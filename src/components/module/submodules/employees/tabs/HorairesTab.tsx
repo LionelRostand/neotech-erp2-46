@@ -2,68 +2,62 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Employee } from '@/types/employee';
-import { Clock } from 'lucide-react';
 
 interface HorairesTabProps {
   employee: Employee;
 }
 
 const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
-  const workSchedule = employee.workSchedule || {};
-  
-  const days = [
-    { name: 'Lundi', key: 'monday' },
-    { name: 'Mardi', key: 'tuesday' },
-    { name: 'Mercredi', key: 'wednesday' },
-    { name: 'Jeudi', key: 'thursday' },
-    { name: 'Vendredi', key: 'friday' },
-    { name: 'Samedi', key: 'saturday' },
-    { name: 'Dimanche', key: 'sunday' }
-  ];
+  const workSchedule = employee.workSchedule || {
+    monday: '9:00 - 17:00',
+    tuesday: '9:00 - 17:00',
+    wednesday: '9:00 - 17:00',
+    thursday: '9:00 - 17:00',
+    friday: '9:00 - 17:00',
+    saturday: '-',
+    sunday: '-'
+  };
 
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="text-lg font-medium flex items-center mb-4">
-          <Clock className="h-5 w-5 mr-2" />
-          Horaires de travail
-        </h3>
+        <h3 className="text-lg font-medium mb-6">Horaires de travail</h3>
         
-        {workSchedule && Object.keys(workSchedule).length > 0 ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-2">
-              {days.map(day => (
-                <div 
-                  key={day.key} 
-                  className={`p-3 rounded border flex justify-between items-center ${
-                    workSchedule[day.key as keyof typeof workSchedule] ? 'bg-background' : 'bg-muted'
-                  }`}
-                >
-                  <span className="font-medium">{day.name}</span>
-                  <span>
-                    {workSchedule[day.key as keyof typeof workSchedule] || 'Non travaillé'}
-                  </span>
-                </div>
-              ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div className="mb-4">
+              <p className="font-medium">Lundi</p>
+              <p>{workSchedule.monday}</p>
             </div>
-            
-            <div className="pt-4 border-t mt-4">
-              <h4 className="text-md font-medium mb-2">Temps de travail</h4>
-              <p className="text-muted-foreground">
-                {employee.contract?.includes('Temps partiel') 
-                  ? 'Temps partiel' 
-                  : employee.contract?.includes('Temps plein') || !employee.contract
-                    ? 'Temps plein'
-                    : employee.contract}
-              </p>
+            <div className="mb-4">
+              <p className="font-medium">Mardi</p>
+              <p>{workSchedule.tuesday}</p>
+            </div>
+            <div className="mb-4">
+              <p className="font-medium">Mercredi</p>
+              <p>{workSchedule.wednesday}</p>
+            </div>
+            <div className="mb-4">
+              <p className="font-medium">Jeudi</p>
+              <p>{workSchedule.thursday}</p>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-10">
-            <Clock className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
-            <p className="text-muted-foreground">Aucun horaire défini pour cet employé</p>
+          
+          <div>
+            <div className="mb-4">
+              <p className="font-medium">Vendredi</p>
+              <p>{workSchedule.friday}</p>
+            </div>
+            <div className="mb-4">
+              <p className="font-medium">Samedi</p>
+              <p>{workSchedule.saturday || '-'}</p>
+            </div>
+            <div className="mb-4">
+              <p className="font-medium">Dimanche</p>
+              <p>{workSchedule.sunday || '-'}</p>
+            </div>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

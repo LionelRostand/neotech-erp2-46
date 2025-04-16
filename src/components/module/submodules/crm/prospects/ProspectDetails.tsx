@@ -67,7 +67,7 @@ const ProspectDetails: React.FC<ProspectDetailsProps> = ({ prospect, onClose }) 
         </div>
         <div>
           <p className="text-sm font-medium">Date de création:</p>
-          <p>{formatDate(prospect.createdAt)}</p>
+          <p>{prospect.createdAt instanceof Date ? formatDate(prospect.createdAt) : formatDate(new Date(prospect.createdAt))}</p>
         </div>
       </CardContent>
     </Card>

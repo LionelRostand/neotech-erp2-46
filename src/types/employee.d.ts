@@ -64,7 +64,7 @@ export interface Document {
   date: string;
   fileData?: string;
   fileType: string;
-  fileSize: number; // Changed to number type to fix build errors
+  fileSize: number;
   employeeId: string;
   documentId?: string;
   storedInFirebase?: boolean;

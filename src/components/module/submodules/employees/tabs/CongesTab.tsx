@@ -1,123 +1,66 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Employee } from '@/types/employee';
-import { Calendar, Clock } from 'lucide-react';
 
 interface CongesTabProps {
   employee: Employee;
 }
 
 const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
-  const congesAcquis = employee.conges?.acquired || 0;
-  const congesPris = employee.conges?.taken || 0;
-  const congesRestants = employee.conges?.balance || 0;
+  const conges = employee.conges || {
+    acquired: 25,
+    taken: 0,
+    balance: 25
+  };
   
-  const rttAcquis = employee.rtt?.acquired || 0;
-  const rttPris = employee.rtt?.taken || 0;
-  const rttRestants = employee.rtt?.balance || 0;
-
-  const congesPercentage = congesAcquis > 0 ? (congesPris / congesAcquis) * 100 : 0;
-  const rttPercentage = rttAcquis > 0 ? (rttPris / rttAcquis) * 100 : 0;
+  const rtt = employee.rtt || {
+    acquired: 10,
+    taken: 0,
+    balance: 10
+  };
 
   return (
     <Card>
-      <CardContent className="p-6 space-y-6">
-        <div>
-          <h3 className="text-lg font-medium flex items-center mb-4">
-            <Calendar className="h-5 w-5 mr-2" />
-            Congés payés
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-muted p-3 rounded">
-                <p className="text-sm font-medium">Acquis</p>
-                <p className="text-2xl font-bold">{congesAcquis} jours</p>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-medium mb-6">Congés payés</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-md font-medium mb-3">Congés annuels</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Acquis</p>
+                <p className="text-xl font-semibold">{conges.acquired} jours</p>
               </div>
-              <div className="bg-muted p-3 rounded">
-                <p className="text-sm font-medium">Pris</p>
-                <p className="text-2xl font-bold">{congesPris} jours</p>
+              <div>
+                <p className="text-sm text-muted-foreground">Pris</p>
+                <p className="text-xl font-semibold">{conges.taken} jours</p>
               </div>
-              <div className="bg-muted p-3 rounded">
-                <p className="text-sm font-medium">Restants</p>
-                <p className="text-2xl font-bold">{congesRestants} jours</p>
+              <div className="col-span-2">
+                <p className="text-sm text-muted-foreground">Solde actuel</p>
+                <p className="text-xl font-semibold text-green-600">{conges.balance} jours</p>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Congés pris</span>
-                <span className="text-sm font-medium">{congesPercentage.toFixed(0)}%</span>
-              </div>
-              <Progress value={congesPercentage} />
             </div>
           </div>
-        </div>
-        
-        <div className="pt-4 border-t">
-          <h3 className="text-lg font-medium flex items-center mb-4">
-            <Clock className="h-5 w-5 mr-2" />
-            RTT
-          </h3>
           
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-muted p-3 rounded">
-                <p className="text-sm font-medium">Acquis</p>
-                <p className="text-2xl font-bold">{rttAcquis} jours</p>
+          <div>
+            <h4 className="text-md font-medium mb-3">RTT</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Acquis</p>
+                <p className="text-xl font-semibold">{rtt.acquired} jours</p>
               </div>
-              <div className="bg-muted p-3 rounded">
-                <p className="text-sm font-medium">Pris</p>
-                <p className="text-2xl font-bold">{rttPris} jours</p>
+              <div>
+                <p className="text-sm text-muted-foreground">Pris</p>
+                <p className="text-xl font-semibold">{rtt.taken} jours</p>
               </div>
-              <div className="bg-muted p-3 rounded">
-                <p className="text-sm font-medium">Restants</p>
-                <p className="text-2xl font-bold">{rttRestants} jours</p>
+              <div className="col-span-2">
+                <p className="text-sm text-muted-foreground">Solde actuel</p>
+                <p className="text-xl font-semibold text-green-600">{rtt.balance} jours</p>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">RTT pris</span>
-                <span className="text-sm font-medium">{rttPercentage.toFixed(0)}%</span>
-              </div>
-              <Progress value={rttPercentage} />
             </div>
           </div>
-        </div>
-        
-        <div className="pt-4 border-t">
-          <h3 className="text-lg font-medium mb-4">Historique des demandes</h3>
-          
-          {employee.leaveRequests && employee.leaveRequests.length > 0 ? (
-            <div className="space-y-3">
-              {employee.leaveRequests.map((request, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-muted rounded">
-                  <div>
-                    <p className="font-medium">{request.type}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Du {new Date(request.startDate).toLocaleDateString()} au {new Date(request.endDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      request.status === 'approved' || request.status === 'Approuvé' 
-                        ? 'bg-green-100 text-green-800' 
-                        : request.status === 'pending' || request.status === 'En attente'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {request.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">Aucune demande enregistrée</p>
-          )}
         </div>
       </CardContent>
     </Card>

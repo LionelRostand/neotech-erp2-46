@@ -49,3 +49,18 @@ export const formatDate = (date: Date | string): string => {
     return 'Date invalide';
   }
 };
+
+/**
+ * Format a phone number in French format
+ * @param phoneNumber The phone number to format
+ * @returns Formatted phone number string
+ */
+export const formatPhoneNumber = (phoneNumber: string): string => {
+  if (!phoneNumber) return '';
+  
+  // Remove any non-digit characters
+  const digitsOnly = phoneNumber.replace(/\D/g, '');
+  
+  // Apply French formatting (XX XX XX XX XX)
+  return digitsOnly.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+};

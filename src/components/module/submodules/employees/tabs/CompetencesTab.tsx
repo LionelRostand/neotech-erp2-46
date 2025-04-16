@@ -12,13 +12,17 @@ import { updateEmployeeDoc } from '@/services/employeeService';
 interface CompetencesTabProps {
   employee: Employee;
   onEmployeeUpdated?: (updatedEmployee: Employee) => void;
+  isEditing?: boolean;
+  onFinishEditing?: () => void;
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
   employee,
-  onEmployeeUpdated
+  onEmployeeUpdated,
+  isEditing: isEditingProp = false,
+  onFinishEditing
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isEditingProp);
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
   
@@ -30,6 +34,9 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
     setSkills(employee.skills || []);
     setNewSkill('');
     setIsEditing(false);
+    if (onFinishEditing) {
+      onFinishEditing();
+    }
   };
   
   const handleAddSkill = () => {
@@ -59,12 +66,20 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
         }
         
         setIsEditing(false);
+        if (onFinishEditing) {
+          onFinishEditing();
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour des compétences:', error);
       toast.error('Erreur lors de la mise à jour des compétences');
     }
   };
+  
+  // Use isEditingProp if it's provided
+  React.useEffect(() => {
+    setIsEditing(isEditingProp);
+  }, [isEditingProp]);
   
   return (
     <Card>

@@ -1,320 +1,107 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Employee, Document } from '@/types/employee';
-import { Plus, FileText, Trash2, Download, File, FileDown } from 'lucide-react';
-import { toast } from 'sonner';
-import { 
-  getEmployeeDocuments, 
-  removeEmployeeDocument 
-} from '../services/documentService';
-import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/lib/formatters';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { jsPDF } from 'jspdf';
-import { generatePayslipPDF } from '../../salaries/utils/payslipPdfUtils';
-import { PaySlip } from '@/types/payslip';
+import { toast } from 'sonner';
 
 interface DocumentsTabProps {
   employee: Employee;
-  isEditing?: boolean;
-  onFinishEditing?: () => void;
+  onEmployeeUpdated?: (updatedEmployee: Employee) => void;
 }
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ 
-  employee, 
-  isEditing = false,
-  onFinishEditing 
+  employee,
+  onEmployeeUpdated
 }) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
-  const { payslips } = useHrModuleData();
-  
-  // Filtrer les fiches de paie pour cet employé
-  const employeePayslips = payslips.filter(
-    payslip => payslip.employeeId === employee.id
-  );
-  
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      setIsLoading(true);
-      try {
-        if (employee.id) {
-          if (employee.documents && Array.isArray(employee.documents) && employee.documents.length > 0) {
-            setDocuments(employee.documents as Document[]);
-          } else {
-            const fetchedDocs = await getEmployeeDocuments(employee.id);
-            setDocuments(fetchedDocs);
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des documents:", error);
-        toast.error("Erreur lors du chargement des documents");
-      } finally {
-        setIsLoading(false);
+  const [documents, setDocuments] = useState<Document[]>(employee.documents || []);
+
+  const handleViewDocument = (document: Document) => {
+    // Check if there's a viewable URL
+    if (document.fileUrl) {
+      window.open(document.fileUrl, '_blank');
+    } else if (document.fileData) {
+      // Create a data URL for embedded data
+      const dataUrl = `data:${document.fileType};base64,${document.fileData}`;
+      
+      // Open in a new tab
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`
+          <html>
+            <head>
+              <title>${document.name}</title>
+            </head>
+            <body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;min-height:100vh;">
+              ${document.fileType.startsWith('image/') 
+                ? `<img src="${dataUrl}" alt="${document.name}" style="max-width:90%;max-height:90vh;" />`
+                : `<iframe src="${dataUrl}" width="100%" height="100%" style="position:absolute;border:none;"></iframe>`
+              }
+            </body>
+          </html>
+        `);
+      } else {
+        toast.error("Impossible d'ouvrir le document, le blocage des popups est peut-être activé");
       }
-    };
-    
-    fetchDocuments();
-  }, [employee]);
-  
-  const handleDocumentAdded = (newDocument: Document) => {
-    setDocuments(prev => [...prev, newDocument]);
-  };
-  
-  const handleDeleteDocument = async () => {
-    if (!documentToDelete || !employee.id) return;
-    
-    try {
-      await removeEmployeeDocument(employee.id, documentToDelete.id!);
-      
-      setDocuments(prev => prev.filter(doc => doc.id !== documentToDelete.id));
-      
-      toast.success("Document supprimé avec succès");
-    } catch (error) {
-      console.error("Erreur lors de la suppression du document:", error);
-      toast.error("Erreur lors de la suppression du document");
-    } finally {
-      setDocumentToDelete(null);
-    }
-  };
-  
-  const getDocumentIcon = (document: Document) => {
-    const fileType = document.fileType?.toLowerCase() || '';
-    
-    if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('png') || fileType.includes('jpeg')) {
-      return <File className="h-6 w-6" />;
-    } else if (fileType.includes('pdf')) {
-      return <FileText className="h-6 w-6" />;
     } else {
-      return <FileText className="h-6 w-6" />;
+      toast.error("Ce document ne contient pas de données visibles");
     }
   };
-  
-  const formatFileSize = (size?: number): string => {
-    if (!size) return '';
-    
-    if (size < 1024) {
-      return `${size} B`;
-    } else if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)} KB`;
-    } else {
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    }
+
+  const handleDeleteDocument = (index: number) => {
+    toast.error("Fonctionnalité non disponible dans cette démonstration");
   };
-  
-  const formatDocumentDate = (dateString?: string): string => {
-    if (!dateString) return '';
-    
-    try {
-      return formatDate(dateString, { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-    } catch (error) {
-      console.error("Erreur lors du formatage de la date:", error);
-      return '';
-    }
-  };
-  
-  const handleDownloadPayslip = async (payslip: PaySlip) => {
-    try {
-      console.log('Téléchargement de la fiche de paie:', payslip);
-      
-      // Vérifier que les données essentielles existent
-      if (!payslip.details || !Array.isArray(payslip.details)) {
-        throw new Error('Les détails de la fiche de paie sont manquants ou invalides');
-      }
-      
-      // Generate PDF document
-      const doc = generatePayslipPDF(payslip);
-      
-      // Save PDF file avec un nom de fichier basé sur les données du bulletin
-      const fileName = `bulletin_de_paie_${payslip.employee.lastName.toLowerCase()}_${payslip.month?.toLowerCase()}_${payslip.year}.pdf`;
-      
-      // Save PDF file
-      doc.save(fileName);
-      
-      toast.success('Fiche de paie téléchargée avec succès');
-    } catch (error) {
-      console.error('Erreur lors du téléchargement de la fiche de paie:', error);
-      let errorMessage = 'Erreur lors du téléchargement de la fiche de paie';
-      
-      if (error instanceof Error) {
-        errorMessage += `: ${error.message}`;
-      }
-      
-      toast.error(errorMessage);
-    }
-  };
-  
+
   return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Documents</CardTitle>
-          {isEditing && (
-            <Button 
-              size="sm" 
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un document
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="mt-2 text-sm text-muted-foreground">Chargement des documents...</p>
-            </div>
-          ) : (documents.length > 0 || employeePayslips.length > 0) ? (
-            <div className="grid gap-4">
-              {/* Section des documents standards */}
-              {documents.length > 0 && (
-                <>
-                  {documents.map((document) => (
-                    <div key={document.id} className="flex items-start p-3 border rounded-md hover:bg-muted/30 transition-colors">
-                      <div className="rounded-md bg-blue-100 p-2 text-blue-700 mr-3">
-                        {getDocumentIcon(document)}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{document.name}</h3>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          <span>{document.type || 'Document'}</span>
-                          {document.fileSize && (
-                            <span> • {formatFileSize(document.fileSize)}</span>
-                          )}
-                          <span> • {formatDocumentDate(document.date)}</span>
-                        </div>
-                      </div>
-                      {isEditing && (
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDocumentToDelete(document)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </>
-              )}
-              
-              {/* Section des fiches de paie */}
-              {employeePayslips.length > 0 && (
-                <>
-                  {employeePayslips.length > 0 && documents.length > 0 && (
-                    <div className="h-px bg-border my-4" />
-                  )}
-                  
-                  <div className="mb-2 mt-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Fiches de paie</h3>
-                  </div>
-                  
-                  {employeePayslips.map((payslip) => (
-                    <div key={payslip.id} className="flex items-start p-3 border rounded-md hover:bg-muted/30 transition-colors">
-                      <div className="rounded-md bg-green-100 p-2 text-green-700 mr-3">
-                        <FileText className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium">Bulletin de paie - {payslip.month} {payslip.year}</h3>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          <span>Fiche de paie</span>
-                          <span> • {formatDocumentDate(payslip.date)}</span>
-                          <span> • {payslip.netSalary?.toFixed(2)} €</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <Button 
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownloadPayslip(payslip)}
-                          title="Télécharger la fiche de paie"
-                        >
-                          <FileDown className="h-4 w-4 text-primary" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-              <p>Aucun document disponible</p>
-              {isEditing && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-4"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un document
-                </Button>
-              )}
-            </div>
-          )}
-        </CardContent>
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-medium">Documents</h3>
+          <Button variant="outline" size="sm">
+            Ajouter un document
+          </Button>
+        </div>
         
-        {isEditing && (documents.length > 0 || employeePayslips.length > 0) && (
-          <CardFooter className="border-t px-6 py-4 bg-muted/20">
-            <div className="ml-auto">
-              <Button 
-                variant="outline" 
-                onClick={onFinishEditing}
-              >
-                Terminer
-              </Button>
-            </div>
-          </CardFooter>
+        {documents.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documents.map((doc, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{doc.name}</TableCell>
+                  <TableCell>{doc.type}</TableCell>
+                  <TableCell>{formatDate(new Date(doc.date))}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)}>
+                        Voir
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteDocument(index)}>
+                        Supprimer
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Aucun document associé à cet employé</p>
+            <p className="text-sm mt-2">Cliquez sur "Ajouter un document" pour en importer un nouveau</p>
+          </div>
         )}
-      </Card>
-      
-      <UploadDocumentDialog 
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        employee={employee}
-        onDocumentAdded={handleDocumentAdded}
-        onSuccess={() => {
-        }}
-      />
-      
-      <AlertDialog 
-        open={!!documentToDelete} 
-        onOpenChange={(open) => !open && setDocumentToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer le document "{documentToDelete?.name}" ?
-              Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteDocument}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      </CardContent>
+    </Card>
   );
 };
 

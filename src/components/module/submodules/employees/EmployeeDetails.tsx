@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       case 'evaluations': return 'Évaluations';
       default: return tabId;
     }
+  };
+
+  const handleEmployeeUpdate = (updatedEmp: Employee) => {
+    setUpdatedEmployee(updatedEmp);
   };
 
   const handleExportPdf = () => {
@@ -141,11 +146,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     onExportPdf();
   };
 
-  const handleEmployeeUpdate = () => {
-    // This function will be passed to each tab component to handle employee updates
-    setUpdatedEmployee(prevEmployee => ({ ...prevEmployee }));
-  };
-
   return (
     <div className="space-y-6">
       <EmployeeProfileHeader 
@@ -165,7 +165,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         
         <TabsContent value="infos">
           <InformationsTab 
-            employee={updatedEmployee} 
+            employee={updatedEmployee}
+            onEmployeeUpdated={handleEmployeeUpdate}
             isEditing={isEditing && activeTab === 'infos'}
             onFinishEditing={handleFinishEditing}
           />
@@ -173,9 +174,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         
         <TabsContent value="documents">
           <DocumentsTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'documents'}
-            onFinishEditing={handleFinishEditing}
+            employee={updatedEmployee}
+            onEmployeeUpdated={handleEmployeeUpdate}
           />
         </TabsContent>
         
@@ -191,24 +191,18 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <TabsContent value="horaires">
           <HorairesTab 
             employee={updatedEmployee}
-            isEditing={isEditing && activeTab === 'horaires'}
-            onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
         
         <TabsContent value="conges">
           <CongesTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'conges'} 
-            onFinishEditing={handleFinishEditing} 
+            employee={updatedEmployee}
           />
         </TabsContent>
         
         <TabsContent value="evaluations">
           <EvaluationsTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'evaluations'} 
-            onFinishEditing={handleFinishEditing} 
+            employee={updatedEmployee}
           />
         </TabsContent>
       </Tabs>
