@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
-import { useEmployeeData, useCompaniesData } from '@/hooks/useEmployeeData';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface AddDepartmentDialogProps {
   formData: DepartmentFormData;
