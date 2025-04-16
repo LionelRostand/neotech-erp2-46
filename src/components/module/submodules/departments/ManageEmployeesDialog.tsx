@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Department } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface ManageEmployeesDialogProps {
   department: Department;
@@ -24,6 +25,13 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onSave,
 }) => {
   const { employees } = useEmployeeData();
+  const { departments } = useAvailableDepartments();
+  
+  // Get department name from id
+  const getDepartmentName = (departmentId: string): string => {
+    const dept = departments.find(d => d.id === departmentId);
+    return dept ? dept.name : departmentId;
+  };
 
   // Set selected employees based on department
   useEffect(() => {
@@ -36,7 +44,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
-        <DialogTitle>Gérer les employés: {department.name}</DialogTitle>
+        <DialogTitle>Gérer les employés: {getDepartmentName(department.id)}</DialogTitle>
       </DialogHeader>
       
       <div className="py-4">
