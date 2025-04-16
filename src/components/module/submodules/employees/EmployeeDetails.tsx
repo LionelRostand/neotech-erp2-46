@@ -126,7 +126,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             </div>
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="h-4 w-4 mr-2" />
-              <span>ID: {employee.id}</span>
+              <span>ID: {employee.shortId || employee.id}</span>
             </div>
           </div>
         </CardHeader>
