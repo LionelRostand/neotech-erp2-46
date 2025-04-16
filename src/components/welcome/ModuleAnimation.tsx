@@ -9,6 +9,14 @@ interface ModuleAnimationProps {
   animationStep: number;
 }
 
+const moduleColors = {
+  1: 'bg-[#00FA9A]',        // Bright green for primary
+  2: 'bg-[#9b87f5]',        // Soft purple for projects
+  3: 'bg-[#F97316]',        // Bright orange for CRM
+  4: 'bg-[#0EA5E9]',        // Ocean blue for Employees
+  5: 'bg-[#D946EF]'         // Magenta pink for Freight Management
+};
+
 const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: ModuleAnimationProps) => {
   return (
     <motion.div 
@@ -48,7 +56,7 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
             return (
               <motion.div
                 key={module.id}
-                className="absolute bg-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ring-2 ring-neotech-primary"
+                className={`absolute p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ring-2 ring-white/20 ${moduleColors[moduleId] || 'bg-white'}`}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ 
                   opacity: 1, 
@@ -64,11 +72,11 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
                   y: { duration: 2 }
                 }}
               >
-                <div className="mb-2 text-2xl text-neotech-primary">
+                <div className="mb-2 text-2xl text-white">
                   {module.icon}
                 </div>
-                <span className="text-sm font-medium text-gray-800">{module.name}</span>
-                <span className="text-xs mt-1 text-neotech-primary">Installé</span>
+                <span className="text-sm font-medium text-white">{module.name}</span>
+                <span className="text-xs mt-1 text-white/80">Installé</span>
               </motion.div>
             );
           })
@@ -82,12 +90,13 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
       
       {/* Background decorative elements */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 right-1/4 w-40 h-40 bg-neotech-primary/5 rounded-full blur-2xl"></div>
+        <div className="absolute top-1/4 right-1/4 w-40 h-40 bg-purple-500/5 rounded-full blur-2xl"></div>
         <div className="absolute bottom-1/3 left-1/3 w-60 h-60 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute top-2/3 right-1/3 w-40 h-40 bg-purple-500/5 rounded-full blur-xl"></div>
+        <div className="absolute top-2/3 right-1/3 w-40 h-40 bg-pink-500/5 rounded-full blur-xl"></div>
       </div>
     </motion.div>
   );
 };
 
 export default ModuleAnimation;
+
