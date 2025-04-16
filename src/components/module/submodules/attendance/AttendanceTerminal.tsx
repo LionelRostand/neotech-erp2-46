@@ -7,23 +7,23 @@ import { Clock, Calendar, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { EmployeeAttendance } from '@/types/attendance';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AttendanceTerminalProps {
   onCheckIn: (attendance: EmployeeAttendance) => void;
   onCheckOut: (employeeId: string, departureTime: string) => void;
   attendances: EmployeeAttendance[];
+  employees: Employee[];
 }
 
 const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({ 
   onCheckIn, 
   onCheckOut,
-  attendances 
+  attendances,
+  employees
 }) => {
   const [employeeId, setEmployeeId] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
-  const { employees } = useEmployeeData(); // Utiliser le hook useEmployeeData pour obtenir les employés
   
   // Mettre à jour l'heure et la date actuelle
   useEffect(() => {
@@ -42,17 +42,37 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
     return () => clearInterval(interval);
   }, []);
   
-  // Rechercher un employé par ID
+  // Rechercher un employé par ID (accepte ID direct ou badge ID)
   const findEmployee = (id: string) => {
     console.log('Recherche d\'employé avec ID:', id);
-    console.log('Employés disponibles:', employees);
     
-    const employee = employees.find(emp => emp.id === id);
+    // 1. Direct employee ID match
+    let employee = employees.find(emp => emp.id === id);
+    
+    // 2. Try to match badge ID
+    if (!employee) {
+      // Check if input might be a badge number
+      const badgePattern = /^B-?\d+$/i;
+      if (badgePattern.test(id)) {
+        // This is potentially a badge ID, let's try to find the employee by badge
+        // Logic to check for employee by badge would go here if we had access to badges
+        // For now, we'll show a helpful message
+        toast.info("Identification par badge en cours d'implémentation");
+      }
+    }
+    
+    // 3. Try to match by name (partial match)
+    if (!employee) {
+      employee = employees.find(emp => 
+        `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(id.toLowerCase()) ||
+        `${emp.lastName} ${emp.firstName}`.toLowerCase().includes(id.toLowerCase())
+      );
+    }
     
     if (employee) {
       console.log('Employé trouvé:', employee);
     } else {
-      console.log('Aucun employé trouvé avec cet ID');
+      console.log('Aucun employé trouvé avec cet ID ou nom');
     }
     
     return employee;
@@ -81,7 +101,7 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
       return;
     }
     
-    if (isEmployeeCheckedInToday(employeeId)) {
+    if (isEmployeeCheckedInToday(employee.id)) {
       toast.error("Vous êtes déjà enregistré comme présent aujourd'hui.");
       return;
     }
@@ -116,18 +136,18 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
       return;
     }
     
-    if (!isEmployeeCheckedInToday(employeeId)) {
+    if (!isEmployeeCheckedInToday(employee.id)) {
       toast.error("Vous n'avez pas encore enregistré votre entrée aujourd'hui.");
       return;
     }
     
-    onCheckOut(employeeId, currentTime);
+    onCheckOut(employee.id, currentTime);
     toast.success(`Au revoir ${employee.firstName} ${employee.lastName}, votre sortie a été enregistrée à ${currentTime}`);
     setEmployeeId('');
   };
   
   return (
-    <Card className="border shadow-lg">
+    <Card className="border shadow-lg mx-auto max-w-md">
       <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-700 text-white">
         <div className="flex justify-between items-center">
           <div>
@@ -156,7 +176,7 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
               id="employee-id"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
-              placeholder="Saisissez votre ID employé (ex: EMP001)"
+              placeholder="Saisissez votre ID employé ou Badge ID"
               className="text-lg"
             />
           </div>

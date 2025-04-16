@@ -5,6 +5,7 @@ export interface BadgeData {
   employeeId: string;
   employeeName: string;
   department?: string;
+  company?: string;
   accessLevel: string;
   status: 'success' | 'warning' | 'danger' | string;
   statusText: string;
@@ -28,5 +29,8 @@ export const getInitials = (firstName: string, lastName: string) => {
 };
 
 export const generateBadgeNumber = (): string => {
-  return `B-${Math.floor(2460 + Math.random() * 100)}`;
+  // Generate a shorter, more memorizable badge number
+  const prefix = 'B';
+  const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4-digit number between 1000-9999
+  return `${prefix}${randomDigits}`;
 };

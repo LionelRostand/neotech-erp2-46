@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -26,8 +28,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [department, setDepartment] = useState<string>('no_department');
+  const [company, setCompany] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
   const { departments } = useAvailableDepartments();
+  const { companies } = useCompaniesData();
 
   const handleCreateBadge = () => {
     if (!selectedEmployee || !accessLevel) {
@@ -44,12 +48,27 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     const departmentName = departments.find(dept => dept.id === (department === 'no_department' ? employee.department : department))?.name 
       || (department === 'no_department' ? 'Non assigné' : department);
     
+    // Get company name from the employee's company property
+    let companyName = company;
+    if (!companyName) {
+      if (typeof employee.company === 'object' && employee.company !== null) {
+        companyName = employee.company.name || 'Entreprise';
+      } else if (typeof employee.company === 'string') {
+        // Try to find company name in companies list
+        const foundCompany = companies.find(c => c.id === employee.company);
+        companyName = foundCompany ? foundCompany.name : 'Entreprise';
+      } else {
+        companyName = 'Entreprise';
+      }
+    }
+    
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
       department: departmentName,
+      company: companyName,
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif"
@@ -65,6 +84,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployeeId('');
     setAccessLevel('');
     setDepartment('no_department');
+    setCompany('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -72,6 +92,26 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     resetForm();
     onOpenChange(false);
   };
+
+  // Update employee data when an employee is selected
+  useEffect(() => {
+    if (selectedEmployeeId) {
+      const employee = employees.find(emp => emp.id === selectedEmployeeId);
+      if (employee) {
+        if (employee.department) {
+          setDepartment(employee.department);
+        }
+        
+        // Set company if available
+        if (typeof employee.company === 'object' && employee.company !== null) {
+          setCompany(employee.company.name || '');
+        } else if (typeof employee.company === 'string') {
+          const foundCompany = companies.find(c => c.id === employee.company);
+          setCompany(foundCompany ? foundCompany.name : '');
+        }
+      }
+    }
+  }, [selectedEmployeeId, employees, companies]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -91,11 +131,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   setSelectedEmployee(value);
                   const empId = value.split('|')[1];
                   setSelectedEmployeeId(empId);
-                  
-                  const employee = employees.find(emp => emp.id === empId);
-                  if (employee?.department) {
-                    setDepartment(employee.department);
-                  }
                 }}
               >
                 <SelectTrigger>
@@ -126,7 +161,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un département" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="no_department">Aucun département</SelectItem>
+                  <SelectItem value="no_department">Département de l'employé</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -134,6 +169,22 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="company" className="text-right">
+              Entreprise
+            </Label>
+            <div className="col-span-3">
+              <Input 
+                id="company" 
+                value={company} 
+                onChange={(e) => setCompany(e.target.value)} 
+                placeholder="Entreprise de l'employé" 
+                readOnly 
+                className="bg-gray-100"
+              />
             </div>
           </div>
 
@@ -148,15 +199,11 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
-                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
-                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
-                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
-                  <SelectItem value="Administration">Administration</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
-                  <SelectItem value="PDG">PDG</SelectItem>
+                  <SelectItem value="Niveau 1">Niveau 1 - Standard</SelectItem>
+                  <SelectItem value="Niveau 2">Niveau 2 - Restreint</SelectItem>
+                  <SelectItem value="Niveau 3">Niveau 3 - Sécurisé</SelectItem>
+                  <SelectItem value="Admin">Admin - Accès total</SelectItem>
+                  <SelectItem value="Direction">Direction</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -164,7 +211,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="badge-number" className="text-right">
-              Numéro de badge
+              ID Badge
             </Label>
             <Input id="badge-number" className="col-span-3" value={badgeNumber} disabled />
           </div>

@@ -1,59 +1,173 @@
 
-import React from 'react';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { Card } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
 import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from '@/components/ui/badge';
-import DownloadPayslipButton from './DownloadPayslipButton';
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { FileText, Download, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { getAllPayslips, deletePayslip, Payslip } from '../services/salaryService';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const PayslipList = () => {
-  const { payslips, isLoading } = useHrModuleData();
-
-  if (isLoading) {
-    return <div>Chargement des fiches de paie...</div>;
+  const [payslips, setPayslips] = useState<Payslip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
+  
+  useEffect(() => {
+    loadPayslips();
+  }, []);
+  
+  const loadPayslips = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllPayslips();
+      setPayslips(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des fiches de paie:', error);
+      toast.error('Erreur lors du chargement des fiches de paie');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleDelete = (payslip: Payslip) => {
+    setSelectedPayslip(payslip);
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!selectedPayslip) return;
+    
+    try {
+      await deletePayslip(selectedPayslip.id);
+      setPayslips(payslips.filter(p => p.id !== selectedPayslip.id));
+      toast.success('Fiche de paie supprimée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression de la fiche de paie');
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedPayslip(null);
+    }
+  };
+  
+  const handleDownload = (payslip: Payslip) => {
+    // Create a simple text representation of the payslip
+    const content = `
+FICHE DE PAIE
+-------------
+Employé: ${payslip.employeeName}
+Mois: ${payslip.monthName} ${payslip.year}
+Salaire brut: ${payslip.grossSalary} €
+Salaire net: ${payslip.netSalary} €
+Date d'émission: ${new Date(payslip.date).toLocaleDateString('fr-FR')}
+    `;
+    
+    // Create a Blob from the content
+    const blob = new Blob([content], { type: 'text/plain' });
+    
+    // Create a link element
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Fiche_de_paie_${payslip.employeeName.replace(/\s+/g, '_')}_${payslip.monthName}_${payslip.year}.txt`;
+    
+    // Append to the document and click
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+  
+  if (loading) {
+    return <div className="flex justify-center p-8">Chargement des fiches de paie...</div>;
   }
-
+  
+  if (payslips.length === 0) {
+    return (
+      <div className="text-center p-8">
+        <FileText className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-2 text-lg font-medium">Aucune fiche de paie</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Aucune fiche de paie n'a été créée pour le moment.
+        </p>
+      </div>
+    );
+  }
+  
   return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Liste des fiches de paie</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Employé</TableHead>
-            <TableHead>Période</TableHead>
-            <TableHead>Montant Net</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {payslips.map((payslip, index) => (
-            <TableRow key={payslip.id || `payslip-${index}`}>
-              <TableCell>{new Date(payslip.date).toLocaleDateString('fr-FR')}</TableCell>
-              <TableCell>{payslip.employeeName}</TableCell>
-              <TableCell>{payslip.month} {payslip.year}</TableCell>
-              <TableCell>{payslip.netSalary?.toFixed(2)} €</TableCell>
-              <TableCell>
-                <Badge variant={payslip.status === 'Généré' ? 'default' : 'secondary'}>
-                  {payslip.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <DownloadPayslipButton payslip={payslip} />
-              </TableCell>
+    <div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employé</TableHead>
+              <TableHead>Période</TableHead>
+              <TableHead className="text-right">Salaire brut</TableHead>
+              <TableHead className="text-right">Salaire net</TableHead>
+              <TableHead className="text-right">Date d'émission</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+          </TableHeader>
+          <TableBody>
+            {payslips.map((payslip) => (
+              <TableRow key={payslip.id}>
+                <TableCell className="font-medium">{payslip.employeeName}</TableCell>
+                <TableCell>{payslip.monthName} {payslip.year}</TableCell>
+                <TableCell className="text-right">{payslip.grossSalary} €</TableCell>
+                <TableCell className="text-right">{payslip.netSalary} €</TableCell>
+                <TableCell className="text-right">
+                  {new Date(payslip.date).toLocaleDateString('fr-FR')}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => handleDownload(payslip)}
+                      title="Télécharger"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => handleDelete(payslip)}
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. Cette fiche de paie sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
 

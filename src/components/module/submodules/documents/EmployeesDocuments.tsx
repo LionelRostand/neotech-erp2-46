@@ -1,168 +1,160 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useDocumentsData } from '@/hooks/useDocumentsData';
-import { DocumentsCalendar } from './components/DocumentsCalendar';
-import { format, isValid, parse } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { DocumentsTabs } from './components/DocumentsTabs';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Plus, Search } from 'lucide-react';
+import { toast } from 'sonner';
+import { useDocumentsData, HrDocument } from '@/hooks/useDocumentsData';
+import DocumentsList from '@/components/module/documents/components/DocumentsList';
+import SearchResults from '@/components/module/documents/components/SearchResults';
+import DocumentsEmptyState from '@/components/module/documents/components/DocumentsEmptyState';
+import DocumentsLoading from '@/components/module/documents/components/DocumentsLoading';
+import { addEmployeeDocument } from '../employees/services/documentService';
+import NewDocumentDialog from './components/NewDocumentDialog';
+import { Document } from '@/types/employee';
 
-const EmployeesDocuments = () => {
-  const { documents, stats, isLoading } = useDocumentsData();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+const EmployeesDocuments: React.FC = () => {
+  const { documents, isLoading, error } = useDocumentsData();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredDocuments, setFilteredDocuments] = useState<HrDocument[]>([]);
+  const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
   
-  // Safe date parser
-  const safeParseDate = (dateStr: string | undefined): Date | null => {
-    if (!dateStr) return null;
-    
-    try {
-      // Check if it's already in DD/MM/YYYY format
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-        const parsedDate = parse(dateStr, 'dd/MM/yyyy', new Date());
-        return isValid(parsedDate) ? parsedDate : null;
-      }
-      
-      // Otherwise try standard parsing
-      const date = new Date(dateStr);
-      return isValid(date) ? date : null;
-    } catch (e) {
-      console.warn('Error parsing date:', dateStr, e);
-      return null;
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredDocuments([]);
+      return;
     }
-  };
-  
-  // Safe format function that won't throw
-  const safeFormat = (date: Date | null, formatString: string): string => {
-    if (!date || !isValid(date)) return '';
     
-    try {
-      return format(date, formatString, { locale: fr });
-    } catch (e) {
-      console.error('Error formatting date:', e);
-      return '';
-    }
-  };
-  
-  // Filter documents by selected date
-  const filteredDocuments = useMemo(() => {
-    if (!selectedDate) return documents;
+    const filtered = documents.filter(doc => 
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.employeeName && doc.employeeName.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
     
-    return documents.filter(doc => {
-      const docDate = safeParseDate(doc.uploadDate);
-      if (!docDate) return false;
-      
-      try {
-        const selectedDateStr = safeFormat(selectedDate, 'yyyy-MM-dd');
-        const docDateStr = safeFormat(docDate, 'yyyy-MM-dd');
-        
-        return selectedDateStr === docDateStr;
-      } catch (e) {
-        console.error('Error comparing dates:', e);
-        return false;
-      }
-    });
-  }, [documents, selectedDate]);
+    setFilteredDocuments(filtered);
+  }, [searchQuery, documents]);
   
-  // Group documents by type - using a safer implementation
-  const documentsByType = useMemo(() => {
+  const handleCreateDocument = async (document: Document, employeeId: string) => {
     try {
-      return filteredDocuments.reduce((acc, doc) => {
-        // Ensure doc.type is a valid string
-        const type = typeof doc.type === 'string' ? doc.type : 'Autre';
-        if (!acc[type]) {
-          acc[type] = [];
-        }
-        acc[type].push(doc);
-        return acc;
-      }, {} as Record<string, typeof documents>);
+      await addEmployeeDocument(employeeId, document);
+      toast.success('Document ajouté avec succès');
+      return Promise.resolve();
     } catch (error) {
-      console.error('Error grouping documents by type:', error);
-      return {};
+      console.error('Erreur lors de l\'ajout du document:', error);
+      toast.error('Erreur lors de l\'ajout du document');
+      return Promise.reject(error);
     }
-  }, [filteredDocuments]);
-  
-  // Get document types in order
-  const documentTypes = useMemo(() => {
-    return Object.keys(documentsByType).sort();
-  }, [documentsByType]);
-  
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
   };
   
-  const clearDateFilter = () => {
-    setSelectedDate(null);
-  };
+  if (error) {
+    return <div className="p-4">Erreur lors du chargement des documents: {error.message}</div>;
+  }
   
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Documents RH</CardTitle>
-              <CardDescription>
-                Gestion centralisée des documents des employés
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DocumentsTabs 
-                documents={filteredDocuments} 
-                documentsByType={documentsByType} 
-                documentTypes={documentTypes}
-                isLoading={isLoading}
-                selectedDate={selectedDate}
-                onClearDateFilter={clearDateFilter}
-              />
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Calendrier</CardTitle>
-              <CardDescription>
-                Documents par date
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DocumentsCalendar 
-                documents={documents} 
-                onSelectDate={handleDateSelect} 
-              />
-            </CardContent>
-          </Card>
-          
-          <div className="mt-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Statistiques</CardTitle>
-                <CardDescription>
-                  Aperçu des documents
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Total des documents</span>
-                    <span className="text-sm font-bold">{stats.total}</span>
-                  </div>
-                  
-                  <div className="h-px bg-border my-2" />
-                  
-                  {Object.entries(stats.byType).map(([type, count]) => (
-                    <div key={type} className="flex justify-between items-center">
-                      <span className="text-sm">{type}</span>
-                      <span className="text-sm">{count}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Documents RH</h2>
+        <Button onClick={() => setIsNewDocumentDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau document
+        </Button>
       </div>
+      
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Recherche de documents</CardTitle>
+          <CardDescription>
+            Recherchez des documents par titre, type ou employé
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              type="search"
+              placeholder="Rechercher..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
+      {searchQuery.trim() !== '' ? (
+        <SearchResults results={filteredDocuments} searchQuery={searchQuery} />
+      ) : (
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">Tous les documents</TabsTrigger>
+            <TabsTrigger value="contracts">Contrats</TabsTrigger>
+            <TabsTrigger value="payslips">Fiches de paie</TabsTrigger>
+            <TabsTrigger value="certifications">Certifications</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all">
+            {isLoading ? (
+              <DocumentsLoading />
+            ) : documents.length === 0 ? (
+              <DocumentsEmptyState />
+            ) : (
+              <DocumentsList documents={documents} />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="contracts">
+            {isLoading ? (
+              <DocumentsLoading />
+            ) : (
+              <DocumentsList 
+                documents={documents.filter(doc => 
+                  doc.type.toLowerCase().includes('contrat')
+                )} 
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="payslips">
+            {isLoading ? (
+              <DocumentsLoading />
+            ) : (
+              <DocumentsList 
+                documents={documents.filter(doc => 
+                  doc.type.toLowerCase().includes('paie') || 
+                  doc.type.toLowerCase().includes('salaire')
+                )} 
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="certifications">
+            {isLoading ? (
+              <DocumentsLoading />
+            ) : (
+              <DocumentsList 
+                documents={documents.filter(doc => 
+                  doc.type.toLowerCase().includes('certification') || 
+                  doc.type.toLowerCase().includes('diplôme') ||
+                  doc.type.toLowerCase().includes('attestation')
+                )} 
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
+      
+      <NewDocumentDialog 
+        isOpen={isNewDocumentDialogOpen}
+        onOpenChange={setIsNewDocumentDialogOpen}
+        onDocumentCreated={handleCreateDocument}
+      />
     </div>
   );
 };
