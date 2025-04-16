@@ -16,13 +16,16 @@ export const useEmployeePermissions = (moduleId?: string, employeeId?: string) =
     const checkPermissions = async () => {
       setLoading(true);
       try {
-        // Vérifier si c'est le profil de l'utilisateur connecté
+        // Check if user is admin or has admin@neotech-consulting.com email
+        const isAdminUser = isAdmin || userData?.email === 'admin@neotech-consulting.com';
+
+        // Check if it's the user's own profile
         if (userData && employeeId) {
           setIsOwnProfile(userData.id === employeeId);
         }
 
-        // Si c'est un admin, il a tous les droits
-        if (isAdmin) {
+        // If admin user, grant all permissions
+        if (isAdminUser) {
           setCanView(true);
           setCanEdit(true);
           setCanDelete(true);
@@ -30,17 +33,17 @@ export const useEmployeePermissions = (moduleId?: string, employeeId?: string) =
           return;
         }
 
-        // Si c'est son propre profil, l'utilisateur peut le voir
+        // If it's own profile, user can view it
         if (isOwnProfile) {
           setCanView(true);
           const canEditOwn = await checkPermission(moduleId || 'employees-profiles', 'edit');
           setCanEdit(canEditOwn);
-          setCanDelete(false); // Un utilisateur ne peut pas supprimer son propre profil
+          setCanDelete(false);
           setLoading(false);
           return;
         }
 
-        // Sinon, on vérifie les permissions
+        // Check regular permissions for non-admin users
         if (moduleId) {
           const viewPermission = await checkPermission(moduleId, 'view');
           const editPermission = await checkPermission(moduleId, 'edit');
@@ -65,7 +68,7 @@ export const useEmployeePermissions = (moduleId?: string, employeeId?: string) =
     canEdit,
     canDelete,
     isOwnProfile,
-    isAdmin,
+    isAdmin: isAdmin || userData?.email === 'admin@neotech-consulting.com',
     loading
   };
 };
