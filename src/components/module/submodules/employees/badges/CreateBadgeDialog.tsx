@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { getEmployeeInitials } from '@/components/module/submodules/employees/utils/employeeUtils';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -48,8 +50,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
-    const employeeInitials = `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`;
-    const shortId = employee.shortId !== undefined ? employee.shortId : employeeInitials;
+    const employeeInitials = getEmployeeInitials(employee.firstName, employee.lastName);
+    
+    // Use optional chaining to safely access shortId, with a fallback to initials
+    const shortId = employee.shortId ?? employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
