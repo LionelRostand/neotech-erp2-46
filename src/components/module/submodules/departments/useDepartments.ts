@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo } from 'react';
 import { Department } from './types';
 import { getDepartmentEmployees, notifyDepartmentUpdates } from './utils/departmentUtils';
@@ -147,6 +148,7 @@ export const useDepartments = () => {
     handleManagerChange: form.handleManagerChange,
     handleColorChange: form.handleColorChange,
     handleEmployeeSelection: form.handleEmployeeSelection,
+    handleCompanyChange: form.handleCompanyChange,
     
     // Operations
     handleAddDepartment,
