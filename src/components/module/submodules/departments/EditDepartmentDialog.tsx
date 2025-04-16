@@ -10,6 +10,7 @@ import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { useEffect } from 'react';
 
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -38,6 +39,19 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
 }) => {
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
+
+  // Debug les valeurs actuelles
+  useEffect(() => {
+    console.log("Department formData:", formData);
+    console.log("Available companies:", companies);
+    console.log("Current companyId:", formData.companyId);
+    
+    // Vérifier si l'ID de l'entreprise existe dans la liste des entreprises
+    if (formData.companyId && companies) {
+      const matchingCompany = companies.find(c => c.id === formData.companyId);
+      console.log("Matching company:", matchingCompany);
+    }
+  }, [formData, companies]);
 
   const handleCompanyChange = (value: string) => {
     onInputChange({
