@@ -52,7 +52,9 @@ export const createEmptyFormData = (departments: Department[] = []) => {
     description: '',
     managerId: '',
     color: '#4f46e5', // Couleur par défaut (indigo)
-    employeeIds: []
+    employeeIds: [],
+    companyId: '',
+    parentId: ''
   };
 };
 
