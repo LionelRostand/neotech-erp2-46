@@ -34,6 +34,8 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   }, [externalIsEditing]);
 
   useEffect(() => {
+    // Update local skills state when employee skills change
+    console.log("Employee skills changed:", employee.skills);
     setSkills(employee.skills || []);
   }, [employee.skills]);
 
@@ -56,7 +58,13 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   const handleSaveSkills = async () => {
     try {
       setIsSaving(true);
+      console.log("Saving skills for employee:", employee.id, skills);
+      
+      // Correct the call to updateEmployeeSkills
       await updateEmployeeSkills(employee.id, skills);
+      
+      // After successful save, call the onEmployeeUpdated function
+      onEmployeeUpdated();
       
       if (onFinishEditing) {
         onFinishEditing();
@@ -64,7 +72,6 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
         setIsEditing(false);
       }
       
-      onEmployeeUpdated();
       toast.success("Compétences mises à jour avec succès");
     } catch (error) {
       console.error("Error saving skills:", error);

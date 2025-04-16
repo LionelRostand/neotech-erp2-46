@@ -100,10 +100,15 @@ export const deleteEmployee = async (id: string): Promise<void> => {
   }
 };
 
-// Add a function to update employee skills
-export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<boolean> => {
+// Update the function to correctly update employee skills
+export const updateEmployeeSkills = async (employeeId: string, skills: string[]): Promise<boolean> => {
   try {
-    await updateEmployee(employeeId, { skills });
+    console.log(`Updating skills for employee ${employeeId}:`, skills);
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    
+    // Update only the skills field
+    await updateDoc(docRef, { skills: skills });
+    
     console.log("Employee skills updated successfully!");
     return true;
   } catch (error) {
