@@ -52,8 +52,9 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     
     const employeeInitials = getEmployeeInitials(employee.firstName, employee.lastName);
     
-    // Generate employee short ID - either use existing or create from initials
-    const employeeShortId = employee.shortId || employeeInitials;
+    // Generate employee short ID - handle the case where shortId might not exist
+    // TypeScript safe approach using type assertion or type guard
+    const employeeShortId = 'shortId' in employee && employee.shortId ? employee.shortId : employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
