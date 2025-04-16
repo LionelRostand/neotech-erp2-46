@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Users } from 'lucide-react';
 import { Department } from './types';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface DepartmentTableProps {
   departments: Department[];
@@ -20,6 +21,8 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onManageEmployees 
 }) => {
+  const { companies } = useCompaniesData();
+
   // Ensure departments are unique by ID
   const uniqueDepartments = React.useMemo(() => {
     const deptMap = new Map<string, Department>();
@@ -30,6 +33,13 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
     });
     return Array.from(deptMap.values());
   }, [departments]);
+
+  // Function to get company name from ID
+  const getCompanyName = (companyId: string | null) => {
+    if (!companyId) return 'Aucune entreprise';
+    const company = companies.find(c => c.id === companyId);
+    return company ? company.name : 'Aucune entreprise';
+  };
 
   return (
     <div className="relative w-full overflow-auto">
@@ -65,7 +75,7 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                 <TableCell>{department.name}</TableCell>
                 <TableCell>{department.description}</TableCell>
                 <TableCell>{department.managerName || 'N/A'}</TableCell>
-                <TableCell>{department.companyId || 'Aucune entreprise'}</TableCell>
+                <TableCell>{getCompanyName(department.companyId)}</TableCell>
                 <TableCell>{department.employeesCount}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
