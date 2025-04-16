@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +19,9 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
   isLoading = false
 }) => {
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState('informations');
+
   const mockEmployee: Employee = {
     id: "EMP001",
     firstName: "Martin",
@@ -62,16 +64,20 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     payslips: []
   };
 
-  // Use the provided employee or fallback to the mock
   const displayedEmployee = employee || mockEmployee;
   
-  // Get the employee ID from the displayed employee
   const employeeId = displayedEmployee?.id;
   
-  // Use the useEmployeePermissions hook with the module ID and employee ID
   const { canView, canEdit, isOwnProfile, loading } = useEmployeePermissions('employees-profiles', employeeId);
 
-  // If employee data is loading or permission check is in progress
+  const handleStartEditing = () => {
+    setIsEditing(true);
+  };
+
+  const handleFinishEditing = () => {
+    setIsEditing(false);
+  };
+
   if (isLoading || loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -92,7 +98,6 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     );
   }
 
-  // If user doesn't have permission to view this profile
   if (!canView && !isOwnProfile) {
     return (
       <Card className="mt-6">
@@ -118,31 +123,41 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center">
-            <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
-              {displayedEmployee.photoURL ? (
-                <img 
-                  src={displayedEmployee.photoURL} 
-                  alt={`${displayedEmployee.firstName} ${displayedEmployee.lastName}`} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
-                  {displayedEmployee.firstName[0]}{displayedEmployee.lastName[0]}
-                </div>
-              )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
+                {displayedEmployee.photoURL ? (
+                  <img 
+                    src={displayedEmployee.photoURL} 
+                    alt={`${displayedEmployee.firstName} ${displayedEmployee.lastName}`} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
+                    {displayedEmployee.firstName[0]}{displayedEmployee.lastName[0]}
+                  </div>
+                )}
+              </div>
+              <div>
+                <CardTitle className="text-2xl">
+                  {displayedEmployee.firstName} {displayedEmployee.lastName}
+                </CardTitle>
+                <p className="text-gray-500">{displayedEmployee.position}</p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-2xl">
-                {displayedEmployee.firstName} {displayedEmployee.lastName}
-              </CardTitle>
-              <p className="text-gray-500">{displayedEmployee.position}</p>
-            </div>
+            {(canEdit || isOwnProfile) && (
+              <Button 
+                variant={isEditing ? "default" : "outline"} 
+                onClick={isEditing ? handleFinishEditing : handleStartEditing}
+              >
+                {isEditing ? "Terminer" : "Modifier"}
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="informations" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="informations">Informations</TabsTrigger>
           <TabsTrigger value="horaires">Horaires</TabsTrigger>
@@ -154,22 +169,22 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
         
         <ScrollArea className="h-[calc(100vh-250px)] min-h-[600px] w-full pr-4 overflow-y-auto">
           <TabsContent value="informations">
-            <InformationsTab employee={displayedEmployee} />
+            <InformationsTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="horaires">
-            <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
+            <HorairesTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="competences">
-            <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
+            <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="conges">
-            <CongesTab employee={displayedEmployee} />
+            <CongesTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="evaluations">
-            <EvaluationsTab employee={displayedEmployee} />
+            <EvaluationsTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="documents">
-            <DocumentsTab employee={displayedEmployee} />
+            <DocumentsTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
         </ScrollArea>
       </Tabs>
