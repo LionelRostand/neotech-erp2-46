@@ -30,19 +30,21 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   if (!selectedBadge) return null;
   
   const getCompanyName = (): string => {
-    if (!selectedEmployee) return "Enterprise";
+    // If no employee, return default
+    if (!selectedEmployee) return "Entreprise";
     
-    if (!selectedEmployee.company) return "Enterprise";
+    // If no company, return default
+    if (!selectedEmployee.company) return "Entreprise";
     
-    // Si company est un string (ID), chercher l'entreprise correspondante
+    // If company is a string (ID), find corresponding company
     if (typeof selectedEmployee.company === 'string') {
       const companyData = companies.find(c => c.id === selectedEmployee.company);
       return companyData?.name || selectedEmployee.company;
     }
     
-    // Si c'est un objet Company
+    // If it's a Company object
     const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || companyObj.id || "Enterprise";
+    return companyObj.name || "Entreprise";
   };
   
   const companyName = getCompanyName();
@@ -195,3 +197,4 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
 };
 
 export default BadgePreviewDialog;
+
