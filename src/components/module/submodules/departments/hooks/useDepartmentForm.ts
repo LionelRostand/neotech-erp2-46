@@ -1,51 +1,66 @@
+
 import { useState, useCallback } from 'react';
 import { Department, DepartmentFormData, departmentColors } from '../types';
-import { createEmptyFormData } from '../utils/departmentUtils';
-import { toast } from 'sonner';
 
-export const useDepartmentForm = (departments: Department[] = []) => {
+export const useDepartmentForm = (departments: Department[]) => {
   const [formData, setFormData] = useState<DepartmentFormData>({
     id: '',
     name: '',
     description: '',
     managerId: '',
+    managerName: '',
     color: departmentColors[0].value,
-    employeeIds: [],
     companyId: ''
   });
-  const [activeTab, setActiveTab] = useState("general");
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   
-  const resetForm = useCallback((depts: Department[]) => {
-    setFormData(createEmptyFormData(depts));
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('general');
+  
+  const resetForm = useCallback((deps: Department[]) => {
+    setFormData({
+      id: '',
+      name: '',
+      description: '',
+      managerId: '',
+      managerName: '',
+      color: departmentColors[0].value,
+      companyId: ''
+    });
     setSelectedEmployees([]);
-    setActiveTab("general");
+    setActiveTab('general');
   }, []);
   
   const initFormWithDepartment = useCallback((department: Department) => {
     setFormData({
-      id: department.id,
-      name: department.name,
-      description: department.description || "",
-      managerId: department.managerId || "",
+      id: department.id || '',
+      name: department.name || '',
+      description: department.description || '',
+      managerId: department.managerId || '',
+      managerName: department.managerName || '',
       color: department.color || departmentColors[0].value,
-      employeeIds: department.employeeIds || []
+      companyId: department.companyId || ''
     });
+    
     setSelectedEmployees(department.employeeIds || []);
-    setActiveTab("general");
+    setActiveTab('general');
   }, []);
   
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
   
   const handleManagerChange = useCallback((value: string) => {
-    setFormData(prev => ({ ...prev, managerId: value === "none" ? "" : value }));
+    setFormData(prev => ({ ...prev, managerId: value }));
   }, []);
   
   const handleColorChange = useCallback((value: string) => {
     setFormData(prev => ({ ...prev, color: value }));
+  }, []);
+  
+  const handleCompanyChange = useCallback((value: string) => {
+    console.log("Company selected:", value);
+    setFormData(prev => ({ ...prev, companyId: value }));
   }, []);
   
   const handleEmployeeSelection = useCallback((employeeId: string, checked: boolean) => {
@@ -58,31 +73,18 @@ export const useDepartmentForm = (departments: Department[] = []) => {
     });
   }, []);
   
-  const handleCompanyChange = useCallback((value: string) => {
-    setFormData(prev => ({ ...prev, companyId: value === 'none' ? '' : value }));
-  }, []);
-  
-  const validateForm = useCallback(() => {
-    if (!formData.name || !formData.description) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return false;
-    }
-    return true;
-  }, [formData]);
-  
   return {
     formData,
-    activeTab,
     selectedEmployees,
+    activeTab,
+    setActiveTab,
     resetForm,
     initFormWithDepartment,
-    setActiveTab,
     handleInputChange,
     handleManagerChange,
     handleColorChange,
-    handleEmployeeSelection,
     handleCompanyChange,
-    validateForm,
+    handleEmployeeSelection,
     setSelectedEmployees
   };
 };

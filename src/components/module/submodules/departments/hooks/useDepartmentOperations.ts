@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Department } from '../types';
 import { useDepartmentService } from '../services/departmentService';
@@ -44,6 +45,7 @@ export const useDepartmentOperations = () => {
     
     try {
       console.log("Current department before update:", currentDepartment);
+      console.log("Form data for update:", formData);
       
       // Find the selected manager from all employees
       const selectedManager = formData.managerId && formData.managerId !== "none"
@@ -62,6 +64,7 @@ export const useDepartmentOperations = () => {
         managerId: formData.managerId === "none" ? null : formData.managerId,
         managerName: managerName,
         color: formData.color,
+        companyId: formData.companyId === "none" ? null : formData.companyId,
         employeeIds: selectedEmployees,
         employeesCount: selectedEmployees.length
       };
