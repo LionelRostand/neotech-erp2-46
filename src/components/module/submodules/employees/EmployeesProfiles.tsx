@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
 import ImportEmployeesDialog from './ImportEmployeesDialog';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface EmployeesProfilesProps {
@@ -153,7 +152,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) 
         <CreateEmployeeDialog
           open={showCreateDialog}
           onOpenChange={setShowCreateDialog}
-          onEmployeeCreated={handleCreateEmployee}
+          onSubmit={handleCreateEmployee}
         />
       )}
       

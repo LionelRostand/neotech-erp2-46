@@ -33,7 +33,7 @@ const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({ onImport 
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       
-      const employees = jsonData.map((row: any) => {
+      const employees = jsonData.map((row: Record<string, any>) => {
         // Safely access properties with type checking
         const employee: Partial<Employee> = {
           firstName: row.firstName || row.FirstName || '',

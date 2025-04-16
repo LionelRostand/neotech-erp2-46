@@ -1,195 +1,237 @@
 
-import React, { useState } from 'react';
-import { Employee } from '@/types/employee';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Employee } from '@/types/employee';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Phone, Mail, MapPin, Building, FileEdit, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Edit, Mail, Phone, MapPin, Building, Calendar, Briefcase, Clock, FileText, Award, Hash } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import DocumentsTab from './tabs/DocumentsTab';
-import AbsencesTab from './tabs/AbsencesTab';
-import FormationsTab from './tabs/FormationsTab';
-import EvaluationsTab from './tabs/EvaluationsTab';
-import HorairesTab from './tabs/HorairesTab';
-import { toast } from 'sonner';
-import { useEmployeePermissions } from './hooks/useEmployeePermissions';
+import { formatDate, formatPhoneNumber } from '@/lib/utils';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
+import EmployeeDocuments from './tabs/EmployeeDocuments';
+import EmployeeAbsences from './tabs/EmployeeAbsences';
+import EmployeeTrainings from './tabs/EmployeeTrainings';
+import EmployeeEvaluations from './tabs/EmployeeEvaluations';
+import EmployeeTimesheet from './tabs/EmployeeTimesheet';
 
 interface EmployeeProfileViewProps {
   employee: Employee;
-  isLoading?: boolean;
-  onEmployeeUpdated?: () => void;
 }
 
-const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
-  employee,
-  isLoading = false,
-  onEmployeeUpdated
-}) => {
+interface EmployeeAddress {
+  street?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({ employee }) => {
+  const { checkPermission, isAdmin } = usePermissions('employees-profiles');
+  const [canEdit, setCanEdit] = React.useState(false);
   const navigate = useNavigate();
-  const { userData } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
-  const { canEdit, isAdmin } = useEmployeePermissions('employees-profiles', employee.id);
-  
-  // Function to handle the edit button click
-  const handleEditClick = () => {
-    navigate(`/modules/employees/profiles/edit/${employee.id}`);
-    toast.info("Mode édition activé");
-  };
-  
-  const getStatusBadge = (status: string) => {
-    const lowerStatus = status?.toLowerCase?.() || '';
+
+  React.useEffect(() => {
+    const checkEditPermission = async () => {
+      const hasPermission = await checkPermission('employees-profiles', 'edit');
+      setCanEdit(hasPermission || isAdmin);
+    };
     
-    if (lowerStatus.includes('actif') || lowerStatus === 'active') {
-      return <Badge className="bg-green-100 text-green-800">Actif</Badge>;
-    } else if (lowerStatus.includes('inactif') || lowerStatus === 'inactive') {
-      return <Badge className="bg-red-100 text-red-800">Inactif</Badge>;
-    } else if (lowerStatus.includes('congé') || lowerStatus === 'onleave') {
-      return <Badge className="bg-blue-100 text-blue-800">En congé</Badge>;
-    } else if (lowerStatus.includes('suspendu') || lowerStatus === 'suspended') {
-      return <Badge className="bg-yellow-100 text-yellow-800">Suspendu</Badge>;
-    } else {
-      return <Badge variant="outline">{status || 'Non défini'}</Badge>;
+    checkEditPermission();
+  }, [checkPermission, isAdmin]);
+
+  const handleEditEmployee = () => {
+    navigate(`/modules/employees/profiles/edit/${employee.id}`);
+  };
+
+  // Format the address from employee
+  const formatAddress = (address?: string | EmployeeAddress) => {
+    if (!address) return '—';
+    
+    if (typeof address === 'string') {
+      return address;
+    }
+    
+    const addressObj = address as EmployeeAddress;
+    const parts = [
+      addressObj.street,
+      addressObj.city,
+      addressObj.state,
+      addressObj.postalCode,
+      addressObj.country
+    ].filter(Boolean);
+    
+    return parts.length > 0 ? parts.join(', ') : '—';
+  };
+
+  // Determine status badge color
+  const getStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+      case 'actif':
+        return <Badge className="bg-green-100 text-green-800">Actif</Badge>;
+      case 'inactive':
+      case 'inactif':
+        return <Badge className="bg-gray-100 text-gray-800">Inactif</Badge>;
+      case 'onleave':
+      case 'en congé':
+        return <Badge className="bg-blue-100 text-blue-800">En congé</Badge>;
+      case 'suspended':
+      case 'suspendu':
+        return <Badge className="bg-red-100 text-red-800">Suspendu</Badge>;
+      default:
+        return <Badge variant="outline">{status || 'Inconnu'}</Badge>;
     }
   };
-  
-  // Function to get user initials for avatar fallback
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  };
-  
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Profil de {employee.firstName} {employee.lastName}</h2>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+            <AvatarFallback>{employee.firstName?.charAt(0)}{employee.lastName?.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {employee.lastName} {employee.firstName}
+            </h1>
+            <p className="text-gray-500">
+              {employee.position || employee.title || 'Poste non spécifié'}
+              {employee.department && ` · ${employee.department}`}
+            </p>
+          </div>
+        </div>
         
-        {/* Edit button - Now enabled based on permissions */}
-        <Button 
-          onClick={handleEditClick} 
-          variant="outline"
-          disabled={!canEdit && !isAdmin}
-        >
-          <FileEdit className="mr-2 h-4 w-4" /> Modifier
-        </Button>
+        {canEdit && (
+          <Button onClick={handleEditEmployee} size="sm">
+            <Edit className="mr-2 h-4 w-4" />
+            Modifier
+          </Button>
+        )}
       </div>
       
       <Card>
-        <CardHeader className="pb-0">
+        <CardHeader>
           <CardTitle>Informations personnelles</CardTitle>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="flex flex-col items-center space-y-3">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={employee.photoURL} alt={`${employee.firstName} ${employee.lastName}`} />
-                <AvatarFallback className="text-lg">
-                  {getInitials(employee.firstName || '', employee.lastName || '')}
-                </AvatarFallback>
-              </Avatar>
-              {getStatusBadge(employee.status || '')}
-              <span className="text-sm text-muted-foreground">
-                {employee.position || 'Poste non spécifié'}
-              </span>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Mail className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Email</p>
+                  <p>{employee.email || '—'}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Phone className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Téléphone</p>
+                  <p>{formatPhoneNumber(employee.phone) || '—'}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <MapPin className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Adresse</p>
+                  <p>{formatAddress(employee.address)}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Calendar className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Date de naissance</p>
+                  <p>{formatDate(employee.birthDate) || '—'}</p>
+                </div>
+              </div>
             </div>
             
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <span className="text-sm font-medium flex items-center text-muted-foreground">
-                  <User className="mr-2 h-4 w-4" /> Nom complet
-                </span>
-                <span className="text-base">{employee.firstName} {employee.lastName}</span>
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Hash className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Matricule</p>
+                  <p>{employee.id || '—'}</p>
+                </div>
               </div>
               
-              <div className="space-y-1">
-                <span className="text-sm font-medium flex items-center text-muted-foreground">
-                  <Mail className="mr-2 h-4 w-4" /> Email
-                </span>
-                <span className="text-base">{employee.email || 'Non spécifié'}</span>
+              <div className="flex gap-2">
+                <Building className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Département</p>
+                  <p>{employee.department || '—'}</p>
+                </div>
               </div>
               
-              <div className="space-y-1">
-                <span className="text-sm font-medium flex items-center text-muted-foreground">
-                  <Phone className="mr-2 h-4 w-4" /> Téléphone
-                </span>
-                <span className="text-base">{employee.phone || 'Non spécifié'}</span>
+              <div className="flex gap-2">
+                <Briefcase className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Poste</p>
+                  <p>{employee.position || employee.title || '—'}</p>
+                </div>
               </div>
               
-              <div className="space-y-1">
-                <span className="text-sm font-medium flex items-center text-muted-foreground">
-                  <Building className="mr-2 h-4 w-4" /> Département
-                </span>
-                <span className="text-base">{employee.department || 'Non spécifié'}</span>
-              </div>
-              
-              <div className="space-y-1">
-                <span className="text-sm font-medium flex items-center text-muted-foreground">
-                  <MapPin className="mr-2 h-4 w-4" /> Adresse
-                </span>
-                <span className="text-base">
-                  {employee.address ? 
-                    typeof employee.address === 'string' ? 
-                      employee.address : 
-                      `${employee.address.street || ''}, ${employee.address.city || ''}, ${employee.address.zipCode || ''}` 
-                    : 'Non spécifiée'
-                  }
-                </span>
-              </div>
-              
-              <div className="space-y-1">
-                <span className="text-sm font-medium flex items-center text-muted-foreground">
-                  <User className="mr-2 h-4 w-4" /> Numéro d'employé
-                </span>
-                <span className="text-base">{employee.employeeNumber || 'Non spécifié'}</span>
+              <div className="flex gap-2">
+                <Clock className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Statut</p>
+                  <div>{getStatusBadge(employee.status || '')}</div>
+                </div>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid grid-cols-6 w-full">
-          <TabsTrigger value="profile">Profil</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="absences">Absences</TabsTrigger>
-          <TabsTrigger value="formations">Formations</TabsTrigger>
-          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
-          <TabsTrigger value="horaires">Horaires</TabsTrigger>
+      <Tabs defaultValue="documents" className="w-full">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="documents">
+            <FileText className="h-4 w-4 mr-2" />
+            Documents
+          </TabsTrigger>
+          <TabsTrigger value="absences">
+            <Calendar className="h-4 w-4 mr-2" />
+            Absences
+          </TabsTrigger>
+          <TabsTrigger value="trainings">
+            <Award className="h-4 w-4 mr-2" />
+            Formations
+          </TabsTrigger>
+          <TabsTrigger value="evaluations">
+            <Award className="h-4 w-4 mr-2" />
+            Évaluations
+          </TabsTrigger>
+          <TabsTrigger value="timesheet">
+            <Clock className="h-4 w-4 mr-2" />
+            Horaires
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="profile" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informations détaillées</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Ajoutez ici plus d'informations détaillées si nécessaire */}
-                <p className="text-gray-500">Informations supplémentaires non disponibles</p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="documents">
+          <EmployeeDocuments employeeId={employee.id} />
         </TabsContent>
         
-        <TabsContent value="documents" className="mt-6">
-          <DocumentsTab employee={employee} />
+        <TabsContent value="absences">
+          <EmployeeAbsences employeeId={employee.id} />
         </TabsContent>
         
-        <TabsContent value="absences" className="mt-6">
-          <AbsencesTab employee={employee} />
+        <TabsContent value="trainings">
+          <EmployeeTrainings employeeId={employee.id} />
         </TabsContent>
         
-        <TabsContent value="formations" className="mt-6">
-          <FormationsTab employee={employee} />
+        <TabsContent value="evaluations">
+          <EmployeeEvaluations employeeId={employee.id} />
         </TabsContent>
         
-        <TabsContent value="evaluations" className="mt-6">
-          <EvaluationsTab employee={employee} />
-        </TabsContent>
-        
-        <TabsContent value="horaires" className="mt-6">
-          <HorairesTab employee={employee} />
+        <TabsContent value="timesheet">
+          <EmployeeTimesheet employeeId={employee.id} />
         </TabsContent>
       </Tabs>
     </div>
