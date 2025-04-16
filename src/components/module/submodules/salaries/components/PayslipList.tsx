@@ -1,57 +1,126 @@
-
 import React from 'react';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { Card } from '@/components/ui/card';
-import { 
+import { PaySlip } from '@/types/payslip';
+import { addEmployeeDocument } from '../../employees/services/documentService';
+import { useToast } from "@/components/ui/use-toast"
+import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from '@/components/ui/badge';
-import DownloadPayslipButton from './DownloadPayslipButton';
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { MoreHorizontal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { usePayslipsData } from '@/hooks/usePayslipsData';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const PayslipList = () => {
-  const { payslips, isLoading } = useHrModuleData();
+  const { toast } = useToast()
+  const navigate = useNavigate();
+  const { payslips, isLoading, error } = usePayslipsData();
+
+  const handlePayslipGenerated = async (payslip: PaySlip) => {
+    try {
+      // Add payslip as a document
+      const document = {
+        id: `payslip_${payslip.id}`,
+        name: `Fiche de paie - ${payslip.period}`,
+        type: 'Fiche de paie',
+        date: payslip.paymentDate,
+        employeeId: payslip.employeeId,
+        fileData: payslip.url // Assuming payslip has a URL or data
+      };
+
+      await addEmployeeDocument(payslip.employeeId, document);
+    } catch (error) {
+      console.error("Error adding payslip as document:", error);
+    }
+  };
 
   if (isLoading) {
-    return <div>Chargement des fiches de paie...</div>;
+    return <Card>Chargement des fiches de paie...</Card>;
+  }
+
+  if (error) {
+    return <Card>Erreur: {error}</Card>;
+  }
+
+  if (!payslips || payslips.length === 0) {
+    return <Card>Aucune fiche de paie disponible.</Card>;
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Liste des fiches de paie</h2>
+    <Card>
       <Table>
+        <TableCaption>A list of your recent payslips.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
+            <TableHead className="w-[100px]">Période</TableHead>
             <TableHead>Employé</TableHead>
-            <TableHead>Période</TableHead>
-            <TableHead>Montant Net</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>Date de paiement</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {payslips.map((payslip, index) => (
-            <TableRow key={payslip.id || `payslip-${index}`}>
-              <TableCell>{new Date(payslip.date).toLocaleDateString('fr-FR')}</TableCell>
+          {payslips.map((payslip) => (
+            <TableRow key={payslip.id}>
+              <TableCell className="font-medium">{payslip.period}</TableCell>
               <TableCell>{payslip.employeeName}</TableCell>
-              <TableCell>{payslip.month} {payslip.year}</TableCell>
-              <TableCell>{payslip.netSalary?.toFixed(2)} €</TableCell>
-              <TableCell>
-                <Badge variant={payslip.status === 'Généré' ? 'default' : 'secondary'}>
-                  {payslip.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <DownloadPayslipButton payslip={payslip} />
+              <TableCell>{format(new Date(payslip.paymentDate), 'dd MMMM yyyy', { locale: fr })}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Ouvrir le menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => {
+                      navigate(`/modules/employees/salaries/${payslip.id}`);
+                    }}>
+                      Voir le détail
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      // Logic to download payslip
+                      toast({
+                        title: "Non implémenté",
+                        description: "Cette fonctionnalité n'est pas encore disponible.",
+                      })
+                    }}>
+                      Télécharger
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      Supprimer
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>Total</TableCell>
+            <TableCell className="text-right">{(payslips.length)}</TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
     </Card>
   );
