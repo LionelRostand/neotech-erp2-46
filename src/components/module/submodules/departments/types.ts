@@ -1,25 +1,25 @@
+import { Employee } from '@/types/employee';
 
 export interface Department {
   id: string;
   name: string;
-  description: string;
-  managerId: string | null;
-  managerName: string | null;
-  employeesCount: number;
-  color: string;
-  employeeIds: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  parentId?: string;
+  description?: string;
+  managerId?: string;
+  managerName?: string | null;
+  color?: string;
+  employeeIds?: string[];
+  employeesCount?: number;
+  companyId?: string;
 }
 
 export interface DepartmentFormData {
   id: string;
   name: string;
   description: string;
-  managerId: string;
-  color: string;
-  employeeIds: string[];
+  managerId?: string;
+  color?: string;
+  employeeIds?: string[];
+  companyId?: string;
 }
 
 export const departmentColors = [

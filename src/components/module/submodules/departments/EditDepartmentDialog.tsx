@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -35,8 +35,8 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onClose,
   onUpdate,
 }) => {
-  // Utiliser les données des employés depuis Firebase
   const { employees, isLoading } = useEmployeeData();
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
 
   return (
     <DialogContent className="sm:max-w-[600px]">
@@ -66,6 +66,32 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               disabled
             />
           </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="edit-company" className="text-right">
+              Entreprise
+            </Label>
+            <div className="col-span-3">
+              <Select value={formData.companyId || "none"} onValueChange={(value) => console.log('Company selected:', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucune entreprise</SelectItem>
+                  {isLoadingCompanies ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="edit-name" className="text-right">
               Nom
