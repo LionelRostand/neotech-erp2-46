@@ -21,70 +21,20 @@ import EmployeesCompanies from "@/components/module/submodules/employees/Employe
 import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Employee } from '@/types/employee';
-import EmployeeDetails from "@/components/module/submodules/employees/EmployeeDetails";
 
 // Helper component to pass props to EmployeesProfiles
-const EmployeesProfilesWithData = () => {
-  const { employees } = useHrModuleData();
-  return <EmployeesProfiles employeesProp={employees} />;
-};
-
-// Helper component to pass employee to EmployeeDetails
-const EmployeeDetailsWithData = () => {
-  // Create a mock employee or use a real one from a hook if available
-  const mockEmployee: Employee = {
-    id: "1",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "123456789",
-    position: "Developer",
-    department: "IT",
-    departmentId: "IT",
-    photo: "",
-    photoURL: "",
-    hireDate: "2023-01-01",
-    startDate: "2023-01-01",
-    status: "active",
-    address: {
-      street: "123 Main St",
-      city: "Paris",
-      postalCode: "75000",
-      country: "France"
-    },
-    contract: "CDI",
-    socialSecurityNumber: "123456789",
-    birthDate: "1990-01-01",
-    documents: [],
-    company: "Company",
-    role: "Developer",
-    title: "Senior Developer",
-    manager: "",
-    managerId: "",
-    professionalEmail: "john.doe@example.com",
-    skills: [],
-    education: [],
-    workSchedule: {
-      monday: "09:00 - 18:00",
-      tuesday: "09:00 - 18:00",
-      wednesday: "09:00 - 18:00",
-      thursday: "09:00 - 18:00",
-      friday: "09:00 - 17:00",
-    },
-    payslips: [],
-  };
-  
-  return <EmployeeDetails employee={mockEmployee} />;
+const EmployeesProfilesWithProps = () => {
+  const { employees } = useEmployeeData();
+  return <EmployeesProfiles employeesProp={employees as Employee[]} />;
 };
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    <Route path="profiles" element={<EmployeesProfilesWithData />} />
-    <Route path="profiles/:id" element={<EmployeeDetailsWithData />} />
+    <Route path="profiles" element={<EmployeesProfilesWithProps />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />

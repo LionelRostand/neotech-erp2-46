@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -24,7 +24,7 @@ export interface EmployeesProfilesProps {
 }
 
 const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) => {
-  const { employees: hrEmployees, isLoading, error, refetchEmployees } = useHrModuleData();
+  const { employees, isLoading, error, refetchEmployees } = useHrModuleData();
   const [openCreate, setOpenCreate] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [department, setDepartment] = useState<string>('all');
@@ -34,7 +34,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) 
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Use the employees from props or from the hook if props are empty
-  const employeesList = employeesProp && employeesProp.length > 0 ? employeesProp : hrEmployees;
+  const employeesList = employeesProp && employeesProp.length > 0 ? employeesProp : employees;
 
   const filteredEmployees = employeesList.filter(employee => {
     const matchesDepartment = department === 'all' || employee.department === department;
