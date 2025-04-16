@@ -3,19 +3,13 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Employee } from '@/types/employee';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Edit, Save, XCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { updateEmployeeDoc } from '@/services/employeeService';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { formatDate } from '@/lib/formatters';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -27,79 +21,72 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
   onEmployeeUpdated
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    email: employee.email || '',
-    phone: employee.phone || '',
-    professionalEmail: employee.professionalEmail || '',
-    streetNumber: employee.address_string?.split(',')[0]?.trim().split(' ')[0] || '',
-    streetName: employee.address_string?.split(',')[0]?.trim().split(' ').slice(1).join(' ') || 
-               (typeof employee.address === 'object' ? employee.address?.street : ''),
-    city: typeof employee.address === 'object' ? employee.address?.city : 
-          employee.address_string?.split(',')[1]?.trim() || '',
-    zipCode: typeof employee.address === 'object' ? employee.address?.postalCode : 
-             employee.address_string?.split(',')[2]?.trim() || '',
-    managerId: employee.managerId || ''
-  });
+  const [email, setEmail] = useState(employee.email || '');
+  const [phone, setPhone] = useState(employee.phone || '');
+  const [professionalEmail, setProfessionalEmail] = useState(employee.professionalEmail || '');
   
-  const { employees } = useEmployeeData();
-  
-  // Filtrer uniquement les managers pour la liste déroulante
-  const managers = employees.filter(emp => 
-    emp.isManager || 
-    (emp.position && emp.position.toLowerCase().includes('manager')) ||
-    emp.forceManager
-  ).filter(manager => manager.id !== employee.id); // Exclure l'employé actuel
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSelectChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  // Address fields
+  const [street, setStreet] = useState(
+    typeof employee.address === 'object' ? employee.address?.street : ''
+  );
+  const [city, setCity] = useState(
+    typeof employee.address === 'object' ? employee.address?.city : ''
+  );
+  const [postalCode, setPostalCode] = useState(
+    typeof employee.address === 'object' ? employee.address?.postalCode : ''
+  );
+  const [addressString, setAddressString] = useState(
+    typeof employee.address === 'string' ? employee.address : employee.address_string || ''
+  );
   
   const handleEdit = () => {
     setIsEditing(true);
   };
   
   const handleCancel = () => {
-    // Réinitialiser le formulaire aux valeurs actuelles de l'employé
-    setFormData({
-      email: employee.email || '',
-      phone: employee.phone || '',
-      professionalEmail: employee.professionalEmail || '',
-      streetNumber: employee.address_string?.split(',')[0]?.trim().split(' ')[0] || '',
-      streetName: employee.address_string?.split(',')[0]?.trim().split(' ').slice(1).join(' ') || 
-                 (typeof employee.address === 'object' ? employee.address?.street : ''),
-      city: typeof employee.address === 'object' ? employee.address?.city : 
-            employee.address_string?.split(',')[1]?.trim() || '',
-      zipCode: typeof employee.address === 'object' ? employee.address?.postalCode : 
-               employee.address_string?.split(',')[2]?.trim() || '',
-      managerId: employee.managerId || ''
-    });
+    // Reset to original values
+    setEmail(employee.email || '');
+    setPhone(employee.phone || '');
+    setProfessionalEmail(employee.professionalEmail || '');
+    
+    setStreet(typeof employee.address === 'object' ? employee.address?.street : '');
+    setCity(typeof employee.address === 'object' ? employee.address?.city : '');
+    setPostalCode(typeof employee.address === 'object' ? employee.address?.postalCode : '');
+    setAddressString(typeof employee.address === 'string' ? employee.address : employee.address_string || '');
+    
     setIsEditing(false);
   };
   
   const handleSave = async () => {
     try {
-      // Construire l'adresse complète
-      const addressString = `${formData.streetNumber} ${formData.streetName}, ${formData.city}, ${formData.zipCode}`;
-      
-      // Préparer les données pour la mise à jour
+      // Prepare update data, avoiding undefined values
       const updateData: Partial<Employee> = {
-        email: formData.email,
-        phone: formData.phone,
-        professionalEmail: formData.professionalEmail,
-        address_string: addressString,
-        address: {
-          street: `${formData.streetNumber} ${formData.streetName}`,
-          city: formData.city,
-          postalCode: formData.zipCode,
-          country: typeof employee.address === 'object' ? employee.address.country : 'France'
-        },
-        managerId: formData.managerId
+        email,
+        phone,
+        professionalEmail,
       };
+      
+      // Only update address as an object if we have street data
+      if (street) {
+        updateData.address = {
+          street: street || "",
+          city: city || "",
+          postalCode: postalCode || "",
+          // Don't include country if not present to avoid undefined value
+        };
+      } else if (addressString) {
+        // If no structured address but we have a string address
+        updateData.address_string = addressString;
+      }
+      
+      // If we're updating address in object form, make sure to also update individual fields
+      if (typeof updateData.address === 'object') {
+        updateData.streetName = street;
+        updateData.city = city;
+        updateData.zipCode = postalCode;
+      }
+      
+      console.log('Updating employee with ID:', employee.id, 'Data:', updateData);
       
       // Mettre à jour l'employé dans la base de données
       const updatedEmployee = await updateEmployeeDoc(employee.id, updateData);
@@ -116,7 +103,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour des informations:', error);
-      toast.error('Erreur lors de la mise à jour des informations');
+      toast.error('Erreur lors de la mise à jour des informations: ' + error);
     }
   };
   
@@ -144,116 +131,121 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={!isEditing}
-              />
+              <h4 className="text-sm font-medium mb-2">Informations de contact</h4>
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email personnel</Label>
+                    <Input
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="professionalEmail">Email professionnel</Label>
+                    <Input
+                      id="professionalEmail"
+                      value={professionalEmail}
+                      onChange={(e) => setProfessionalEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm"><span className="font-medium">Email personnel:</span> {employee.email || '-'}</p>
+                  <p className="text-sm"><span className="font-medium">Email professionnel:</span> {employee.professionalEmail || '-'}</p>
+                  <p className="text-sm"><span className="font-medium">Téléphone:</span> {employee.phone || '-'}</p>
+                </div>
+              )}
             </div>
             
             <div>
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                disabled={!isEditing}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="professionalEmail">Email professionnel</Label>
-              <Input
-                id="professionalEmail"
-                name="professionalEmail"
-                value={formData.professionalEmail}
-                onChange={handleChange}
-                disabled={!isEditing}
-              />
+              <h4 className="text-sm font-medium mb-2">Adresse</h4>
+              {isEditing ? (
+                <div className="space-y-4">
+                  {typeof employee.address === 'object' ? (
+                    <>
+                      <div>
+                        <Label htmlFor="street">Rue</Label>
+                        <Input
+                          id="street"
+                          value={street}
+                          onChange={(e) => setStreet(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="city">Ville</Label>
+                        <Input
+                          id="city"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="postalCode">Code postal</Label>
+                        <Input
+                          id="postalCode"
+                          value={postalCode}
+                          onChange={(e) => setPostalCode(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <Label htmlFor="address">Adresse complète</Label>
+                      <Input
+                        id="address"
+                        value={addressString}
+                        onChange={(e) => setAddressString(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm">
+                  {typeof employee.address === 'object' ? (
+                    <>
+                      <p>{employee.address?.street || ''}</p>
+                      <p>{employee.address?.postalCode || ''} {employee.address?.city || ''}</p>
+                      <p>{employee.address?.country || ''}</p>
+                    </>
+                  ) : (
+                    <p>{employee.address || employee.address_string || '-'}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-medium mb-2">Informations professionnelles</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="streetNumber">N° rue</Label>
-                <Input
-                  id="streetNumber"
-                  name="streetNumber"
-                  value={formData.streetNumber}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
+                <p className="text-sm"><span className="font-medium">Poste:</span> {employee.position || '-'}</p>
+                <p className="text-sm"><span className="font-medium">Département:</span> {employee.department || '-'}</p>
+                <p className="text-sm"><span className="font-medium">Contrat:</span> {employee.contract || '-'}</p>
               </div>
-              
               <div>
-                <Label htmlFor="streetName">Nom de rue</Label>
-                <Input
-                  id="streetName"
-                  name="streetName"
-                  value={formData.streetName}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
+                <p className="text-sm"><span className="font-medium">Date d'embauche:</span> {employee.hireDate ? formatDate(new Date(employee.hireDate)) : '-'}</p>
+                <p className="text-sm"><span className="font-medium">Manager:</span> {employee.manager || '-'}</p>
+                <p className="text-sm"><span className="font-medium">Statut:</span> 
+                  <Badge variant={employee.status === 'active' || employee.status === 'Actif' ? 'success' : 'secondary'} className="ml-2">
+                    {employee.status || '-'}
+                  </Badge>
+                </p>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">Ville</Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="zipCode">Code postal</Label>
-                <Input
-                  id="zipCode"
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="manager">Responsable</Label>
-              {isEditing ? (
-                <Select
-                  value={formData.managerId || "none"}
-                  onValueChange={(value) => handleSelectChange('managerId', value === "none" ? "" : value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un responsable" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun responsable</SelectItem>
-                    {managers.map(manager => (
-                      <SelectItem key={manager.id} value={manager.id}>
-                        {manager.lastName} {manager.firstName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={employee.manager || 'Non défini'}
-                  disabled={true}
-                />
-              )}
             </div>
           </div>
         </div>

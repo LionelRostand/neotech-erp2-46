@@ -85,13 +85,33 @@ export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Pr
     // S'assurer que la photo est correctement mise à jour
     const photoURL = data.photoURL || data.photo || '';
     
+    // Clean data to remove any undefined values that would cause Firebase errors
+    const cleanData = { ...data };
+    
+    // Handle the address specifically to avoid undefined fields
+    if (cleanData.address && typeof cleanData.address === 'object') {
+      cleanData.address = Object.entries(cleanData.address).reduce((acc: any, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+    }
+    
     // Préparer les données de mise à jour
     const updateData = {
-      ...data,
-      photoURL: photoURL,
-      photo: photoURL, // Garder la compatibilité avec les deux champs
+      ...cleanData,
+      photoURL: photoURL || undefined,
+      photo: photoURL || undefined, // Garder la compatibilité avec les deux champs
       updatedAt: new Date().toISOString()
     };
+    
+    // Remove any properties with undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key as keyof typeof updateData] === undefined) {
+        delete updateData[key as keyof typeof updateData];
+      }
+    });
     
     await updateDoc(docRef, updateData);
     console.log('Update successful, fetching updated employee data');
