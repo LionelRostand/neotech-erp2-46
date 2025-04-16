@@ -1,6 +1,6 @@
 
-import { useClientsQuery } from './useClientsQuery';
-import { useClientMutations } from './useClientMutations';
+import { useClientsQuery } from './clients/useClientsQuery';
+import { useClientMutations } from './clients/useClientMutations';
 
 export const useClientsData = () => {
   const { 
