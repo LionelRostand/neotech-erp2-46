@@ -16,25 +16,27 @@ import EmployeeProfileHeader from './profile/EmployeeProfileHeader';
 import EmployeeProfileActions from './profile/EmployeeProfileActions';
 import { useForm } from 'react-hook-form';
 import { EmployeeFormValues } from './form/employeeFormSchema';
+import { updateEmployeeDoc } from '@/services/employeeService';
 
 interface EmployeeDetailsProps {
   employee?: Employee;
   isLoading?: boolean;
   onExportPdf?: () => void;
   onEdit?: () => void;
+  onUpdate?: (updatedEmployee: Employee) => void;
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
   employee,
   isLoading = false,
   onExportPdf,
-  onEdit
+  onEdit,
+  onUpdate
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('informations');
   const [isEditing, setIsEditing] = useState(false);
 
-  // Initialize form with employee data when available
   const employeeForm = useForm<EmployeeFormValues>({
     defaultValues: employee ? {
       firstName: employee.firstName,
@@ -51,24 +53,25 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   const handleStartEditing = () => {
     setIsEditing(true);
-    toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
     if (onEdit) {
       onEdit();
     }
   };
 
-  const handleFinishEditing = () => {
-    setIsEditing(false);
-    toast.success(`Modifications enregistrées pour l'onglet ${getTabName(activeTab)}`);
-  };
-
-  const getTabName = (tabId: string): string => {
-    switch (tabId) {
-      case 'informations': return 'Informations';
-      case 'horaires': return 'Horaires et présence';
-      case 'competences': return 'Compétences';
-      case 'conges': return 'Congés';
-      default: return tabId;
+  const handleFinishEditing = async () => {
+    try {
+      const formData = employeeForm.getValues();
+      if (employee && employee.id) {
+        const updatedEmployee = await updateEmployeeDoc(employee.id, formData);
+        if (updatedEmployee && onUpdate) {
+          onUpdate(updatedEmployee);
+        }
+        setIsEditing(false);
+        toast.success(`Modifications enregistrées pour ${employee.firstName} ${employee.lastName}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error("Erreur lors de l'enregistrement des modifications");
     }
   };
 
@@ -152,7 +155,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <TabsContent value="competences">
           <CompetencesTab 
             employee={employee}
-            onEmployeeUpdated={() => {}}
+            onEmployeeUpdated={onUpdate}
             isEditing={isEditing && activeTab === 'competences'}
             onFinishEditing={handleFinishEditing}
           />
