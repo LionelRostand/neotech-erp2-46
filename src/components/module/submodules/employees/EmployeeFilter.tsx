@@ -1,21 +1,20 @@
 
-import React, { useEffect, useState } from 'react';
-import { 
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search, Upload } from 'lucide-react';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, Upload } from 'lucide-react';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface EmployeeFilterProps {
-  onDepartmentChange: (department: string) => void;
-  onStatusChange: (status: string) => void;
-  onSearchChange: (search: string) => void;
+  onDepartmentChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
+  onSearchChange: (value: string) => void;
   onImportClick: () => void;
 }
 
@@ -25,77 +24,48 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
   onSearchChange,
   onImportClick
 }) => {
-  const { departments } = useHrModuleData();
-  const [searchValue, setSearchValue] = useState('');
-  const [uniqueDepartments, setUniqueDepartments] = useState<string[]>([]);
-
-  // Extract unique departments from the departments collection
-  useEffect(() => {
-    if (departments && departments.length > 0) {
-      const deptNames = departments.map(dept => dept.name || '');
-      const uniqueDepts = [...new Set(deptNames)].filter(name => name.trim() !== '');
-      setUniqueDepartments(uniqueDepts);
-    }
-  }, [departments]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchValue(value);
-    onSearchChange(value);
-  };
-
-  const handleDepartmentChange = (value: string) => {
-    onDepartmentChange(value);
-  };
-
-  const handleStatusChange = (value: string) => {
-    onStatusChange(value);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Rechercher un employé..."
-            value={searchValue}
-            onChange={handleSearchChange}
-            className="pl-10"
-          />
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        </div>
-        
-        <Select onValueChange={handleDepartmentChange} defaultValue="all">
-          <SelectTrigger>
+    <div className="flex flex-col gap-4 md:flex-row">
+      <div className="relative flex-1">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher un employé..."
+          className="pl-8"
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select defaultValue="all" onValueChange={onDepartmentChange}>
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Département" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les départements</SelectItem>
-            {uniqueDepartments.map((dept, index) => (
-              <SelectItem key={index} value={dept}>{dept}</SelectItem>
-            ))}
+            <SelectItem value="IT">IT</SelectItem>
+            <SelectItem value="HR">Ressources Humaines</SelectItem>
+            <SelectItem value="Finance">Finance</SelectItem>
+            <SelectItem value="Marketing">Marketing</SelectItem>
+            <SelectItem value="Sales">Ventes</SelectItem>
+            <SelectItem value="Operations">Opérations</SelectItem>
           </SelectContent>
         </Select>
         
-        <Select onValueChange={handleStatusChange} defaultValue="all">
-          <SelectTrigger>
+        <Select defaultValue="all" onValueChange={onStatusChange}>
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Statut" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
-            <SelectItem value="active">Actif</SelectItem>
-            <SelectItem value="inactive">Inactif</SelectItem>
+            <SelectItem value="active">Actifs</SelectItem>
             <SelectItem value="onLeave">En congé</SelectItem>
-            <SelectItem value="Suspendu">Suspendu</SelectItem>
+            <SelectItem value="inactive">Inactifs</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-      
-      <div className="flex justify-end">
+        
         <Button variant="outline" onClick={onImportClick}>
           <Upload className="h-4 w-4 mr-2" />
-          Importer des employés
+          Importer
         </Button>
       </div>
     </div>
