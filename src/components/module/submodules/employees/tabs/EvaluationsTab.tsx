@@ -4,7 +4,7 @@ import { Employee } from '@/types/employee';
 import { useEvaluationsData } from '@/hooks/useEvaluationsData';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Plus } from '@/components/ui/icons';
+import { Plus } from 'lucide-react';
 
 interface EvaluationsTabProps {
   employee: Employee;
