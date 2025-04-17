@@ -4,7 +4,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Contract } from '@/hooks/useContractsData';
 import { formatDate } from '@/lib/formatters';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Briefcase, Building, UserRound, CreditCard } from 'lucide-react';
+import { CalendarIcon, Briefcase, Building, UserRound, CreditCard, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { generateContractPdf } from './utils/contractPdfUtils';
+import { toast } from 'sonner';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { useFirestore } from '@/hooks/use-firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface ContractDetailsDialogProps {
   contract: Contract | null;
@@ -18,7 +24,10 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
   onOpenChange,
 }) => {
   if (!contract) return null;
-
+  
+  const { employees } = useHrModuleData();
+  const { updateOne } = useFirestore(COLLECTIONS.EMPLOYEES);
+  
   // Fonction pour afficher le bon badge de statut
   const getStatusBadge = (status: 'Actif' | 'À venir' | 'Expiré') => {
     switch (status) {
@@ -30,6 +39,45 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
         return <Badge className="bg-red-500 hover:bg-red-600">Expiré</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+  
+  const handleGeneratePdf = () => {
+    try {
+      // Trouver l'employé associé au contrat
+      const employee = employees.find(emp => emp.id === contract.employeeId);
+      
+      if (!employee) {
+        toast.error("Impossible de trouver l'employé associé à ce contrat");
+        return;
+      }
+      
+      // Générer le PDF
+      const pdfResult = generateContractPdf(contract, employee);
+      
+      if (pdfResult.success && pdfResult.documentObj) {
+        // Ajouter le document à l'employé
+        if (!employee.documents) {
+          employee.documents = [];
+        }
+        
+        employee.documents.push(pdfResult.documentObj);
+        
+        // Mettre à jour l'employé dans la base de données
+        updateOne(employee.id, { documents: employee.documents })
+          .then(() => {
+            toast.success("Le contrat a été généré et ajouté aux documents de l'employé");
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la mise à jour de l'employé:", error);
+            toast.error("Erreur lors de l'enregistrement du document");
+          });
+      } else {
+        toast.error("Erreur lors de la génération du contrat: " + (pdfResult.error || "erreur inconnue"));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast.error("Une erreur s'est produite lors de la génération du PDF");
     }
   };
 
@@ -98,6 +146,16 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
                 </div>
               </div>
             )}
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={handleGeneratePdf}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Générer PDF du contrat
+            </Button>
           </div>
         </div>
       </DialogContent>
