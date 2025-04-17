@@ -58,6 +58,8 @@ const CreateCompanyForm = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
+      console.log("Creating company with data:", data); // Debug log
+      
       const companyData = {
         ...data,
         status: 'active' as const,

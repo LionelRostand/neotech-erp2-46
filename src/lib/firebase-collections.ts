@@ -10,7 +10,7 @@ export const COLLECTIONS = {
   CONTACTS: 'contacts',
   USERS: 'users',
   USER_PERMISSIONS: 'user_permissions',
-  COMPANIES: 'companies',
+  COMPANIES: 'companies', // Make sure this is defined as a string, not an object or empty value
   WAREHOUSES: 'warehouses',
   PRODUCTS: 'products',
   ORDERS: 'orders',
