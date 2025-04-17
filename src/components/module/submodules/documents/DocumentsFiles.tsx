@@ -84,6 +84,13 @@ const DocumentsFiles: React.FC = () => {
     doc.type?.toLowerCase() === 'cv'
   );
   
+  // Filter Contract documents
+  const contractDocuments = documents.filter(doc => 
+    doc.name?.toLowerCase().includes('contrat') || 
+    doc.type?.toLowerCase() === 'contrat' ||
+    doc.type?.toLowerCase() === 'contract'
+  );
+  
   return (
     <div className="space-y-4">
       <SearchAndFilters
@@ -118,6 +125,11 @@ const DocumentsFiles: React.FC = () => {
             <FileUser className="h-4 w-4 mr-2" />
             CV <Badge variant="secondary" className="ml-2">{cvDocuments.length}</Badge>
           </TabsTrigger>
+          
+          <TabsTrigger value="contrats">
+            <FileText className="h-4 w-4 mr-2" />
+            Contrats <Badge variant="secondary" className="ml-2">{contractDocuments.length}</Badge>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="pt-2">
@@ -147,6 +159,33 @@ const DocumentsFiles: React.FC = () => {
             <div className="lg:col-span-2">
               <DocumentsLayout
                 documents={cvDocuments.filter(doc => 
+                  searchQuery ? 
+                    doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    doc.type?.toLowerCase().includes(searchQuery.toLowerCase()) : 
+                    true
+                )}
+                loading={loading}
+                view={view}
+                onSelect={setSelectedDocument}
+                onDelete={handleDeleteDocument}
+                selectedDocumentId={selectedDocument?.id}
+              />
+            </div>
+            
+            <div className="lg:col-span-1">
+              <DocumentSidebar
+                selectedDocument={selectedDocument}
+                onPermissionsClick={() => setShowPermissionsDialog(true)}
+              />
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="contrats" className="pt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <DocumentsLayout
+                documents={contractDocuments.filter(doc => 
                   searchQuery ? 
                     doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                     doc.type?.toLowerCase().includes(searchQuery.toLowerCase()) : 
