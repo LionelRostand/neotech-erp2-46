@@ -1,65 +1,64 @@
 
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import EmployeeForm from './EmployeeForm';
-import { EmployeeFormValues } from './form/employeeFormSchema';
-import { toast } from 'sonner';
 import { useEmployeeService } from '@/hooks/useEmployeeService';
-import { formValuesToEmployee } from './utils/formAdapter';
+import { Employee } from '@/types/employee';
+import { EmployeeFormValues } from './form/employeeFormSchema';
+import { formToEmployee } from './form/employeeUtils';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: () => void;
+  onCreated: (employee: Employee) => void;
 }
 
-const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({ 
-  open, 
+const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
+  open,
   onOpenChange,
-  onCreated
+  onCreated,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addEmployee } = useEmployeeService();
 
   const handleSubmit = async (data: EmployeeFormValues) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
-      // Convertir les données du formulaire en données d'employé
-      const employeeData = formValuesToEmployee(data);
-
-      await addEmployee(employeeData);
+      const employeeData = formToEmployee(data);
+      const newEmployee = await addEmployee(employeeData);
       
-      toast.success('Employé créé avec succès');
-      onOpenChange(false);
-      onCreated();
+      if (newEmployee) {
+        onCreated(newEmployee as Employee);
+        onOpenChange(false);
+      }
     } catch (error) {
-      console.error('Erreur lors de la création de l\'employé:', error);
-      toast.error("Erreur lors de la création de l'employé");
+      console.error('Error creating employee:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Nouvel employé</DialogTitle>
+          <DialogTitle>Ajouter un nouvel employé</DialogTitle>
+          <DialogDescription>
+            Complétez les informations de l'employé ci-dessous.
+          </DialogDescription>
         </DialogHeader>
         
         <EmployeeForm
           onSubmit={handleSubmit}
-          onCancel={handleCancel}
+          onCancel={() => onOpenChange(false)}
           isSubmitting={isSubmitting}
         />
       </DialogContent>

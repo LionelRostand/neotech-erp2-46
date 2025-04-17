@@ -1,4 +1,3 @@
-
 import { EmployeeFormValues } from './employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from '../utils/photoUtils';
@@ -45,16 +44,9 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
       fileName: formData.photoMeta.fileName || `photo_${Date.now()}.jpg`,
       fileType: formData.photoMeta.fileType || 'image/jpeg',
       fileSize: formData.photoMeta.fileSize || 100000,
-      updatedAt: formData.photoMeta.updatedAt || new Date().toISOString()
+      updatedAt: formData.photoMeta.updatedAt || new Date().toISOString(),
+      data: formData.photoMeta.data
     };
-    
-    // Only add data if it exists
-    if (formData.photoMeta.data) {
-      employee.photoMeta = {
-        ...employee.photoMeta,
-        data: formData.photoMeta.data
-      };
-    }
   } else if (formData.photo && !employee.photoMeta) {
     // Create photo metadata if photo exists but no metadata
     employee.photoMeta = createPhotoMeta(formData.photo);

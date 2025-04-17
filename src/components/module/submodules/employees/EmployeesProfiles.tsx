@@ -18,8 +18,6 @@ import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { formValuesToEmployee } from './utils/formAdapter';
-import { EmployeeFormValues } from './form/employeeFormSchema';
 
 export interface EmployeesProfilesProps {
   employees: Employee[];
@@ -63,7 +61,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
     setOpenImport(true);
   };
   
-  const handleCreated = () => {
+  const handleCreated = (newEmployee: Employee) => {
     refetchEmployees();
   };
   
