@@ -8,7 +8,6 @@ import CompanyDepartmentFields from './form/CompanyDepartmentFields';
 import FormActions from './form/FormActions';
 import PhotoUploadField from './form/PhotoUploadField';
 import { Employee } from '@/types/employee';
-import { processPhotoMetadata } from './utils/employeeUtils';
 import { getPhotoUrl } from './utils/photoUtils';
 
 interface EmployeeFormProps {
@@ -31,7 +30,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       lastName: defaultValues?.lastName || '',
       email: defaultValues?.email || '',
       phone: defaultValues?.phone || '',
-      company: defaultValues?.company?.toString() || '',
+      company: typeof defaultValues?.company === 'string' ? defaultValues.company : '',
       department: defaultValues?.department || '',
       position: defaultValues?.position || '',
       contract: defaultValues?.contract || 'cdi',

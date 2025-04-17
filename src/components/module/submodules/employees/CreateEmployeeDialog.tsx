@@ -11,6 +11,7 @@ import { EmployeeFormValues } from './form/employeeFormSchema';
 import { toast } from 'sonner';
 import { useAddEmployee } from '@/hooks/useAddEmployee';
 import { Employee } from '@/types/employee';
+import { formValuesToEmployee } from './utils/formAdapter';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -31,13 +32,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
       setIsSubmitting(true);
 
       // Convertir les données du formulaire en données d'employé
-      const employeeData: Partial<Employee> = {
-        ...data,
-        // S'assurer que les champs spécifiques sont correctement définis
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const employeeData = formValuesToEmployee(data);
 
       await addEmployee(employeeData);
       
