@@ -26,7 +26,7 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
   if (!contract) return null;
   
   const { employees } = useHrModuleData();
-  const { updateOne } = useFirestore(COLLECTIONS.EMPLOYEES);
+  const { update } = useFirestore(COLLECTIONS.HR.EMPLOYEES);
   
   // Fonction pour afficher le bon badge de statut
   const getStatusBadge = (status: 'Actif' | 'À venir' | 'Expiré') => {
@@ -64,7 +64,7 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
         employee.documents.push(pdfResult.documentObj);
         
         // Mettre à jour l'employé dans la base de données
-        updateOne(employee.id, { documents: employee.documents })
+        update(employee.id, { documents: employee.documents })
           .then(() => {
             toast.success("Le contrat a été généré et ajouté aux documents de l'employé");
           })
