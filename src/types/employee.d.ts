@@ -1,10 +1,10 @@
 
 export interface EmployeePhotoMeta {
   data?: string;
-  fileName?: string;
-  fileType?: string;
-  fileSize?: number;
-  updatedAt?: string;
+  fileName: string; // Required field
+  fileType: string; // Required field
+  fileSize: number; // Required field
+  updatedAt: string; // Required field
 }
 
 export interface Employee {

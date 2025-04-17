@@ -1,6 +1,5 @@
 
 import { Employee } from '@/types/employee';
-import { EmployeePhotoMeta } from '@/types/employee';
 
 /**
  * Vérifie si un intitulé de poste correspond à un manager

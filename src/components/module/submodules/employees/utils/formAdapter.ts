@@ -1,6 +1,7 @@
 
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
+import { createPhotoMeta } from './photoUtils';
 
 /**
  * Convertit les valeurs du formulaire en format d'employé
@@ -51,6 +52,9 @@ export const formValuesToEmployee = (
   // Gestion des métadonnées de photo
   if (formValues.photoMeta) {
     employeeData.photoMeta = formValues.photoMeta;
+  } else if (formValues.photo && !employeeData.photoMeta) {
+    // Create photo metadata if photo exists but no metadata
+    employeeData.photoMeta = createPhotoMeta(formValues.photo);
   }
 
   // Si c'est un nouvel employé, ajouter la date de création
@@ -69,6 +73,18 @@ export const formValuesToEmployee = (
 export const employeeToFormValues = (
   employee: Partial<Employee>
 ): EmployeeFormValues => {
+  // Make sure we have default values for required photoMeta fields if they exist
+  let photoMeta = employee.photoMeta;
+  if (photoMeta && (!photoMeta.fileName || !photoMeta.fileType || !photoMeta.fileSize || !photoMeta.updatedAt)) {
+    photoMeta = {
+      ...photoMeta,
+      fileName: photoMeta.fileName || `photo_${Date.now()}.jpg`,
+      fileType: photoMeta.fileType || 'image/jpeg',
+      fileSize: photoMeta.fileSize || 100000,
+      updatedAt: photoMeta.updatedAt || new Date().toISOString()
+    };
+  }
+
   return {
     firstName: employee.firstName || '',
     lastName: employee.lastName || '',
@@ -83,7 +99,7 @@ export const employeeToFormValues = (
     managerId: employee.managerId || '',
     status: (employee.status || 'active') as any,
     photo: employee.photo || employee.photoURL || '',
-    photoMeta: employee.photoMeta,
+    photoMeta: photoMeta,
     professionalEmail: employee.professionalEmail || '',
     forceManager: employee.forceManager || false,
     isManager: employee.isManager || false,

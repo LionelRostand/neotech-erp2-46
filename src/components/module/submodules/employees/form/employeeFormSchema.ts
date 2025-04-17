@@ -5,10 +5,10 @@ import { EmployeePhotoMeta } from '@/types/employee';
 // Define a schema for photo metadata that matches our interface
 const photoMetaSchema = z.object({
   data: z.string().optional(),
-  fileName: z.string().optional(),
-  fileType: z.string().optional(),
-  fileSize: z.number().optional(),
-  updatedAt: z.string().optional()
+  fileName: z.string(),
+  fileType: z.string(),
+  fileSize: z.number(),
+  updatedAt: z.string()
 }).optional();
 
 export const employeeFormSchema = z.object({

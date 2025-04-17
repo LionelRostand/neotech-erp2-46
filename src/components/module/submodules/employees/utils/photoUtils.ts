@@ -27,10 +27,10 @@ export const createPhotoMeta = (photoData?: string): EmployeePhotoMeta | undefin
   
   return {
     data: photoData,
-    fileName: `photo_${Date.now()}.jpg`,
-    fileType: 'image/jpeg',
-    fileSize: estimatePhotoSize(photoData),
-    updatedAt: new Date().toISOString()
+    fileName: `photo_${Date.now()}.jpg`, // Required field
+    fileType: 'image/jpeg', // Required field
+    fileSize: estimatePhotoSize(photoData), // Required field
+    updatedAt: new Date().toISOString() // Required field
   };
 };
 

@@ -1,5 +1,6 @@
 import { EmployeeFormValues } from './employeeFormSchema';
-import { Employee, EmployeePhotoMeta } from '@/types/employee';
+import { Employee } from '@/types/employee';
+import { createPhotoMeta } from '../utils/photoUtils';
 
 /**
  * Convertit un formulaire employé en objet employee
@@ -36,8 +37,12 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     employee.photoData = formData.photo;
   }
 
+  // Handle photoMeta
   if (formData.photoMeta) {
     employee.photoMeta = formData.photoMeta;
+  } else if (formData.photo && !employee.photoMeta) {
+    // Create photo metadata if photo exists but no metadata
+    employee.photoMeta = createPhotoMeta(formData.photo);
   }
 
   // Keep existing data
@@ -58,6 +63,18 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
  * Convertit un objet employee en données de formulaire
  */
 export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues => {
+  // Make sure we have default values for required photoMeta fields if they exist
+  let photoMeta = employee.photoMeta;
+  if (photoMeta && (!photoMeta.fileName || !photoMeta.fileType || !photoMeta.fileSize || !photoMeta.updatedAt)) {
+    photoMeta = {
+      ...photoMeta,
+      fileName: photoMeta.fileName || `photo_${Date.now()}.jpg`,
+      fileType: photoMeta.fileType || 'image/jpeg',
+      fileSize: photoMeta.fileSize || 100000,
+      updatedAt: photoMeta.updatedAt || new Date().toISOString()
+    };
+  }
+
   return {
     firstName: employee.firstName || '',
     lastName: employee.lastName || '',
@@ -73,7 +90,7 @@ export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues 
     birthDate: employee.birthDate || '',
     managerId: employee.managerId || '',
     photo: employee.photo || employee.photoURL || '',
-    photoMeta: employee.photoMeta,
+    photoMeta: photoMeta,
     forceManager: employee.forceManager || false,
     isManager: employee.isManager || false,
     streetNumber: employee.streetNumber || '',
