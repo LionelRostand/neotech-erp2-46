@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
@@ -24,6 +24,8 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee,
   onDeleteClick
 }) => {
+  const [isPrinted, setIsPrinted] = useState(false);
+  
   if (!selectedBadge) return null;
   
   const getCompanyName = (): string => {
@@ -113,6 +115,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.save(`badge-${selectedBadge.id}.pdf`);
     
     toast.success("Badge téléchargé avec succès");
+    setIsPrinted(true);
   };
   
   return (
@@ -153,7 +156,10 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
                 <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
+                  {!isPrinted && (
+                    <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
+                  )}
+                  <p><span className="font-medium">Email professionnel:</span> {selectedEmployee.professionalEmail || 'Non spécifié'}</p>
                   <p><span className="font-medium">Poste:</span> {selectedEmployee.position}</p>
                 </div>
               </div>
@@ -168,6 +174,18 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
             >
               <Download className="h-4 w-4 mr-2" />
               Télécharger le badge
+            </Button>
+            
+            <Button
+              onClick={() => {
+                handleDownloadBadge();
+                toast.success("Badge imprimé avec succès");
+              }}
+              className="flex-1"
+              variant="default"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimer le badge
             </Button>
             
             {onDeleteClick && selectedBadge && (
