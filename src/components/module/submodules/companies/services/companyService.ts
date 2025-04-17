@@ -1,3 +1,4 @@
+
 import { 
   collection, 
   doc, 
@@ -16,7 +17,6 @@ import { Company, CompanyFilters } from '../types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { createCompany as createCompanyOp } from './companyOperations';
-import { Company } from '../types';
 
 const determineCompanySize = (employeesCount: number): string => {
   if (employeesCount <= 10) return 'Très petite entreprise';

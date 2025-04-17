@@ -61,8 +61,6 @@ const CreateCompanyForm = () => {
       const companyData = {
         ...data,
         status: 'active' as const,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
       
       await companyService.createCompany(companyData);
