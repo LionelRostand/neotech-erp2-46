@@ -5,14 +5,14 @@ import { createEmptyFormData } from '../utils/departmentUtils';
 import { toast } from 'sonner';
 
 export const useDepartmentForm = (departments: Department[] = []) => {
-  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData(departments));
+  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData());
   const [activeTab, setActiveTab] = useState("general");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   
   // Reset form with initial data
-  const resetForm = useCallback((depts: Department[]) => {
+  const resetForm = useCallback(() => {
     // We don't want to continuously reset this in an infinite loop
-    setFormData(createEmptyFormData(depts));
+    setFormData(createEmptyFormData());
     setSelectedEmployees([]);
     setActiveTab("general");
   }, []);
