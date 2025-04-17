@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import { BadgeData } from '../BadgeTypes';
 import { Employee } from '@/types/employee';
@@ -69,10 +68,10 @@ export const generateBadgePdf = (
   doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.text(`Statut: ${badge.statusText}`, 42.5, 41, { align: 'center' });
   
-  // Email professionnel
+  // Email professionnel au lieu de l'email standard
   doc.setTextColor(100, 100, 100);
   doc.setFontSize(8);
-  doc.text(`Email: ${employee?.professionalEmail || 'N/A'}`, 42.5, 46, { align: 'center' });
+  doc.text(`Email pro: ${employee?.professionalEmail || 'N/A'}`, 42.5, 46, { align: 'center' });
   
   // Pied de page
   doc.setFillColor(70, 70, 70);
