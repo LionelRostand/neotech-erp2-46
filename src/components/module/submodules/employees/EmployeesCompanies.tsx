@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,12 +33,10 @@ const EmployeesCompanies: React.FC = () => {
   };
 
   const handleViewCompany = (company: Company) => {
-    // Naviguer vers la vue détaillée de l'entreprise
     navigate(`/modules/companies/view/${company.id}`);
   };
 
   const handleCreateCompany = () => {
-    // Naviguer vers le formulaire de création d'entreprise
     navigate('/modules/companies/create');
   };
 
