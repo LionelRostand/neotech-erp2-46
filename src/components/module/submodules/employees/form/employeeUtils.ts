@@ -50,7 +50,10 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     
     // Only add data if it exists
     if (formData.photoMeta.data) {
-      (employee.photoMeta as EmployeePhotoMeta).data = formData.photoMeta.data;
+      employee.photoMeta = {
+        ...employee.photoMeta,
+        data: formData.photoMeta.data
+      };
     }
   } else if (formData.photo && !employee.photoMeta) {
     // Create photo metadata if photo exists but no metadata
