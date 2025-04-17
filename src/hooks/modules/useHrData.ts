@@ -38,6 +38,33 @@ export const useHrData = () => {
     }
   }, []);
 
+  // Fonction dédiée pour récupérer les départements
+  const fetchDepartments = useCallback(async () => {
+    try {
+      console.log('Fetching departments from Firestore...');
+      const data = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS);
+      console.log(`Fetched ${data.length} departments from Firestore`);
+      
+      // Déduplications des départements basée sur leur ID
+      const uniqueDepartments = new Map<string, Department>();
+      data.forEach(dept => {
+        if (dept && dept.id && !uniqueDepartments.has(dept.id)) {
+          uniqueDepartments.set(dept.id, dept);
+        }
+      });
+      
+      const uniqueData = Array.from(uniqueDepartments.values());
+      console.log(`Après déduplication: ${uniqueData.length} départements (avant: ${data.length})`);
+      
+      setDepartments(uniqueData);
+      return uniqueData;
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      setError(err as Error);
+      return [];
+    }
+  }, []);
+
   const fetchAllHrData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -62,7 +89,7 @@ export const useHrData = () => {
         fetchEmployees(),
         fetchCollectionData(COLLECTIONS.HR.PAYSLIPS),
         fetchCollectionData(COLLECTIONS.HR.CONTRACTS),
-        fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS), // Add proper generic type
+        fetchDepartments(), // Utiliser notre nouvelle fonction
         fetchCollectionData(COLLECTIONS.HR.LEAVE_REQUESTS),
         fetchCollectionData(COLLECTIONS.HR.ATTENDANCE),
         fetchCollectionData(COLLECTIONS.HR.ABSENCE_REQUESTS),
@@ -76,7 +103,7 @@ export const useHrData = () => {
       
       setPayslips(payslipsData);
       setContracts(contractsData);
-      setDepartments(departmentsData as Department[]); // Add type casting here
+      // Les départements sont déjà définis par fetchDepartments()
       setLeaveRequests(leaveRequestsData);
       setAttendance(attendanceData);
       setAbsenceRequests(absenceRequestsData);
@@ -94,7 +121,7 @@ export const useHrData = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchEmployees]);
+  }, [fetchEmployees, fetchDepartments]);
   
   // Initial data fetch
   useEffect(() => {
@@ -111,6 +138,22 @@ export const useHrData = () => {
     } catch (err) {
       console.error('Error refetching employees:', err);
       toast.error('Erreur lors de l\'actualisation des données employés');
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const refetchDepartments = async () => {
+    console.log('Manually refetching department data...');
+    setIsLoading(true);
+    try {
+      const refreshedDepartments = await fetchDepartments();
+      console.log(`Données départements actualisées: ${refreshedDepartments.length} départements`);
+      return refreshedDepartments;
+    } catch (err) {
+      console.error('Error refetching departments:', err);
+      toast.error('Erreur lors de l\'actualisation des données départements');
       return [];
     } finally {
       setIsLoading(false);
@@ -134,6 +177,7 @@ export const useHrData = () => {
     isLoading,
     error,
     refetchEmployees,
+    refetchDepartments,
     fetchAllHrData
   };
 };
