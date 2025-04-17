@@ -13,12 +13,13 @@ import CreateEmployeeDialog from './CreateEmployeeDialog';
 import ImportEmployeesDialog from './ImportEmployeesDialog';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
-import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
 import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { formValuesToEmployee } from './utils/formAdapter';
+import { EmployeeFormValues } from './form/employeeFormSchema';
 
 export interface EmployeesProfilesProps {
   employees: Employee[];
@@ -142,7 +143,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
           
           <div className="mt-6">
             <EmployeeTable 
-              employees={filteredEmployees as Employee[]} 
+              employees={filteredEmployees} 
               isLoading={isLoading || isDeleting} 
               onDelete={handleDeleteEmployee}
             />

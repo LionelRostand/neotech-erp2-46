@@ -149,7 +149,7 @@ export const processPhotoMetadata = (photoMeta: EmployeePhotoMeta | string | und
   
   // Si photoMeta est un objet avec une propriété 'data', utiliser cette valeur
   if (typeof photoMeta === 'object' && photoMeta !== null && 'data' in photoMeta) {
-    return photoMeta.data as string;
+    return photoMeta.data as string || '';
   }
   
   // Si photoMeta est une chaîne directement, la retourner

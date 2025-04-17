@@ -81,11 +81,11 @@ export interface EmployeeAddress {
 }
 
 export interface EmployeePhotoMeta {
-  data: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  updatedAt: string;
+  data?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  updatedAt?: string;
 }
 
 export interface EducationEntry {

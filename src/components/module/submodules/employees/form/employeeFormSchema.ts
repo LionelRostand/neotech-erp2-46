@@ -3,11 +3,11 @@ import { z } from 'zod';
 
 // Define a schema for photo metadata
 const photoMetaSchema = z.object({
-  data: z.string(),
-  fileName: z.string(),
-  fileType: z.string(),
-  fileSize: z.number(),
-  updatedAt: z.string()
+  data: z.string().optional(),
+  fileName: z.string().optional(),
+  fileType: z.string().optional(),
+  fileSize: z.number().optional(),
+  updatedAt: z.string().optional()
 }).optional();
 
 export const employeeFormSchema = z.object({

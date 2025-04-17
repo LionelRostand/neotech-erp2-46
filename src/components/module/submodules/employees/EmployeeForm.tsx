@@ -31,7 +31,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       lastName: defaultValues?.lastName || '',
       email: defaultValues?.email || '',
       phone: defaultValues?.phone || '',
-      company: defaultValues?.company || '',
+      company: defaultValues?.company?.toString() || '',
       department: defaultValues?.department || '',
       position: defaultValues?.position || '',
       contract: defaultValues?.contract || 'cdi',

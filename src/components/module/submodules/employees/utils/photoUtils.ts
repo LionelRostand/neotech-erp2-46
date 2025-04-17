@@ -10,8 +10,8 @@ export const getPhotoUrl = (photoMeta?: EmployeePhotoMeta | string | null): stri
   if (!photoMeta) return '';
   
   // Si photoMeta est un objet avec une propriété 'data'
-  if (typeof photoMeta === 'object' && 'data' in photoMeta) {
-    return photoMeta.data;
+  if (typeof photoMeta === 'object' && photoMeta !== null && 'data' in photoMeta) {
+    return photoMeta.data || '';
   }
   
   // Si photoMeta est directement une chaîne

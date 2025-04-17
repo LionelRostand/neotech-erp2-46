@@ -21,12 +21,11 @@ import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { Employee } from '@/types/employee';
 
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
   const { employees } = useEmployeeData();
-  return <EmployeesProfiles employees={employees as Employee[]} />;
+  return <EmployeesProfiles employees={employees} />;
 };
 
 export const EmployeesRoutes = (
