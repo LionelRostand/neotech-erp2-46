@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
@@ -44,8 +43,10 @@ export const useDepartments = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
+        console.log("Fetching departments in useDepartments hook");
         setLoading(true);
         const fetchedDepartments = await departmentService.getAll();
+        console.log("Departments fetched:", fetchedDepartments);
         setDepartments(fetchedDepartments);
       } catch (error) {
         console.error("Error fetching departments:", error);

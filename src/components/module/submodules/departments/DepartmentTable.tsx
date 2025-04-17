@@ -20,15 +20,24 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onManageEmployees 
 }) => {
-  // Ensure departments are unique by ID
+  // Ensure departments are unique by ID and actually exist
   const uniqueDepartments = React.useMemo(() => {
+    console.log("Rendering departments in table:", departments);
+    if (!departments || !Array.isArray(departments)) {
+      console.warn("Departments is not an array:", departments);
+      return [];
+    }
+    
     const deptMap = new Map<string, Department>();
     departments.forEach(dept => {
-      if (!deptMap.has(dept.id)) {
+      if (dept && dept.id && !deptMap.has(dept.id)) {
         deptMap.set(dept.id, dept);
       }
     });
-    return Array.from(deptMap.values());
+    
+    const result = Array.from(deptMap.values());
+    console.log("Unique departments to display:", result);
+    return result;
   }, [departments]);
 
   return (
@@ -66,13 +75,13 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                 <TableCell>{department.description}</TableCell>
                 <TableCell>{department.managerName || 'N/A'}</TableCell>
                 <TableCell>{department.companyName || 'N/A'}</TableCell>
-                <TableCell>{department.employeesCount}</TableCell>
+                <TableCell>{department.employeesCount || 0}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Modifier
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onDeleteDepartment(department.id, department.name)}>
+                  <Button variant="ghost" size="sm" onClick={() => onDeleteDepartment(department.id, department.name || 'Sans nom')}>
                     <Trash className="h-4 w-4 mr-2" />
                     Supprimer
                   </Button>

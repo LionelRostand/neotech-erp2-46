@@ -12,6 +12,8 @@ export const useDepartmentService = () => {
   
   const getAll = async (): Promise<Department[]> => {
     try {
+      console.log("Attempting to fetch departments from collection:", DEPARTMENTS_COLLECTION);
+      
       // Récupérer les données depuis Firestore
       const data = await getAllDocuments(DEPARTMENTS_COLLECTION);
       console.log("Départements récupérés depuis Firebase:", data);
