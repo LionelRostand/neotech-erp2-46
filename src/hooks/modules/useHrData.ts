@@ -62,7 +62,7 @@ export const useHrData = () => {
         fetchEmployees(),
         fetchCollectionData(COLLECTIONS.HR.PAYSLIPS),
         fetchCollectionData(COLLECTIONS.HR.CONTRACTS),
-        fetchCollectionData(COLLECTIONS.HR.DEPARTMENTS),
+        fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS), // Add proper generic type
         fetchCollectionData(COLLECTIONS.HR.LEAVE_REQUESTS),
         fetchCollectionData(COLLECTIONS.HR.ATTENDANCE),
         fetchCollectionData(COLLECTIONS.HR.ABSENCE_REQUESTS),
@@ -76,7 +76,7 @@ export const useHrData = () => {
       
       setPayslips(payslipsData);
       setContracts(contractsData);
-      setDepartments(departmentsData);
+      setDepartments(departmentsData as Department[]); // Add type casting here
       setLeaveRequests(leaveRequestsData);
       setAttendance(attendanceData);
       setAbsenceRequests(absenceRequestsData);

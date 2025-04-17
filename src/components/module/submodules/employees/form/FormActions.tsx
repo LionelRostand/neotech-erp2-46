@@ -22,13 +22,15 @@ interface FormActionsProps {
   isSubmitting?: boolean;
   form?: UseFormReturn<EmployeeFormValues>;
   showManagerOption?: boolean;
+  error?: Error | null; // Added error property as optional
 }
 
 const FormActions: React.FC<FormActionsProps> = ({ 
   onCancel, 
   isSubmitting = false,
   form,
-  showManagerOption = true
+  showManagerOption = true,
+  error // Added error parameter
 }) => {
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
