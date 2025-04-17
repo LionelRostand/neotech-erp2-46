@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useHrData } from './modules/useHrData';
 import { Company } from '@/components/module/submodules/companies/types';
@@ -33,65 +32,76 @@ export const useHrModuleData = () => {
   // Process employees data
   useEffect(() => {
     if (rawEmployees) {
-      // Utiliser une Map pour éliminer les doublons par ID
-      const uniqueEmployeesMap = new Map<string, Employee>();
+      // Log the raw data for debugging
+      console.log(`Raw employees data length: ${rawEmployees.length}`);
       
-      rawEmployees.forEach(emp => {
-        if (!uniqueEmployeesMap.has(emp.id)) {
-          const processedEmployee = {
-            id: emp.id,
-            firstName: emp.firstName || '',
-            lastName: emp.lastName || '',
-            email: emp.email || '',
-            phone: emp.phone || '',
-            position: emp.position || emp.role || 'Employé',
-            department: emp.department || 'Non spécifié',
-            departmentId: emp.departmentId || emp.department || '',
-            photo: emp.photoURL || emp.photo || '',
-            photoURL: emp.photoURL || emp.photo || '',
-            hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
-            startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
-            status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
-            address: emp.address || {},
-            contract: emp.contract || '',
-            socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
-            birthDate: emp.birthDate || '',
-            documents: emp.documents || [],
-            company: emp.company || '',
-            role: emp.role || emp.position || '',
-            title: emp.title || emp.position || '',
-            manager: emp.manager || '',
-            managerId: emp.managerId || '',
-            professionalEmail: emp.professionalEmail || emp.email || '',
-            skills: emp.skills || [],
-            education: emp.education || [],
-            isManager: emp.isManager || determineIfManager(emp.position || emp.role),
-            workSchedule: emp.workSchedule || {
-              monday: '09:00 - 18:00',
-              tuesday: '09:00 - 18:00',
-              wednesday: '09:00 - 18:00',
-              thursday: '09:00 - 18:00',
-              friday: '09:00 - 17:00',
-            },
-            payslips: emp.payslips || [],
-          } as Employee;
-          
-          uniqueEmployeesMap.set(emp.id, processedEmployee);
-        }
+      // Make a copy of raw data to avoid modifying original
+      const employeesData = [...rawEmployees];
+      
+      // Ensure we don't have empty entries
+      const filteredEmployees = employeesData.filter(emp => emp && emp.id);
+      
+      // Log filtered data for debugging
+      console.log(`After filtering empty entries: ${filteredEmployees.length}`);
+      
+      // Process each employee to ensure required fields exist
+      const processedEmployees = filteredEmployees.map(emp => {
+        return {
+          id: emp.id,
+          firstName: emp.firstName || '',
+          lastName: emp.lastName || '',
+          email: emp.email || '',
+          phone: emp.phone || '',
+          position: emp.position || emp.role || 'Employé',
+          department: emp.department || 'Non spécifié',
+          departmentId: emp.departmentId || emp.department || '',
+          photo: emp.photoURL || emp.photo || '',
+          photoURL: emp.photoURL || emp.photo || '',
+          hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
+          startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
+          status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
+          address: emp.address || {},
+          contract: emp.contract || '',
+          socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
+          birthDate: emp.birthDate || '',
+          documents: emp.documents || [],
+          company: emp.company || '',
+          role: emp.role || emp.position || '',
+          title: emp.title || emp.position || '',
+          manager: emp.manager || '',
+          managerId: emp.managerId || '',
+          professionalEmail: emp.professionalEmail || emp.email || '',
+          skills: emp.skills || [],
+          education: emp.education || [],
+          isManager: emp.isManager || determineIfManager(emp.position || emp.role),
+          workSchedule: emp.workSchedule || {
+            monday: '09:00 - 18:00',
+            tuesday: '09:00 - 18:00',
+            wednesday: '09:00 - 18:00',
+            thursday: '09:00 - 18:00',
+            friday: '09:00 - 17:00',
+          },
+          payslips: emp.payslips || [],
+          // Add photoMeta with required properties if it exists
+          photoMeta: emp.photoMeta ? {
+            fileName: emp.photoMeta.fileName || `photo_${Date.now()}.jpg`,
+            fileType: emp.photoMeta.fileType || 'image/jpeg',
+            fileSize: emp.photoMeta.fileSize || 100000,
+            updatedAt: emp.photoMeta.updatedAt || new Date().toISOString()
+          } : undefined
+        } as Employee;
       });
       
-      const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
-      console.log(`useHrModuleData: ${uniqueEmployees.length} employés uniques (avant: ${rawEmployees.length})`);
-      
-      // Vérifier la présence de certains employés pour le débogage
-      const lionelPresent = uniqueEmployees.some(emp => 
+      // Check for Lionel in the processed data
+      const lionelPresent = processedEmployees.some(emp => 
         emp.firstName?.toLowerCase().includes('lionel') && 
         emp.lastName?.toLowerCase().includes('djossa')
       );
       
+      console.log(`useHrModuleData: ${processedEmployees.length} employés uniques (avant: ${rawEmployees.length})`);
       console.log(`useHrModuleData: LIONEL DJOSSA présent dans les données après traitement? ${lionelPresent}`);
       
-      setEmployees(uniqueEmployees);
+      setEmployees(processedEmployees);
     }
   }, [rawEmployees]);
 

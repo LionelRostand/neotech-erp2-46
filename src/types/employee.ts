@@ -45,7 +45,6 @@ export interface LeaveRequest {
   approvedAt?: string;
 }
 
-// Updated to match the Evaluation interface from useEvaluationsData
 export interface Evaluation {
   id: string;
   date: string;
@@ -66,6 +65,13 @@ export interface Evaluation {
   fromEmployeeRecord?: boolean;
 }
 
+export interface EmployeePhotoMeta {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  updatedAt: string;
+}
+
 export interface Employee {
   id: string;
   firebaseId?: string; // ID généré par Firestore
@@ -80,12 +86,7 @@ export interface Employee {
   photoURL: string;
   photoData?: string; // Base64 data for the photo
   photoHex?: string;  // Hexadecimal data for the photo
-  photoMeta?: {
-    fileName: string;
-    fileType: string;
-    fileSize: number;
-    updatedAt: string;
-  };
+  photoMeta?: EmployeePhotoMeta;
   hireDate: string;
   startDate: string;
   status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
@@ -117,8 +118,8 @@ export interface Employee {
   updatedAt?: string; // Adding timestamp for last update
   leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
-  isManager?: boolean; // Added isManager property to fix type errors
-  forceManager?: boolean; // Added forceManager property to match d.ts file
+  isManager?: boolean;
+  forceManager?: boolean;
   conges?: {
     acquired: number;
     taken: number;
@@ -129,4 +130,9 @@ export interface Employee {
     taken: number;
     balance: number;
   };
+  streetNumber?: string;
+  streetName?: string;
+  city?: string;
+  zipCode?: string;
+  region?: string;
 }

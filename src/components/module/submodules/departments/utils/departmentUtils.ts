@@ -3,6 +3,24 @@ import { Department } from '../types';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 
+// Create an empty form data object for a new department
+export const createEmptyFormData = () => {
+  return {
+    id: '',
+    name: '',
+    description: '',
+    managerId: '',
+    managerName: '',
+    companyId: '',
+    companyName: '',
+    color: '#3B82F6',
+    employeeIds: [],
+    employeesCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+};
+
 // Event bus mechanism for department updates
 const subscribers: ((departments: Department[]) => void)[] = [];
 
