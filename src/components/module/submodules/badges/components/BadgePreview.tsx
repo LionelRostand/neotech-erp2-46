@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BadgeData } from '../BadgeTypes';
 import { Employee } from '@/types/employee';
@@ -34,7 +35,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
     if (employee?.photoURL) {
       return (
         <Avatar className="h-16 w-16 mx-auto mb-3">
-          <AvatarImage src={employee.photoURL} alt={badge.employeeName} />
+          <AvatarImage src={employee.photoURL} alt={badge.employeeName || 'Employee'} />
           <AvatarFallback>{getInitials(badge.employeeName)}</AvatarFallback>
         </Avatar>
       );
@@ -58,7 +59,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
       
       <div className="text-center mb-3">
         <p className="text-sm text-gray-500">ID: {badge.id}</p>
-        <h3 className="text-lg font-bold">{badge.employeeName}</h3>
+        <h3 className="text-lg font-bold">{badge.employeeName || 'Employee'}</h3>
         <p className="text-sm text-gray-600">Entreprise: {companyName || 'Non spécifiée'}</p>
       </div>
       
@@ -71,10 +72,10 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
             badge.status === 'success' ? 'text-green-600' : 
             badge.status === 'warning' ? 'text-amber-600' : 'text-red-600'
           }`}>
-            {badge.statusText}
+            {badge.statusText || 'N/A'}
           </span>
         </p>
-        <p><span className="font-medium">Date d'émission:</span> {badge.date}</p>
+        <p><span className="font-medium">Date d'émission:</span> {badge.date || 'N/A'}</p>
       </div>
       
       {employee && (
@@ -82,7 +83,7 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
           <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
           <div className="space-y-1 text-sm">
             <p><span className="font-medium">Email professionnel:</span> {employee.professionalEmail || 'Non spécifié'}</p>
-            <p><span className="font-medium">Poste:</span> {employee.position}</p>
+            <p><span className="font-medium">Poste:</span> {employee.position || 'Non spécifié'}</p>
           </div>
         </div>
       )}
