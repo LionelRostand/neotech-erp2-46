@@ -2,7 +2,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useHrData } from '@/hooks/modules/useHrData';
 import {
   Select,
   SelectContent,
@@ -16,11 +16,12 @@ import { EmployeeFormValues } from './employeeFormSchema';
 const CompanyDepartmentFields = () => {
   const { control, watch, setValue } = useFormContext<EmployeeFormValues>();
   const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
-  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
+  const { departments, isLoading: isLoadingDepartments } = useHrData();
   const selectedCompany = watch('company');
 
+  // Filter departments based on selected company
   const filteredDepartments = departments.filter(
-    dept => !selectedCompany || dept.id.startsWith(selectedCompany)
+    dept => !selectedCompany || dept.companyId === selectedCompany
   );
 
   return (
