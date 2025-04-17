@@ -1,5 +1,5 @@
 
-import { EmployeePhotoMeta, Employee } from '@/types/employee';
+import { Employee, EmployeePhotoMeta } from '@/types/employee';
 
 /**
  * Génère les initiales à partir du nom et prénom d'un employé
@@ -149,7 +149,7 @@ export const processPhotoMetadata = (photoMeta: EmployeePhotoMeta | string | und
   
   // Si photoMeta est un objet avec une propriété 'data', utiliser cette valeur
   if (typeof photoMeta === 'object' && photoMeta !== null && 'data' in photoMeta) {
-    return photoMeta.data as string || '';
+    return photoMeta.data || '';
   }
   
   // Si photoMeta est une chaîne directement, la retourner
