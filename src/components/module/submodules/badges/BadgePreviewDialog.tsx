@@ -156,9 +156,6 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
                 <div className="space-y-1 text-sm">
-                  {!isPrinted && (
-                    <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
-                  )}
                   <p><span className="font-medium">Email professionnel:</span> {selectedEmployee.professionalEmail || 'Non spécifié'}</p>
                   <p><span className="font-medium">Poste:</span> {selectedEmployee.position}</p>
                 </div>
