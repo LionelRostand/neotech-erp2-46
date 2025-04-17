@@ -9,6 +9,7 @@ export const COLLECTIONS = {
   },
   CONTACTS: 'contacts',
   USERS: 'users',
+  USER_PERMISSIONS: 'user_permissions',
   COMPANIES: 'companies',
   WAREHOUSES: 'warehouses',
   PRODUCTS: 'products',
@@ -41,7 +42,12 @@ export const COLLECTIONS = {
     PROSPECTS: 'crm_prospects',
     OPPORTUNITIES: 'crm_opportunities',
     ACTIVITIES: 'crm_activities',
-    CONTACTS: 'crm_contacts'
+    CONTACTS: 'crm_contacts',
+    DEALS: 'crm_deals',
+    SETTINGS: 'crm_settings',
+    TASKS: 'crm_tasks',
+    CAMPAIGNS: 'crm_campaigns',
+    LEADS: 'crm_leads'
   },
   HR: {
     EMPLOYEES: 'hr_employees',
@@ -53,6 +59,26 @@ export const COLLECTIONS = {
     TRAININGS: 'hr_trainings',
     PAYSLIPS: 'hr_payslips',
     EVALUATIONS: 'hr_evaluations',
-    ABSENCE_REQUESTS: 'hr_absence_requests'
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    BADGES: 'hr_badges',
+    MANAGERS: 'hr_managers',
+    SALARIES: 'hr_salaries',
+    POSITIONS: 'hr_positions',
+    PERMISSIONS: 'hr_permissions',
+    SETTINGS: 'hr_settings',
+    ALERTS: 'hr_alerts',
+    REPORTS: 'hr_reports'
+  },
+  FREIGHT: {
+    SHIPMENTS: 'freight_shipments',
+    CONTAINERS: 'freight_containers',
+    CARRIERS: 'freight_carriers',
+    ROUTES: 'freight_routes',
+    TRACKING: 'freight_tracking',
+    DOCUMENTS: 'freight_documents',
+    PRICING: 'freight_pricing',
+    CLIENTS: 'freight_clients',
+    SETTINGS: 'freight_settings',
+    USERS: 'freight_users'
   }
 };
