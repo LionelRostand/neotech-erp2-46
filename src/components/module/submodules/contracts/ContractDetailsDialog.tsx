@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { generateContractPdf } from './utils/contractPdfUtils';
 import { toast } from 'sonner';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { useFirestore } from '@/hooks/use-firestore';
+import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface ContractDetailsDialogProps {
