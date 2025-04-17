@@ -20,7 +20,6 @@ export interface Employee {
   managerId?: string;
   professionalEmail?: string;
   company?: string | any;
-  companyId?: string;
   photoURL?: string;
   photo?: string;
   photoData?: string;
@@ -57,6 +56,34 @@ export interface Employee {
   region?: string;
 }
 
+export interface EmployeePhotoMeta {
+  data?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  updatedAt?: string;
+}
+
+export interface EmployeeAddress {
+  street: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  state?: string;
+}
+
+export interface Education {
+  degree: string;
+  school: string;
+  year: string;
+}
+
+export interface EducationEntry {
+  degree: string;
+  school: string;
+  year: string;
+}
+
 export interface Document {
   id: string;
   name: string;
@@ -70,28 +97,6 @@ export interface Document {
   storedInFirebase?: boolean;
   storedInHrDocuments?: boolean;
   storageFormat?: string;
-}
-
-export interface EmployeeAddress {
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  state?: string;
-}
-
-export interface EmployeePhotoMeta {
-  data?: string;
-  fileName?: string;
-  fileType?: string;
-  fileSize?: number;
-  updatedAt?: string;
-}
-
-export interface EducationEntry {
-  degree: string;
-  school: string;
-  year: string;
 }
 
 export interface WorkSchedule {

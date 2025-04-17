@@ -37,7 +37,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       contract: 'cdi',
       hireDate: new Date().toISOString().split('T')[0],
       birthDate: '',
-      status: 'active',
+      status: 'active' as const,
       photo: '',
       photoMeta: undefined,
       forceManager: false,

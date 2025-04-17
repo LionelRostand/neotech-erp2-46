@@ -9,7 +9,7 @@ import {
 import EmployeeForm from './EmployeeForm';
 import { EmployeeFormValues } from './form/employeeFormSchema';
 import { toast } from 'sonner';
-import { useAddEmployee } from '@/hooks/useAddEmployee';
+import { useEmployeeService } from '@/hooks/useEmployeeService';
 import { formValuesToEmployee } from './utils/formAdapter';
 
 interface CreateEmployeeDialogProps {
@@ -24,7 +24,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   onCreated
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addEmployee } = useAddEmployee();
+  const { addEmployee } = useEmployeeService();
 
   const handleSubmit = async (data: EmployeeFormValues) => {
     try {

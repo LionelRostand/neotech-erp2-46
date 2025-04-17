@@ -11,9 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { EmployeeFormValues } from './employeeFormSchema';
 
 const CompanyDepartmentFields = () => {
-  const { control, watch, setValue } = useFormContext();
+  const { control, watch, setValue } = useFormContext<EmployeeFormValues>();
   const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
   const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
   const selectedCompany = watch('company');

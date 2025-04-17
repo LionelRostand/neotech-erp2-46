@@ -33,13 +33,11 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
   if (formData.photo) {
     employee.photo = formData.photo;
     employee.photoURL = formData.photo;
+    employee.photoData = formData.photo;
   }
 
   if (formData.photoMeta) {
     employee.photoMeta = formData.photoMeta;
-    if (formData.photoMeta.data) {
-      employee.photoData = formData.photoMeta.data;
-    }
   }
 
   // Keep existing data
@@ -74,7 +72,7 @@ export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues 
     professionalEmail: employee.professionalEmail || '',
     department: employee.department || '',
     company: typeof employee.company === 'string' ? employee.company : '',
-    status: employee.status || 'active',
+    status: (employee.status || 'active') as any,
     contract: employee.contract || 'cdi',
     hireDate: employee.hireDate || new Date().toISOString().split('T')[0],
     birthDate: employee.birthDate || '',
