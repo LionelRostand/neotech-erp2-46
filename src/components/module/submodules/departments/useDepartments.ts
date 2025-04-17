@@ -5,6 +5,7 @@ import { useDepartmentOperations } from './hooks/useDepartmentOperations';
 import { Department } from './types';
 import { useDepartmentService } from './services/departmentService';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 
 export const useDepartments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -16,9 +17,16 @@ export const useDepartments = () => {
   
   const departmentService = useDepartmentService();
   const { employees } = useEmployeeData();
+  const { departments: firebaseDepartments, isLoading: isFirebaseLoading, error: firebaseError, refetch } = useFirebaseDepartments();
   
-  // Use a ref to prevent infinite re-renders
-  const fetchingRef = useRef(false);
+  // Use firebaseDepartments when available
+  useEffect(() => {
+    if (firebaseDepartments && firebaseDepartments.length > 0) {
+      console.log("Setting departments from Firebase:", firebaseDepartments);
+      setDepartments(firebaseDepartments);
+      setLoading(isFirebaseLoading);
+    }
+  }, [firebaseDepartments, isFirebaseLoading]);
   
   const {
     formData,
@@ -42,30 +50,6 @@ export const useDepartments = () => {
     handleDeleteDepartment,
     handleSaveEmployeeAssignments
   } = useDepartmentOperations();
-  
-  // Fetch departments only once on component mount
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      // Use ref to prevent duplicate fetching
-      if (fetchingRef.current) return;
-      
-      try {
-        fetchingRef.current = true;
-        console.log("Fetching departments in useDepartments hook");
-        setLoading(true);
-        const fetchedDepartments = await departmentService.getAll();
-        console.log("Departments fetched:", fetchedDepartments);
-        setDepartments(fetchedDepartments);
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-      } finally {
-        setLoading(false);
-        fetchingRef.current = false;
-      }
-    };
-    
-    fetchDepartments();
-  }, [departmentService]);
   
   // Get employees for a department
   const getDepartmentEmployees = useCallback((departmentId: string) => {
@@ -104,14 +88,9 @@ export const useDepartments = () => {
     
     if (success) {
       setIsAddDialogOpen(false);
-      
-      // Refresh departments list (with a delay to avoid loop)
-      setTimeout(async () => {
-        const updatedDepartments = await departmentService.getAll();
-        setDepartments(updatedDepartments);
-      }, 300);
+      refetch(); // Use direct refetch from Firebase hook
     }
-  }, [formData, selectedEmployees, validateForm, handleSaveDepartment, departmentService]);
+  }, [formData, selectedEmployees, validateForm, handleSaveDepartment, refetch]);
   
   // Update department
   const handleUpdateExistingDepartment = useCallback(async () => {
@@ -121,14 +100,9 @@ export const useDepartments = () => {
     
     if (success) {
       setIsEditDialogOpen(false);
-      
-      // Refresh departments list (with a delay to avoid loop)
-      setTimeout(async () => {
-        const updatedDepartments = await departmentService.getAll();
-        setDepartments(updatedDepartments);
-      }, 300);
+      refetch(); // Use direct refetch from Firebase hook
     }
-  }, [formData, selectedEmployees, currentDepartment, validateForm, handleUpdateDepartment, departmentService]);
+  }, [formData, selectedEmployees, currentDepartment, validateForm, handleUpdateDepartment, refetch]);
   
   // Save employee assignments
   const handleSaveEmployees = useCallback(async () => {
@@ -138,27 +112,18 @@ export const useDepartments = () => {
     
     if (success) {
       setIsManageEmployeesDialogOpen(false);
-      
-      // Refresh departments list (with a delay to avoid loop)
-      setTimeout(async () => {
-        const updatedDepartments = await departmentService.getAll();
-        setDepartments(updatedDepartments);
-      }, 300);
+      refetch(); // Use direct refetch from Firebase hook
     }
-  }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, departmentService]);
+  }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, refetch]);
   
   // Delete department
   const handleDeleteDept = useCallback(async (id: string, name: string) => {
     const success = await handleDeleteDepartment(id, name);
     
     if (success) {
-      // Refresh departments list (with a delay to avoid loop)
-      setTimeout(async () => {
-        const updatedDepartments = await departmentService.getAll();
-        setDepartments(updatedDepartments);
-      }, 300);
+      refetch(); // Use direct refetch from Firebase hook
     }
-  }, [handleDeleteDepartment, departmentService]);
+  }, [handleDeleteDepartment, refetch]);
   
   return {
     departments,
