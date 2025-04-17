@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -9,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import PhotoUploadField from '@/components/module/submodules/employees/form/PhotoUploadField';
-import { updateEmployeeDoc } from '@/services/employeeService';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { User } from 'lucide-react';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
@@ -37,7 +37,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       position: employee.position || employee.title || '',
       department: employee.department || '',
       status: employee.status || 'active',
-      photo: employee.photoURL || employee.photo || '',
+      photo: employee.photoURL || employee.photo || employee.photoData || '',
       managerId: employee.managerId || ''
     }
   });
@@ -56,10 +56,12 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
     try {
       console.log('Soumission du formulaire avec les données:', data);
       
-      await updateEmployeeDoc(employee.id, {
+      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
         ...data,
         photoURL: data.photo,
-        photo: data.photo
+        photo: data.photo,
+        photoData: data.photo,
+        updatedAt: new Date().toISOString()
       });
       
       toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
@@ -78,7 +80,9 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <PhotoUploadField defaultPhotoUrl={employee.photoURL || employee.photo} />
+          <PhotoUploadField 
+            defaultPhotoUrl={employee.photoURL || employee.photo || employee.photoData} 
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
