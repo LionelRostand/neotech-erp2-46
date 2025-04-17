@@ -1,66 +1,46 @@
+
+export interface CandidateApplication {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  cvUrl?: string;
+  coverLetterUrl?: string;
+  applicationDate: string;
+  status: 'pending' | 'reviewing' | 'interview' | 'offer' | 'hired' | 'rejected';
+  notes?: string;
+  interviewDate?: string;
+  evaluationScore?: number;
+}
+
 export interface RecruitmentPost {
   id: string;
   position: string;
   department: string;
   location: string;
-  status: 'Ouvert' | 'En cours' | 'Clôturé';
-  priority: 'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse';
+  priority: 'Urgente' | 'Haute' | 'Moyenne' | 'Basse' | 'High' | 'Medium' | 'Low';
   description: string;
   requirements: string[] | string;
-  currentStage?: RecruitmentStage;
-  responsibilities?: string[];
-  salary_range?: {
+  responsibilities: string[] | string;
+  status: 'Ouverte' | 'En cours' | 'Entretiens' | 'Offre' | 'Fermée';
+  publishDate: string;
+  closingDate?: string;
+  salary?: {
     min: number;
     max: number;
     currency: string;
   };
-  posting_date?: string;
-  closing_date?: string;
-  hiring_manager?: string;
-  contact_email?: string;
-  applications_count?: number;
-  interviews_scheduled?: number;
-  created_at: string;
-  updated_at: string;
-  
-  // Including fields from useRecruitmentData.ts
-  openDate: string;
-  applicationDeadline?: string;
-  hiringManagerId: string;
-  hiringManagerName: string;
-  contractType: string;
-  salary: string;
-  applicationCount: number;
-  
-  // Added candidates field
+  contractType: 'full-time' | 'part-time' | 'temporary' | 'internship' | 'freelance';
+  experienceLevel: 'entry' | 'junior' | 'intermediate' | 'senior' | 'expert';
+  educationLevel?: string;
+  skills?: string[];
+  benefits?: string[];
+  remote?: boolean;
+  hiredCandidateId?: string;
+  hiredEmployeeId?: string;
+  createdAt: any; // Firestore Timestamp
+  updatedAt: any; // Firestore Timestamp
+  createdBy?: string;
   candidates?: CandidateApplication[];
-}
-
-export type RecruitmentStage = 
-  | 'Candidature déposée'
-  | 'CV en cours d\'analyse' 
-  | 'Entretien RH'
-  | 'Test technique'
-  | 'Entretien technique'
-  | 'Entretien final'
-  | 'Proposition envoyée'
-  | 'Recrutement finalisé'
-  | 'Candidature refusée';
-
-export interface CandidateApplication {
-  id: string;
-  recruitmentId: string;
-  candidateId?: string;
-  candidateName: string;
-  candidateEmail: string;
-  currentStage: RecruitmentStage;
-  stageHistory: {
-    stage: RecruitmentStage;
-    date: string;
-    comments?: string;
-  }[];
-  resume?: string;
-  coverLetter?: string;
-  createdAt: string;
-  updatedAt: string;
 }

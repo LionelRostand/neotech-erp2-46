@@ -19,17 +19,30 @@ const RecruitmentKanban: React.FC = () => {
     const fetchRecruitmentPosts = async () => {
       try {
         setLoading(true);
+        
+        // Make sure the collection path is valid and not empty
+        if (!COLLECTIONS.HR.RECRUITMENT) {
+          console.error('Invalid collection path: COLLECTIONS.HR.RECRUITMENT is undefined or empty');
+          toast.error('Erreur de configuration des collections Firebase');
+          setLoading(false);
+          return;
+        }
+        
         const q = query(
           collection(db, COLLECTIONS.HR.RECRUITMENT),
           orderBy('createdAt', 'desc')
         );
+        
         const querySnapshot = await getDocs(q);
         
         const posts: RecruitmentPost[] = [];
         querySnapshot.forEach((doc) => {
+          const data = doc.data();
           posts.push({
             id: doc.id,
-            ...doc.data()
+            ...data,
+            // Ensure the status is one of the allowed values
+            status: statuses.includes(data.status) ? data.status : 'Ouverte'
           } as RecruitmentPost);
         });
         
@@ -64,6 +77,12 @@ const RecruitmentKanban: React.FC = () => {
     if (postIndex === -1) return;
     
     try {
+      // Make sure we have a valid collection path
+      if (!COLLECTIONS.HR.RECRUITMENT) {
+        toast.error('Erreur de configuration des collections Firebase');
+        return;
+      }
+      
       const updatedPost = {
         ...recruitmentPosts[postIndex],
         status: overId

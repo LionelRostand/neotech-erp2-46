@@ -1,90 +1,87 @@
 
 import { useState } from 'react';
-import { updateDocument, addDocument } from '@/hooks/firestore/firestore-utils';
+import { doc, setDoc, updateDoc, Timestamp, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useToast } from '@/components/ui/use-toast';
-import { CandidateApplication, RecruitmentPost } from '@/types/recruitment';
+import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Custom hook to convert a candidate/recruitment post to an employee
+ */
 export const useRecruitmentToEmployee = () => {
-  const [isConverting, setIsConverting] = useState(false);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const convertCandidateToEmployee = async (
-    candidate: CandidateApplication,
-    recruitmentPost: RecruitmentPost
-  ) => {
+  /**
+   * Convert a candidate to an employee
+   * @param candidateData The candidate data
+   * @param postData The recruitment post data
+   * @returns The new employee ID or null if failed
+   */
+  const convertToEmployee = async (candidateData: any, postData: any) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setIsConverting(true);
+      // Make sure we have valid collection paths
+      if (!COLLECTIONS.HR.EMPLOYEES || !COLLECTIONS.HR.RECRUITMENT) {
+        throw new Error('Invalid collection path configuration');
+      }
 
-      // Create an employee from the candidate data
+      // Create the employee record
+      const employeeId = uuidv4();
+      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+
+      // Create new employee record
       const newEmployeeData = {
-        id: uuidv4(), // Generate a unique ID
-        firstName: candidate.candidateName.split(' ')[0] || '',
-        lastName: candidate.candidateName.split(' ').slice(1).join(' ') || '',
-        email: candidate.candidateEmail,
-        position: recruitmentPost.position,
-        department: recruitmentPost.department,
-        departmentId: recruitmentPost.department,
-        hireDate: new Date().toISOString(),
-        startDate: new Date().toISOString(),
+        id: employeeId,
+        firstName: candidateData.firstName || '',
+        lastName: candidateData.lastName || '',
+        email: candidateData.email || '',
+        phone: candidateData.phone || '',
+        position: postData.position || 'New Employee',
+        department: postData.department || '',
         status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        // Add any additional fields needed for an employee
-        photoURL: '',
-        phone: '',
-        candidateId: candidate.id, // Reference to original candidate
-        recruitmentId: recruitmentPost.id, // Reference to original recruitment post
+        hireDate: Timestamp.now(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        // Add other relevant fields from the candidate's data
+        address: candidateData.address || {},
+        birthDate: candidateData.birthDate || null,
+        cv: candidateData.cvUrl || '',
+        recruitmentSource: 'internal',
+        recruitmentPostId: postData.id || ''
       };
 
-      // Add the new employee to the HR_EMPLOYEES collection
-      const employeeRef = await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployeeData);
-      
-      // Update the recruitment post to mark the candidate as hired
-      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, recruitmentPost.id, {
-        candidates: recruitmentPost.candidates?.map(c => 
-          c.id === candidate.id 
-            ? { 
-                ...c, 
-                currentStage: 'Recrutement finalisé',
-                hired: true,
-                employeeId: employeeRef.id,
-                stageHistory: [
-                  ...c.stageHistory,
-                  {
-                    stage: 'Recrutement finalisé',
-                    date: new Date().toISOString(),
-                    comments: `Candidat embauché et converti en employé avec l'ID: ${employeeRef.id}`
-                  }
-                ]
-              }
-            : c
-        ),
-        updated_at: new Date().toISOString(),
-      });
+      // Add the employee to Firestore
+      await setDoc(employeeRef, newEmployeeData);
 
-      toast({
-        title: "Conversion réussie",
-        description: `${candidate.candidateName} a été converti en employé avec succès`,
-      });
+      // Update the recruitment post to mark this candidate as hired
+      if (postData.id) {
+        const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, postData.id);
+        await updateDoc(postRef, {
+          status: 'Fermée',
+          hiredCandidateId: candidateData.id,
+          hiredEmployeeId: employeeId,
+          updatedAt: Timestamp.now()
+        });
+      }
 
-      return employeeRef.id;
-    } catch (error) {
-      console.error("Erreur lors de la conversion du candidat en employé:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de convertir le candidat en employé",
-        variant: "destructive",
-      });
+      toast.success(`${candidateData.firstName} ${candidateData.lastName} a été embauché(e) avec succès`);
+      return employeeId;
+    } catch (err) {
+      console.error('Error converting candidate to employee:', err);
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      setError(error);
+      toast.error(`Erreur lors de l'embauche: ${error.message}`);
       return null;
     } finally {
-      setIsConverting(false);
+      setLoading(false);
     }
   };
 
-  return {
-    convertCandidateToEmployee,
-    isConverting
-  };
+  return { convertToEmployee, loading, error };
 };
+
+export default useRecruitmentToEmployee;
