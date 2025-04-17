@@ -7,6 +7,7 @@ import { FileDown, Printer } from 'lucide-react';
 import { PaySlip } from '@/types/payslip';
 import EmployeeInfoSection from './EmployeeInfoSection';
 import LeaveBalanceCard from './LeaveBalanceCard';
+import { formatDate } from '@/lib/utils';
 
 interface PayslipDetailsProps {
   payslip: PaySlip;
@@ -15,8 +16,8 @@ interface PayslipDetailsProps {
 const PayslipDetails: React.FC<PayslipDetailsProps> = ({ payslip }) => {
   // Préparer les données pour l'affichage
   const employee = {
-    firstName: payslip.employeeName.split(' ')[0] || '',
-    lastName: payslip.employeeName.split(' ').slice(1).join(' ') || '',
+    firstName: payslip.employee?.firstName || payslip.employeeName.split(' ')[0] || '',
+    lastName: payslip.employee?.lastName || payslip.employeeName.split(' ').slice(1).join(' ') || '',
     role: payslip.employee?.role || 'Employé',
     socialSecurityNumber: payslip.employee?.socialSecurityNumber || '',
     period: payslip.period || `${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`,
@@ -133,7 +134,7 @@ const PayslipDetails: React.FC<PayslipDetailsProps> = ({ payslip }) => {
           <h3 className="font-bold text-lg mb-2">Informations complémentaires</h3>
           <div className="space-y-2 text-sm">
             <p><span className="font-medium">Méthode de paiement:</span> {payslip.paymentMethod || 'Virement bancaire'}</p>
-            <p><span className="font-medium">Date de paiement:</span> {new Date(payslip.paymentDate || payslip.date).toLocaleDateString('fr-FR')}</p>
+            <p><span className="font-medium">Date de paiement:</span> {new Date(payslip.paymentDate || payslip.date || '').toLocaleDateString('fr-FR')}</p>
             {payslip.notes && (
               <div>
                 <p className="font-medium">Notes:</p>
