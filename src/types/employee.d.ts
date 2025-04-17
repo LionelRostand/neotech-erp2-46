@@ -56,7 +56,7 @@ export interface Employee {
     taken: number;
     balance: number;
   };
-  // Address-related fields for direct access
+  // Ajout des champs d'adresse pour l'accès direct
   streetNumber?: string;
   streetName?: string;
   city?: string;
