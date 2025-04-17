@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Document } from '@/types/employee';
 
 interface ContractDetailsDialogProps {
   contract: Contract | null;
@@ -61,7 +62,13 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
           employee.documents = [];
         }
         
-        employee.documents.push(pdfResult.documentObj);
+        // Ensure documentObj has all required properties of Document
+        const documentToAdd: Document = {
+          ...pdfResult.documentObj,
+          date: new Date().toISOString(), // Add the required date property
+        };
+        
+        employee.documents.push(documentToAdd);
         
         // Mettre à jour l'employé dans la base de données
         update(employee.id, { documents: employee.documents })
