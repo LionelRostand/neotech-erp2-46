@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
@@ -25,7 +24,6 @@ export const usePayslipGenerator = () => {
   };
 
   const handleCompanySelect = (companyId: string, companies: Company[]) => {
-    setSelectedCompanyId(companyId);
     const company = companies.find(c => c.id === companyId);
     if (company) {
       setCompanyName(company.name);
@@ -40,7 +38,7 @@ export const usePayslipGenerator = () => {
     const employeePortion = 0.22;
     const employerPortion = 0.45;
 
-    const parsedGrossSalary = parseFloat(grossSalary);
+    const parsedGrossSalary = parseFloat(grossSalary) / 12;
     const parsedOvertimeHours = parseFloat(overtimeHours);
     const parsedOvertimeRate = parseFloat(overtimeRate);
 
@@ -87,7 +85,7 @@ export const usePayslipGenerator = () => {
         balance: 10,
       },
       annualCumulative: {
-        grossSalary: parsedGrossSalary * 12,
+        grossSalary: parseFloat(grossSalary),
         netSalary: netSalary * 12,
         taxableIncome: netSalary * 12 * 0.8,
       },

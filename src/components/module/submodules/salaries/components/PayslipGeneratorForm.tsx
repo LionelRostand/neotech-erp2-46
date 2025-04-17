@@ -6,11 +6,10 @@ import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import CompanySelect from './CompanySelect';
+import CompanySelect from '@/components/module/submodules/salaries/components/CompanySelect';
 
 const PayslipGeneratorForm: React.FC = () => {
   const { employees } = useEmployeeData();
-  const { companies } = useSalarySlipsData();
   
   const {
     employeeName,
@@ -23,15 +22,9 @@ const PayslipGeneratorForm: React.FC = () => {
     overtimeRate,
     setOvertimeRate,
     selectedCompanyId,
-    companyName,
-    companyAddress,
-    setCompanyAddress,
-    companySiret,
-    setCompanySiret,
+    handleCompanySelect,
     showPreview,
     setShowPreview,
-    handleEmployeeSelect,
-    handleCompanySelect,
     generatePayslip
   } = usePayslipGenerator();
 
@@ -51,7 +44,7 @@ const PayslipGeneratorForm: React.FC = () => {
           <label htmlFor="employee-select" className="text-sm font-medium">
             Employé
           </label>
-          <Select onValueChange={(value) => handleEmployeeSelect(value, employees)}>
+          <Select>
             <SelectTrigger id="employee-select">
               <SelectValue placeholder="Sélectionner un employé" />
             </SelectTrigger>
@@ -68,7 +61,6 @@ const PayslipGeneratorForm: React.FC = () => {
         <CompanySelect 
           selectedCompanyId={selectedCompanyId}
           onCompanySelect={handleCompanySelect}
-          companies={companies}
         />
         
         <div>
@@ -91,39 +83,14 @@ const PayslipGeneratorForm: React.FC = () => {
         </div>
         
         <div>
-          <label htmlFor="company-name" className="text-sm font-medium">
-            Nom de l'entreprise
-          </label>
-          <Input
-            id="company-name"
-            value={companyName}
-            readOnly
-            disabled
-            className="bg-gray-50"
-          />
-        </div>
-        
-        <div>
           <label htmlFor="gross-salary" className="text-sm font-medium">
-            Salaire brut mensuel (basé sur le salaire annuel)
+            Salaire brut annuel
           </label>
           <Input
             id="gross-salary"
             value={grossSalary}
             onChange={(e) => setGrossSalary(e.target.value)}
-            placeholder="Saisir le salaire brut mensuel"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="company-address" className="text-sm font-medium">
-            Adresse de l'entreprise
-          </label>
-          <Input
-            id="company-address"
-            value={companyAddress}
-            onChange={(e) => setCompanyAddress(e.target.value)}
-            placeholder="Adresse de l'entreprise"
+            placeholder="Saisir le salaire brut annuel"
           />
         </div>
         
@@ -136,18 +103,6 @@ const PayslipGeneratorForm: React.FC = () => {
             value={overtimeHours}
             onChange={(e) => setOvertimeHours(e.target.value)}
             placeholder="Nombre d'heures supplémentaires"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="siret" className="text-sm font-medium">
-            Numéro SIRET
-          </label>
-          <Input
-            id="siret"
-            value={companySiret}
-            onChange={(e) => setCompanySiret(e.target.value)}
-            placeholder="Numéro SIRET"
           />
         </div>
         
