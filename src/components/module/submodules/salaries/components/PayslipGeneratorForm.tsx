@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
@@ -7,12 +7,14 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CompanySelect from '@/components/module/submodules/salaries/components/CompanySelect';
+import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 
 const PayslipGeneratorForm: React.FC = () => {
   const { employees } = useEmployeeData();
   
   const {
     employeeName,
+    setEmployeeName,
     period,
     setPeriod,
     grossSalary,
@@ -23,16 +25,34 @@ const PayslipGeneratorForm: React.FC = () => {
     setOvertimeRate,
     selectedCompanyId,
     handleCompanySelect,
+    handleEmployeeSelect,
     showPreview,
     setShowPreview,
-    generatePayslip
+    generatePayslip,
+    selectedEmployeeId,
+    setSelectedEmployeeId
   } = usePayslipGenerator();
+
+  // We'll use this hook to get the employee's salary from their contract
+  const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
+
+  // Update gross salary when contract salary changes
+  useEffect(() => {
+    if (contractSalary > 0) {
+      setGrossSalary(contractSalary.toString());
+    }
+  }, [contractSalary, setGrossSalary]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payslip = generatePayslip();
     console.log("Fiche de paie générée:", payslip);
     setShowPreview(true);
+  };
+
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    handleEmployeeSelect(employeeId, employees);
   };
 
   return (
@@ -44,7 +64,7 @@ const PayslipGeneratorForm: React.FC = () => {
           <label htmlFor="employee-select" className="text-sm font-medium">
             Employé
           </label>
-          <Select>
+          <Select value={selectedEmployeeId} onValueChange={handleEmployeeChange}>
             <SelectTrigger id="employee-select">
               <SelectValue placeholder="Sélectionner un employé" />
             </SelectTrigger>
@@ -90,8 +110,12 @@ const PayslipGeneratorForm: React.FC = () => {
             id="gross-salary"
             value={grossSalary}
             onChange={(e) => setGrossSalary(e.target.value)}
-            placeholder="Saisir le salaire brut annuel"
+            placeholder="Salaire brut annuel récupéré depuis le contrat"
+            className={contractSalary > 0 ? "bg-gray-50" : ""}
           />
+          {contractSalary > 0 && (
+            <p className="text-xs text-gray-500 mt-1">Récupéré du contrat de travail</p>
+          )}
         </div>
         
         <div>
