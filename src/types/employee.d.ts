@@ -1,5 +1,4 @@
 
-
 export interface EmployeePhotoMeta {
   data?: string;
   fileName?: string;
@@ -109,4 +108,3 @@ export interface WorkSchedule {
   saturday?: string;
   sunday?: string;
 }
-
