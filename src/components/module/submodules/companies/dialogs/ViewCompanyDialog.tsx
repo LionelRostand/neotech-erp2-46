@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { Company } from '../types';
 import { Building2, Mail, Phone, Globe, MapPin } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface ViewCompanyDialogProps {
   company: Company | null;
@@ -17,6 +19,17 @@ interface ViewCompanyDialogProps {
 
 const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, onClose }) => {
   if (!company) return null;
+
+  // Format creation date safely
+  const formatCreationDate = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'dd MMMM yyyy', { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date inconnue';
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -80,7 +93,7 @@ const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, on
 
           <div className="border-t pt-4">
             <p className="text-sm text-muted-foreground">
-              Créé le {new Date(company.createdAt).toLocaleDateString('fr-FR')}
+              Créé le {formatCreationDate(company.createdAt)}
             </p>
           </div>
         </div>
