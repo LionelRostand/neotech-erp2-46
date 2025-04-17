@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,6 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
       return selectedEmployee.company;
     }
     
-    // Now TypeScript knows this is a Company object
     const companyObj = selectedEmployee.company as Company;
     return companyObj.name || "Enterprise";
   };
@@ -97,7 +95,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);
-    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 46, { align: 'center' });
+    doc.text(`Email: ${selectedEmployee?.professionalEmail || 'N/A'}`, 42.5, 46, { align: 'center' });
     
     doc.setFillColor(70, 70, 70);
     doc.rect(0, 50, 85, 4, 'F');
