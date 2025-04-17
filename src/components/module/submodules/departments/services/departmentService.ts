@@ -33,7 +33,9 @@ export const useDepartmentService = () => {
         if (dept && dept.id && !uniqueDepartmentsMap.has(dept.id)) {
           uniqueDepartmentsMap.set(dept.id, dept);
         } else if (dept && dept.id) {
-          console.warn(`Doublon détecté pour le département ID: ${dept.id}, nom: ${dept.name || 'Sans nom'}`);
+          // Cast to Department type or any to safely access name
+          const deptObj = dept as Partial<Department>;
+          console.warn(`Doublon détecté pour le département ID: ${dept.id}, nom: ${deptObj.name || 'Sans nom'}`);
         }
       });
       
