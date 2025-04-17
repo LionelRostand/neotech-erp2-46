@@ -1,4 +1,6 @@
 
+import { EmployeePhotoMeta } from '@/types/employee';
+
 /**
  * Génère les initiales à partir du nom et prénom d'un employé
  * @param firstName Prénom de l'employé
@@ -142,7 +144,7 @@ export const employeeExists = (employees: any[], newEmployee: any): boolean => {
  * @param photoMeta Métadonnées de la photo
  * @returns URL de la photo ou chaîne vide
  */
-export const processPhotoMetadata = (photoMeta: any): string => {
+export const processPhotoMetadata = (photoMeta: EmployeePhotoMeta | string | undefined): string => {
   if (!photoMeta) return '';
   
   // Si photoMeta est un objet avec une propriété 'data', utiliser cette valeur

@@ -19,7 +19,7 @@ const CompanyDepartmentFields = () => {
   const selectedCompany = watch('company');
 
   const filteredDepartments = departments.filter(
-    dept => !selectedCompany || dept.companyId === selectedCompany
+    dept => !selectedCompany || dept.id.startsWith(selectedCompany) || dept.companyId === selectedCompany
   );
 
   return (

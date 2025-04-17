@@ -11,8 +11,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { Home, MapPin, Building, Landmark, Calendar } from 'lucide-react';
-import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();

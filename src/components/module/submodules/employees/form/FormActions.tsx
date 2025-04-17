@@ -96,16 +96,22 @@ const FormActions: React.FC<FormActionsProps> = ({
 
           {showManagerOption && (
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="managerId" className="text-right">
+              <Label htmlFor="managerSelect" className="text-right">
                 Responsable
               </Label>
               <div className="col-span-3">
                 <Select
+                  onValueChange={(value) => {
+                    if (value === 'none') {
+                      form.setValue('managerId', '');
+                    } else {
+                      form.setValue('managerId', value);
+                    }
+                  }}
                   value={form.getValues('managerId') || 'none'}
-                  onValueChange={(value) => form.setValue('managerId', value === 'none' ? '' : value)}
                   disabled={isLoadingEmployees}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="managerSelect">
                     <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">

@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 // Define a schema for photo metadata
@@ -24,6 +25,8 @@ export const employeeFormSchema = z.object({
   position: z.string().optional(),
   contract: z.string(),
   hireDate: z.string().optional(),
+  birthDate: z.string().optional(),
+  managerId: z.string().optional(),
   status: z.enum(['active', 'inactive', 'onLeave', 'Actif', 'En congé', 'Suspendu', 'Inactif']),
   photo: z.string().optional(),
   photoMeta: photoMetaSchema,

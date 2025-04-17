@@ -36,17 +36,19 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       position: defaultValues?.position || '',
       contract: defaultValues?.contract || 'cdi',
       hireDate: defaultValues?.hireDate || new Date().toISOString().split('T')[0],
+      birthDate: defaultValues?.birthDate || '',
       status: defaultValues?.status || 'active',
       photo: defaultValues?.photo || defaultValues?.photoURL || '',
       photoMeta: defaultValues?.photoMeta,
       forceManager: defaultValues?.forceManager || false,
       isManager: defaultValues?.isManager || false,
+      managerId: defaultValues?.managerId || '',
       professionalEmail: defaultValues?.professionalEmail || '',
-      streetNumber: '',
-      streetName: '',
-      city: '',
-      zipCode: '',
-      region: ''
+      streetNumber: defaultValues?.streetNumber || '',
+      streetName: defaultValues?.streetName || '',
+      city: defaultValues?.city || '',
+      zipCode: defaultValues?.zipCode || '',
+      region: defaultValues?.region || ''
     }
   });
 
