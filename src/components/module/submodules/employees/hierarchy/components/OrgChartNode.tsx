@@ -7,15 +7,16 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { getEmployeeInitials, getAvatarColorFromName, getPositionStyleClasses } from "../../utils/employeeUtils";
 import { Employee } from '@/types/employee';
 import { getPhotoUrl } from '../../utils/photoUtils';
+import { ChartNode } from '../types';
 
 interface OrgChartNodeProps {
   employee: Employee;
-  node?: any; // Add support for node prop
+  node?: ChartNode | any;
   children?: React.ReactNode;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   onSelect?: (employee: Employee) => void;
-  searchQuery?: string; // Add support for searchQuery prop
+  searchQuery?: string;
 }
 
 const OrgChartNode: React.FC<OrgChartNodeProps> = ({

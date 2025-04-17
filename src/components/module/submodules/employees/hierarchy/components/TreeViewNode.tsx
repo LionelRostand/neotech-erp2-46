@@ -7,10 +7,11 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { getEmployeeInitials, getAvatarColorFromName, getPositionStyleClasses } from "../../utils/employeeUtils";
 import { Employee } from '@/types/employee';
 import { getPhotoUrl } from '../../utils/photoUtils';
+import { ChartNode } from '../types';
 
 interface TreeViewNodeProps {
   employee: Employee;
-  node?: any;
+  node?: ChartNode | any;
   expanded: boolean;
   onToggleExpand: () => void;
   onSelectNode: (employee: Employee) => void;
