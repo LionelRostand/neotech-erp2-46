@@ -1,7 +1,14 @@
 
 // Define Firestore collection paths here to ensure consistency
 export const COLLECTIONS = {
-  MESSAGES: 'messages',
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    ARCHIVE: 'messages_archive',
+    SCHEDULED: 'messages_scheduled',
+    METRICS: 'messages_metrics'
+  },
+  CONTACTS: 'contacts',
+  USERS: 'users',
   COMPANIES: 'companies',
   WAREHOUSES: 'warehouses',
   PRODUCTS: 'products',
@@ -12,6 +19,11 @@ export const COLLECTIONS = {
   DRIVERS: 'drivers',
   VEHICLES: 'vehicles',
   CONTRACTS: 'contracts',
+  DOCUMENT_COLLECTIONS: {
+    DOCUMENTS: 'documents',
+    SETTINGS: 'document_settings',
+    TEMPLATES: 'document_templates'
+  },
   HR: {
     EMPLOYEES: 'hr_employees',
     DEPARTMENTS: 'hr_departments',
