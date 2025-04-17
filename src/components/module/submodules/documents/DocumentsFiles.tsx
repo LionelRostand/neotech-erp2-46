@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useDocumentService } from '../../documents/services';
 import { DocumentFile } from '../../documents/types/document-types';
 import { DocumentPermissionsDialog } from '../../documents/components/DocumentPermissionsDialog';
-import { FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Import new components
@@ -11,6 +10,9 @@ import SearchAndFilters from './components/SearchAndFilters';
 import UploadingFilesList from './components/UploadingFilesList';
 import DocumentsLayout from './components/DocumentsLayout';
 import DocumentSidebar from './components/DocumentSidebar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileUser, FileText, Files } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 // Import hooks
 import { useDocumentFilters } from './hooks/useDocumentFilters';
@@ -75,6 +77,12 @@ const DocumentsFiles: React.FC = () => {
       toast.error('Erreur lors de la suppression du document');
     }
   };
+
+  // Filter CV documents
+  const cvDocuments = documents.filter(doc => 
+    doc.name?.toLowerCase().includes('cv') || 
+    doc.type?.toLowerCase() === 'cv'
+  );
   
   return (
     <div className="space-y-4">
@@ -99,25 +107,68 @@ const DocumentsFiles: React.FC = () => {
       
       <UploadingFilesList uploadingFiles={uploadingFiles} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <DocumentsLayout
-            documents={filteredDocuments}
-            loading={loading}
-            view={view}
-            onSelect={setSelectedDocument}
-            onDelete={handleDeleteDocument}
-            selectedDocumentId={selectedDocument?.id}
-          />
-        </div>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">
+            <Files className="h-4 w-4 mr-2" />
+            Tous les documents <Badge variant="secondary" className="ml-2">{documents.length}</Badge>
+          </TabsTrigger>
+          
+          <TabsTrigger value="cv">
+            <FileUser className="h-4 w-4 mr-2" />
+            CV <Badge variant="secondary" className="ml-2">{cvDocuments.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
         
-        <div className="lg:col-span-1">
-          <DocumentSidebar
-            selectedDocument={selectedDocument}
-            onPermissionsClick={() => setShowPermissionsDialog(true)}
-          />
-        </div>
-      </div>
+        <TabsContent value="all" className="pt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <DocumentsLayout
+                documents={filteredDocuments}
+                loading={loading}
+                view={view}
+                onSelect={setSelectedDocument}
+                onDelete={handleDeleteDocument}
+                selectedDocumentId={selectedDocument?.id}
+              />
+            </div>
+            
+            <div className="lg:col-span-1">
+              <DocumentSidebar
+                selectedDocument={selectedDocument}
+                onPermissionsClick={() => setShowPermissionsDialog(true)}
+              />
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="cv" className="pt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <DocumentsLayout
+                documents={cvDocuments.filter(doc => 
+                  searchQuery ? 
+                    doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    doc.type?.toLowerCase().includes(searchQuery.toLowerCase()) : 
+                    true
+                )}
+                loading={loading}
+                view={view}
+                onSelect={setSelectedDocument}
+                onDelete={handleDeleteDocument}
+                selectedDocumentId={selectedDocument?.id}
+              />
+            </div>
+            
+            <div className="lg:col-span-1">
+              <DocumentSidebar
+                selectedDocument={selectedDocument}
+                onPermissionsClick={() => setShowPermissionsDialog(true)}
+              />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
       
       {showPermissionsDialog && selectedDocument && (
         <DocumentPermissionsDialog
