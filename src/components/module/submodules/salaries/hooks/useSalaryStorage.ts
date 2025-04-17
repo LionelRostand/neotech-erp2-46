@@ -64,6 +64,10 @@ export const useSalaryStorage = ({
         overtimeRate: overtimeRate ? parseFloat(overtimeRate) : undefined,
         companyName,
         companyAddress,
+        // Adding a date field to ensure we have a valid field for sorting
+        date: new Date().toISOString(),
+        // Adding a status field to track the payslip status
+        status: 'Généré',
       };
 
       const result = await savePaySlip(payslipData);

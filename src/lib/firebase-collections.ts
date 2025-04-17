@@ -24,6 +24,25 @@ export const COLLECTIONS = {
     SETTINGS: 'document_settings',
     TEMPLATES: 'document_templates'
   },
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    EXPENSES: 'accounting_expenses',
+    CLIENTS: 'accounting_clients',
+    SUPPLIERS: 'accounting_suppliers',
+    REPORTS: 'accounting_reports',
+    TAXES: 'accounting_taxes',
+    TRANSACTIONS: 'accounting_transactions',
+    SETTINGS: 'accounting_settings',
+    PERMISSIONS: 'accounting_permissions'
+  },
+  CRM: {
+    CLIENTS: 'crm_clients',
+    PROSPECTS: 'crm_prospects',
+    OPPORTUNITIES: 'crm_opportunities',
+    ACTIVITIES: 'crm_activities',
+    CONTACTS: 'crm_contacts'
+  },
   HR: {
     EMPLOYEES: 'hr_employees',
     DEPARTMENTS: 'hr_departments',
@@ -34,5 +53,6 @@ export const COLLECTIONS = {
     TRAININGS: 'hr_trainings',
     PAYSLIPS: 'hr_payslips',
     EVALUATIONS: 'hr_evaluations',
+    ABSENCE_REQUESTS: 'hr_absence_requests'
   }
 };

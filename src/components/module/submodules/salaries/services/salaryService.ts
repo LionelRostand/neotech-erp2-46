@@ -31,9 +31,9 @@ export interface Payslip {
 // Add a new payslip
 export const addPayslip = async (payslip: Payslip): Promise<Payslip> => {
   try {
-    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
-    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
-    const payslipRef = await addDoc(collection(db, collectionPath), payslip);
+    // Use the proper collection path from COLLECTIONS
+    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+    const payslipRef = await addDoc(payslipsRef, payslip);
     
     // Get the newly created document
     const payslipDoc = await getDoc(payslipRef);
@@ -52,9 +52,9 @@ export const addPayslip = async (payslip: Payslip): Promise<Payslip> => {
 // Get all payslips
 export const getAllPayslips = async (): Promise<Payslip[]> => {
   try {
-    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
-    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
-    const q = query(collection(db, collectionPath), orderBy('date', 'desc'));
+    // Use the proper collection path from COLLECTIONS
+    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+    const q = query(payslipsRef, orderBy('date', 'desc'));
     const querySnapshot = await getDocs(q);
     
     const payslips: Payslip[] = [];
@@ -72,10 +72,10 @@ export const getAllPayslips = async (): Promise<Payslip[]> => {
 // Get payslips for a specific employee
 export const getEmployeePayslips = async (employeeId: string): Promise<Payslip[]> => {
   try {
-    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
-    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    // Use the proper collection path from COLLECTIONS
+    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
     const q = query(
-      collection(db, collectionPath),
+      payslipsRef,
       where('employeeId', '==', employeeId),
       orderBy('date', 'desc')
     );
@@ -97,9 +97,9 @@ export const getEmployeePayslips = async (employeeId: string): Promise<Payslip[]
 // Get a single payslip by ID
 export const getPayslip = async (payslipId: string): Promise<Payslip | null> => {
   try {
-    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
-    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
-    const payslipDoc = await getDoc(doc(db, collectionPath, payslipId));
+    // Use the proper collection path from COLLECTIONS
+    const payslipRef = doc(db, COLLECTIONS.HR.PAYSLIPS, payslipId);
+    const payslipDoc = await getDoc(payslipRef);
     
     if (payslipDoc.exists()) {
       return { id: payslipDoc.id, ...payslipDoc.data() } as Payslip;
@@ -115,9 +115,9 @@ export const getPayslip = async (payslipId: string): Promise<Payslip | null> => 
 // Update a payslip
 export const updatePayslip = async (payslipId: string, data: Partial<Payslip>): Promise<void> => {
   try {
-    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
-    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
-    await updateDoc(doc(db, collectionPath, payslipId), data);
+    // Use the proper collection path from COLLECTIONS
+    const payslipRef = doc(db, COLLECTIONS.HR.PAYSLIPS, payslipId);
+    await updateDoc(payslipRef, data);
   } catch (error) {
     console.error('Error updating payslip:', error);
     throw error;
@@ -127,9 +127,9 @@ export const updatePayslip = async (payslipId: string, data: Partial<Payslip>): 
 // Delete a payslip
 export const deletePayslip = async (payslipId: string): Promise<void> => {
   try {
-    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
-    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
-    await deleteDoc(doc(db, collectionPath, payslipId));
+    // Use the proper collection path from COLLECTIONS
+    const payslipRef = doc(db, COLLECTIONS.HR.PAYSLIPS, payslipId);
+    await deleteDoc(payslipRef);
   } catch (error) {
     console.error('Error deleting payslip:', error);
     throw error;

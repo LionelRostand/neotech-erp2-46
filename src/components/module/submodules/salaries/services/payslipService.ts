@@ -9,6 +9,7 @@ import { PaySlipData } from '../types/payslip-types';
 // Create a new payslip
 export const createPaySlip = async (payslipData: Omit<PaySlipData, 'id'>): Promise<PaySlipData> => {
   try {
+    // Ensure we use a valid collection path
     const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
     const docRef = await addDoc(payslipsRef, {
       ...payslipData,
@@ -35,6 +36,7 @@ export const createPaySlip = async (payslipData: Omit<PaySlipData, 'id'>): Promi
 // Function to fetch all payslips for an employee
 export const getEmployeePaySlips = async (employeeId: string): Promise<PaySlipData[]> => {
   try {
+    // Ensure we use a valid collection path
     const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
     const q = query(
       payslipsRef,
@@ -62,6 +64,7 @@ export const getEmployeePaySlips = async (employeeId: string): Promise<PaySlipDa
 // Function to update an existing payslip
 export const updatePaySlip = async (payslipId: string, data: Partial<PaySlipData>): Promise<PaySlipData> => {
   try {
+    // Ensure we use a valid collection path
     const payslipRef = doc(db, COLLECTIONS.HR.PAYSLIPS, payslipId);
     
     await updateDoc(payslipRef, {
