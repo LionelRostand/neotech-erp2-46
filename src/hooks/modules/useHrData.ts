@@ -1,199 +1,122 @@
-import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, query, orderBy, where, getDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
 
-/**
- * Hook pour récupérer les données du module RH
- */
+import { useState, useEffect, useCallback } from 'react';
+import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Employee } from '@/types/employee';
+import { Department } from '@/components/module/submodules/departments/types';
+import { toast } from 'sonner';
+
 export const useHrData = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [payslips, setPayslips] = useState([]);
-  const [contracts, setContracts] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [leaveRequests, setLeaveRequests] = useState([]);
-  const [attendance, setAttendance] = useState([]);
-  const [absenceRequests, setAbsenceRequests] = useState([]);
-  const [hrDocuments, setHrDocuments] = useState([]);
-  const [timeSheets, setTimeSheets] = useState([]);
-  const [evaluations, setEvaluations] = useState([]);
-  const [trainings, setTrainings] = useState([]);
-  const [hrReports, setHrReports] = useState([]);
-  const [hrAlerts, setHrAlerts] = useState([]);
+  const [payslips, setPayslips] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<any[]>([]);
+  const [absenceRequests, setAbsenceRequests] = useState<any[]>([]);
+  const [hrDocuments, setHrDocuments] = useState<any[]>([]);
+  const [timeSheets, setTimeSheets] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [trainings, setTrainings] = useState<any[]>([]);
+  const [hrReports, setHrReports] = useState<any[]>([]);
+  const [hrAlerts, setHrAlerts] = useState<any[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Function to fetch HR data
-  const fetchHrData = useCallback(async () => {
-    setIsLoading(true);
+  const fetchEmployees = useCallback(async () => {
     try {
-      console.log('Début de récupération des données RH...');
-      
-      // Récupérer les employés depuis la collection des employés
-      const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-      const employeesQuery = query(employeesRef);
-      const employeesSnapshot = await getDocs(employeesQuery);
-      console.log(`Employés récupérés: ${employeesSnapshot.docs.length}`);
-      
-      // Convertir les documents en objets employés
-      const allEmployees = employeesSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-        } as unknown as Employee;
-      });
-      
-      // Utiliser une Map pour éliminer les doublons par ID
-      const uniqueEmployeesMap = new Map<string, Employee>();
-      
-      allEmployees.forEach(employee => {
-        if (!uniqueEmployeesMap.has(employee.id)) {
-          uniqueEmployeesMap.set(employee.id, employee);
-        }
-      });
-      
-      const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
-      console.log(`Total d'employés uniques après déduplication: ${uniqueEmployees.length} (avant: ${allEmployees.length})`);
-      
-      // Vérification finale pour LIONEL DJOSSA après déduplication
-      const lionelAfterDedup = uniqueEmployees.some(emp => 
-        emp.firstName?.toLowerCase().includes('lionel') && 
-        emp.lastName?.toLowerCase().includes('djossa')
-      );
-      
-      console.log(`LIONEL DJOSSA présent après déduplication: ${lionelAfterDedup}`);
-      
-      // Trier par nom de famille
-      const sortedEmployees = uniqueEmployees.sort((a, b) => 
-        (a.lastName || '').localeCompare(b.lastName || '') || 0
-      );
-      
-      setEmployees(sortedEmployees);
-
-      // Récupérer les autres données
-      const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
-      const payslipsSnapshot = await getDocs(payslipsRef);
-      setPayslips(payslipsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const contractsRef = collection(db, COLLECTIONS.HR.CONTRACTS);
-      const contractsSnapshot = await getDocs(contractsRef);
-      setContracts(contractsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      // Déduplication des départements
-      const departmentsRef = collection(db, COLLECTIONS.HR.DEPARTMENTS);
-      const departmentsSnapshot = await getDocs(departmentsRef);
-      const allDepartments = departmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      // Utiliser une Map pour éliminer les doublons par ID
-      const uniqueDepartmentsMap = new Map();
-      allDepartments.forEach(dept => {
-        if (!uniqueDepartmentsMap.has(dept.id)) {
-          uniqueDepartmentsMap.set(dept.id, dept);
-        }
-      });
-      
-      setDepartments(Array.from(uniqueDepartmentsMap.values()));
-
-      const leaveRequestsRef = collection(db, COLLECTIONS.HR.LEAVE_REQUESTS);
-      const leaveRequestsSnapshot = await getDocs(leaveRequestsRef);
-      setLeaveRequests(leaveRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const attendanceRef = collection(db, COLLECTIONS.HR.ATTENDANCE);
-      const attendanceSnapshot = await getDocs(attendanceRef);
-      setAttendance(attendanceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const absenceRequestsRef = collection(db, COLLECTIONS.HR.ABSENCE_REQUESTS);
-      const absenceRequestsSnapshot = await getDocs(absenceRequestsRef);
-      setAbsenceRequests(absenceRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const hrDocumentsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
-      const hrDocumentsSnapshot = await getDocs(hrDocumentsRef);
-      setHrDocuments(hrDocumentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const timeSheetCollection = COLLECTIONS.HR.TIMESHEET;
-      const timeSheetsRef = collection(db, timeSheetCollection);
-      const timeSheetsSnapshot = await getDocs(timeSheetsRef);
-      setTimeSheets(timeSheetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const evaluationsRef = collection(db, COLLECTIONS.HR.EVALUATIONS);
-      const evaluationsSnapshot = await getDocs(evaluationsRef);
-      setEvaluations(evaluationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const trainingsRef = collection(db, COLLECTIONS.HR.TRAININGS);
-      const trainingsSnapshot = await getDocs(trainingsRef);
-      setTrainings(trainingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const hrReportsRef = collection(db, COLLECTIONS.HR.REPORTS);
-      const hrReportsSnapshot = await getDocs(hrReportsRef);
-      setHrReports(hrReportsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-      const hrAlertsRef = collection(db, COLLECTIONS.HR.ALERTS);
-      const hrAlertsSnapshot = await getDocs(hrAlertsRef);
-      setHrAlerts(hrAlertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    } catch (error) {
-      console.error('Error fetching HR data:', error);
-      setError(error);
-      toast.error('Erreur lors du chargement des données RH');
-    } finally {
-      setIsLoading(false);
+      console.log('Fetching employees from Firestore...');
+      const data = await fetchCollectionData<Employee>(COLLECTIONS.HR.EMPLOYEES);
+      console.log(`Fetched ${data.length} employees from Firestore`);
+      setEmployees(data);
+      return data;
+    } catch (err) {
+      console.error('Error fetching employees:', err);
+      setError(err as Error);
+      return [];
     }
   }, []);
 
+  const fetchAllHrData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Fetching all HR data...');
+      const [
+        employeesData,
+        payslipsData,
+        contractsData,
+        departmentsData,
+        leaveRequestsData,
+        attendanceData,
+        absenceRequestsData,
+        documentsData,
+        timeSheetsData,
+        evaluationsData,
+        trainingsData,
+        reportsData,
+        alertsData
+      ] = await Promise.all([
+        fetchEmployees(),
+        fetchCollectionData(COLLECTIONS.HR.PAYSLIPS),
+        fetchCollectionData(COLLECTIONS.HR.CONTRACTS),
+        fetchCollectionData(COLLECTIONS.HR.DEPARTMENTS),
+        fetchCollectionData(COLLECTIONS.HR.LEAVE_REQUESTS),
+        fetchCollectionData(COLLECTIONS.HR.ATTENDANCE),
+        fetchCollectionData(COLLECTIONS.HR.ABSENCE_REQUESTS),
+        fetchCollectionData(COLLECTIONS.HR.DOCUMENTS),
+        fetchCollectionData(COLLECTIONS.HR.TIMESHEET),
+        fetchCollectionData(COLLECTIONS.HR.EVALUATIONS),
+        fetchCollectionData(COLLECTIONS.HR.TRAININGS),
+        fetchCollectionData(COLLECTIONS.HR.REPORTS),
+        fetchCollectionData(COLLECTIONS.HR.ALERTS)
+      ]);
+      
+      setPayslips(payslipsData);
+      setContracts(contractsData);
+      setDepartments(departmentsData);
+      setLeaveRequests(leaveRequestsData);
+      setAttendance(attendanceData);
+      setAbsenceRequests(absenceRequestsData);
+      setHrDocuments(documentsData);
+      setTimeSheets(timeSheetsData);
+      setEvaluations(evaluationsData);
+      setTrainings(trainingsData);
+      setHrReports(reportsData);
+      setHrAlerts(alertsData);
+      
+      console.log('All HR data fetched successfully');
+    } catch (err) {
+      console.error('Error fetching HR data:', err);
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchEmployees]);
+  
   // Initial data fetch
   useEffect(() => {
-    fetchHrData();
-  }, [fetchHrData]);
-
-  // Function to refetch employees data
-  const refetchEmployees = useCallback(async () => {
+    fetchAllHrData();
+  }, [fetchAllHrData]);
+  
+  const refetchEmployees = async () => {
+    console.log('Manually refetching employee data...');
+    setIsLoading(true);
     try {
-      console.log('Actualisation des données employés...');
-      setIsLoading(true);
-      
-      const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-      const employeesQuery = query(employeesRef);
-      const employeesSnapshot = await getDocs(employeesQuery);
-      
-      const allEmployees = employeesSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-        } as unknown as Employee;
-      });
-      
-      // Utiliser une Map pour éliminer les doublons par ID
-      const uniqueEmployeesMap = new Map<string, Employee>();
-      
-      allEmployees.forEach(employee => {
-        if (!uniqueEmployeesMap.has(employee.id)) {
-          uniqueEmployeesMap.set(employee.id, employee);
-        }
-      });
-      
-      const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
-      
-      // Trier par nom de famille
-      const sortedEmployees = uniqueEmployees.sort((a, b) => 
-        (a.lastName || '').localeCompare(b.lastName || '') || 0
-      );
-      
-      setEmployees(sortedEmployees);
-      console.log(`Données employés actualisées: ${sortedEmployees.length} employés`);
-      
-      return sortedEmployees;
-    } catch (error) {
-      console.error('Erreur lors de l\'actualisation des données employés:', error);
+      const refreshedEmployees = await fetchEmployees();
+      console.log(`Données employés actualisées: ${refreshedEmployees.length} employés`);
+      return refreshedEmployees;
+    } catch (err) {
+      console.error('Error refetching employees:', err);
       toast.error('Erreur lors de l\'actualisation des données employés');
-      throw error;
+      return [];
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
+  };
+  
   return {
     employees,
     payslips,
@@ -206,10 +129,11 @@ export const useHrData = () => {
     timeSheets,
     evaluations,
     trainings,
-    hrReports,
+    hrReports, 
     hrAlerts,
     isLoading,
     error,
-    refetchEmployees
+    refetchEmployees,
+    fetchAllHrData
   };
 };

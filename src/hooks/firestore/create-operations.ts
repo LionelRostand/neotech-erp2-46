@@ -2,6 +2,7 @@
 import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 /**
  * Add a document to a collection
@@ -10,7 +11,19 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
  * @returns A promise that resolves with the document reference
  */
 export const addDocument = async (collectionPath: string, data: any) => {
-  return await addDoc(collection(db, collectionPath), data);
+  try {
+    console.log(`Adding document to collection: ${collectionPath}`, data);
+    const collectionRef = collection(db, collectionPath);
+    const docRef = await addDoc(collectionRef, data);
+    console.log(`Document added successfully with ID: ${docRef.id}`);
+    
+    // Return the document with its ID
+    return { id: docRef.id, ...data };
+  } catch (error) {
+    console.error(`Error adding document to ${collectionPath}:`, error);
+    toast.error(`Erreur lors de l'ajout du document: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    throw error;
+  }
 };
 
 /**
@@ -30,5 +43,15 @@ export const addTrainingDocument = async (data: any) => {
  * @returns A promise that resolves when the operation is complete
  */
 export const setDocument = async (collectionPath: string, id: string, data: any) => {
-  return await setDoc(doc(db, collectionPath, id), data);
+  try {
+    console.log(`Setting document in collection: ${collectionPath} with ID: ${id}`, data);
+    const docRef = doc(db, collectionPath, id);
+    await setDoc(docRef, data);
+    console.log(`Document set successfully with ID: ${id}`);
+    return { id, ...data };
+  } catch (error) {
+    console.error(`Error setting document in ${collectionPath} with ID ${id}:`, error);
+    toast.error(`Erreur lors de la définition du document: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    throw error;
+  }
 };
