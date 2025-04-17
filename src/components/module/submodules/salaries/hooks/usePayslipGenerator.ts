@@ -10,6 +10,7 @@ export const usePayslipGenerator = () => {
   const [grossSalary, setGrossSalary] = useState('');
   const [overtimeHours, setOvertimeHours] = useState('');
   const [overtimeRate, setOvertimeRate] = useState('25');
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companySiret, setCompanySiret] = useState('');
@@ -24,6 +25,7 @@ export const usePayslipGenerator = () => {
   };
 
   const handleCompanySelect = (companyId: string, companies: Company[]) => {
+    setSelectedCompanyId(companyId);
     const company = companies.find(c => c.id === companyId);
     if (company) {
       setCompanyName(company.name);
@@ -108,6 +110,8 @@ export const usePayslipGenerator = () => {
     setOvertimeHours,
     overtimeRate,
     setOvertimeRate,
+    selectedCompanyId,
+    setSelectedCompanyId,
     companyName,
     setCompanyName,
     companyAddress,

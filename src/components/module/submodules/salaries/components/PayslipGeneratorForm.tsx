@@ -1,0 +1,176 @@
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CompanySelect from './CompanySelect';
+
+const PayslipGeneratorForm: React.FC = () => {
+  const { employees } = useEmployeeData();
+  const { companies } = useSalarySlipsData();
+  
+  const {
+    employeeName,
+    period,
+    setPeriod,
+    grossSalary,
+    setGrossSalary,
+    overtimeHours,
+    setOvertimeHours,
+    overtimeRate,
+    setOvertimeRate,
+    selectedCompanyId,
+    companyName,
+    companyAddress,
+    setCompanyAddress,
+    companySiret,
+    setCompanySiret,
+    showPreview,
+    setShowPreview,
+    handleEmployeeSelect,
+    handleCompanySelect,
+    generatePayslip
+  } = usePayslipGenerator();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payslip = generatePayslip();
+    console.log("Fiche de paie générée:", payslip);
+    setShowPreview(true);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-xl font-bold mb-6">Créer une nouvelle fiche de paie</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label htmlFor="employee-select" className="text-sm font-medium">
+            Employé
+          </label>
+          <Select onValueChange={(value) => handleEmployeeSelect(value, employees)}>
+            <SelectTrigger id="employee-select">
+              <SelectValue placeholder="Sélectionner un employé" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.firstName} {employee.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <CompanySelect 
+          selectedCompanyId={selectedCompanyId}
+          onCompanySelect={handleCompanySelect}
+          companies={companies}
+        />
+        
+        <div>
+          <label htmlFor="period-select" className="text-sm font-medium">
+            Période
+          </label>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger id="period-select">
+              <SelectValue placeholder="Sélectionner la période" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="janvier 2025">janvier 2025</SelectItem>
+              <SelectItem value="février 2025">février 2025</SelectItem>
+              <SelectItem value="mars 2025">mars 2025</SelectItem>
+              <SelectItem value="avril 2025">avril 2025</SelectItem>
+              <SelectItem value="mai 2025">mai 2025</SelectItem>
+              <SelectItem value="juin 2025">juin 2025</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label htmlFor="company-name" className="text-sm font-medium">
+            Nom de l'entreprise
+          </label>
+          <Input
+            id="company-name"
+            value={companyName}
+            readOnly
+            disabled
+            className="bg-gray-50"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="gross-salary" className="text-sm font-medium">
+            Salaire brut mensuel (basé sur le salaire annuel)
+          </label>
+          <Input
+            id="gross-salary"
+            value={grossSalary}
+            onChange={(e) => setGrossSalary(e.target.value)}
+            placeholder="Saisir le salaire brut mensuel"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="company-address" className="text-sm font-medium">
+            Adresse de l'entreprise
+          </label>
+          <Input
+            id="company-address"
+            value={companyAddress}
+            onChange={(e) => setCompanyAddress(e.target.value)}
+            placeholder="Adresse de l'entreprise"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="overtime-hours" className="text-sm font-medium">
+            Heures supplémentaires
+          </label>
+          <Input
+            id="overtime-hours"
+            value={overtimeHours}
+            onChange={(e) => setOvertimeHours(e.target.value)}
+            placeholder="Nombre d'heures supplémentaires"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="siret" className="text-sm font-medium">
+            Numéro SIRET
+          </label>
+          <Input
+            id="siret"
+            value={companySiret}
+            onChange={(e) => setCompanySiret(e.target.value)}
+            placeholder="Numéro SIRET"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="overtime-rate" className="text-sm font-medium">
+            Majoration (%)
+          </label>
+          <Input
+            id="overtime-rate"
+            value={overtimeRate}
+            onChange={(e) => setOvertimeRate(e.target.value)}
+            placeholder="Pourcentage de majoration"
+          />
+        </div>
+      </div>
+      
+      <div className="pt-4 flex justify-end">
+        <Button type="submit" className="w-full md:w-auto">
+          Générer la fiche de paie
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export default PayslipGeneratorForm;
