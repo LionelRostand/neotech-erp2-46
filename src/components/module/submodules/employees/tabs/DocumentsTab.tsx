@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,9 @@ import { formatDate } from '@/lib/formatters';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUser, FileText, Files } from 'lucide-react';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useFirestore } from '@/hooks/useFirestore';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -19,16 +21,14 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   onEmployeeUpdated
 }) => {
   const [documents, setDocuments] = useState<Document[]>(employee.documents || []);
+  const { update } = useFirestore(COLLECTIONS.HR.EMPLOYEES);
 
   const handleViewDocument = (document: Document) => {
-    // Check if there's a viewable URL
     if (document.fileUrl) {
       window.open(document.fileUrl, '_blank');
     } else if (document.fileData) {
-      // Create a data URL for embedded data
       const dataUrl = `data:${document.fileType};base64,${document.fileData}`;
       
-      // Open in a new tab
       const newTab = window.open();
       if (newTab) {
         newTab.document.write(`
@@ -52,11 +52,38 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     }
   };
 
-  const handleDeleteDocument = (index: number) => {
-    toast.error("Fonctionnalité non disponible dans cette démonstration");
+  const handleDeleteDocument = async (index: number) => {
+    try {
+      const docToDelete = documents[index];
+      
+      const updatedDocuments = [...documents];
+      updatedDocuments.splice(index, 1);
+      
+      setDocuments(updatedDocuments);
+      
+      await update(employee.id, { documents: updatedDocuments });
+      
+      if (docToDelete.documentId) {
+        try {
+          await deleteDocument(COLLECTIONS.HR.DOCUMENTS, docToDelete.documentId);
+          console.log(`Document also deleted from ${COLLECTIONS.HR.DOCUMENTS}`);
+        } catch (hrError) {
+          console.warn('Error deleting from HR Documents collection:', hrError);
+        }
+      }
+      
+      if (onEmployeeUpdated) {
+        const updatedEmployee = { ...employee, documents: updatedDocuments };
+        onEmployeeUpdated(updatedEmployee);
+      }
+      
+      toast.success("Document supprimé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la suppression du document:", error);
+      toast.error("Erreur lors de la suppression du document");
+    }
   };
 
-  // Filter documents by type
   const cvDocuments = documents.filter(doc => 
     doc.type?.toLowerCase() === 'cv' || 
     doc.name?.toLowerCase().includes('cv')
@@ -67,7 +94,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     doc.name?.toLowerCase().includes('contrat')
   );
 
-  // Component to render document table
   const DocumentsTable = ({ docs }: { docs: Document[] }) => (
     docs.length > 0 ? (
       <Table>
@@ -106,7 +132,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     )
   );
 
-  // Empty state component
   const EmptyState = () => (
     <div className="text-center py-8 text-muted-foreground">
       <p>Aucun document associé à cet employé</p>

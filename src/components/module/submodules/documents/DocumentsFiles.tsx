@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useDocumentService } from '../../documents/services';
 import { DocumentFile } from '../../documents/types/document-types';
@@ -17,9 +16,11 @@ import { Badge } from '@/components/ui/badge';
 // Import hooks
 import { useDocumentFilters } from './hooks/useDocumentFilters';
 import { useDocumentUpload } from './hooks/useDocumentUpload';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const DocumentsFiles: React.FC = () => {
-  const { getAllUserDocuments, deleteDocument } = useDocumentService();
+  const { getAllUserDocuments, deleteDocument: deleteDocFromService } = useDocumentService();
   
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,11 +67,23 @@ const DocumentsFiles: React.FC = () => {
   
   const handleDeleteDocument = async (documentId: string) => {
     try {
-      await deleteDocument(documentId);
+      // First delete from the service
+      await deleteDocFromService(documentId);
+      
+      // Also delete from HR Documents collection if it exists there
+      try {
+        await deleteDocument(COLLECTIONS.HR.DOCUMENTS, documentId);
+        console.log(`Document deleted from ${COLLECTIONS.HR.DOCUMENTS}`);
+      } catch (hrError) {
+        console.warn(`Document might not exist in HR Documents collection or deletion failed:`, hrError);
+      }
+      
+      // Update state
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
       if (selectedDocument?.id === documentId) {
         setSelectedDocument(null);
       }
+      
       toast.success('Document supprimé avec succès');
     } catch (error) {
       console.error('Error deleting document:', error);
