@@ -10,6 +10,7 @@ import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { Building2, Loader2 } from 'lucide-react';
 
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -38,7 +39,6 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onClose,
   onUpdate,
 }) => {
-  // Utiliser les données des employés depuis Firebase
   const { employees, isLoading } = useEmployeeData();
   // Utiliser les données des entreprises depuis Firebase
   const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
@@ -61,22 +61,23 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
         
         <TabsContent value="general" className="space-y-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-id" className="text-right">
+            <Label htmlFor="id" className="text-right">
               ID
             </Label>
             <Input
-              id="edit-id"
+              id="id"
+              name="id"
               value={formData.id}
               className="col-span-3"
               disabled
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-name" className="text-right">
+            <Label htmlFor="name" className="text-right">
               Nom
             </Label>
             <Input
-              id="edit-name"
+              id="name"
               name="name"
               value={formData.name}
               onChange={onInputChange}
@@ -84,11 +85,11 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-description" className="text-right">
+            <Label htmlFor="description" className="text-right">
               Description
             </Label>
             <Input
-              id="edit-description"
+              id="description"
               name="description"
               value={formData.description}
               onChange={onInputChange}
@@ -96,7 +97,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-manager" className="text-right">
+            <Label htmlFor="manager" className="text-right">
               Responsable
             </Label>
             <div className="col-span-3">
@@ -120,7 +121,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-company" className="text-right">
+            <Label htmlFor="company" className="text-right">
               Entreprise
             </Label>
             <div className="col-span-3">
@@ -131,20 +132,30 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="none">Aucune entreprise</SelectItem>
                   {isLoadingCompanies ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                  ) : (
-                    companies?.map((company) => (
+                    <div className="flex items-center justify-center py-2 px-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span>Chargement des entreprises...</span>
+                    </div>
+                  ) : companies && companies.length > 0 ? (
+                    companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
-                        {company.name}
+                        <div className="flex items-center">
+                          <Building2 className="h-4 w-4 mr-2 text-gray-500" />
+                          {company.name}
+                        </div>
                       </SelectItem>
                     ))
+                  ) : (
+                    <div className="px-2 py-2 text-sm text-muted-foreground">
+                      Aucune entreprise disponible
+                    </div>
                   )}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-color" className="text-right">
+            <Label htmlFor="color" className="text-right">
               Couleur
             </Label>
             <div className="col-span-3">
