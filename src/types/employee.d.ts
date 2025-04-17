@@ -1,3 +1,4 @@
+
 export interface EmployeePhotoMeta {
   data?: string;
   fileName?: string;
@@ -55,7 +56,7 @@ export interface Employee {
     taken: number;
     balance: number;
   };
-  // Address fields for direct access
+  // Adding address fields for direct access
   streetNumber?: string;
   streetName?: string;
   city?: string;
