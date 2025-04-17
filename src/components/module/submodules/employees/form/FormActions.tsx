@@ -16,13 +16,14 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { isEmployeeManager } from '@/components/module/submodules/employees/utils/employeeUtils';
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 
 interface FormActionsProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   form?: UseFormReturn<EmployeeFormValues>;
   showManagerOption?: boolean;
-  error?: Error | null; // Added error property as optional
+  error?: Error | null;
 }
 
 const FormActions: React.FC<FormActionsProps> = ({ 
@@ -30,22 +31,15 @@ const FormActions: React.FC<FormActionsProps> = ({
   isSubmitting = false,
   form,
   showManagerOption = true,
-  error // Added error parameter
+  error
 }) => {
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
+  const { departments, isLoading: isLoadingDepartments } = useFirebaseDepartments();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
   // Utiliser les données des employés dédupliquées depuis useEmployeeData
   useEffect(() => {
     if (employees && employees.length > 0) {
-      console.log(`FormActions: Nombre total d'employés récupérés: ${employees.length}`);
-      
-      // Vérification des IDs pour s'assurer qu'il n'y a pas de doublons
-      const uniqueIds = new Set(employees.map(emp => emp.id));
-      console.log(`FormActions: Nombre d'IDs uniques: ${uniqueIds.size}`);
-      
-      // Tri des employés par nom de famille puis prénom pour faciliter la recherche
-      // Filtrer seulement les employés qui sont des managers
       const managerEmployees = employees.filter(emp => 
         emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || '')
       );
@@ -56,12 +50,8 @@ const FormActions: React.FC<FormActionsProps> = ({
         return nameA.localeCompare(nameB);
       });
       
-      console.log(`FormActions: Nombre de managers disponibles: ${sorted.length}`);
-      
       setSortedEmployees(sorted);
       
-      // Si le formulaire est disponible et qu'un employé actuel est édité,
-      // mettre à jour le champ isManager basé sur le poste
       if (form) {
         const position = form.getValues('position');
         const forceManager = form.getValues('forceManager');
@@ -73,41 +63,64 @@ const FormActions: React.FC<FormActionsProps> = ({
           }
         }
       }
-    } else {
-      console.log('FormActions: Aucun employé récupéré ou liste vide');
-      if (isLoadingEmployees) {
-        console.log('FormActions: Chargement des employés en cours...');
-      }
     }
   }, [employees, isLoadingEmployees, form]);
   
   return (
     <div className="space-y-4">
-      {form && showManagerOption && (
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="managerId" className="text-right">
-            Responsable
-          </Label>
-          <div className="col-span-3">
-            <Select
-              value={form.getValues('managerId') || 'none'}
-              onValueChange={(value) => form.setValue('managerId', value === 'none' ? '' : value)}
-              disabled={isLoadingEmployees}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
-              </SelectTrigger>
-              <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
-                <SelectItem value="none">Aucun responsable</SelectItem>
-                {sortedEmployees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {`${employee.lastName || ''} ${employee.firstName || ''}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {form && (
+        <>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="department" className="text-right">
+              Département
+            </Label>
+            <div className="col-span-3">
+              <Select
+                value={form.getValues('department') || ''}
+                onValueChange={(value) => form.setValue('department', value)}
+                disabled={isLoadingDepartments}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingDepartments ? "Chargement..." : "Sélectionner un département"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
+                  {departments?.map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+
+          {showManagerOption && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="managerId" className="text-right">
+                Responsable
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={form.getValues('managerId') || 'none'}
+                  onValueChange={(value) => form.setValue('managerId', value === 'none' ? '' : value)}
+                  disabled={isLoadingEmployees}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
+                    <SelectItem value="none">Aucun responsable</SelectItem>
+                    {sortedEmployees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {`${employee.lastName || ''} ${employee.firstName || ''}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </>
       )}
       
       <div className="flex justify-end space-x-2 pt-4">
