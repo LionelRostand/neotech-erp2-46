@@ -2,8 +2,8 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Company } from '@/components/module/submodules/companies/types';
+import { Loader2, Building2 } from 'lucide-react';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { Loader2 } from 'lucide-react';
 
 interface CompanySelectProps {
   selectedCompanyId: string;
@@ -41,8 +41,11 @@ const CompanySelect: React.FC<CompanySelectProps> = ({
             </div>
           ) : companies && companies.length > 0 ? (
             companies.map((company) => (
-              <SelectItem key={company.id} value={company.id}>
-                {company.name}
+              <SelectItem key={company.id} value={company.id} className="flex items-center">
+                <div className="flex items-center">
+                  <Building2 className="h-4 w-4 mr-2 text-gray-500" />
+                  {company.name}
+                </div>
               </SelectItem>
             ))
           ) : (
