@@ -2,108 +2,79 @@
 import { jsPDF } from 'jspdf';
 import { BadgeData } from '../BadgeTypes';
 import { Employee } from '@/types/employee';
-import { Company } from '@/components/module/submodules/companies/types';
 
 /**
- * Génère un PDF pour un badge d'employé
+ * Get company name from employee data
  */
-export const generateBadgePdf = (
-  badge: BadgeData,
-  employee: Employee | null,
-  companyName: string
-): jsPDF => {
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: [85, 54]
-  });
+export const getCompanyName = (employee: Employee | null): string => {
+  if (!employee) return 'Non spécifiée';
   
-  // Fond du badge
-  doc.setFillColor(240, 240, 240);
-  doc.rect(0, 0, 85, 54, 'F');
-  
-  // Couleur de l'entête selon le statut
-  let headerColor;
-  if (badge.status === 'success') {
-    headerColor = [34, 197, 94];
-  } else if (badge.status === 'warning') {
-    headerColor = [234, 179, 8];
-  } else {
-    headerColor = [239, 68, 68];
-  }
-  doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-  doc.rect(0, 0, 85, 12, 'F');
-  
-  // Entête avec nom de l'entreprise
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text(companyName.toUpperCase(), 5, 7);
-  
-  // ID du badge
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(8);
-  doc.text(`ID: ${badge.id}`, 42.5, 18, { align: 'center' });
-  
-  // Nom de l'employé
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(badge.employeeName, 42.5, 25, { align: 'center' });
-  
-  // Département et niveau d'accès
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Département: ${badge.department || 'N/A'}`, 42.5, 31, { align: 'center' });
-  doc.text(`Accès: ${badge.accessLevel || 'Standard'}`, 42.5, 36, { align: 'center' });
-  
-  // Statut du badge
-  let statusColor;
-  if (badge.status === 'success') {
-    statusColor = [34, 197, 94];
-  } else if (badge.status === 'warning') {
-    statusColor = [234, 179, 8];
-  } else {
-    statusColor = [239, 68, 68];
+  if (typeof employee.company === 'string') {
+    return employee.company || 'Non spécifiée';
   }
   
-  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.text(`Statut: ${badge.statusText}`, 42.5, 41, { align: 'center' });
+  if (employee.company && typeof employee.company === 'object') {
+    return employee.company.name || 'Non spécifiée';
+  }
   
-  // Email professionnel au lieu de l'email standard
-  doc.setTextColor(100, 100, 100);
-  doc.setFontSize(8);
-  doc.text(`Email pro: ${employee?.professionalEmail || 'N/A'}`, 42.5, 46, { align: 'center' });
-  
-  // Pied de page
-  doc.setFillColor(70, 70, 70);
-  doc.rect(0, 50, 85, 4, 'F');
-  doc.setFontSize(6);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
-  
-  // QR code (simulé)
-  doc.setFillColor(0, 0, 0);
-  doc.rect(5, 36, 10, 10, 'F');
-  doc.setFillColor(255, 255, 255);
-  doc.rect(6, 37, 8, 8, 'F');
-  doc.setFillColor(0, 0, 0);
-  doc.rect(7, 38, 6, 6, 'F');
-  
-  return doc;
+  return 'Non spécifiée';
 };
 
 /**
- * Extrait le nom de l'entreprise d'un employé
+ * Generate PDF for badge
  */
-export const getCompanyName = (employee: Employee | null): string => {
-  if (!employee) return "Enterprise";
+export const generateBadgePdf = (
+  badge: BadgeData, 
+  employee: Employee | null, 
+  companyName: string
+): jsPDF => {
+  // Create new PDF
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a7' // Small card size
+  });
   
-  if (!employee.company) return "Enterprise";
+  // Set up document
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
   
-  if (typeof employee.company === 'string') {
-    return employee.company;
+  // Add Badge header with color
+  if (badge.status === 'success') {
+    doc.setFillColor(34, 197, 94); // green-500
+  } else if (badge.status === 'warning') {
+    doc.setFillColor(245, 158, 11); // amber-500
+  } else {
+    doc.setFillColor(239, 68, 68); // red-500
   }
   
-  const companyObj = employee.company as Company;
-  return companyObj.name || "Enterprise";
+  // Add colored header rectangle
+  doc.rect(0, 0, 74, 5, 'F');
+  
+  // Add badge content
+  doc.setFontSize(8);
+  doc.text(`ID: ${badge.id}`, 37, 15, { align: 'center' });
+  
+  doc.setFontSize(14);
+  doc.text(badge.employeeName || 'Employé', 37, 22, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text(`Entreprise: ${companyName}`, 37, 28, { align: 'center' });
+  
+  // Add information
+  doc.setFontSize(8);
+  doc.text(`Département: ${badge.department || 'N/A'}`, 10, 38);
+  doc.text(`Niveau d'accès: ${badge.accessLevel || 'Standard'}`, 10, 44);
+  doc.text(`Statut: ${badge.statusText}`, 10, 50);
+  doc.text(`Date d'émission: ${badge.date}`, 10, 56);
+  
+  // Add extra employee info if available
+  if (employee) {
+    doc.line(10, 62, 64, 62);
+    doc.text('Informations supplémentaires:', 10, 68);
+    doc.text(`Email: ${employee.professionalEmail || employee.email || 'Non spécifié'}`, 10, 74);
+    doc.text(`Poste: ${employee.position || employee.title || 'Non spécifié'}`, 10, 80);
+  }
+  
+  return doc;
 };
