@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -38,6 +39,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       department: employee.department || '',
       status: employee.status || 'active',
       photo: employee.photoURL || employee.photo || employee.photoData || '',
+      photoMeta: employee.photoMeta || null,
       managerId: employee.managerId || ''
     }
   });

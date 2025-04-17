@@ -81,6 +81,7 @@ export interface EmployeeAddress {
 }
 
 export interface EmployeePhotoMeta {
+  data: string;
   fileName: string;
   fileType: string;
   fileSize: number;

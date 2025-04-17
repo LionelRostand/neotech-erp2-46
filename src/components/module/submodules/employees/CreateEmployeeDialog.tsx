@@ -52,7 +52,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
       status: 'active',
       forceManager: false,
       isManager: false,
-      photo: ''
+      photo: '',
+      photoMeta: undefined
     }
   });
   
@@ -75,6 +76,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
         photo: data.photo || '',
         photoURL: data.photo || '',
         photoData: data.photo || '',
+        photoMeta: data.photoMeta || null,
         address: {
           streetNumber: data.streetNumber || '',
           streetName: data.streetName || '',

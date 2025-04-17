@@ -1,6 +1,15 @@
 
 import { z } from 'zod';
 
+// Define a schema for photo metadata
+const photoMetaSchema = z.object({
+  data: z.string(),
+  fileName: z.string(),
+  fileType: z.string(),
+  fileSize: z.number(),
+  updatedAt: z.string()
+}).optional();
+
 export const employeeFormSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis' }),
   lastName: z.string().min(1, { message: 'Le nom est requis' }),
@@ -22,6 +31,7 @@ export const employeeFormSchema = z.object({
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   company: z.string().optional(),
   photo: z.string().optional(),
+  photoMeta: photoMetaSchema,
   forceManager: z.boolean().default(false),
   isManager: z.boolean().optional(),
 });

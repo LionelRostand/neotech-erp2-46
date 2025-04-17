@@ -45,7 +45,18 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
         const base64Data = e.target?.result as string;
         if (base64Data) {
           setPreviewUrl(base64Data);
+          
+          // Set the photo value as a string (base64)
           form.setValue('photo', base64Data);
+          
+          // Also set the photoMeta for additional information
+          form.setValue('photoMeta', {
+            data: base64Data,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            updatedAt: new Date().toISOString()
+          });
         }
         setIsUploading(false);
       };
