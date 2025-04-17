@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatFileSize } from '../utils/formatUtils';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { DocumentIcon } from './DocumentIcon';
 
@@ -43,6 +43,28 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
   onSelect,
   onDelete
 }) => {
+  // Function to safely format date with validation
+  const formatSafeDate = (date: Date | string | number | null | undefined) => {
+    if (!date) return 'Date inconnue';
+    
+    // If it's a string, try to convert it to a date object
+    const dateObj = typeof date === 'string' || typeof date === 'number' 
+      ? new Date(date) 
+      : date;
+    
+    // Validate the date is actually valid before formatting
+    if (!dateObj || !isValid(dateObj)) {
+      return 'Date invalide';
+    }
+    
+    try {
+      return format(dateObj, 'PPP', { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', error, dateObj);
+      return 'Date invalide';
+    }
+  };
+
   return (
     <div 
       className={`border rounded-md p-4 space-y-2 hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -81,7 +103,7 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </TooltipTrigger>
             <TooltipContent>
-              {format(new Date(document.createdAt), 'PPP', { locale: fr })}
+              {formatSafeDate(document.createdAt)}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

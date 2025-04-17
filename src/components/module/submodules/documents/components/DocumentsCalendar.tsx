@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { fr } from 'date-fns/locale';
-import { format, isSameDay, isValid } from 'date-fns';
+import { format, isSameDay, isValid, parseISO } from 'date-fns';
 import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsCalendarProps {
@@ -15,33 +15,38 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-  // Simple, safe date parser that won't throw on invalid dates
+  // Improved safe date parser with better validation
   const safeParseDate = (dateString: string | undefined): Date | null => {
     if (!dateString) return null;
     
     try {
-      // Simple validation for empty or invalid strings
+      // Skip empty or explicitly invalid strings
       if (!dateString.trim() || dateString === 'Date non valide') {
         return null;
       }
       
-      // Check for French date format (DD/MM/YYYY)
+      // Handle French date format (DD/MM/YYYY)
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
         const [day, month, year] = dateString.split('/').map(Number);
         const parsedDate = new Date(year, month - 1, day);
-        if (!isNaN(parsedDate.getTime())) {
-          return parsedDate;
+        return isValid(parsedDate) ? parsedDate : null;
+      }
+      
+      // Try ISO parsing first (most reliable)
+      try {
+        const isoDate = parseISO(dateString);
+        if (isValid(isoDate)) {
+          return isoDate;
         }
+      } catch (e) {
+        // Continue to standard parsing if ISO parsing fails
       }
       
       // Standard date parsing
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return null;
-      }
-      return date;
+      return isValid(date) ? date : null;
     } catch (e) {
-      console.warn('Error parsing date:', dateString);
+      console.warn('Error parsing date:', dateString, e);
       return null;
     }
   };
@@ -94,7 +99,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     }
   };
 
-  // Return a custom content for each day that has documents
+  // Safer day rendering with better error handling
   const renderDay = (day: Date) => {
     try {
       if (!day || !isValid(day)) {
@@ -105,7 +110,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       try {
         dateStr = format(day, 'yyyy-MM-dd');
       } catch (e) {
-        console.error('Error formatting day in renderDay:', e);
+        console.error('Error formatting day in renderDay:', e, day);
         return <div>{day?.getDate?.() ?? '?'}</div>;
       }
       
@@ -126,7 +131,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       );
     } catch (e) {
       console.error('Error rendering day:', e);
-      return <div>{day?.getDate?.() ?? '?'}</div>;
+      return <div>?</div>;
     }
   };
 

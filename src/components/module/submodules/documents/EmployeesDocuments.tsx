@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,9 +19,44 @@ import { addEmployeeDocument } from '../employees/services/documentService';
 import NewDocumentDialog from './components/NewDocumentDialog';
 import { Document } from '@/types/employee';
 import { DocumentFile } from '../../documents/types/document-types';
+import { isValid } from 'date-fns';
 
-// Adapter function to convert HrDocument to DocumentFile
+// Adapter function to convert HrDocument to DocumentFile with better date handling
 const adaptHrDocumentToDocumentFile = (doc: HrDocument): DocumentFile => {
+  // Parse the date safely
+  const getValidDate = (dateStr?: string): Date => {
+    if (!dateStr) return new Date(); // Fallback to current date if no date provided
+    
+    try {
+      const date = new Date(dateStr);
+      // Check if date is valid, if not return current date
+      return isValid(date) ? date : new Date();
+    } catch (error) {
+      console.error('Error parsing date:', error, dateStr);
+      return new Date(); // Fallback to current date if parsing fails
+    }
+  };
+  
+  // Find the first valid date among the options
+  const getFirstValidDate = (...dateCandidates: (string | undefined)[]): Date => {
+    for (const dateStr of dateCandidates) {
+      if (dateStr) {
+        const date = getValidDate(dateStr);
+        if (isValid(date)) {
+          return date;
+        }
+      }
+    }
+    return new Date(); // Fallback to current date if no valid dates
+  };
+  
+  // Try to get a valid date for creation date
+  const createdDate = getFirstValidDate(
+    doc.uploadDate, 
+    doc.createdAt, 
+    doc.date
+  );
+  
   return {
     id: doc.id,
     name: doc.title,
@@ -30,8 +64,8 @@ const adaptHrDocumentToDocumentFile = (doc: HrDocument): DocumentFile => {
     size: typeof doc.fileSize === 'string' ? parseInt(doc.fileSize) || 0 : doc.fileSize || 0,
     format: doc.fileType || 'unknown',
     path: doc.url || '',
-    createdAt: new Date(doc.uploadDate || doc.createdAt || doc.date || new Date().toISOString()),
-    updatedAt: new Date(doc.uploadDate || doc.createdAt || doc.date || new Date().toISOString()),
+    createdAt: createdDate,
+    updatedAt: createdDate, // Use same date for updated if not available
     createdBy: doc.employeeName || 'Unknown',
     isEncrypted: false,
     status: 'active',
@@ -52,7 +86,7 @@ const EmployeesDocuments: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [selectedDocument, setSelectedDocument] = useState<DocumentFile | null>(null);
   
-  // Convert HrDocuments to DocumentFiles
+  // Convert HrDocuments to DocumentFiles with safe date handling
   const adaptedDocuments = documents.map(adaptHrDocumentToDocumentFile);
   const adaptedFilteredDocuments = filteredDocuments.map(adaptHrDocumentToDocumentFile);
   
