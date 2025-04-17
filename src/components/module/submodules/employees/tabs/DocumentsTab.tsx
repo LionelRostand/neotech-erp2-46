@@ -6,6 +6,8 @@ import { Employee, Document } from '@/types/employee';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/lib/formatters';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileUser, FileText, Files } from 'lucide-react';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -54,6 +56,64 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     toast.error("Fonctionnalité non disponible dans cette démonstration");
   };
 
+  // Filter documents by type
+  const cvDocuments = documents.filter(doc => 
+    doc.type?.toLowerCase() === 'cv' || 
+    doc.name?.toLowerCase().includes('cv')
+  );
+  
+  const contractDocuments = documents.filter(doc => 
+    doc.type?.toLowerCase() === 'contrat' || 
+    doc.name?.toLowerCase().includes('contrat')
+  );
+
+  // Component to render document table
+  const DocumentsTable = ({ docs }: { docs: Document[] }) => (
+    docs.length > 0 ? (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nom</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {docs.map((doc, index) => (
+            <TableRow key={index}>
+              <TableCell className="font-medium">{doc.name}</TableCell>
+              <TableCell>{doc.type}</TableCell>
+              <TableCell>{formatDate(new Date(doc.date))}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)}>
+                    Voir
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteDocument(index)}>
+                    Supprimer
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    ) : (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Aucun document dans cette catégorie</p>
+      </div>
+    )
+  );
+
+  // Empty state component
+  const EmptyState = () => (
+    <div className="text-center py-8 text-muted-foreground">
+      <p>Aucun document associé à cet employé</p>
+      <p className="text-sm mt-2">Cliquez sur "Ajouter un document" pour en importer un nouveau</p>
+    </div>
+  );
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -65,40 +125,36 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
         </div>
         
         {documents.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.map((doc, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{doc.name}</TableCell>
-                  <TableCell>{doc.type}</TableCell>
-                  <TableCell>{formatDate(new Date(doc.date))}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)}>
-                        Voir
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteDocument(index)}>
-                        Supprimer
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <Tabs defaultValue="all">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">
+                <Files className="h-4 w-4 mr-2" />
+                Tous
+              </TabsTrigger>
+              <TabsTrigger value="cv">
+                <FileUser className="h-4 w-4 mr-2" />
+                CV
+              </TabsTrigger>
+              <TabsTrigger value="contrats">
+                <FileText className="h-4 w-4 mr-2" />
+                Contrats
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              <DocumentsTable docs={documents} />
+            </TabsContent>
+            
+            <TabsContent value="cv">
+              <DocumentsTable docs={cvDocuments} />
+            </TabsContent>
+            
+            <TabsContent value="contrats">
+              <DocumentsTable docs={contractDocuments} />
+            </TabsContent>
+          </Tabs>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Aucun document associé à cet employé</p>
-            <p className="text-sm mt-2">Cliquez sur "Ajouter un document" pour en importer un nouveau</p>
-          </div>
+          <EmptyState />
         )}
       </CardContent>
     </Card>
