@@ -1,5 +1,5 @@
 
-import { EmployeePhotoMeta } from '@/types/employee';
+import { EmployeePhotoMeta, Employee } from '@/types/employee';
 
 /**
  * Génère les initiales à partir du nom et prénom d'un employé

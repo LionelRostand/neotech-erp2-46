@@ -49,7 +49,7 @@ export interface Employee {
     taken: number;
     balance: number;
   };
-  // Added address-related fields for direct access
+  // Address-related fields for direct access
   streetNumber?: string;
   streetName?: string;
   city?: string;

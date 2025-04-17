@@ -19,7 +19,7 @@ const CompanyDepartmentFields = () => {
   const selectedCompany = watch('company');
 
   const filteredDepartments = departments.filter(
-    dept => !selectedCompany || dept.id.startsWith(selectedCompany) || dept.companyId === selectedCompany
+    dept => !selectedCompany || dept.id.startsWith(selectedCompany)
   );
 
   return (
@@ -31,7 +31,11 @@ const CompanyDepartmentFields = () => {
           <FormItem>
             <FormLabel>Entreprise</FormLabel>
             <Select
-              onValueChange={field.onChange}
+              onValueChange={(val) => {
+                field.onChange(val);
+                // Reset department when company changes
+                setValue('department', '');
+              }}
               defaultValue={field.value}
               disabled={isLoadingCompanies}
             >
