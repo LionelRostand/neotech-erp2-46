@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
@@ -24,6 +25,7 @@ export const usePayslipGenerator = () => {
   };
 
   const handleCompanySelect = (companyId: string, companies: Company[]) => {
+    setSelectedCompanyId(companyId);
     const company = companies.find(c => c.id === companyId);
     if (company) {
       setCompanyName(company.name);
