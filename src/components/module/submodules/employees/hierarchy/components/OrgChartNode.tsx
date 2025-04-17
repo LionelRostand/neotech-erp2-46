@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -9,37 +10,44 @@ import { getPhotoUrl } from '../../utils/photoUtils';
 
 interface OrgChartNodeProps {
   employee: Employee;
+  node?: any; // Add support for node prop
   children?: React.ReactNode;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   onSelect?: (employee: Employee) => void;
+  searchQuery?: string; // Add support for searchQuery prop
 }
 
 const OrgChartNode: React.FC<OrgChartNodeProps> = ({
   employee,
+  node,
   children,
   isCollapsed = false,
   onToggleCollapse,
-  onSelect
+  onSelect,
+  searchQuery = ''
 }) => {
-  const avatarColor = getAvatarColorFromName(employee.firstName + employee.lastName);
-  const positionClasses = getPositionStyleClasses(employee.position || '');
-  const photoUrl = getPhotoUrl(employee.photoMeta);
+  // If node is provided, use it instead of employee directly
+  const employeeData = node || employee;
+  
+  const avatarColor = getAvatarColorFromName(employeeData.firstName + employeeData.lastName);
+  const positionClasses = getPositionStyleClasses(employeeData.position || '');
+  const photoUrl = getPhotoUrl(employeeData.photoMeta);
 
   return (
     <div className="relative">
-      <div className="flex items-center space-x-4 p-4 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect?.(employee)}>
+      <div className="flex items-center space-x-4 p-4 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect?.(employeeData)}>
         <Avatar className={`h-10 w-10 ${avatarColor}`}>
           {photoUrl ? (
-            <AvatarImage src={photoUrl} alt={employee.firstName} />
+            <AvatarImage src={photoUrl} alt={employeeData.firstName} />
           ) : (
-            <AvatarFallback>{getEmployeeInitials(employee)}</AvatarFallback>
+            <AvatarFallback>{getEmployeeInitials(employeeData)}</AvatarFallback>
           )}
         </Avatar>
         <div>
-          <h4 className="text-sm font-medium">{employee.firstName} {employee.lastName}</h4>
-          <p className={`text-xs ${positionClasses}`}>{employee.position || 'N/A'}</p>
-          <Badge variant="secondary" className="mt-1">{employee.department}</Badge>
+          <h4 className="text-sm font-medium">{employeeData.firstName} {employeeData.lastName}</h4>
+          <p className={`text-xs ${positionClasses}`}>{employeeData.position || 'N/A'}</p>
+          <Badge variant="secondary" className="mt-1">{employeeData.department}</Badge>
         </div>
       </div>
 

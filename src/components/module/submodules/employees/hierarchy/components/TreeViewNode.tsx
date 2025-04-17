@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getEmployeeInitials, getAvatarColorFromName } from "../../utils/employeeUtils";
@@ -13,6 +15,7 @@ interface TreeViewNodeProps {
   onToggleExpand: (id: string) => void;
   onSelectNode: (node: any) => void;
   selectedNodeId?: string;
+  searchQuery?: string;
 }
 
 const TreeViewNode: React.FC<TreeViewNodeProps> = ({
@@ -21,7 +24,8 @@ const TreeViewNode: React.FC<TreeViewNodeProps> = ({
   expanded,
   onToggleExpand,
   onSelectNode,
-  selectedNodeId
+  selectedNodeId,
+  searchQuery = ''
 }) => {
   const isExpanded = expanded.includes(node.id);
   const hasChildren = node.children && node.children.length > 0;
@@ -79,6 +83,7 @@ const TreeViewNode: React.FC<TreeViewNodeProps> = ({
               onToggleExpand={onToggleExpand}
               onSelectNode={onSelectNode}
               selectedNodeId={selectedNodeId}
+              searchQuery={searchQuery}
             />
           ))}
         </div>

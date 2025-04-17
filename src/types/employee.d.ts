@@ -1,3 +1,10 @@
+export interface EmployeePhotoMeta {
+  data?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  updatedAt?: string;
+}
 
 export interface Employee {
   id: string;
@@ -54,14 +61,6 @@ export interface Employee {
   city?: string;
   zipCode?: string;
   region?: string;
-}
-
-export interface EmployeePhotoMeta {
-  data?: string;
-  fileName?: string;
-  fileType?: string;
-  fileSize?: number;
-  updatedAt?: string;
 }
 
 export interface EmployeeAddress {
