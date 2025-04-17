@@ -41,11 +41,11 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Ouvert':
+      case 'Ouverte':
         return 'bg-green-100 text-green-800';
       case 'En cours':
         return 'bg-blue-100 text-blue-800';
-      case 'Clôturé':
+      case 'Fermée':
         return 'bg-amber-100 text-amber-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -55,13 +55,36 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'Haute':
+      case 'High':
         return 'bg-red-100 text-red-800';
       case 'Moyenne':
+      case 'Medium':
         return 'bg-orange-100 text-orange-800';
       case 'Basse':
+      case 'Low':
         return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatSalary = (salary: any): string => {
+    if (!salary) return 'Non précisé';
+    if (typeof salary === 'string') return salary;
+    if (typeof salary === 'object' && 'min' in salary && 'max' in salary) {
+      return `${salary.min}-${salary.max} ${salary.currency || '€'}`;
+    }
+    return 'Non précisé';
+  };
+
+  const formatContractType = (type: string): string => {
+    switch (type) {
+      case 'full-time': return 'Temps plein';
+      case 'part-time': return 'Temps partiel';
+      case 'temporary': return 'Temporaire';
+      case 'internship': return 'Stage';
+      case 'freelance': return 'Freelance';
+      default: return type;
     }
   };
 
@@ -91,7 +114,7 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
                 Priorité: {recruitment.priority}
               </Badge>
               <div className="text-sm text-gray-500 ml-auto">
-                Ouvert le {recruitment.openDate}
+                Ouvert le {recruitment.openDate || recruitment.publishDate}
               </div>
             </div>
             
@@ -100,7 +123,7 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
               <div className="flex items-center">
                 <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="text-sm">
-                  <span className="font-medium">Type:</span> {recruitment.contractType}
+                  <span className="font-medium">Type:</span> {formatContractType(recruitment.contractType)}
                 </span>
               </div>
               
@@ -121,21 +144,21 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
               <div className="flex items-center">
                 <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="text-sm">
-                  <span className="font-medium">Salaire:</span> {recruitment.salary || 'Non précisé'}
+                  <span className="font-medium">Salaire:</span> {formatSalary(recruitment.salary)}
                 </span>
               </div>
               
               <div className="flex items-center">
                 <User className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="text-sm">
-                  <span className="font-medium">Responsable:</span> {recruitment.hiringManagerName}
+                  <span className="font-medium">Responsable:</span> {recruitment.hiringManagerName || 'Non spécifié'}
                 </span>
               </div>
               
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="text-sm">
-                  <span className="font-medium">Date limite:</span> {recruitment.applicationDeadline || 'Non définie'}
+                  <span className="font-medium">Date limite:</span> {recruitment.applicationDeadline || recruitment.closingDate || 'Non définie'}
                 </span>
               </div>
             </div>
@@ -154,7 +177,12 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
             <div className="space-y-3">
               <h3 className="font-medium">Prérequis et compétences</h3>
               <p className="text-sm text-gray-700 whitespace-pre-line">
-                {recruitment.requirements}
+                {typeof recruitment.requirements === 'string'
+                  ? recruitment.requirements
+                  : Array.isArray(recruitment.requirements)
+                    ? recruitment.requirements.join('\n')
+                    : 'Non précisé'
+                }
               </p>
             </div>
             
@@ -163,7 +191,7 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
               <div className="flex items-center">
                 <TrendingUp className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="text-sm">
-                  <span className="font-medium">Candidatures reçues:</span> {recruitment.applicationCount}
+                  <span className="font-medium">Candidatures reçues:</span> {recruitment.applicationCount || recruitment.applications_count || 0}
                 </span>
               </div>
             </div>

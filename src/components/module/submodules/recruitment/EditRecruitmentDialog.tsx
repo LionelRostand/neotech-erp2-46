@@ -39,6 +39,13 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
 
   if (!recruitment) return null;
 
+  // Format the salary for display in the form
+  const formatSalaryForDisplay = () => {
+    if (!formData.salary) return '';
+    if (typeof formData.salary === 'string') return formData.salary;
+    return `${formData.salary.min}-${formData.salary.max} ${formData.salary.currency}`;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -102,9 +109,11 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Ouvert">Ouvert</SelectItem>
+                  <SelectItem value="Ouverte">Ouverte</SelectItem>
                   <SelectItem value="En cours">En cours</SelectItem>
-                  <SelectItem value="Clôturé">Clôturé</SelectItem>
+                  <SelectItem value="Entretiens">Entretiens</SelectItem>
+                  <SelectItem value="Offre">Offre</SelectItem>
+                  <SelectItem value="Fermée">Fermée</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -139,13 +148,21 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="contractType">Type de contrat</Label>
-              <Input
-                id="contractType"
-                name="contractType"
-                value={formData.contractType || ''}
-                onChange={handleChange}
-                required
-              />
+              <Select
+                value={formData.contractType}
+                onValueChange={(value) => handleSelectChange('contractType', value)}
+              >
+                <SelectTrigger id="contractType">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full-time">Temps plein</SelectItem>
+                  <SelectItem value="part-time">Temps partiel</SelectItem>
+                  <SelectItem value="temporary">Temporaire</SelectItem>
+                  <SelectItem value="internship">Stage</SelectItem>
+                  <SelectItem value="freelance">Freelance</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -153,9 +170,8 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
               <Input
                 id="salary"
                 name="salary"
-                value={formData.salary || ''}
+                value={formatSalaryForDisplay()}
                 onChange={handleChange}
-                required
               />
             </div>
 
@@ -166,7 +182,6 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
                 name="hiringManagerName"
                 value={formData.hiringManagerName || ''}
                 onChange={handleChange}
-                required
               />
             </div>
           </div>

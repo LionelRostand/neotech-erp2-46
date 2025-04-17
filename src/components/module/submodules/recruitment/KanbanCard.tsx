@@ -33,7 +33,7 @@ const KanbanCard = ({ item, type, onStageUpdate, getRecruitmentPost }: KanbanCar
   });
   
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
-  const { convertCandidateToEmployee, isConverting } = useRecruitmentToEmployee();
+  const { convertCandidateToEmployee, loading: isConverting } = useRecruitmentToEmployee();
 
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -121,7 +121,7 @@ const KanbanCard = ({ item, type, onStageUpdate, getRecruitmentPost }: KanbanCar
         <p className="text-xs text-muted-foreground">{post.department}</p>
         <div className="flex justify-between items-center mt-1">
           <Badge className={`text-xs ${
-            post.status === 'Ouvert' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 
+            post.status === 'Ouverte' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 
             post.status === 'En cours' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' : 
             'bg-gray-100 text-gray-800 hover:bg-gray-100'
           }`}>

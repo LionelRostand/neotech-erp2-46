@@ -44,7 +44,7 @@ export interface RecruitmentPost {
     min: number;
     max: number;
     currency: string;
-  };
+  } | string;
   contractType: 'full-time' | 'part-time' | 'temporary' | 'internship' | 'freelance';
   experienceLevel: 'entry' | 'junior' | 'intermediate' | 'senior' | 'expert';
   educationLevel?: string;

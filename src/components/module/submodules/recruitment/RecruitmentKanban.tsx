@@ -8,7 +8,9 @@ import { toast } from 'sonner';
 import KanbanColumn from './KanbanColumn';
 import { RecruitmentPost } from '@/types/recruitment';
 
-const statuses = ['Ouverte', 'En cours', 'Entretiens', 'Offre', 'Fermée'];
+// Define the valid statuses for recruitment posts
+const statuses = ['Ouverte', 'En cours', 'Entretiens', 'Offre', 'Fermée'] as const;
+type StatusType = typeof statuses[number];
 
 const RecruitmentKanban: React.FC = () => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
@@ -38,11 +40,18 @@ const RecruitmentKanban: React.FC = () => {
         const posts: RecruitmentPost[] = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
+          
+          // Ensure the status is one of the allowed values or default to 'Ouverte'
+          let validStatus: StatusType = 'Ouverte';
+          if (data.status && typeof data.status === 'string' && 
+              (statuses as readonly string[]).includes(data.status)) {
+            validStatus = data.status as StatusType;
+          }
+          
           posts.push({
             id: doc.id,
             ...data,
-            // Ensure the status is one of the allowed values
-            status: statuses.includes(data.status) ? data.status : 'Ouverte'
+            status: validStatus
           } as RecruitmentPost);
         });
         
@@ -83,15 +92,23 @@ const RecruitmentKanban: React.FC = () => {
         return;
       }
       
+      // Ensure overId is a valid status
+      if (!(statuses as readonly string[]).includes(overId)) {
+        toast.error(`Statut invalide: ${overId}`);
+        return;
+      }
+      
+      const validStatus = overId as StatusType;
+      
       const updatedPost = {
         ...recruitmentPosts[postIndex],
-        status: overId
+        status: validStatus
       };
       
       // Update in Firestore
       const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, activeId);
       await updateDoc(postRef, {
-        status: overId,
+        status: validStatus,
         updatedAt: new Date()
       });
       
@@ -100,7 +117,7 @@ const RecruitmentKanban: React.FC = () => {
       updatedPosts[postIndex] = updatedPost;
       setRecruitmentPosts(updatedPosts);
       
-      toast.success(`Offre déplacée vers "${overId}"`);
+      toast.success(`Offre déplacée vers "${validStatus}"`);
     } catch (error) {
       console.error('Error updating post status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
@@ -117,13 +134,16 @@ const RecruitmentKanban: React.FC = () => {
     const priorityOrder: Record<string, number> = {
       'Urgente': 0,
       'Haute': 1,
-      'Normale': 2,
-      'Basse': 3
+      'Moyenne': 2,
+      'Basse': 3,
+      'High': 0,
+      'Medium': 2,
+      'Low': 3
     };
     
     columnPosts.sort((a, b) => {
-      const priorityA = priorityOrder[a.priority];
-      const priorityB = priorityOrder[b.priority];
+      const priorityA = priorityOrder[a.priority] ?? 99;
+      const priorityB = priorityOrder[b.priority] ?? 99;
       return priorityA - priorityB;
     });
     
