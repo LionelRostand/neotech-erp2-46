@@ -28,7 +28,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('non-specified');
   
   // Récupérer la liste des entreprises
   const { companies, isLoading } = useFirebaseCompanies();
@@ -56,7 +56,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif",
-      company: selectedCompany || 'Non spécifiée'
+      company: selectedCompany === 'non-specified' ? 'Non spécifiée' : selectedCompany
     };
     
     // Callback to add the badge
@@ -71,7 +71,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployee('');
     setSelectedEmployeeId('');
     setAccessLevel('');
-    setSelectedCompany('');
+    setSelectedCompany('non-specified');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -135,7 +135,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Non spécifiée</SelectItem>
+                  <SelectItem value="non-specified">Non spécifiée</SelectItem>
                   {companies && companies.map((company) => (
                     <SelectItem key={company.id} value={company.name}>
                       {company.name}

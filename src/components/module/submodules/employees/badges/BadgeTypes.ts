@@ -8,7 +8,7 @@ export interface BadgeData {
   accessLevel: string;
   status: string;
   statusText: string;
-  company?: string;  // Nouveau champ pour l'entreprise
+  company?: string;  // Champ pour l'entreprise
 }
 
 export const generateBadgeNumber = (): string => {
