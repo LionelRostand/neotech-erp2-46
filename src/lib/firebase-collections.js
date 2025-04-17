@@ -26,7 +26,8 @@ export const COLLECTIONS = {
     ABSENCE_REQUESTS: 'hr_absence_requests',
     SALARIES: 'hr_salaries',
     POSITIONS: 'hr_positions',
-    PERMISSIONS: 'hr_permissions'
+    PERMISSIONS: 'hr_permissions',
+    RECRUITMENT: 'hr_recruitment'
   },
   MESSAGES: {
     INBOX: 'messages_inbox',
@@ -93,7 +94,8 @@ export const COLLECTIONS = {
     AUTHORS: 'library_authors',
     PUBLISHERS: 'library_publishers',
     CATEGORIES: 'library_categories',
-    SETTINGS: 'library_settings'
+    SETTINGS: 'library_settings',
+    STATS: 'library_stats'
   },
   ACCOUNTING: {
     INVOICES: 'accounting_invoices',

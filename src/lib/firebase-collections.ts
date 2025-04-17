@@ -20,6 +20,8 @@ export const COLLECTIONS = {
   DRIVERS: 'drivers',
   VEHICLES: 'vehicles',
   CONTRACTS: 'contracts',
+  PROJECTS: 'projects',
+  TASKS: 'tasks',
   DOCUMENT_COLLECTIONS: {
     DOCUMENTS: 'documents',
     SETTINGS: 'document_settings',
@@ -68,7 +70,8 @@ export const COLLECTIONS = {
     PERMISSIONS: 'hr_permissions',
     SETTINGS: 'hr_settings',
     ALERTS: 'hr_alerts',
-    REPORTS: 'hr_reports'
+    REPORTS: 'hr_reports',
+    RECRUITMENT: 'hr_recruitment'
   },
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',
@@ -111,6 +114,7 @@ export const COLLECTIONS = {
     AUTHORS: 'library_authors',
     PUBLISHERS: 'library_publishers',
     CATEGORIES: 'library_categories',
-    SETTINGS: 'library_settings'
+    SETTINGS: 'library_settings',
+    STATS: 'library_stats'
   }
 };
