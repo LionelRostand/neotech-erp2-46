@@ -28,6 +28,7 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
   
   const { employees } = useHrModuleData();
   const { update } = useFirestore(COLLECTIONS.HR.EMPLOYEES);
+  const { add: addHrDocument } = useFirestore(COLLECTIONS.HR.DOCUMENTS);
   
   // Fonction pour afficher le bon badge de statut
   const getStatusBadge = (status: 'Actif' | 'À venir' | 'Expiré') => {
@@ -43,7 +44,7 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
     }
   };
   
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = async () => {
     try {
       // Trouver l'employé associé au contrat
       const employee = employees.find(emp => emp.id === contract.employeeId);
@@ -73,7 +74,34 @@ const ContractDetailsDialog: React.FC<ContractDetailsDialogProps> = ({
         // Mettre à jour l'employé dans la base de données
         update(employee.id, { documents: employee.documents })
           .then(() => {
-            toast.success("Le contrat a été généré et ajouté aux documents de l'employé");
+            // Also add the document to HR Documents collection
+            const hrDocumentToAdd = {
+              title: documentToAdd.name,
+              type: 'contrat',
+              fileType: documentToAdd.fileType,
+              fileSize: documentToAdd.fileSize,
+              employeeId: employee.id,
+              employeeName: `${employee.firstName} ${employee.lastName}`,
+              department: employee.department,
+              uploadDate: new Date(),
+              createdAt: new Date(),
+              date: new Date(),
+              fileData: documentToAdd.fileData,
+              // Add additional metadata
+              description: `Contrat de ${contract.type} pour ${employee.firstName} ${employee.lastName}`,
+              position: contract.position,
+              status: 'active'
+            };
+            
+            // Add to HR Documents collection
+            addHrDocument(hrDocumentToAdd)
+              .then(() => {
+                toast.success("Le contrat a été généré et ajouté aux documents de l'employé et aux Documents RH");
+              })
+              .catch((error) => {
+                console.error("Erreur lors de l'ajout du document aux Documents RH:", error);
+                toast.error("Erreur lors de l'ajout du document aux Documents RH");
+              });
           })
           .catch((error) => {
             console.error("Erreur lors de la mise à jour de l'employé:", error);
