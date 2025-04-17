@@ -22,7 +22,7 @@ export const getCompanies = async (): Promise<Company[]> => {
   try {
     console.log('Récupération des entreprises depuis Firestore...');
     
-    const companiesRef = collection(db, COLLECTIONS.COMPANIES);
+    const companiesRef = collection(db, 'companies');
     const q = query(companiesRef, orderBy('name', 'asc'));
     const querySnapshot = await getDocs(q);
     
@@ -67,11 +67,6 @@ export const addCompany = async (company: Partial<Company>): Promise<Company> =>
   try {
     console.log('Ajout d\'une entreprise dans Firestore:', company);
     
-    // S'assurer que la collection est bien définie
-    if (!COLLECTIONS.COMPANIES) {
-      throw new Error('Le chemin de la collection des entreprises n\'est pas défini');
-    }
-    
     const companyData = {
       ...company,
       createdAt: serverTimestamp(),
@@ -79,8 +74,8 @@ export const addCompany = async (company: Partial<Company>): Promise<Company> =>
       employeesCount: 0 // Initialiser le nombre d'employés à 0 pour une nouvelle entreprise
     };
     
-    // Utiliser explicitement le chemin de la collection COMPANIES
-    const companiesCollectionRef = collection(db, COLLECTIONS.COMPANIES);
+    // Utiliser directement 'companies' comme chemin de collection
+    const companiesCollectionRef = collection(db, 'companies');
     const docRef = await addDoc(companiesCollectionRef, companyData);
     
     toast.success('Entreprise ajoutée avec succès');
@@ -108,7 +103,7 @@ export const updateCompany = async (id: string, updates: Partial<Company>): Prom
       updatedAt: serverTimestamp()
     };
     
-    await updateDoc(doc(db, COLLECTIONS.COMPANIES, id), updatedData);
+    await updateDoc(doc(db, 'companies', id), updatedData);
     
     toast.success('Entreprise mise à jour avec succès');
     return true;
@@ -125,7 +120,7 @@ export const deleteCompany = async (id: string): Promise<boolean> => {
   try {
     console.log(`Suppression de l'entreprise ${id} de Firestore`);
     
-    await deleteDoc(doc(db, COLLECTIONS.COMPANIES, id));
+    await deleteDoc(doc(db, 'companies', id));
     
     toast.success('Entreprise supprimée avec succès');
     return true;

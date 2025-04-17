@@ -47,11 +47,14 @@ export const useFirebaseCompanies = () => {
         return;
       }
       
-      if (!COLLECTIONS.COMPANIES) {
+      // Utiliser directement 'companies' comme chemin de collection
+      const companiesCollectionPath = 'companies';
+      
+      if (!companiesCollectionPath) {
         throw new Error('Le chemin de la collection des entreprises n\'est pas défini');
       }
       
-      const companiesRef = collection(db, COLLECTIONS.COMPANIES);
+      const companiesRef = collection(db, companiesCollectionPath);
       const q = query(companiesRef, orderBy('name', 'asc'));
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -137,7 +140,8 @@ export const useFirebaseCompanies = () => {
   const refetch = async () => {
     setIsLoading(true);
     try {
-      const companiesRef = collection(db, COLLECTIONS.COMPANIES);
+      // Utiliser directement 'companies' comme chemin de collection
+      const companiesRef = collection(db, 'companies');
       const q = query(companiesRef, orderBy('name', 'asc'));
       
       console.log("Actualisation des données des entreprises...");
