@@ -3,7 +3,6 @@ import React from 'react';
 import { usePayslipGenerator } from './hooks/usePayslipGenerator';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import CompanySelect from './components/CompanySelect';
 import { Input } from '@/components/ui/input';
@@ -35,7 +34,6 @@ const PaySlipGenerator: React.FC = () => {
 
   const { employees } = useEmployeeData();
   const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
-  const { companies } = useFirebaseCompanies();
 
   // Update employee name when selected from dropdown
   const handleEmployeeChange = (employeeId: string) => {
@@ -81,16 +79,10 @@ const PaySlipGenerator: React.FC = () => {
           </div>
 
           {/* Company select */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Entreprise
-            </label>
-            <CompanySelect
-              selectedCompanyId={selectedCompanyId}
-              onCompanySelect={(id) => handleCompanySelect(id, companies || [])}
-              companies={companies}
-            />
-          </div>
+          <CompanySelect
+            selectedCompanyId={selectedCompanyId}
+            onCompanySelect={handleCompanySelect}
+          />
 
           {/* Period select */}
           <div>

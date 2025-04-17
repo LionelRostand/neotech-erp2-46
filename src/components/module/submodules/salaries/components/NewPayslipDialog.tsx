@@ -7,7 +7,6 @@ import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 import CompanySelect from './CompanySelect';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 
@@ -40,7 +39,6 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({ open, onClose, onGe
   } = usePayslipGenerator();
 
   const { employees } = useEmployeeData();
-  const { companies } = useFirebaseCompanies();
   const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
 
   // Update employee name when selected from dropdown
@@ -57,7 +55,7 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({ open, onClose, onGe
   }, [contractSalary, setGrossSalary]);
 
   const handleGeneratePayslip = () => {
-    const payslip = generatePayslip();
+    generatePayslip();
     setShowPreview(true);
     onGenerate();
   };
@@ -88,16 +86,10 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({ open, onClose, onGe
             </Select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Entreprise
-            </label>
-            <CompanySelect
-              selectedCompanyId={selectedCompanyId}
-              onCompanySelect={(id) => handleCompanySelect(id, companies || [])}
-              companies={companies}
-            />
-          </div>
+          <CompanySelect
+            selectedCompanyId={selectedCompanyId}
+            onCompanySelect={handleCompanySelect}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

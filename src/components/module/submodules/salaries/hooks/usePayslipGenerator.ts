@@ -1,7 +1,7 @@
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Company } from '@/components/module/submodules/companies/types';
+import { Employee } from '@/types/employee';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 import { PaySlipDetail, PaySlip } from '@/types/payslip';
 
@@ -20,14 +20,14 @@ export const usePayslipGenerator = () => {
   const { companies } = useFirebaseCompanies();
 
   // Handle company selection
-  const handleCompanySelect = useCallback((companyId: string, companiesList: Company[]) => {
+  const handleCompanySelect = useCallback((companyId: string) => {
     setSelectedCompanyId(companyId);
-    const company = companiesList.find(c => c.id === companyId) || null;
+    const company = companies?.find(c => c.id === companyId) || null;
     setSelectedCompany(company);
-  }, []);
+  }, [companies]);
 
   // Handle employee selection
-  const handleEmployeeSelect = useCallback((employeeId: string, employees: any[]) => {
+  const handleEmployeeSelect = useCallback((employeeId: string, employees: Employee[]) => {
     setSelectedEmployeeId(employeeId);
     const employee = employees.find(e => e.id === employeeId);
     if (employee) {
@@ -191,6 +191,16 @@ export const usePayslipGenerator = () => {
     return payslip;
   }, [employeeName, period, grossSalary, overtimeHours, overtimeRate, selectedCompany, selectedEmployeeId]);
 
+  // Effect to update selected company when companies change
+  useEffect(() => {
+    if (selectedCompanyId && companies) {
+      const company = companies.find(c => c.id === selectedCompanyId);
+      if (company) {
+        setSelectedCompany(company);
+      }
+    }
+  }, [companies, selectedCompanyId]);
+
   return {
     employeeName,
     setEmployeeName,
@@ -208,12 +218,11 @@ export const usePayslipGenerator = () => {
     setCurrentPayslip,
     generatePayslip,
     selectedCompanyId,
+    setSelectedCompanyId,
     handleCompanySelect,
     handleEmployeeSelect,
     selectedEmployeeId,
     setSelectedEmployeeId,
-    // Additional properties needed by the components
-    selectedCompany,
-    setSelectedCompany
+    selectedCompany
   };
 };

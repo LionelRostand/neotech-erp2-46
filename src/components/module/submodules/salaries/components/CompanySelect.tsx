@@ -7,33 +7,30 @@ import { Loader2 } from 'lucide-react';
 
 interface CompanySelectProps {
   selectedCompanyId: string;
-  onCompanySelect: (companyId: string, companies: Company[]) => void;
-  companies?: Company[];
+  onCompanySelect: (companyId: string) => void;
 }
 
 const CompanySelect: React.FC<CompanySelectProps> = ({ 
   selectedCompanyId, 
-  onCompanySelect,
-  companies: externalCompanies
+  onCompanySelect 
 }) => {
-  // Si les entreprises sont fournies en props, on les utilise
-  // Sinon, on les récupère depuis Firebase
-  const { companies: firebaseCompanies, isLoading } = useFirebaseCompanies();
-  
-  const companies = externalCompanies || firebaseCompanies || [];
+  const { companies, isLoading } = useFirebaseCompanies();
   
   const handleValueChange = (value: string) => {
-    onCompanySelect(value, companies);
+    const selectedCompany = companies?.find(company => company.id === value);
+    if (selectedCompany) {
+      onCompanySelect(value);
+    }
   };
   
   return (
     <div>
-      <label htmlFor="company-select" className="text-sm font-medium">
+      <label htmlFor="company-select" className="block text-sm font-medium text-gray-700 mb-1">
         Entreprise
       </label>
       
       <Select value={selectedCompanyId} onValueChange={handleValueChange}>
-        <SelectTrigger id="company-select" className="w-full mt-1">
+        <SelectTrigger id="company-select" className="w-full">
           <SelectValue placeholder="Sélectionner une entreprise" />
         </SelectTrigger>
         <SelectContent>
@@ -42,7 +39,7 @@ const CompanySelect: React.FC<CompanySelectProps> = ({
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
               <span>Chargement...</span>
             </div>
-          ) : companies.length > 0 ? (
+          ) : companies && companies.length > 0 ? (
             companies.map((company) => (
               <SelectItem key={company.id} value={company.id}>
                 {company.name}
