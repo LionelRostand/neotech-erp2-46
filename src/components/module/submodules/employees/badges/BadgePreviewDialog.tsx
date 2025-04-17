@@ -6,8 +6,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
-import { AlignJustify, Building, Calendar, User, ShieldCheck, Info, Trash2 } from 'lucide-react';
+import { AlignJustify, Building, Calendar, User, ShieldCheck, Info, Trash2, Printer, Mail } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -38,6 +40,99 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     if (onDeleteClick && selectedBadge) {
       onDeleteClick(selectedBadge);
     }
+  };
+
+  const handlePrintBadge = () => {
+    if (!selectedBadge) return;
+    
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: [85, 54] // Format standard de carte de badge
+    });
+    
+    // Fond du badge
+    doc.setFillColor(240, 240, 240);
+    doc.rect(0, 0, 85, 54, 'F');
+    
+    // En-tête coloré
+    let headerColor;
+    if (selectedBadge.status === 'success') {
+      headerColor = [34, 197, 94]; // Vert
+    } else if (selectedBadge.status === 'warning') {
+      headerColor = [234, 179, 8]; // Jaune
+    } else {
+      headerColor = [239, 68, 68]; // Rouge
+    }
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+    doc.rect(0, 0, 85, 12, 'F');
+    
+    // Nom de l'entreprise en en-tête
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(selectedBadge.company || 'ENTREPRISE', 5, 7);
+    
+    // Numéro de badge
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    doc.text(`ID: ${selectedBadge.id}`, 42.5, 18, { align: 'center' });
+    
+    // Nom de l'employé
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(selectedBadge.employeeName, 42.5, 25, { align: 'center' });
+    
+    // Département et niveau d'accès
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 31, { align: 'center' });
+    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 36, { align: 'center' });
+    
+    // Email (si disponible)
+    if (selectedEmployee?.email) {
+      doc.setFontSize(7);
+      doc.text(`Email: ${selectedEmployee.email}`, 42.5, 41, { align: 'center' });
+    }
+    
+    // Statut du badge
+    let statusColor;
+    if (selectedBadge.status === 'success') {
+      statusColor = [34, 197, 94];
+    } else if (selectedBadge.status === 'warning') {
+      statusColor = [234, 179, 8];
+    } else {
+      statusColor = [239, 68, 68];
+    }
+    
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.setFontSize(8);
+    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 45, { align: 'center' });
+    
+    // Date d'émission
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(7);
+    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 49, { align: 'center' });
+    
+    // Pied de page
+    doc.setFillColor(70, 70, 70);
+    doc.rect(0, 50, 85, 4, 'F');
+    doc.setFontSize(6);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
+    
+    // Symbole QR code (simplifié)
+    doc.setFillColor(0, 0, 0);
+    doc.rect(5, 36, 10, 10, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(6, 37, 8, 8, 'F');
+    doc.setFillColor(0, 0, 0);
+    doc.rect(7, 38, 6, 6, 'F');
+
+    // Enregistrer le PDF
+    doc.save(`badge-${selectedBadge.id}.pdf`);
+    
+    toast.success("Badge imprimé avec succès");
   };
 
   return (
@@ -80,6 +175,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
                 <ShieldCheck className="h-5 w-5 mr-2 text-primary" />
                 <span className="text-primary font-medium">{selectedBadge.accessLevel}</span>
               </div>
+              {selectedEmployee?.email && (
+                <div className="mt-2 flex items-center text-sm">
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{selectedEmployee.email}</span>
+                </div>
+              )}
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -141,8 +242,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
           </div>
         </ScrollArea>
         
-        <DialogFooter>
+        <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
+          <Button variant="secondary" onClick={handlePrintBadge}>
+            <Printer className="h-4 w-4 mr-2" />
+            Imprimer le badge
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
