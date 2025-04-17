@@ -1,3 +1,4 @@
+
 import { jsPDF } from 'jspdf';
 import { BadgeData } from '../BadgeTypes';
 import { Employee } from '@/types/employee';
