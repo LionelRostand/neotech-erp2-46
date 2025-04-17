@@ -15,7 +15,7 @@ export const createEmptyFormData = () => {
     companyName: '',
     color: '#3B82F6',
     employeeIds: [],
-    employeesCount:.0,
+    employeesCount: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

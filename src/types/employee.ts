@@ -71,7 +71,7 @@ export interface EmployeePhotoMeta {
   fileType: string;
   fileSize: number;
   updatedAt: string;
-  data?: string; // Adding data property to match usage in code
+  data?: string; // Keep data property to match usage in code
 }
 
 export interface Employee {
