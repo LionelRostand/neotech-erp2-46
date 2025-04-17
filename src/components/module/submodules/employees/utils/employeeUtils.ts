@@ -31,6 +31,53 @@ export const getEmployeeFullName = (employee: Partial<Employee>): string => {
 };
 
 /**
+ * Génère les initiales d'un employé
+ */
+export const getEmployeeInitials = (employee: Partial<Employee>): string => {
+  if (!employee) return '';
+  const firstName = employee.firstName || '';
+  const lastName = employee.lastName || '';
+  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+};
+
+/**
+ * Génère une couleur d'avatar basée sur le nom
+ */
+export const getAvatarColorFromName = (name: string): string => {
+  const colors = [
+    'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500',
+    'bg-red-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'
+  ];
+  
+  if (!name) return colors[0];
+  
+  // Simple hash function to get a consistent color for a given name
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
+
+/**
+ * Génère des classes CSS pour styliser un poste spécifique
+ */
+export const getPositionStyleClasses = (position: string): string => {
+  if (!position) return 'text-gray-600';
+  
+  const lowerPosition = position.toLowerCase();
+  
+  if (lowerPosition.includes('manager') || 
+      lowerPosition.includes('directeur') || 
+      lowerPosition.includes('responsable')) {
+    return 'text-blue-600 font-medium';
+  }
+  
+  if (lowerPosition.includes('senior') || lowerPosition.includes('lead')) {
+    return 'text-purple-600 font-medium';
+  }
+  
+  return 'text-gray-600';
+};
+
+/**
  * Convertit une date au format français
  */
 export const formatDateFR = (dateStr?: string): string => {

@@ -1,6 +1,6 @@
 
 import { EmployeeFormValues } from '../form/employeeFormSchema';
-import { Employee } from '@/types/employee';
+import { Employee, EmployeePhotoMeta } from '@/types/employee';
 
 /**
  * Convertit les valeurs du formulaire en format d'employé

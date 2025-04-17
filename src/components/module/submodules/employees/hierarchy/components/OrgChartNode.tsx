@@ -1,70 +1,66 @@
-
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChartNode } from '../types';
-import { getEmployeeInitials, getAvatarColorFromName, getPositionStyleClasses } from '../../utils/employeeUtils';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { getEmployeeInitials, getAvatarColorFromName, getPositionStyleClasses } from "../../utils/employeeUtils";
+import { Employee } from '@/types/employee';
+import { getPhotoUrl } from '../../utils/photoUtils';
 
 interface OrgChartNodeProps {
-  node: ChartNode;
-  searchQuery: string;
+  employee: Employee;
+  children?: React.ReactNode;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  onSelect?: (employee: Employee) => void;
 }
 
-// Helper function to check if a node or its children match the search query
-const nodeMatchesSearch = (node: ChartNode, query: string): boolean => {
-  if (!query.trim()) return true;
-  
-  const searchLower = query.toLowerCase();
-  const nodeName = node.name.toLowerCase();
-  const nodePosition = node.position.toLowerCase();
-  const nodeDepartment = node.department ? node.department.toLowerCase() : '';
-  
-  if (
-    nodeName.includes(searchLower) ||
-    nodePosition.includes(searchLower) ||
-    nodeDepartment.includes(searchLower)
-  ) {
-    return true;
-  }
-  
-  // Check children
-  return node.children.some(child => nodeMatchesSearch(child, searchLower));
-};
+const OrgChartNode: React.FC<OrgChartNodeProps> = ({
+  employee,
+  children,
+  isCollapsed = false,
+  onToggleCollapse,
+  onSelect
+}) => {
+  const avatarColor = getAvatarColorFromName(employee.firstName + employee.lastName);
+  const positionClasses = getPositionStyleClasses(employee.position || '');
+  const photoUrl = getPhotoUrl(employee.photoMeta);
 
-const OrgChartNode: React.FC<OrgChartNodeProps> = ({ node, searchQuery }) => {
-  if (!nodeMatchesSearch(node, searchQuery)) return null;
-  
-  const positionColor = getPositionStyleClasses(node.position);
-  const avatarColor = getAvatarColorFromName(node.name);
-  
   return (
-    <div key={node.id} className="flex flex-col items-center">
-      <Card className={`p-4 flex flex-col items-center w-56 text-center mb-2 shadow-md hover:shadow-lg transition-shadow border-2 ${positionColor}`}>
-        <Avatar className="h-20 w-20 mb-2 ring-2 ring-white ring-offset-2 ring-offset-slate-50">
-          {node.imageUrl ? (
-            <AvatarImage src={node.imageUrl} alt={node.name} />
+    <div className="relative">
+      <div className="flex items-center space-x-4 p-4 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect?.(employee)}>
+        <Avatar className={`h-10 w-10 ${avatarColor}`}>
+          {photoUrl ? (
+            <AvatarImage src={photoUrl} alt={employee.firstName} />
           ) : (
-            <AvatarFallback className={avatarColor}>
-              {getEmployeeInitials(node.name.split(' ')[0], node.name.split(' ')[1])}
-            </AvatarFallback>
+            <AvatarFallback>{getEmployeeInitials(employee)}</AvatarFallback>
           )}
         </Avatar>
-        <div className="font-medium">{node.name}</div>
-        <div className="text-sm text-slate-500">{node.position}</div>
-        {node.department && <div className="text-xs text-slate-400">{node.department}</div>}
-      </Card>
-      
-      {node.children.length > 0 && (
-        <div className="relative pt-6">
-          <div className="absolute top-0 left-1/2 h-6 w-0.5 -ml-px bg-slate-300"></div>
-          <div className="flex flex-wrap justify-center gap-10">
-            {node.children.map(child => (
-              <div key={child.id} className="relative pt-6">
-                <div className="absolute top-0 left-1/2 h-6 w-0.5 -ml-px bg-slate-300"></div>
-                <OrgChartNode node={child} searchQuery={searchQuery} />
-              </div>
-            ))}
-          </div>
+        <div>
+          <h4 className="text-sm font-medium">{employee.firstName} {employee.lastName}</h4>
+          <p className={`text-xs ${positionClasses}`}>{employee.position || 'N/A'}</p>
+          <Badge variant="secondary" className="mt-1">{employee.department}</Badge>
+        </div>
+      </div>
+
+      {children && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute right-2 top-2 rounded-full h-8 w-8 p-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleCollapse?.();
+          }}
+        >
+          {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          <span className="sr-only">Toggle Collapse</span>
+        </Button>
+      )}
+
+      {!isCollapsed && children && (
+        <div className="mt-4 ml-6 pl-6 border-l-2 border-dashed border-gray-200">
+          {children}
         </div>
       )}
     </div>
