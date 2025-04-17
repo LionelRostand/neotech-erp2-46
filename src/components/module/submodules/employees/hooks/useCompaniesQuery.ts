@@ -8,8 +8,22 @@ export const useCompaniesQuery = () => {
   return useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      const companies = await fetchCollectionData<Company>(COLLECTIONS.COMPANIES);
-      return companies;
+      try {
+        console.log('Fetching companies data...');
+        const companies = await fetchCollectionData<Company>(COLLECTIONS.COMPANIES);
+        // Ensure all companies have required fields to avoid undefined errors
+        return companies.map(company => ({
+          id: company.id || '',
+          name: company.name || 'Sans nom',
+          industry: company.industry || '',
+          status: company.status || 'active',
+          // Ensure other fields have default values if needed
+          ...company
+        }));
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        throw error;
+      }
     }
   });
 };

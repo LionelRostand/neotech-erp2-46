@@ -14,10 +14,14 @@ const EmployeesCompanies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
-  const filteredCompanies = companies.filter(company => 
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (company.industry && company.industry.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredCompanies = companies.filter(company => {
+    // Add null checks to prevent the "toLowerCase of undefined" error
+    const companyName = company.name || '';
+    const companyIndustry = company.industry || '';
+    
+    return companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      companyIndustry.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const handleCreateCompany = () => {
     navigate('/modules/companies/create');
@@ -53,15 +57,15 @@ const EmployeesCompanies = () => {
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle>Entreprises</CardTitle>
-            <div className="w-72">
+            <div className="w-72 relative">
               <Input
                 type="search"
                 placeholder="Rechercher une entreprise..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
-                icon={<Search className="h-4 w-4 text-gray-400" />}
               />
+              <Search className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
         </CardHeader>
