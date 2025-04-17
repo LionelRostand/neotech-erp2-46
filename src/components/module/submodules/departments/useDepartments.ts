@@ -1,10 +1,11 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { Department } from './types';
+import { Department, DepartmentFormData } from './types';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
 import { toast } from 'sonner';
 import { useHrData } from '@/hooks/modules/useHrData';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useDepartments = () => {
   const { employees } = useEmployeeData();
@@ -15,12 +16,14 @@ export const useDepartments = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isManageEmployeesDialogOpen, setIsManageEmployeesDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DepartmentFormData>({
+    id: `dept-${uuidv4().substring(0, 8)}`,
     name: '',
     description: '',
     managerId: '',
     companyId: '',
-    color: '#3B82F6'
+    color: '#3B82F6',
+    employeeIds: []
   });
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
   const [activeTab, setActiveTab] = useState<string>('general');
@@ -70,12 +73,15 @@ export const useDepartments = () => {
   };
 
   const handleAddDepartment = () => {
+    // Reset form data with a new ID and empty values
     setFormData({
+      id: `dept-${uuidv4().substring(0, 8)}`,
       name: '',
       description: '',
       managerId: '',
       companyId: '',
-      color: '#3B82F6'
+      color: '#3B82F6',
+      employeeIds: []
     });
     setSelectedEmployees([]);
     setIsAddDialogOpen(true);
@@ -84,11 +90,13 @@ export const useDepartments = () => {
   const handleEditDepartment = (department: Department) => {
     setCurrentDepartment(department);
     setFormData({
+      id: department.id,
       name: department.name,
       description: department.description,
       managerId: department.managerId || '',
       companyId: department.companyId || '',
-      color: department.color || '#3B82F6'
+      color: department.color || '#3B82F6',
+      employeeIds: department.employeeIds || []
     });
     setSelectedEmployees(department.employeeIds || []);
     setIsEditDialogOpen(true);
