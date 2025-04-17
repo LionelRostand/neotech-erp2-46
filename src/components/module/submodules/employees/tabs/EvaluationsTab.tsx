@@ -21,8 +21,8 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ employee }) => {
     }
     
     // Get evaluations from both sources
-    const fromEvaluationsCollection = evaluations.filter(eval => 
-      eval.employeeId === employee.id
+    const fromEvaluationsCollection = evaluations.filter(evaluation => 
+      evaluation.employeeId === employee.id
     );
     
     const fromEmployeeRecord = employee.evaluations || [];
