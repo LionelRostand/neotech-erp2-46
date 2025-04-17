@@ -83,7 +83,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           <TableRow>
             <TableHead className="w-[50px]"></TableHead>
             <TableHead>Nom</TableHead>
-            <TableHead>Email</TableHead>
+            <TableHead>Email professionnel</TableHead>
             <TableHead>Poste</TableHead>
             <TableHead>Département</TableHead>
             <TableHead>Statut</TableHead>
@@ -102,7 +102,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                 </Avatar>
               </TableCell>
               <TableCell className="font-medium">{employee.firstName} {employee.lastName}</TableCell>
-              <TableCell>{employee.email}</TableCell>
+              <TableCell>{employee.professionalEmail || 'Non spécifié'}</TableCell>
               <TableCell>{employee.position || employee.title}</TableCell>
               <TableCell>{employee.department}</TableCell>
               <TableCell>
