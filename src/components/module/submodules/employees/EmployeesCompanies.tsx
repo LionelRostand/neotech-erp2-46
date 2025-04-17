@@ -9,12 +9,14 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useNavigate } from 'react-router-dom';
+import ViewCompanyDialog from '@/components/module/submodules/companies/dialogs/ViewCompanyDialog';
 
 const EmployeesCompanies: React.FC = () => {
   const { companies, isLoading, error, isOffline, refetch } = useFirebaseCompanies();
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   const filteredCompanies = companies.filter(company => 
     company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -33,11 +35,11 @@ const EmployeesCompanies: React.FC = () => {
   };
 
   const handleViewCompany = (company: Company) => {
-    navigate(`/modules/companies/view/${company.id}`);
+    setSelectedCompany(company);
   };
 
-  const handleCreateCompany = () => {
-    navigate('/modules/companies/create');
+  const handleCloseDialog = () => {
+    setSelectedCompany(null);
   };
 
   return (
@@ -110,6 +112,12 @@ const EmployeesCompanies: React.FC = () => {
           />
         </CardContent>
       </Card>
+
+      <ViewCompanyDialog 
+        company={selectedCompany}
+        open={selectedCompany !== null}
+        onClose={handleCloseDialog}
+      />
     </div>
   );
 };
