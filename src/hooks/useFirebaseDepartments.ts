@@ -16,6 +16,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
     queryConstraints.push(where('companyId', '==', companyId));
   }
   
+  // Use the HR.DEPARTMENTS path directly from collections
   const { 
     data: departments, 
     isLoading, 

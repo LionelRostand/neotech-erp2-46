@@ -7,7 +7,7 @@ import { getAllEmployees } from '@/components/module/submodules/employees/servic
 import { notifyDepartmentUpdates } from '../utils/departmentUtils';
 
 export const useDepartmentService = () => {
-  // Updated collection path for departments
+  // Use the HR.DEPARTMENTS collection path
   const DEPARTMENTS_COLLECTION = COLLECTIONS.HR.DEPARTMENTS;
   
   const getAll = async (): Promise<Department[]> => {
@@ -21,15 +21,19 @@ export const useDepartmentService = () => {
       // Récupérer les employés pour enrichir les départements avec les noms de managers
       const employees = await getAllEmployees();
       
+      // Ensure data is valid before proceeding
+      if (!Array.isArray(data)) {
+        console.error("Data returned is not an array:", data);
+        return [];
+      }
+      
       // Filtrer les doublons par ID avant d'enrichir
       const uniqueDepartmentsMap = new Map();
       data.forEach(dept => {
-        // Cast dept to Partial<Department> to safely access the name property
-        const typedDept = dept as Partial<Department>;
-        if (!uniqueDepartmentsMap.has(typedDept.id)) {
-          uniqueDepartmentsMap.set(typedDept.id, typedDept);
-        } else {
-          console.warn(`Doublon détecté pour le département ID: ${typedDept.id}, nom: ${typedDept.name || 'Sans nom'}`);
+        if (dept && dept.id && !uniqueDepartmentsMap.has(dept.id)) {
+          uniqueDepartmentsMap.set(dept.id, dept);
+        } else if (dept && dept.id) {
+          console.warn(`Doublon détecté pour le département ID: ${dept.id}, nom: ${dept.name || 'Sans nom'}`);
         }
       });
       
@@ -38,7 +42,13 @@ export const useDepartmentService = () => {
       
       // Enrichir les départements avec les noms de managers
       const enrichedDepartments = uniqueData.map(department => {
-        // Traiter chaque département comme un objet Department partiel
+        // Make sure department is a valid object
+        if (!department || typeof department !== 'object') {
+          console.warn("Invalid department object:", department);
+          return null;
+        }
+        
+        // Cast to Department type after validation
         const typedDepartment = department as Partial<Department>;
         
         if (typedDepartment.managerId) {
@@ -47,10 +57,16 @@ export const useDepartmentService = () => {
             typedDepartment.managerName = `${manager.firstName} ${manager.lastName}`;
           }
         }
+        
+        // Ensure employeeIds is always an array
+        if (!typedDepartment.employeeIds) {
+          typedDepartment.employeeIds = [];
+        }
+        
         return typedDepartment as Department;
-      });
+      }).filter(Boolean) as Department[]; // Remove null entries
       
-      // Notifier les autres composants de la mise à jour des départements
+      // Notify other components of the department updates
       notifyDepartmentUpdates(enrichedDepartments);
       
       return enrichedDepartments;
@@ -63,13 +79,24 @@ export const useDepartmentService = () => {
 
   const createDepartment = async (department: Department): Promise<boolean> => {
     try {
+      // Ensure employeeIds is an array
+      if (!department.employeeIds) {
+        department.employeeIds = [];
+      }
+      
+      // Add timestamps
+      department.createdAt = new Date().toISOString();
+      department.updatedAt = new Date().toISOString();
+      
       // Enregistrer dans Firestore
       await addDocument(DEPARTMENTS_COLLECTION, department);
       toast.success(`Département ${department.name} créé avec succès`);
       
-      // Récupérer les départements mis à jour et notifier
-      const updatedDepartments = await getAll();
-      notifyDepartmentUpdates(updatedDepartments);
+      // Wait before re-fetching to avoid potential race conditions
+      setTimeout(async () => {
+        const updatedDepartments = await getAll();
+        notifyDepartmentUpdates(updatedDepartments);
+      }, 300);
       
       return true;
     } catch (error) {
@@ -88,17 +115,26 @@ export const useDepartmentService = () => {
         return false;
       }
 
+      // Ensure employeeIds is an array
+      if (!department.employeeIds) {
+        department.employeeIds = [];
+      }
+      
+      // Update timestamp
+      department.updatedAt = new Date().toISOString();
+      
       console.log(`Mise à jour du département ID: ${department.id}`, department);
       
       // Utiliser updateDocument pour mettre à jour le document existant
-      // Cette fonction vérifie si le document existe avant de le mettre à jour
       await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
       
       toast.success(`Département ${department.name} mis à jour avec succès`);
       
-      // Récupérer les départements mis à jour et notifier
-      const updatedDepartments = await getAll();
-      notifyDepartmentUpdates(updatedDepartments);
+      // Wait before re-fetching to avoid potential race conditions
+      setTimeout(async () => {
+        const updatedDepartments = await getAll();
+        notifyDepartmentUpdates(updatedDepartments);
+      }, 300);
       
       return true;
     } catch (error) {
@@ -129,9 +165,11 @@ export const useDepartmentService = () => {
       await deleteDocument(DEPARTMENTS_COLLECTION, id);
       toast.success(`Département ${name} supprimé avec succès`);
       
-      // Récupérer les départements mis à jour et notifier
-      const updatedDepartments = await getAll();
-      notifyDepartmentUpdates(updatedDepartments);
+      // Wait before re-fetching to avoid potential race conditions
+      setTimeout(async () => {
+        const updatedDepartments = await getAll();
+        notifyDepartmentUpdates(updatedDepartments);
+      }, 300);
       
       return true;
     } catch (error) {

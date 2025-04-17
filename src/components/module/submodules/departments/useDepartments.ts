@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
 import { Department } from './types';
@@ -15,6 +16,9 @@ export const useDepartments = () => {
   
   const departmentService = useDepartmentService();
   const { employees } = useEmployeeData();
+  
+  // Use a ref to prevent infinite re-renders
+  const fetchingRef = useRef(false);
   
   const {
     formData,
@@ -39,10 +43,14 @@ export const useDepartments = () => {
     handleSaveEmployeeAssignments
   } = useDepartmentOperations();
   
-  // Fetch departments
+  // Fetch departments only once on component mount
   useEffect(() => {
     const fetchDepartments = async () => {
+      // Use ref to prevent duplicate fetching
+      if (fetchingRef.current) return;
+      
       try {
+        fetchingRef.current = true;
         console.log("Fetching departments in useDepartments hook");
         setLoading(true);
         const fetchedDepartments = await departmentService.getAll();
@@ -52,6 +60,7 @@ export const useDepartments = () => {
         console.error("Error fetching departments:", error);
       } finally {
         setLoading(false);
+        fetchingRef.current = false;
       }
     };
     
@@ -61,9 +70,9 @@ export const useDepartments = () => {
   // Get employees for a department
   const getDepartmentEmployees = useCallback((departmentId: string) => {
     const department = departments.find(dept => dept.id === departmentId);
-    if (!department) return [];
+    if (!department || !department.employeeIds) return [];
     
-    return employees.filter(emp => department.employeeIds.includes(emp.id));
+    return employees.filter(emp => department.employeeIds?.includes(emp.id));
   }, [departments, employees]);
   
   // Show add department dialog
@@ -96,9 +105,11 @@ export const useDepartments = () => {
     if (success) {
       setIsAddDialogOpen(false);
       
-      // Refresh departments list
-      const updatedDepartments = await departmentService.getAll();
-      setDepartments(updatedDepartments);
+      // Refresh departments list (with a delay to avoid loop)
+      setTimeout(async () => {
+        const updatedDepartments = await departmentService.getAll();
+        setDepartments(updatedDepartments);
+      }, 300);
     }
   }, [formData, selectedEmployees, validateForm, handleSaveDepartment, departmentService]);
   
@@ -111,9 +122,11 @@ export const useDepartments = () => {
     if (success) {
       setIsEditDialogOpen(false);
       
-      // Refresh departments list
-      const updatedDepartments = await departmentService.getAll();
-      setDepartments(updatedDepartments);
+      // Refresh departments list (with a delay to avoid loop)
+      setTimeout(async () => {
+        const updatedDepartments = await departmentService.getAll();
+        setDepartments(updatedDepartments);
+      }, 300);
     }
   }, [formData, selectedEmployees, currentDepartment, validateForm, handleUpdateDepartment, departmentService]);
   
@@ -126,9 +139,11 @@ export const useDepartments = () => {
     if (success) {
       setIsManageEmployeesDialogOpen(false);
       
-      // Refresh departments list
-      const updatedDepartments = await departmentService.getAll();
-      setDepartments(updatedDepartments);
+      // Refresh departments list (with a delay to avoid loop)
+      setTimeout(async () => {
+        const updatedDepartments = await departmentService.getAll();
+        setDepartments(updatedDepartments);
+      }, 300);
     }
   }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, departmentService]);
   
@@ -137,9 +152,11 @@ export const useDepartments = () => {
     const success = await handleDeleteDepartment(id, name);
     
     if (success) {
-      // Refresh departments list
-      const updatedDepartments = await departmentService.getAll();
-      setDepartments(updatedDepartments);
+      // Refresh departments list (with a delay to avoid loop)
+      setTimeout(async () => {
+        const updatedDepartments = await departmentService.getAll();
+        setDepartments(updatedDepartments);
+      }, 300);
     }
   }, [handleDeleteDepartment, departmentService]);
   

@@ -20,25 +20,35 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onManageEmployees 
 }) => {
-  // Ensure departments are unique by ID and actually exist
-  const uniqueDepartments = React.useMemo(() => {
-    console.log("Rendering departments in table:", departments);
+  // Add defensive check for departments array
+  const validDepartments = React.useMemo(() => {
     if (!departments || !Array.isArray(departments)) {
-      console.warn("Departments is not an array:", departments);
+      console.warn("Invalid departments data:", departments);
       return [];
     }
     
+    // Filter out invalid entries and deduplicate
     const deptMap = new Map<string, Department>();
+    
     departments.forEach(dept => {
       if (dept && dept.id && !deptMap.has(dept.id)) {
-        deptMap.set(dept.id, dept);
+        // Ensure all required properties exist
+        const validDept = {
+          ...dept,
+          name: dept.name || 'Sans nom',
+          description: dept.description || '',
+          managerName: dept.managerName || 'N/A',
+          companyName: dept.companyName || 'N/A',
+          employeesCount: dept.employeesCount || (dept.employeeIds?.length || 0)
+        };
+        deptMap.set(dept.id, validDept as Department);
       }
     });
     
-    const result = Array.from(deptMap.values());
-    console.log("Unique departments to display:", result);
-    return result;
+    return Array.from(deptMap.values());
   }, [departments]);
+
+  console.log("Rendering department table with", validDepartments.length, "departments");
 
   return (
     <div className="relative w-full overflow-auto">
@@ -61,21 +71,21 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                 Chargement...
               </TableCell>
             </TableRow>
-          ) : uniqueDepartments.length === 0 ? (
+          ) : validDepartments.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-4">
                 Aucun département trouvé.
               </TableCell>
             </TableRow>
           ) : (
-            uniqueDepartments.map((department) => (
-              <TableRow key={`${department.id}-${department.name}`}>
+            validDepartments.map((department) => (
+              <TableRow key={department.id}>
                 <TableCell className="font-medium">{department.id}</TableCell>
                 <TableCell>{department.name}</TableCell>
                 <TableCell>{department.description}</TableCell>
                 <TableCell>{department.managerName || 'N/A'}</TableCell>
                 <TableCell>{department.companyName || 'N/A'}</TableCell>
-                <TableCell>{department.employeesCount || 0}</TableCell>
+                <TableCell>{department.employeesCount || (department.employeeIds?.length || 0)}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
                     <Edit className="h-4 w-4 mr-2" />
