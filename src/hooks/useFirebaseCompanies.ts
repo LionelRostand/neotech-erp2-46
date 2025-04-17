@@ -11,22 +11,42 @@ import { Company } from '@/components/module/submodules/companies/types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
-/**
- * Hook pour récupérer les données des entreprises depuis Firebase
- */
 export const useFirebaseCompanies = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   
+  useEffect(() => {
+    // Gérer les changements de connectivité
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     setIsLoading(true);
     
     try {
       console.log('Récupération des entreprises depuis Firestore...');
       
-      // Vérifions que le chemin de la collection est correct
+      // Vérifier les données en cache avant de charger de nouvelles données
+      const cachedCompanies = localStorage.getItem('cached_companies');
+      if (cachedCompanies && isOffline) {
+        const parsedCompanies = JSON.parse(cachedCompanies);
+        setCompanies(parsedCompanies);
+        setIsLoading(false);
+        toast.warning("Données chargées depuis le cache en mode hors-ligne");
+        return;
+      }
+      
       if (!COLLECTIONS.COMPANIES) {
         throw new Error('Le chemin de la collection des entreprises n\'est pas défini');
       }
@@ -59,6 +79,10 @@ export const useFirebaseCompanies = () => {
         
         console.log(`${companiesData.length} entreprises récupérées`);
         setCompanies(companiesData);
+        
+        // Mettre à jour le cache local
+        localStorage.setItem('cached_companies', JSON.stringify(companiesData));
+        
         setIsLoading(false);
         setIsOffline(false);
       }, (err) => {
@@ -67,54 +91,35 @@ export const useFirebaseCompanies = () => {
         setIsLoading(false);
         setIsOffline(true);
         
-        // En cas d'erreur, créer des données de démonstration
-        const mockCompanies = [
-          {
-            id: 'enterprise1',
-            name: 'Enterprise Solutions (Demo)',
-            industry: 'Technologie',
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            address: {
-              street: '123 Rue de la Tech',
-              city: 'Paris',
-              postalCode: '75001',
-              country: 'France'
-            }
-          },
-          {
-            id: 'techinno',
-            name: 'TechInnovation (Demo)', 
-            industry: 'IT Services',
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            address: {
-              street: '45 Avenue de l\'Innovation',
-              city: 'Lyon',
-              postalCode: '69001',
-              country: 'France'
-            }
-          },
-          {
-            id: 'greenco',
-            name: 'GreenCo (Demo)',
-            industry: 'Environnement',
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            address: {
-              street: '78 Boulevard Vert',
-              city: 'Bordeaux',
-              postalCode: '33000',
-              country: 'France'
-            }
-          }
-        ] as Company[];
-        
-        setCompanies(mockCompanies);
-        toast.error("Impossible de récupérer les entreprises depuis Firestore. Des données de démonstration sont utilisées.");
+        // Vérifier les données en cache
+        const cachedCompanies = localStorage.getItem('cached_companies');
+        if (cachedCompanies) {
+          const parsedCompanies = JSON.parse(cachedCompanies);
+          setCompanies(parsedCompanies);
+          toast.warning("Utilisation des données en cache en raison d'un problème de connexion");
+        } else {
+          // Données de démonstration si aucun cache n'est disponible
+          const mockCompanies: Company[] = [
+            {
+              id: 'enterprise1',
+              name: 'Enterprise Solutions (Demo)',
+              industry: 'Technologie',
+              status: 'active',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              address: {
+                street: '123 Rue de la Tech',
+                city: 'Paris',
+                postalCode: '75001',
+                country: 'France'
+              }
+            },
+            // ... autres entreprises de démonstration
+          ];
+          
+          setCompanies(mockCompanies);
+          toast.error("Impossible de récupérer les entreprises. Des données de démonstration sont utilisées.");
+        }
       });
       
       return unsubscribe;
@@ -129,21 +134,13 @@ export const useFirebaseCompanies = () => {
     }
   }, []);
 
-  // Ajout d'une fonction refetch pour actualiser les données
   const refetch = async () => {
     setIsLoading(true);
-    // Simulation d'un refresh en réexécutant le même code
-    // Dans un cas réel, on pourrait faire une nouvelle requête Firestore
     try {
       const companiesRef = collection(db, COLLECTIONS.COMPANIES);
       const q = query(companiesRef, orderBy('name', 'asc'));
       
-      // Cette partie sert principalement à déclencher une nouvelle requête
-      // l'effet principal vient du setIsLoading qui va forcer un re-render
       console.log("Actualisation des données des entreprises...");
-      
-      // On ne fait pas await ici car onSnapshot est asynchrone et retourne un unsubscribe
-      // Le setIsLoading(false) sera géré par le callback de onSnapshot
       
       return true;
     } catch (error) {
