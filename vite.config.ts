@@ -20,13 +20,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    // Explicitly provide the environment variables that need to be available in the client code
-    'import.meta.env.VITE_EMULATOR': JSON.stringify(process.env.VITE_EMULATOR || 'false'),
-    'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify("AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU"),
-    'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify("neotech-erp.firebaseapp.com"),
-    'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify("neotech-erp"),
-    'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify("neotech-erp.firebasestorage.app"),
-    'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify("803661896660"),
-    'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify("1:803661896660:web:94f17531b963627cbd5441")
+    // Updated Firebase environment variables
+    'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify("AIzaSyDKgLJI-y03tTsGhRmUzY7Q31zzfwVzazA"),
+    'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify("neotech-7c574.firebaseapp.com"),
+    'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify("neotech-7c574"),
+    'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify("neotech-7c574.appspot.com"),
+    'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify("375585071827"),
+    'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify("1:375585071827:web:3c8d4a02a50a5321086a26")
   },
 }));

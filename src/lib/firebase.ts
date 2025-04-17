@@ -1,6 +1,7 @@
-
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { 
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged 
+} from 'firebase/auth';
 import { 
   getFirestore, collection, doc, setDoc, getDoc, updateDoc, 
   serverTimestamp, onSnapshot, query, orderBy, limit, 
@@ -11,13 +12,12 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { COLLECTIONS } from './firebase-collections';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDKgLJI-y03tTsGhRmUzY7Q31zzfwVzazA",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "neotech-7c574.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "neotech-7c574",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "neotech-7c574.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "375585071827",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:375585071827:web:3c8d4a02a50a5321086a26"
 };
 
 // Initialize Firebase
