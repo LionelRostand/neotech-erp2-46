@@ -18,6 +18,7 @@ import { useEmployeeService } from '@/hooks/useEmployeeService';
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import PhotoUploadField from './form/PhotoUploadField';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -50,7 +51,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
       hireDate: new Date().toISOString().split('T')[0],
       status: 'active',
       forceManager: false,
-      isManager: false
+      isManager: false,
+      photo: ''
     }
   });
   
@@ -70,6 +72,9 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
         department: data.department || '',
         hireDate: data.hireDate || new Date().toISOString(),
         status: data.status,
+        photo: data.photo || '',
+        photoURL: data.photo || '',
+        photoData: data.photo || '',
         address: {
           streetNumber: data.streetNumber || '',
           streetName: data.streetName || '',
@@ -119,6 +124,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
         
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <PhotoUploadField />
             <PersonalInfoFields />
             
             <DialogFooter>
