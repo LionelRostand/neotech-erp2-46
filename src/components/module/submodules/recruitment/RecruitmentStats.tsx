@@ -1,153 +1,146 @@
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Users, Building, Calendar, ChevronUp, ChevronDown, Clock, CheckCircle } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Card } from '@/components/ui/card';
+import { Users, Clock, CheckCircle, Calendar } from 'lucide-react';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
 
-const RecruitmentStats = () => {
+const RecruitmentStats: React.FC = () => {
   const { recruitmentPosts, isLoading } = useRecruitmentFirebaseData();
-  const [applicationsChange, setApplicationsChange] = useState<number>(0);
-  const [stats, setStats] = useState({
-    openPositions: 0,
-    inProgressPositions: 0,
-    closedPositions: 0,
-    applicationsThisMonth: 0,
-    interviewsScheduled: 0,
-    totalApplications: 0
-  });
-
-  useEffect(() => {
-    if (recruitmentPosts && recruitmentPosts.length > 0) {
-      // Changed to use French status values
-      const openCount = recruitmentPosts.filter(post => post.status === 'Ouvert').length;
-      const inProgressCount = recruitmentPosts.filter(post => post.status === 'En cours').length;
-      const closedCount = recruitmentPosts.filter(post => post.status === 'Clôturé').length;
-      
-      const applicationCount = recruitmentPosts.reduce((acc, post) => acc + (post.applicationCount || post.applications_count || 0), 0);
-      const interviewsCount = recruitmentPosts.reduce((acc, post) => acc + (post.interviews_scheduled || 0), 0);
-      
-      // Set a random change percentage for demonstration purposes
-      const randomChange = Math.floor(Math.random() * 30) - 10; // Random value between -10 and 20
-      
-      setStats({
-        openPositions: openCount,
-        inProgressPositions: inProgressCount,
-        closedPositions: closedCount,
-        applicationsThisMonth: applicationCount,
-        interviewsScheduled: interviewsCount,
-        totalApplications: applicationCount + (closedCount * 15) // Adding some fictive past applications
-      });
-      
-      setApplicationsChange(randomChange);
+  
+  const stats = useMemo(() => {
+    if (!recruitmentPosts || recruitmentPosts.length === 0) {
+      return {
+        openPositions: 0,
+        ongoingRecruitments: 0,
+        closedPositions: 0,
+        totalApplications: 0,
+        scheduledInterviews: 0
+      };
     }
+    
+    const openPositions = recruitmentPosts.filter(post => post.status === 'Ouverte').length;
+    const ongoingRecruitments = recruitmentPosts.filter(post => 
+      post.status === 'En cours' || post.status === 'Entretiens' || post.status === 'Offre'
+    ).length;
+    const closedPositions = recruitmentPosts.filter(post => post.status === 'Fermée').length;
+    
+    // Calculate total applications
+    const totalApplications = recruitmentPosts.reduce((total, post) => {
+      if (post.candidates && post.candidates.length) {
+        return total + post.candidates.length;
+      }
+      // Try using applicationCount if available
+      if (post.applicationCount !== undefined) {
+        return total + post.applicationCount;
+      }
+      // Try using applications_count if available
+      if (post.applications_count !== undefined) {
+        return total + post.applications_count;
+      }
+      return total;
+    }, 0);
+    
+    // Calculate scheduled interviews
+    const scheduledInterviews = recruitmentPosts.reduce((total, post) => {
+      if (post.interviews_scheduled !== undefined) {
+        return total + post.interviews_scheduled;
+      }
+      return total;
+    }, 0);
+    
+    return {
+      openPositions,
+      ongoingRecruitments,
+      closedPositions,
+      totalApplications,
+      scheduledInterviews
+    };
   }, [recruitmentPosts]);
-
+  
+  if (isLoading) {
+    return <div className="h-32 flex items-center justify-center">Chargement des statistiques...</div>;
+  }
+  
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <Card className="bg-white">
-        <CardContent className="p-4 flex items-center">
-          <div className="bg-green-100 p-3 rounded-full mr-4">
-            <Building className="h-6 w-6 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Postes ouverts</h3>
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
-            ) : (
-              <p className="text-2xl font-bold">{stats.openPositions}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white">
-        <CardContent className="p-4 flex items-center">
-          <div className="bg-blue-100 p-3 rounded-full mr-4">
-            <Clock className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">En cours</h3>
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
-            ) : (
-              <p className="text-2xl font-bold">{stats.inProgressPositions}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white">
-        <CardContent className="p-4 flex items-center">
-          <div className="bg-gray-100 p-3 rounded-full mr-4">
-            <CheckCircle className="h-6 w-6 text-gray-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Clôturés</h3>
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
-            ) : (
-              <p className="text-2xl font-bold">{stats.closedPositions}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white">
-        <CardContent className="p-4 flex items-center">
-          <div className="bg-green-100 p-3 rounded-full mr-4">
-            <Users className="h-6 w-6 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Candidatures ce mois</h3>
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
-            ) : (
-              <div className="flex items-center">
-                <p className="text-2xl font-bold">{stats.applicationsThisMonth}</p>
-                {applicationsChange !== 0 && (
-                  <div className={`flex items-center ml-2 ${applicationsChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {applicationsChange > 0 ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    <span className="text-xs">{Math.abs(applicationsChange)}%</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white">
-        <CardContent className="p-4 flex items-center">
-          <div className="bg-purple-100 p-3 rounded-full mr-4">
-            <Calendar className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Entretiens programmés</h3>
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
-            ) : (
-              <p className="text-2xl font-bold">{stats.interviewsScheduled}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white">
-        <CardContent className="p-4 flex items-center">
-          <div className="bg-amber-100 p-3 rounded-full mr-4">
-            <Users className="h-6 w-6 text-amber-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Candidatures totales</h3>
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
-            ) : (
-              <p className="text-2xl font-bold">{stats.totalApplications}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <StatsCard
+        title="Postes ouverts"
+        value={stats.openPositions}
+        icon={<Users className="h-5 w-5 text-blue-500" />}
+        description="Offres publiées"
+        bgColor="bg-blue-50"
+        textColor="text-blue-800"
+      />
+      
+      <StatsCard
+        title="En cours"
+        value={stats.ongoingRecruitments}
+        icon={<Clock className="h-5 w-5 text-amber-500" />}
+        description="Processus actifs"
+        bgColor="bg-amber-50"
+        textColor="text-amber-800"
+      />
+      
+      <StatsCard
+        title="Postes pourvus"
+        value={stats.closedPositions}
+        icon={<CheckCircle className="h-5 w-5 text-green-500" />}
+        description="Recrutements terminés"
+        bgColor="bg-green-50"
+        textColor="text-green-800"
+      />
+      
+      <StatsCard
+        title="Candidatures"
+        value={stats.totalApplications}
+        icon={<Users className="h-5 w-5 text-purple-500" />}
+        description="Reçues au total"
+        bgColor="bg-purple-50"
+        textColor="text-purple-800"
+      />
+      
+      <StatsCard
+        title="Entretiens"
+        value={stats.scheduledInterviews}
+        icon={<Calendar className="h-5 w-5 text-indigo-500" />}
+        description="Programmés"
+        bgColor="bg-indigo-50"
+        textColor="text-indigo-800"
+      />
     </div>
+  );
+};
+
+interface StatsCardProps {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  description: string;
+  bgColor: string;
+  textColor: string;
+}
+
+const StatsCard: React.FC<StatsCardProps> = ({
+  title,
+  value,
+  icon,
+  description,
+  bgColor,
+  textColor
+}) => {
+  return (
+    <Card className={`p-6 ${bgColor}`}>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm font-medium">{title}</p>
+          <p className={`text-2xl font-bold mt-1 ${textColor}`}>{value}</p>
+          <p className="text-xs text-gray-500 mt-1">{description}</p>
+        </div>
+        <div className="rounded-full p-2 bg-white">
+          {icon}
+        </div>
+      </div>
+    </Card>
   );
 };
 

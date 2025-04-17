@@ -1,122 +1,86 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { ChevronRight, Check, X } from 'lucide-react';
 import { RecruitmentStage } from '@/types/recruitment';
-import { ChevronRight, CheckCircle, XCircle, UserPlus } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 
-interface StageActionsProps {
-  currentStage: RecruitmentStage;
-  onUpdateStage: (newStage: RecruitmentStage) => void;
-  onRecruitmentFinalized?: (data: any) => void;
-  candidateData?: any;
+interface RecruitmentStageActionsProps {
+  currentStage: string;
+  onStageUpdate: (newStage: string) => void;
 }
 
-const RecruitmentStageActions: React.FC<StageActionsProps> = ({
+const RecruitmentStageActions: React.FC<RecruitmentStageActionsProps> = ({
   currentStage,
-  onUpdateStage,
-  onRecruitmentFinalized,
-  candidateData
+  onStageUpdate
 }) => {
-  const { toast } = useToast();
-  
-  const stages: RecruitmentStage[] = [
-    'Candidature déposée',
-    'CV en cours d\'analyse',
-    'Entretien RH',
+  const stages = [
+    'CV Reçu',
+    'CV Présélectionné',
+    'Entretien planifié',
+    'Entretien réalisé',
     'Test technique',
-    'Entretien technique',
     'Entretien final',
-    'Proposition envoyée',
+    'Offre proposée',
     'Recrutement finalisé',
-    'Candidature refusée'
+    'Candidature rejetée'
   ];
 
-  const handleMoveToNextStage = () => {
-    const currentIndex = stages.indexOf(currentStage);
-    if (currentIndex < stages.length - 2) { // -2 because 'Candidature refusée' is special
-      const nextStage = stages[currentIndex + 1];
-      onUpdateStage(nextStage);
-      toast({
-        title: "Étape mise à jour",
-        description: `Le candidat passe à l'étape : ${nextStage}`
-      });
-    }
-  };
-
-  const handleRejectCandidate = () => {
-    onUpdateStage('Candidature refusée');
-    toast({
-      title: "Candidature refusée",
-      description: "Le statut du candidat a été mis à jour"
-    });
-  };
-
-  const handleValidateStage = () => {
-    if (currentStage === 'Proposition envoyée') {
-      onUpdateStage('Recrutement finalisé');
-      toast({
-        title: "Recrutement finalisé",
-        description: "Le processus de recrutement est terminé avec succès"
-      });
-      
-      // If we have the finalize handler and candidate data, call it
-      if (onRecruitmentFinalized && candidateData) {
-        onRecruitmentFinalized(candidateData);
-      }
-    } else {
-      handleMoveToNextStage();
-    }
-  };
+  const currentStageIndex = stages.indexOf(currentStage);
   
-  const handleConvertToEmployee = () => {
-    if (onRecruitmentFinalized && candidateData) {
-      onRecruitmentFinalized(candidateData);
-      toast({
-        title: "Conversion en employé",
-        description: "Le candidat est converti en employé avec succès"
-      });
+  // Cannot advance if already at final stages
+  const canAdvance = currentStage !== 'Recrutement finalisé' && 
+                    currentStage !== 'Candidature rejetée' &&
+                    currentStageIndex < stages.length - 2;
+                    
+  const handleNextStage = () => {
+    if (canAdvance) {
+      onStageUpdate(stages[currentStageIndex + 1]);
     }
   };
 
-  // Don't show actions if recruitment is rejected
-  if (currentStage === 'Candidature refusée') {
-    return null;
-  }
-  
-  // Show "convert to employee" button when recruitment is finalized
-  if (currentStage === 'Recrutement finalisé') {
-    return (
-      <div className="flex gap-2 mt-4">
-        <Button 
-          onClick={handleConvertToEmployee}
-          className="flex items-center gap-2"
-        >
-          <UserPlus className="w-4 h-4" />
-          Convertir en employé
-        </Button>
-      </div>
-    );
-  }
+  const handleReject = () => {
+    onStageUpdate('Candidature rejetée');
+  };
+
+  const handleFinalize = () => {
+    onStageUpdate('Recrutement finalisé');
+  };
 
   return (
-    <div className="flex gap-2 mt-4">
-      <Button 
-        onClick={handleValidateStage}
-        className="flex items-center gap-2"
-      >
-        <CheckCircle className="w-4 h-4" />
-        Valider cette étape
-      </Button>
+    <div className="flex justify-end space-x-2">
+      {currentStage !== 'Candidature rejetée' && currentStage !== 'Recrutement finalisé' && (
+        <>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-red-600"
+            onClick={handleReject}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Rejeter
+          </Button>
 
-      <Button 
-        variant="destructive"
-        onClick={handleRejectCandidate}
-        className="flex items-center gap-2"
-      >
-        <XCircle className="w-4 h-4" />
-        Refuser la candidature
-      </Button>
+          {currentStageIndex === 6 ? (
+            <Button 
+              size="sm"
+              className="bg-green-600 hover:bg-green-700" 
+              onClick={handleFinalize}
+            >
+              <Check className="h-4 w-4 mr-1" />
+              Finaliser
+            </Button>
+          ) : (
+            <Button 
+              size="sm" 
+              onClick={handleNextStage}
+              disabled={!canAdvance}
+            >
+              Étape suivante
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          )}
+        </>
+      )}
     </div>
   );
 };

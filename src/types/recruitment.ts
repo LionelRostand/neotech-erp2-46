@@ -1,4 +1,10 @@
 
+export interface RecruitmentStage {
+  stage: string;
+  date: string;
+  note?: string;
+}
+
 export interface CandidateApplication {
   id: string;
   firstName: string;
@@ -12,6 +18,14 @@ export interface CandidateApplication {
   notes?: string;
   interviewDate?: string;
   evaluationScore?: number;
+  
+  // Additional properties needed by components
+  candidateName?: string;
+  candidateEmail?: string;
+  currentStage?: string;
+  stageHistory?: RecruitmentStage[];
+  recruitmentId?: string;
+  resume?: string;
 }
 
 export interface RecruitmentPost {
@@ -43,4 +57,13 @@ export interface RecruitmentPost {
   updatedAt: any; // Firestore Timestamp
   createdBy?: string;
   candidates?: CandidateApplication[];
+  
+  // Additional properties needed by components
+  openDate?: string;
+  applicationDeadline?: string;
+  hiringManagerId?: string;
+  hiringManagerName?: string;
+  applicationCount?: number;
+  applications_count?: number;
+  interviews_scheduled?: number;
 }

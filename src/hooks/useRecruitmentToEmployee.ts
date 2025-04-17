@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export const useRecruitmentToEmployee = () => {
   const [loading, setLoading] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   /**
@@ -81,7 +82,10 @@ export const useRecruitmentToEmployee = () => {
     }
   };
 
-  return { convertToEmployee, loading, error };
+  // Alias for better API naming
+  const convertCandidateToEmployee = convertToEmployee;
+
+  return { convertToEmployee, convertCandidateToEmployee, loading, isConverting, error };
 };
 
 export default useRecruitmentToEmployee;

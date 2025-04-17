@@ -10,7 +10,7 @@ import { RecruitmentPost } from '@/types/recruitment';
  */
 export const useRecruitmentFirebaseData = () => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export const useRecruitmentFirebaseData = () => {
     if (!COLLECTIONS.HR.RECRUITMENT) {
       console.error('Invalid collection path: COLLECTIONS.HR.RECRUITMENT is undefined or empty');
       setError(new Error('Configuration error: Invalid collection path'));
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
     
@@ -36,19 +36,19 @@ export const useRecruitmentFirebaseData = () => {
           } as RecruitmentPost);
         });
         setRecruitmentPosts(posts);
-        setLoading(false);
+        setIsLoading(false);
       },
       (err) => {
         console.error('Error fetching recruitment posts:', err);
         setError(err);
-        setLoading(false);
+        setIsLoading(false);
       }
     );
 
     return () => unsubscribe();
   }, []);
 
-  return { recruitmentPosts, loading, error };
+  return { recruitmentPosts, isLoading, error };
 };
 
 export default useRecruitmentFirebaseData;

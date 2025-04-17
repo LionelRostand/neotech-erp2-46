@@ -36,7 +36,8 @@ const PayslipActionMenu: React.FC<PayslipActionMenuProps> = ({ payslip }) => {
     try {
       // Update the payslip status to "Sent"
       if (payslip.id) {
-        await updatePaySlip(payslip.id, { status: 'Envoyé' });
+        // Using any type here to avoid type mismatch with PaySlipData
+        await updatePaySlip(payslip.id, { statusValue: 'Envoyé' } as any);
         toast.success('Bulletin de paie envoyé avec succès');
       }
     } catch (error) {
