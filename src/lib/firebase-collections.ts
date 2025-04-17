@@ -60,6 +60,7 @@ export const COLLECTIONS = {
     PAYSLIPS: 'hr_payslips',
     EVALUATIONS: 'hr_evaluations',
     ABSENCE_REQUESTS: 'hr_absence_requests',
+    LEAVE_REQUESTS: 'hr_leave_requests',
     BADGES: 'hr_badges',
     MANAGERS: 'hr_managers',
     SALARIES: 'hr_salaries',
@@ -79,6 +80,37 @@ export const COLLECTIONS = {
     PRICING: 'freight_pricing',
     CLIENTS: 'freight_clients',
     SETTINGS: 'freight_settings',
-    USERS: 'freight_users'
+    USERS: 'freight_users',
+    PACKAGES: 'freight_packages',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    PACKAGE_TYPES: 'freight_package_types',
+    BILLING: 'freight_billing',
+    QUOTES: 'freight_quotes',
+    CUSTOMERS: 'freight_customers'
+  },
+  HEALTH: {
+    PATIENTS: 'health_patients',
+    DOCTORS: 'health_doctors',
+    APPOINTMENTS: 'health_appointments',
+    CONSULTATIONS: 'health_consultations',
+    PRESCRIPTIONS: 'health_prescriptions',
+    MEDICAL_RECORDS: 'health_medical_records',
+    STAFF: 'health_staff',
+    BILLING: 'health_billing',
+    INSURANCE: 'health_insurance',
+    LABORATORY: 'health_laboratory',
+    INVENTORY: 'health_inventory',
+    SETTINGS: 'health_settings',
+    PERMISSIONS: 'health_permissions'
+  },
+  LIBRARY: {
+    BOOKS: 'library_books',
+    MEMBERS: 'library_members',
+    LOANS: 'library_loans',
+    RETURNS: 'library_returns',
+    AUTHORS: 'library_authors',
+    PUBLISHERS: 'library_publishers',
+    CATEGORIES: 'library_categories',
+    SETTINGS: 'library_settings'
   }
 };
