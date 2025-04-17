@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase';
 import { Company } from '@/components/module/submodules/companies/types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
 export const useFirebaseCompanies = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -47,12 +48,8 @@ export const useFirebaseCompanies = () => {
         return;
       }
       
-      // Utiliser directement 'companies' comme chemin de collection
+      // Utiliser directement 'companies' comme chemin de collection (toujours défini)
       const companiesCollectionPath = 'companies';
-      
-      if (!companiesCollectionPath) {
-        throw new Error('Le chemin de la collection des entreprises n\'est pas défini');
-      }
       
       const companiesRef = collection(db, companiesCollectionPath);
       const q = query(companiesRef, orderBy('name', 'asc'));
@@ -87,6 +84,7 @@ export const useFirebaseCompanies = () => {
         localStorage.setItem('cached_companies', JSON.stringify(companiesData));
         
         setIsLoading(false);
+        setError(null);
         setIsOffline(false);
       }, (err) => {
         console.error("Erreur lors de la récupération des entreprises:", err);
