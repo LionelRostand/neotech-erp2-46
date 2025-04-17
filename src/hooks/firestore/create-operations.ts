@@ -18,6 +18,20 @@ export const addDocument = async (collectionPath: string, data: any) => {
     console.log(`Adding document to collection: ${collectionPath}`, data);
     console.log(`Document has ID? ${hasId ? 'Yes: ' + data.id : 'No'}`);
     
+    // Vérifier si l'objet contient des champs d'image (photo, photoURL, photoData)
+    if (data.photo || data.photoURL || data.photoData) {
+      console.log('Le document contient des données d\'image, s\'assurant qu\'elles sont correctement stockées');
+      
+      // S'assurer que toutes les propriétés de photos sont cohérentes
+      const photoData = data.photoData || data.photo || data.photoURL || '';
+      
+      if (photoData && typeof photoData === 'string') {
+        data.photo = photoData;
+        data.photoURL = photoData;
+        data.photoData = photoData;
+      }
+    }
+    
     if (hasId) {
       // Si un ID est fourni, utiliser setDoc pour éviter la duplication
       console.log(`Using setDoc with provided ID: ${data.id}`);

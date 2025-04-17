@@ -41,36 +41,22 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
   // Sélectionner l'URL de la photo à utiliser
   const getPhotoUrl = () => {
-    console.log("Photo data:", employee.photoData);
-    console.log("Photo URL:", employee.photoURL);
-    console.log("Photo:", employee.photo);
+    // Vérifier chaque propriété d'image dans un ordre de priorité logique
+    const sources = [
+      { name: 'photoData', value: employee.photoData },
+      { name: 'photoURL', value: employee.photoURL },
+      { name: 'photo', value: employee.photo }
+    ];
     
-    // Check if photoData exists and is a string starting with 'data:'
-    if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
-      return employee.photoData;
-    }
-
-    // Check photoURL
-    if (employee.photoURL && typeof employee.photoURL === 'string' && employee.photoURL.length > 0) {
-      return employee.photoURL;
-    }
-
-    // Check legacy photo property
-    if (employee.photo && typeof employee.photo === 'string' && employee.photo.length > 0) {
-      return employee.photo;
-    }
-
-    // Check if photoData is an object with a data property - with proper null check
-    if (employee.photoData && typeof employee.photoData === 'object' && 
-        employee.photoData !== null) {
-      // Additional safe check for 'data' property
-      const photoDataObj = employee.photoData as Record<string, unknown>;
-      if ('data' in photoDataObj && typeof photoDataObj.data === 'string') {
-        return photoDataObj.data;
+    for (const source of sources) {
+      if (source.value && typeof source.value === 'string' && source.value.length > 0) {
+        console.log(`Utilisation de la source d'image: ${source.name}`);
+        return source.value;
       }
     }
-    
-    // If no photo is found, return an empty string
+
+    // Si aucune source n'est trouvée, on retourne une chaîne vide
+    console.log("Aucune source d'image valide trouvée pour l'employé:", employee.id);
     return '';
   };
 

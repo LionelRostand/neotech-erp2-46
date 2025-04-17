@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useFormContext } from 'react-hook-form';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
@@ -18,6 +18,13 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
   const { uploadFile } = useStorageUpload();
   // Get the form context to ensure we're inside a form
   const form = useFormContext();
+
+  // Mettre à jour le prévisualisation quand defaultPhotoUrl change
+  useEffect(() => {
+    if (defaultPhotoUrl) {
+      setPreviewUrl(defaultPhotoUrl);
+    }
+  }, [defaultPhotoUrl]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
     const files = event.target.files;
@@ -50,13 +57,14 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
         const base64Data = e.target?.result as string;
         if (base64Data) {
           // Stocker à la fois les données base64 et les métadonnées
-          onChange(base64Data); // Stocker directement la chaîne base64 pour faciliter l'utilisation
+          console.log("Photo convertie en base64 avec succès - Stockage dans les champs photo et photoData");
           
-          // Ajouter des logs pour le débogage
-          console.log('Photo convertie en base64 avec succès', {
-            size: base64Data.length,
-            preview: base64Data.substring(0, 50) + '...'
-          });
+          // Mettre à jour plusieurs champs du formulaire
+          form.setValue('photo', base64Data);
+          form.setValue('photoURL', base64Data);
+          form.setValue('photoData', base64Data);
+          
+          onChange(base64Data);
         } else {
           // En cas d'échec, on stocke au moins les métadonnées
           onChange(null);
