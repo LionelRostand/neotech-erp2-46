@@ -83,13 +83,21 @@ export const useDepartmentService = () => {
     try {
       // Vérifier si un département avec le même nom existe déjà
       const existingDepartments = await getAll();
+      
+      // Add null check for department name and ensure lowercase comparison works properly
+      const departmentName = department.name || '';
+      
       const duplicateName = existingDepartments.find(
-        dept => dept.name.toLowerCase() === department.name.toLowerCase()
+        dept => {
+          // Add null check for existing department names
+          const existingDeptName = dept.name || '';
+          return existingDeptName.toLowerCase() === departmentName.toLowerCase();
+        }
       );
       
       if (duplicateName) {
-        console.warn(`Un département nommé "${department.name}" existe déjà.`);
-        toast.error(`Un département nommé "${department.name}" existe déjà.`);
+        console.warn(`Un département nommé "${departmentName}" existe déjà.`);
+        toast.error(`Un département nommé "${departmentName}" existe déjà.`);
         return false;
       }
       
@@ -108,7 +116,7 @@ export const useDepartmentService = () => {
       const result = await addDocument(DEPARTMENTS_COLLECTION, department);
       console.log("Résultat de la création:", result);
       
-      toast.success(`Département ${department.name} créé avec succès`);
+      toast.success(`Département ${departmentName} créé avec succès`);
       
       // Wait before re-fetching to avoid potential race conditions
       setTimeout(async () => {

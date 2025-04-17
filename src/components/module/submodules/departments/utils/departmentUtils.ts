@@ -1,93 +1,66 @@
 
-import { v4 as uuidv4 } from 'uuid';
-import { Department, DepartmentFormData } from '../types';
+import { Department } from '../types';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 
-// Create an event bus for department updates
-type EventListener = () => void;
-const eventListeners: EventListener[] = [];
+// Event bus mechanism for department updates
+const subscribers: ((departments: Department[]) => void)[] = [];
 
-/**
- * Notify subscribers when departments are updated
- * @param departments The updated departments
- */
-export const notifyDepartmentUpdates = (departments: Department[]) => {
-  console.log(`Notifying ${eventListeners.length} subscribers about department updates`);
-  // Trigger all event listeners
-  eventListeners.forEach(listener => listener());
-};
-
-/**
- * Subscribe to department updates
- * @param callback Function to call when departments are updated
- * @returns Function to unsubscribe
- */
-export const subscribeToDepartmentUpdates = (callback: EventListener): (() => void) => {
-  console.log('New subscriber to department updates');
-  eventListeners.push(callback);
-  
-  // Return unsubscribe function
+export const subscribeToDepartmentUpdates = (callback: (departments: Department[]) => void) => {
+  subscribers.push(callback);
   return () => {
-    const index = eventListeners.indexOf(callback);
-    if (index > -1) {
-      eventListeners.splice(index, 1);
-      console.log('Unsubscribed from department updates');
+    const index = subscribers.indexOf(callback);
+    if (index !== -1) {
+      subscribers.splice(index, 1);
     }
   };
 };
 
-export const createEmptyFormData = (departments: Department[] = []): DepartmentFormData => {
-  const deptId = `dept-${departments.length + 1}`;
-
-  return {
-    id: deptId,
-    name: '',
-    description: '',
-    managerId: '',
-    companyId: '',
-    color: '#3b82f6',
-    employeeIds: [],
-  };
+export const notifyDepartmentUpdates = (departments: Department[]) => {
+  console.log(`Notifying ${subscribers.length} subscribers about department updates`);
+  subscribers.forEach(callback => callback(departments));
 };
 
+/**
+ * Converts form data to a department object
+ */
 export const prepareDepartmentFromForm = (
-  formData: DepartmentFormData, 
-  selectedEmployees: string[],
-  employees: Employee[] = [],
-  companies: Company[] = []
+  formData: any, 
+  selectedEmployees: string[], 
+  allEmployees: Employee[], 
+  companies: Company[]
 ): Department => {
-  // Find the selected manager and get their name
-  const selectedManager = formData.managerId
-    ? employees.find(employee => employee.id === formData.managerId)
+  // Find the selected manager from all employees
+  const selectedManager = formData.managerId && formData.managerId !== "none"
+    ? allEmployees.find(emp => emp.id === formData.managerId) 
     : null;
+
+  // Ensure manager properties are handled safely
   const managerName = selectedManager 
-    ? `${selectedManager.firstName} ${selectedManager.lastName}`
+    ? `${selectedManager.firstName || ''} ${selectedManager.lastName || ''}`.trim() 
+    : '';
+
+  // Find the selected company from all companies
+  const selectedCompany = formData.companyId && formData.companyId !== "none"
+    ? companies.find(comp => comp.id === formData.companyId)
     : null;
 
-  // Find the selected company and get its name
-  const selectedCompany = formData.companyId
-    ? companies.find(company => company.id === formData.companyId)
-    : null;
-  const companyName = selectedCompany
-    ? selectedCompany.name
-    : null;
+  // Ensure company properties are handled safely
+  const companyName = selectedCompany ? (selectedCompany.name || '') : '';
 
-  // Create a new department object
-  const department: Department = {
-    id: formData.id || `dept-${uuidv4().substring(0, 8)}`,
-    name: formData.name,
-    description: formData.description,
-    managerId: formData.managerId || null,
+  // Create the department object with safe defaults for all required fields
+  return {
+    id: formData.id || `dept-${Date.now()}`,
+    name: formData.name || '',
+    description: formData.description || '',
+    managerId: formData.managerId === "none" ? null : (formData.managerId || null),
     managerName: managerName,
-    companyId: formData.companyId || null,
+    companyId: formData.companyId === "none" ? null : (formData.companyId || null),
     companyName: companyName,
-    color: formData.color,
-    employeeIds: selectedEmployees,
-    employeesCount: selectedEmployees.length,
+    color: formData.color || '#3B82F6',
+    employeeIds: selectedEmployees || [],
+    employeesCount: (selectedEmployees || []).length,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-
-  return department;
 };
