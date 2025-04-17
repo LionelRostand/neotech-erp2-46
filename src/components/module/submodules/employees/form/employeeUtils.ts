@@ -11,11 +11,6 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     lastName: formData.lastName,
     email: formData.email,
     phone: formData.phone || '',
-    streetNumber: formData.streetNumber || '',
-    streetName: formData.streetName || '',
-    city: formData.city || '',
-    zipCode: formData.zipCode || '',
-    region: formData.region || '',
     position: formData.position || '',
     professionalEmail: formData.professionalEmail || '',
     department: formData.department || '',
@@ -27,6 +22,11 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     managerId: formData.managerId || '',
     forceManager: formData.forceManager,
     isManager: formData.isManager,
+    streetNumber: formData.streetNumber,
+    streetName: formData.streetName,
+    city: formData.city,
+    zipCode: formData.zipCode,
+    region: formData.region
   };
 
   // Handle photo and photoMeta
@@ -63,11 +63,6 @@ export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues 
     lastName: employee.lastName || '',
     email: employee.email || '',
     phone: employee.phone || '',
-    streetNumber: employee.streetNumber || '',
-    streetName: employee.streetName || '',
-    city: employee.city || '',
-    zipCode: employee.zipCode || '',
-    region: employee.region || '',
     position: employee.position || '',
     professionalEmail: employee.professionalEmail || '',
     department: employee.department || '',
@@ -81,5 +76,10 @@ export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues 
     photoMeta: employee.photoMeta,
     forceManager: employee.forceManager || false,
     isManager: employee.isManager || false,
+    streetNumber: employee.streetNumber || '',
+    streetName: employee.streetName || '',
+    city: employee.city || '',
+    zipCode: employee.zipCode || '',
+    region: employee.region || ''
   };
 };

@@ -19,11 +19,6 @@ export const formValuesToEmployee = (
     lastName: formValues.lastName,
     email: formValues.email,
     phone: formValues.phone,
-    streetNumber: formValues.streetNumber,
-    streetName: formValues.streetName,
-    city: formValues.city,
-    zipCode: formValues.zipCode,
-    region: formValues.region,
     company: formValues.company,
     department: formValues.department,
     position: formValues.position,
@@ -32,17 +27,31 @@ export const formValuesToEmployee = (
     birthDate: formValues.birthDate,
     managerId: formValues.managerId,
     status: formValues.status,
-    photo: formValues.photo,
-    photoURL: formValues.photo,
-    photoData: formValues.photo,
-    photoMeta: formValues.photoMeta,
     professionalEmail: formValues.professionalEmail,
     forceManager: formValues.forceManager,
     isManager: formValues.isManager,
+    // Ajouter les champs d'adresse
+    streetNumber: formValues.streetNumber,
+    streetName: formValues.streetName,
+    city: formValues.city,
+    zipCode: formValues.zipCode,
+    region: formValues.region,
     // Conserver l'ID existant si disponible
     id: existingEmployee?.id || crypto.randomUUID(),
     updatedAt: new Date().toISOString(),
   };
+
+  // Gestion de la photo
+  if (formValues.photo) {
+    employeeData.photo = formValues.photo;
+    employeeData.photoURL = formValues.photo;
+    employeeData.photoData = formValues.photo;
+  }
+
+  // Gestion des métadonnées de photo
+  if (formValues.photoMeta) {
+    employeeData.photoMeta = formValues.photoMeta;
+  }
 
   // Si c'est un nouvel employé, ajouter la date de création
   if (!existingEmployee) {
@@ -65,11 +74,6 @@ export const employeeToFormValues = (
     lastName: employee.lastName || '',
     email: employee.email || '',
     phone: employee.phone || '',
-    streetNumber: employee.streetNumber || '',
-    streetName: employee.streetName || '',
-    city: employee.city || '',
-    zipCode: employee.zipCode || '',
-    region: employee.region || '',
     company: typeof employee.company === 'string' ? employee.company : '',
     department: employee.department || '',
     position: employee.position || '',
@@ -83,5 +87,10 @@ export const employeeToFormValues = (
     professionalEmail: employee.professionalEmail || '',
     forceManager: employee.forceManager || false,
     isManager: employee.isManager || false,
+    streetNumber: employee.streetNumber || '',
+    streetName: employee.streetName || '',
+    city: employee.city || '',
+    zipCode: employee.zipCode || '',
+    region: employee.region || ''
   };
 };

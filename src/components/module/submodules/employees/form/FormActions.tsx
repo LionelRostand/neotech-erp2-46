@@ -34,7 +34,6 @@ const FormActions: React.FC<FormActionsProps> = ({
   error
 }) => {
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
-  const { departments, isLoading: isLoadingDepartments } = useFirebaseDepartments();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
   // Utiliser les données des employés dédupliquées depuis useEmployeeData
@@ -68,65 +67,37 @@ const FormActions: React.FC<FormActionsProps> = ({
   
   return (
     <div className="space-y-4">
-      {form && (
-        <>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="department" className="text-right">
-              Département
-            </Label>
-            <div className="col-span-3">
-              <Select
-                value={form.getValues('department') || ''}
-                onValueChange={(value) => form.setValue('department', value)}
-                disabled={isLoadingDepartments}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={isLoadingDepartments ? "Chargement..." : "Sélectionner un département"} />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
-                  {departments?.map((department) => (
-                    <SelectItem key={department.id} value={department.id}>
-                      {department.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {form && showManagerOption && (
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="managerSelect" className="text-right">
+            Responsable
+          </Label>
+          <div className="col-span-3">
+            <Select
+              onValueChange={(value) => {
+                if (value === 'none') {
+                  form.setValue('managerId', '');
+                } else {
+                  form.setValue('managerId', value);
+                }
+              }}
+              value={form.getValues('managerId') || 'none'}
+              disabled={isLoadingEmployees}
+            >
+              <SelectTrigger id="managerSelect">
+                <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
+                <SelectItem value="none">Aucun responsable</SelectItem>
+                {sortedEmployees.map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {`${employee.lastName || ''} ${employee.firstName || ''}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-
-          {showManagerOption && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="managerSelect" className="text-right">
-                Responsable
-              </Label>
-              <div className="col-span-3">
-                <Select
-                  onValueChange={(value) => {
-                    if (value === 'none') {
-                      form.setValue('managerId', '');
-                    } else {
-                      form.setValue('managerId', value);
-                    }
-                  }}
-                  value={form.getValues('managerId') || 'none'}
-                  disabled={isLoadingEmployees}
-                >
-                  <SelectTrigger id="managerSelect">
-                    <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
-                    <SelectItem value="none">Aucun responsable</SelectItem>
-                    {sortedEmployees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {`${employee.lastName || ''} ${employee.firstName || ''}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-        </>
+        </div>
       )}
       
       <div className="flex justify-end space-x-2 pt-4">
