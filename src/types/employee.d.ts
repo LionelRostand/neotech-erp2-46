@@ -1,3 +1,4 @@
+
 export interface EmployeePhotoMeta {
   data?: string;
   fileName?: string;

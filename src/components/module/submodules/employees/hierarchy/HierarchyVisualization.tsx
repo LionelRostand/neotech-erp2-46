@@ -1,104 +1,150 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { ChartNode, HierarchyNode, HierarchyVisualizationProps } from './types';
-import { convertToChartNode, nodeMatchesSearch } from './utils/hierarchyUtils';
-import EmptyHierarchy from './components/EmptyHierarchy';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import OrgChartNode from './components/OrgChartNode';
 import TreeViewNode from './components/TreeViewNode';
-import { subscribeToDepartmentUpdates } from '../../departments/utils/departmentUtils';
-import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
 
-const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
-  data: externalData,
-  viewMode, 
-  searchQuery,
-  onRefresh
-}) => {
-  // État local pour stocker les données du graphique
-  const [chartData, setChartData] = useState<ChartNode | null>(null);
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
-  
-  // Mettre à jour les données du graphique lorsque les données externes changent
-  useEffect(() => {
-    if (externalData) {
-      const convertedData = 'position' in externalData 
-        ? externalData 
-        : convertToChartNode(externalData as HierarchyNode);
-      setChartData(convertedData as ChartNode);
-      setLastUpdateTime(new Date());
-    } else {
-      setChartData(null);
-    }
-  }, [externalData]);
+// Interface for node in the chart structure
+interface ChartNode {
+  id: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  department: string;
+  photoURL?: string;
+  photoMeta?: any;
+  children: ChartNode[];
+  // Include other employee properties needed
+}
 
-  // Fonction de rafraîchissement avec délai minimum
-  const handleRefresh = useCallback(() => {
-    const now = new Date();
-    const timeSinceLastUpdate = now.getTime() - lastUpdateTime.getTime();
+interface HierarchyVisualizationProps {
+  searchQuery?: string;
+}
+
+const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ searchQuery = '' }) => {
+  const { employees } = useEmployeeData();
+  const [selectedView, setSelectedView] = useState<'org-chart' | 'tree-view'>('org-chart');
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  // Build the employee hierarchy
+  const hierarchy = useMemo(() => {
+    // Find root nodes (employees without managers or with managers not in the system)
+    const managerIds = new Set(employees.map(e => e.managerId).filter(Boolean));
+    const employeeIds = new Set(employees.map(e => e.id));
     
-    // Éviter les rafraîchissements trop fréquents (minimum 5 secondes entre les mises à jour)
-    if (timeSinceLastUpdate > 5000) {
-      console.log("Rafraîchissement de la hiérarchie depuis la visualisation");
-      if (onRefresh) {
-        onRefresh();
-        setLastUpdateTime(now);
-        toast.info("Organigramme mis à jour");
+    const rootEmployees = employees.filter(e => 
+      !e.managerId || !employeeIds.has(e.managerId) || e.forceManager
+    );
+
+    // Build the hierarchy tree recursively
+    const buildHierarchy = (rootNodes: Employee[]): ChartNode[] => {
+      return rootNodes.map(employee => {
+        const directReports = employees.filter(e => e.managerId === employee.id);
+        
+        return {
+          id: employee.id,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          position: employee.position || employee.title || 'N/A',
+          department: employee.department || 'N/A',
+          photoURL: employee.photoURL || employee.photo || '',
+          photoMeta: employee.photoMeta,
+          children: buildHierarchy(directReports)
+        };
+      });
+    };
+
+    return buildHierarchy(rootEmployees);
+  }, [employees]);
+
+  // Handle toggle node expansion in tree view
+  const handleToggleExpand = (nodeId: string) => {
+    setExpandedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
       }
-    } else {
-      console.log("Rafraîchissement ignoré (trop fréquent)");
-    }
-  }, [onRefresh, lastUpdateTime]);
+      return newSet;
+    });
+  };
 
-  // S'abonner aux mises à jour des départements
-  useEffect(() => {
-    // Fonction pour gérer les mises à jour des départements
-    const handleDepartmentsUpdate = () => {
-      console.log("Départements ou employés mis à jour, rafraîchissement de la hiérarchie");
-      handleRefresh();
-    };
-    
-    // S'abonner aux événements de mise à jour des départements
-    const unsubscribe = subscribeToDepartmentUpdates(handleDepartmentsUpdate);
-    
-    // Se désabonner lors du démontage du composant
-    return () => {
-      unsubscribe();
-    };
-  }, [handleRefresh]);
-  
-  // Afficher un message si aucune donnée n'est disponible
-  if (!chartData) {
-    return <EmptyHierarchy />;
-  }
+  // Render org chart nodes recursively
+  const renderOrgChartNodes = (nodes: ChartNode[]) => {
+    return nodes.map(node => (
+      <OrgChartNode
+        key={node.id}
+        employee={node as any} // Cast to Employee for compatibility
+        searchQuery={searchQuery}
+        onSelect={() => handleSelectEmployee(node.id)}
+      >
+        {node.children.length > 0 && renderOrgChartNodes(node.children)}
+      </OrgChartNode>
+    ));
+  };
 
-  // Filtrer les données en fonction de la recherche si nécessaire
-  const shouldFilter = searchQuery && searchQuery.trim().length > 0;
-  
-  const renderNode = (node: ChartNode) => {
-    if (shouldFilter && !nodeMatchesSearch(node, searchQuery)) {
-      return null;
-    }
-    
-    if (viewMode === 'orgChart') {
-      return <OrgChartNode key={node.id} node={node} searchQuery={searchQuery} />;
-    } else {
-      return <TreeViewNode key={node.id} node={node} searchQuery={searchQuery} />;
-    }
+  // Render tree view nodes recursively
+  const renderTreeViewNodes = (nodes: ChartNode[]) => {
+    return nodes.map(node => (
+      <TreeViewNode
+        key={node.id}
+        employee={node as any} // Cast to Employee for compatibility
+        expanded={expandedNodes.has(node.id)}
+        onToggleExpand={() => handleToggleExpand(node.id)}
+        onSelectNode={() => handleSelectEmployee(node.id)}
+        searchQuery={searchQuery}
+      >
+        {node.children.length > 0 && renderTreeViewNodes(node.children)}
+      </TreeViewNode>
+    ));
+  };
+
+  // Handle employee selection
+  const handleSelectEmployee = (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId) || null;
+    setSelectedEmployee(employee);
   };
 
   return (
-    <div className="overflow-auto max-h-[calc(100vh-250px)]">
-      <div className="inline-block min-w-full p-4">
-        {viewMode === 'orgChart' ? (
-          <div className="flex justify-center">
-            {renderNode(chartData)}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {renderNode(chartData)}
-          </div>
-        )}
-      </div>
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <Tabs value={selectedView} onValueChange={(value: any) => setSelectedView(value)}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="org-chart">Organigramme</TabsTrigger>
+            <TabsTrigger value="tree-view">Vue Arbre</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="org-chart" className="min-h-[400px]">
+            <div className="mt-4 space-y-8">
+              {hierarchy.length > 0 ? (
+                renderOrgChartNodes(hierarchy)
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  Aucune hiérarchie d'employé n'a été trouvée.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="tree-view" className="min-h-[400px]">
+            <div className="mt-4">
+              {hierarchy.length > 0 ? (
+                renderTreeViewNodes(hierarchy)
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  Aucune hiérarchie d'employé n'a été trouvée.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
 

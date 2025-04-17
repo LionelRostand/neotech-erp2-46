@@ -1,33 +1,54 @@
 
-import { Employee } from '@/types/employee';
 import { EmployeePhotoMeta } from '@/types/employee';
 
 /**
- * Récupère l'URL de la photo d'un employé
- * Tente de récupérer l'URL à partir de différentes sources disponibles
+ * Génère une URL pour l'affichage de la photo d'un employé
+ * @param photoMeta Métadonnées de la photo
+ * @returns URL de la photo ou undefined
  */
-export const getPhotoUrl = (photoMeta?: EmployeePhotoMeta | null): string => {
-  if (!photoMeta) return '';
+export const getPhotoUrl = (photoMeta?: EmployeePhotoMeta): string | undefined => {
+  if (!photoMeta) return undefined;
+  if (!photoMeta.data) return undefined;
   
-  // Si on a des données directement dans photoMeta.data
-  if (photoMeta.data) {
-    return photoMeta.data;
-  }
+  // Si la donnée est une URL, la retourner directement
+  if (photoMeta.data.startsWith('http')) return photoMeta.data;
   
-  return '';
+  // Sinon, considérer que c'est une donnée Base64
+  return photoMeta.data;
 };
 
 /**
- * Analyse et crée un objet EmployeePhotoMeta à partir d'une URL de photo
+ * Convertit une photo en métadonnées
+ * @param photoData Données de la photo (URL ou Base64)
+ * @returns Métadonnées de la photo
  */
-export const parsePhotoMetaFromUrl = (photoUrl: string): EmployeePhotoMeta | undefined => {
-  if (!photoUrl) return undefined;
+export const createPhotoMeta = (photoData?: string): EmployeePhotoMeta | undefined => {
+  if (!photoData) return undefined;
   
   return {
-    data: photoUrl,
-    fileName: 'profile-photo.jpg',
+    data: photoData,
+    fileName: `photo_${Date.now()}.jpg`,
     fileType: 'image/jpeg',
-    fileSize: 0,
+    fileSize: estimatePhotoSize(photoData),
     updatedAt: new Date().toISOString()
   };
+};
+
+/**
+ * Estime la taille d'une photo en octets
+ * @param photoData Données de la photo
+ * @returns Taille estimée en octets
+ */
+const estimatePhotoSize = (photoData: string): number => {
+  if (!photoData) return 0;
+  
+  // Si c'est une URL, retourner une taille par défaut
+  if (photoData.startsWith('http')) return 100000; // ~100KB
+  
+  // Pour une donnée Base64, calculer approximativement
+  const base64Length = photoData.length;
+  const paddingCount = (photoData.match(/=/g) || []).length;
+  const dataSize = Math.floor((base64Length * 3) / 4) - paddingCount;
+  
+  return dataSize;
 };
