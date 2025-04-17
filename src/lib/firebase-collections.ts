@@ -20,8 +20,12 @@ export const COLLECTIONS = {
   DRIVERS: 'drivers',
   VEHICLES: 'vehicles',
   CONTRACTS: 'contracts',
-  PROJECTS: 'projects',
-  TASKS: 'tasks',
+  PROJECTS: {
+    PROJECTS: 'projects',
+    TASKS: 'tasks',
+    TEAMS: 'teams',
+    NOTIFICATIONS: 'project_notifications'
+  },
   DOCUMENT_COLLECTIONS: {
     DOCUMENTS: 'documents',
     SETTINGS: 'document_settings',
@@ -49,7 +53,8 @@ export const COLLECTIONS = {
     SETTINGS: 'crm_settings',
     TASKS: 'crm_tasks',
     CAMPAIGNS: 'crm_campaigns',
-    LEADS: 'crm_leads'
+    LEADS: 'crm_leads',
+    REMINDERS: 'crm_reminders'
   },
   HR: {
     EMPLOYEES: 'hr_employees',
@@ -71,7 +76,8 @@ export const COLLECTIONS = {
     SETTINGS: 'hr_settings',
     ALERTS: 'hr_alerts',
     REPORTS: 'hr_reports',
-    RECRUITMENT: 'hr_recruitment'
+    RECRUITMENT: 'hr_recruitment',
+    TIMESHEET: 'hr_timesheet'
   },
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',
@@ -105,6 +111,14 @@ export const COLLECTIONS = {
     INVENTORY: 'health_inventory',
     SETTINGS: 'health_settings',
     PERMISSIONS: 'health_permissions'
+  },
+  TRANSPORT: {
+    DRIVERS: 'transport_drivers',
+    VEHICLES: 'transport_vehicles',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients',
+    ROUTES: 'transport_routes',
+    SETTINGS: 'transport_settings'
   },
   LIBRARY: {
     BOOKS: 'library_books',

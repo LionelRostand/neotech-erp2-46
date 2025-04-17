@@ -2,8 +2,12 @@
 // Define Firestore collection paths here to ensure consistency
 export const COLLECTIONS = {
   USERS: 'users',
-  PROJECTS: 'projects',
-  TASKS: 'tasks',
+  PROJECTS: {
+    PROJECTS: 'projects',
+    TASKS: 'tasks',
+    TEAMS: 'teams', 
+    NOTIFICATIONS: 'project_notifications'
+  },
   CLIENTS: 'clients',
   USER_PERMISSIONS: 'user_permissions',
   HR: {
@@ -27,7 +31,8 @@ export const COLLECTIONS = {
     SALARIES: 'hr_salaries',
     POSITIONS: 'hr_positions',
     PERMISSIONS: 'hr_permissions',
-    RECRUITMENT: 'hr_recruitment'
+    RECRUITMENT: 'hr_recruitment',
+    TIMESHEET: 'hr_timesheet'
   },
   MESSAGES: {
     INBOX: 'messages_inbox',
@@ -46,7 +51,8 @@ export const COLLECTIONS = {
     SETTINGS: 'crm_settings',
     TASKS: 'crm_tasks',
     CAMPAIGNS: 'crm_campaigns',
-    LEADS: 'crm_leads'
+    LEADS: 'crm_leads',
+    REMINDERS: 'crm_reminders'
   },
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',
@@ -85,6 +91,14 @@ export const COLLECTIONS = {
     INVENTORY: 'health_inventory',
     SETTINGS: 'health_settings',
     PERMISSIONS: 'health_permissions'
+  },
+  TRANSPORT: {
+    DRIVERS: 'transport_drivers',
+    VEHICLES: 'transport_vehicles',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients',
+    ROUTES: 'transport_routes',
+    SETTINGS: 'transport_settings'
   },
   LIBRARY: {
     BOOKS: 'library_books',

@@ -1,265 +1,151 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { RecruitmentStage, CandidateApplication, RecruitmentPost } from '@/types/recruitment';
-import KanbanCard from './KanbanCard';
-import { DndContext, DragEndEvent, closestCorners } from '@dnd-kit/core';
-import { useDroppable } from '@dnd-kit/core';
-import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
-import { useToast } from '@/components/ui/use-toast';
-import { updateDocument } from '@/hooks/firestore/firestore-utils';
+import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import { collection, doc, getDocs, updateDoc, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
+import KanbanColumn from './KanbanColumn';
+import { RecruitmentPost } from '@/types/recruitment';
 
-interface KanbanColumnProps {
-  title: string;
-  children: React.ReactNode;
-  id: string;
-}
+const statuses = ['Ouverte', 'En cours', 'Entretiens', 'Offre', 'Fermée'];
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, children, id }) => {
-  const { setNodeRef } = useDroppable({
-    id,
-  });
-
-  return (
-    <div className="flex-1 min-w-[250px] max-w-[300px]">
-      <div className="bg-muted p-3 rounded-t-lg border-b">
-        <h3 className="font-semibold text-sm">{title}</h3>
-      </div>
-      <div ref={setNodeRef} className="p-2 bg-muted/50 rounded-b-lg min-h-[400px]">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-const RecruitmentKanban = () => {
-  const { recruitmentPosts, isLoading } = useRecruitmentFirebaseData();
-  const { toast } = useToast();
-  
-  const stages: RecruitmentStage[] = [
-    'CV en cours d\'analyse',
-    'Entretien RH',
-    'Test technique',
-    'Entretien final',
-    'Recrutement finalisé'
-  ];
-
-  const [candidates, setCandidates] = useState<CandidateApplication[]>([]);
+const RecruitmentKanban: React.FC = () => {
+  const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [organizingColumn, setOrganizingColumn] = useState('');
 
   useEffect(() => {
-    const fetchCandidates = () => {
-      const allCandidates: CandidateApplication[] = [];
-      
-      recruitmentPosts.forEach(post => {
-        if (post.candidates && Array.isArray(post.candidates)) {
-          post.candidates.forEach(candidate => {
-            allCandidates.push({
-              ...candidate,
-              recruitmentId: post.id
-            });
-          });
-        }
-      });
-      
-      setCandidates(allCandidates);
+    const fetchRecruitmentPosts = async () => {
+      try {
+        setLoading(true);
+        const q = query(
+          collection(db, COLLECTIONS.HR.RECRUITMENT),
+          orderBy('createdAt', 'desc')
+        );
+        const querySnapshot = await getDocs(q);
+        
+        const posts: RecruitmentPost[] = [];
+        querySnapshot.forEach((doc) => {
+          posts.push({
+            id: doc.id,
+            ...doc.data()
+          } as RecruitmentPost);
+        });
+        
+        setRecruitmentPosts(posts);
+      } catch (error) {
+        console.error('Error fetching recruitment posts:', error);
+        toast.error('Erreur lors du chargement des offres d\'emploi');
+      } finally {
+        setLoading(false);
+      }
     };
     
-    if (!isLoading && recruitmentPosts.length > 0) {
-      fetchCandidates();
-    }
-  }, [recruitmentPosts, isLoading]);
+    fetchRecruitmentPosts();
+  }, []);
 
-  const updateCandidateInFirebase = async (candidate: CandidateApplication) => {
-    try {
-      const post = recruitmentPosts.find(p => p.id === candidate.recruitmentId);
-      
-      if (!post) {
-        toast({
-          title: "Erreur",
-          description: "Offre de recrutement non trouvée",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const updatedCandidates = post.candidates?.map(c => 
-        c.id === candidate.id ? candidate : c
-      ) || [candidate];
-      
-      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, post.id, {
-        candidates: updatedCandidates,
-        updated_at: new Date().toISOString(),
-      });
-      
-      toast({
-        title: "Candidat mis à jour",
-        description: `${candidate.candidateName} est maintenant en phase "${candidate.currentStage}"`,
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du candidat:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le candidat",
-        variant: "destructive",
-      });
-    }
+  const getPostsByStatus = (status: string) => {
+    return recruitmentPosts.filter(post => post.status === status);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-
+    
     if (!over) return;
-
-    if (active.data?.current?.type === 'candidate' && active.id !== over.id) {
-      setCandidates(prevCandidates => 
-        prevCandidates.map(candidate => {
-          if (candidate.id === active.id) {
-            const updatedCandidate = {
-              ...candidate,
-              currentStage: over.id as RecruitmentStage,
-              updatedAt: new Date().toISOString(),
-              stageHistory: [
-                ...candidate.stageHistory,
-                {
-                  stage: over.id as RecruitmentStage,
-                  date: new Date().toISOString(),
-                }
-              ]
-            };
-
-            updateCandidateInFirebase(updatedCandidate);
-            return updatedCandidate;
-          }
-          return candidate;
-        })
-      );
-    } 
-    else if (active.data?.current?.type === 'offer' && active.id !== over.id) {
-      const offerId = active.id as string;
-      const targetStage = over.id as string; // Changed type from RecruitmentStage to string to handle "offres"
-      let newStatus: 'Ouvert' | 'En cours' | 'Clôturé' = 'En cours';
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    if (activeId === overId) return;
+    
+    const postIndex = recruitmentPosts.findIndex(post => post.id === activeId);
+    
+    if (postIndex === -1) return;
+    
+    try {
+      const updatedPost = {
+        ...recruitmentPosts[postIndex],
+        status: overId
+      };
       
-      // Si l'offre est déplacée depuis la colonne "Offres" vers une autre étape
-      if (targetStage !== 'offres') {
-        if (targetStage === 'Recrutement finalisé') {
-          newStatus = 'Clôturé';
-        } else {
-          newStatus = 'En cours';
-        }
-        
-        await updateOfferStatusInFirebase(offerId, newStatus);
+      // Update in Firestore
+      const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, activeId);
+      await updateDoc(postRef, {
+        status: overId,
+        updatedAt: new Date()
+      });
+      
+      // Update local state
+      const updatedPosts = [...recruitmentPosts];
+      updatedPosts[postIndex] = updatedPost;
+      setRecruitmentPosts(updatedPosts);
+      
+      toast.success(`Offre déplacée vers "${overId}"`);
+    } catch (error) {
+      console.error('Error updating post status:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
+  };
+
+  const sortColumn = (columnId: string) => {
+    setOrganizingColumn(columnId);
+    
+    const updatedPosts = [...recruitmentPosts];
+    const columnPosts = updatedPosts.filter(post => post.status === columnId);
+    
+    // Sort by priority (Urgente > Haute > Normale > Basse)
+    const priorityOrder: Record<string, number> = {
+      'Urgente': 0,
+      'Haute': 1,
+      'Normale': 2,
+      'Basse': 3
+    };
+    
+    columnPosts.sort((a, b) => {
+      const priorityA = priorityOrder[a.priority];
+      const priorityB = priorityOrder[b.priority];
+      return priorityA - priorityB;
+    });
+    
+    // Replace the posts in the original array
+    let currentIndex = 0;
+    for (let i = 0; i < updatedPosts.length; i++) {
+      if (updatedPosts[i].status === columnId) {
+        updatedPosts[i] = columnPosts[currentIndex];
+        currentIndex++;
       }
     }
-  };
-
-  const updateOfferStatusInFirebase = async (offerId: string, newStatus: 'Ouvert' | 'En cours' | 'Clôturé') => {
-    try {
-      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, offerId, {
-        status: newStatus,
-        currentStage: newStatus === 'Clôturé' ? 'Recrutement finalisé' : 'CV en cours d\'analyse',
-        updated_at: new Date().toISOString(),
-      });
-      
-      const statusMessages = {
-        'Ouvert': 'ouverte',
-        'En cours': 'en cours',
-        'Clôturé': 'clôturée'
-      };
-      
-      toast({
-        title: "Statut de l'offre mis à jour",
-        description: `L'offre est maintenant "${statusMessages[newStatus]}"`,
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'offre:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut de l'offre",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCandidateStageUpdate = (candidateId: string, newStage: string) => {
-    const candidateToUpdate = candidates.find(c => c.id === candidateId);
     
-    if (candidateToUpdate) {
-      const updatedCandidate = {
-        ...candidateToUpdate,
-        currentStage: newStage as RecruitmentStage,
-        updatedAt: new Date().toISOString(),
-        stageHistory: [
-          ...candidateToUpdate.stageHistory,
-          {
-            stage: newStage as RecruitmentStage,
-            date: new Date().toISOString(),
-          }
-        ]
-      };
-      
-      updateCandidateInFirebase(updatedCandidate);
-      
-      setCandidates(prevCandidates => 
-        prevCandidates.map(c => 
-          c.id === candidateId ? updatedCandidate : c
-        )
-      );
-    }
+    setRecruitmentPosts(updatedPosts);
+    toast.success(`Colonne "${columnId}" organisée par priorité`);
+    setOrganizingColumn('');
   };
 
-  const getRecruitmentPost = (recruitmentId: string) => {
-    return recruitmentPosts.find(post => post.id === recruitmentId);
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
-    <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
-      <div className="w-full overflow-x-auto">
-        <div className="flex gap-3 p-3">
-          <KanbanColumn key="offres" id="offres" title="Offres">
-            <div className="space-y-2">
-              {recruitmentPosts
-                .filter(post => post.status === 'Ouvert')
-                .map((post) => (
-                  <KanbanCard 
-                    key={post.id} 
-                    item={post} 
-                    type="offer"
-                  />
-                ))}
-            </div>
-          </KanbanColumn>
-
-          {stages.map((stage) => (
-            <KanbanColumn key={stage} id={stage} title={stage}>
-              <div className="space-y-2">
-                {stage !== 'Recrutement finalisé' && 
-                  recruitmentPosts
-                    .filter(post => post.status === 'En cours' && post.currentStage === stage)
-                    .map(post => (
-                      <KanbanCard 
-                        key={post.id} 
-                        item={post} 
-                        type="offer"
-                      />
-                    ))
-                }
-                {candidates
-                  .filter(candidate => candidate.currentStage === stage)
-                  .map(candidate => (
-                    <KanbanCard 
-                      key={candidate.id} 
-                      item={candidate} 
-                      type="candidate"
-                      onStageUpdate={handleCandidateStageUpdate}
-                      getRecruitmentPost={getRecruitmentPost}
-                    />
-                  ))
-                }
-              </div>
-            </KanbanColumn>
-          ))}
-        </div>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex overflow-x-auto pb-4 gap-4">
+        {statuses.map(status => (
+          <KanbanColumn
+            key={status}
+            id={status}
+            title={status}
+            items={getPostsByStatus(status)}
+            onSort={() => sortColumn(status)}
+            isOrganizing={organizingColumn === status}
+          />
+        ))}
       </div>
     </DndContext>
   );

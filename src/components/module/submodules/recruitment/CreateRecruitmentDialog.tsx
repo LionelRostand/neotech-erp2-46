@@ -1,13 +1,26 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { addDocument } from '@/hooks/firestore/firestore-utils'; // Corrected import path
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments'; // Added import for departments
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface CreateRecruitmentDialogProps {
   open: boolean;
@@ -18,54 +31,59 @@ interface CreateRecruitmentDialogProps {
 const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
   open,
   onOpenChange,
-  onRecruitmentCreated,
+  onRecruitmentCreated
 }) => {
   const [position, setPosition] = useState('');
-  const [location, setLocation] = useState('');
-  const [status, setStatus] = useState<'Ouvert' | 'En cours' | 'Clôturé'>('Ouvert');
-  const [priority, setPriority] = useState<'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse'>('Medium');
+  const [department, setDepartment] = useState('');
   const [description, setDescription] = useState('');
+  const [status, setStatus] = useState('Ouverte');
+  const [priority, setPriority] = useState('Normale');
+  const [location, setLocation] = useState('');
   const [requirements, setRequirements] = useState('');
-  const [salaryMin, setSalaryMin] = useState('');
-  const [salaryMax, setSalaryMax] = useState('');
-  const [currency, setCurrency] = useState('EUR');
-  const [contactEmail, setContactEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { departments } = useAvailableDepartments();
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-
-  const handleSubmit = async () => {
-    if (!position || !selectedDepartment) {
-      toast.error("Veuillez remplir tous les champs obligatoires.");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!position || !department) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
-
+    
+    setIsSubmitting(true);
+    
     try {
-      const recruitmentData = {
+      // Using the correct collection name
+      await addDoc(collection(db, COLLECTIONS.HR.RECRUITMENT), {
         position,
-        department: selectedDepartment,
-        location,
+        department,
+        description,
         status,
         priority,
-        description,
-        requirements: requirements.split(',').map(item => item.trim()),
-        salary_range: {
-          min: salaryMin ? parseFloat(salaryMin) : 0,
-          max: salaryMax ? parseFloat(salaryMax) : 0,
-          currency,
-        },
-        contact_email: contactEmail,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      await addDocument(COLLECTIONS.HR.RECRUITMENTS, recruitmentData);
-      toast.success("Offre d'emploi créée avec succès.");
-      onRecruitmentCreated();
+        location,
+        requirements,
+        applications: [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
       onOpenChange(false);
+      onRecruitmentCreated();
+      toast.success("Offre d'emploi créée avec succès");
+      
+      // Reset form fields
+      setPosition('');
+      setDepartment('');
+      setDescription('');
+      setStatus('Ouverte');
+      setPriority('Normale');
+      setLocation('');
+      setRequirements('');
     } catch (error) {
-      console.error("Erreur lors de la création de l'offre d'emploi:", error);
-      toast.error("Erreur lors de la création de l'offre d'emploi.");
+      console.error("Erreur lors de la création:", error);
+      toast.error("Erreur lors de la création de l'offre d'emploi");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,114 +93,113 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Créer une nouvelle offre d'emploi</DialogTitle>
         </DialogHeader>
-
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Poste *</label>
-              <Input type="text" value={position} onChange={(e) => setPosition(e.target.value)} />
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="position">Poste <span className="text-red-500">*</span></Label>
+              <Input
+                id="position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                placeholder="Développeur Full Stack"
+                required
+              />
             </div>
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Département *</label>
-              <Select onValueChange={setSelectedDepartment}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un département" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments && departments.map((department) => (
-                    <SelectItem key={department.id} value={department.name}>
-                      {department.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            <div className="space-y-2">
+              <Label htmlFor="department">Département <span className="text-red-500">*</span></Label>
+              <Input
+                id="department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="Informatique"
+                required
+              />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Lieu</label>
-              <Input type="text" value={location} onChange={(e) => setLocation(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Statut</label>
-              <Select value={status} onValueChange={(value) => setStatus(value as 'Ouvert' | 'En cours' | 'Clôturé')}>
-                <SelectTrigger>
-                  <SelectValue placeholder={status} />
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description du poste, des responsabilités..."
+              rows={4}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Ouvert">Ouvert</SelectItem>
+                  <SelectItem value="Ouverte">Ouverte</SelectItem>
                   <SelectItem value="En cours">En cours</SelectItem>
-                  <SelectItem value="Clôturé">Clôturé</SelectItem>
+                  <SelectItem value="Fermée">Fermée</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Priorité</label>
-              <Select value={priority} onValueChange={(value) => setPriority(value as 'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse')}>
-                <SelectTrigger>
-                  <SelectValue placeholder={priority} />
+            
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priorité</Label>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Sélectionner une priorité" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="Low">Low</SelectItem>
-                  <SelectItem value="Haute">Haute</SelectItem>
-                  <SelectItem value="Moyenne">Moyenne</SelectItem>
                   <SelectItem value="Basse">Basse</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Email de contact</label>
-              <Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium leading-none text-gray-700">Description</label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium leading-none text-gray-700">Exigences (séparées par des virgules)</label>
-            <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Salaire Min</label>
-              <Input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Salaire Max</label>
-              <Input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium leading-none text-gray-700">Devise</label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger>
-                  <SelectValue placeholder={currency} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="CAD">CAD</SelectItem>
+                  <SelectItem value="Normale">Normale</SelectItem>
+                  <SelectItem value="Haute">Haute</SelectItem>
+                  <SelectItem value="Urgente">Urgente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-        </div>
-
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit}>Créer</Button>
-        </DialogFooter>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Lieu</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Paris, France"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Exigences</Label>
+            <Textarea
+              id="requirements"
+              value={requirements}
+              onChange={(e) => setRequirements(e.target.value)}
+              placeholder="Exigences du poste, compétences requises..."
+              rows={3}
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Création..." : "Créer l'offre"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
