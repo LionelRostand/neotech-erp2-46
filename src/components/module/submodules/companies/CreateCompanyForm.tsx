@@ -70,7 +70,7 @@ const CreateCompanyForm = () => {
       navigate("/modules/employees/companies");
     } catch (error) {
       console.error("Error creating company:", error);
-      toast.error("Erreur lors de la création de l'entreprise");
+      toast.error(`Erreur lors de la création de l'entreprise: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 

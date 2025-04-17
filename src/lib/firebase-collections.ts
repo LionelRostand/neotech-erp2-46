@@ -1,3 +1,4 @@
+
 // Define Firestore collection paths here to ensure consistency
 export const COLLECTIONS = {
   MESSAGES: {

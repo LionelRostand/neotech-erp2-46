@@ -14,10 +14,18 @@ export const createCompany = async (data: Partial<Company>): Promise<Company> =>
       employeesCount: 0
     };
 
-    console.log("Creating company with collection path:", COLLECTIONS.COMPANIES);
+    console.log("Creating company with data:", data);
+    console.log("Using collection path:", COLLECTIONS.COMPANIES);
+    
+    // Verify that COLLECTIONS.COMPANIES is a string and not empty
+    if (!COLLECTIONS.COMPANIES || typeof COLLECTIONS.COMPANIES !== 'string') {
+      console.error("Invalid COMPANIES collection path:", COLLECTIONS.COMPANIES);
+      throw new Error('Invalid collection path for companies');
+    }
     
     // Add to Firestore using the proper collection path
     const docRef = await addDoc(collection(db, COLLECTIONS.COMPANIES), companyData);
+    console.log("Company created successfully with ID:", docRef.id);
     
     // Return the created company with properly formatted data for client-side use
     return {
@@ -33,4 +41,3 @@ export const createCompany = async (data: Partial<Company>): Promise<Company> =>
     throw error;
   }
 };
-
