@@ -136,3 +136,24 @@ export const employeeExists = (employees: any[], newEmployee: any): boolean => {
      emp.lastName?.toLowerCase() === newEmployee.lastName?.toLowerCase())
   );
 };
+
+/**
+ * Traite les métadonnées de photo et renvoie l'URL de la photo
+ * @param photoMeta Métadonnées de la photo
+ * @returns URL de la photo ou chaîne vide
+ */
+export const processPhotoMetadata = (photoMeta: any): string => {
+  if (!photoMeta) return '';
+  
+  // Si photoMeta est un objet avec une propriété 'data', utiliser cette valeur
+  if (typeof photoMeta === 'object' && photoMeta !== null && 'data' in photoMeta) {
+    return photoMeta.data as string;
+  }
+  
+  // Si photoMeta est une chaîne directement, la retourner
+  if (typeof photoMeta === 'string') {
+    return photoMeta;
+  }
+  
+  return '';
+};
