@@ -10,7 +10,6 @@ import EmployeeForm from './EmployeeForm';
 import { EmployeeFormValues } from './form/employeeFormSchema';
 import { toast } from 'sonner';
 import { useAddEmployee } from '@/hooks/useAddEmployee';
-import { Employee } from '@/types/employee';
 import { formValuesToEmployee } from './utils/formAdapter';
 
 interface CreateEmployeeDialogProps {

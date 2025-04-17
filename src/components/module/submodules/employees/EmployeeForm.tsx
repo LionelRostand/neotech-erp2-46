@@ -9,6 +9,7 @@ import FormActions from './form/FormActions';
 import PhotoUploadField from './form/PhotoUploadField';
 import { Employee } from '@/types/employee';
 import { getPhotoUrl } from './utils/photoUtils';
+import { employeeToFormValues } from './utils/formAdapter';
 
 interface EmployeeFormProps {
   defaultValues?: Partial<Employee>;
@@ -23,39 +24,43 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   onCancel,
   isSubmitting = false
 }) => {
+  const formDefaultValues = defaultValues ? 
+    employeeToFormValues(defaultValues) : 
+    {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      company: '',
+      department: '',
+      position: '',
+      contract: 'cdi',
+      hireDate: new Date().toISOString().split('T')[0],
+      birthDate: '',
+      status: 'active',
+      photo: '',
+      photoMeta: undefined,
+      forceManager: false,
+      isManager: false,
+      managerId: '',
+      professionalEmail: '',
+      streetNumber: '',
+      streetName: '',
+      city: '',
+      zipCode: '',
+      region: ''
+    };
+
   const methods = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
-    defaultValues: {
-      firstName: defaultValues?.firstName || '',
-      lastName: defaultValues?.lastName || '',
-      email: defaultValues?.email || '',
-      phone: defaultValues?.phone || '',
-      company: typeof defaultValues?.company === 'string' ? defaultValues.company : '',
-      department: defaultValues?.department || '',
-      position: defaultValues?.position || '',
-      contract: defaultValues?.contract || 'cdi',
-      hireDate: defaultValues?.hireDate || new Date().toISOString().split('T')[0],
-      birthDate: defaultValues?.birthDate || '',
-      status: defaultValues?.status || 'active',
-      photo: defaultValues?.photo || defaultValues?.photoURL || '',
-      photoMeta: defaultValues?.photoMeta,
-      forceManager: defaultValues?.forceManager || false,
-      isManager: defaultValues?.isManager || false,
-      managerId: defaultValues?.managerId || '',
-      professionalEmail: defaultValues?.professionalEmail || '',
-      streetNumber: defaultValues?.streetNumber || '',
-      streetName: defaultValues?.streetName || '',
-      city: defaultValues?.city || '',
-      zipCode: defaultValues?.zipCode || '',
-      region: defaultValues?.region || ''
-    }
+    defaultValues: formDefaultValues
   });
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
         <PhotoUploadField 
-          defaultPhotoUrl={getPhotoUrl(defaultValues?.photoMeta) || defaultValues?.photoURL || defaultValues?.photo || ''} 
+          defaultPhotoUrl={defaultValues?.photoURL || defaultValues?.photo || getPhotoUrl(defaultValues?.photoMeta) || ''} 
         />
         <PersonalInfoFields />
         <CompanyDepartmentFields />

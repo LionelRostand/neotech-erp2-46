@@ -1,7 +1,8 @@
 
 import { z } from 'zod';
+import { EmployeePhotoMeta } from '@/types/employee';
 
-// Define a schema for photo metadata
+// Define a schema for photo metadata that matches our interface
 const photoMetaSchema = z.object({
   data: z.string().optional(),
   fileName: z.string().optional(),

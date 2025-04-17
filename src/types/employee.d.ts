@@ -19,7 +19,7 @@ export interface Employee {
   manager?: string;
   managerId?: string;
   professionalEmail?: string;
-  company?: string;
+  company?: string | any;
   companyId?: string;
   photoURL?: string;
   photo?: string;
