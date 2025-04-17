@@ -4,6 +4,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
 import PersonalInfoFields from './form/PersonalInfoFields';
+import CompanyDepartmentFields from './form/CompanyDepartmentFields';
 import FormActions from './form/FormActions';
 import PhotoUploadField from './form/PhotoUploadField';
 import { Employee } from '@/types/employee';
@@ -30,11 +31,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       lastName: defaultValues?.lastName || '',
       email: defaultValues?.email || '',
       phone: defaultValues?.phone || '',
-      streetNumber: defaultValues?.streetNumber || '',
-      streetName: defaultValues?.streetName || '',
-      city: defaultValues?.city || '',
-      zipCode: defaultValues?.zipCode || '',
-      region: defaultValues?.region || '',
+      company: defaultValues?.company as string || '',
       department: defaultValues?.department || '',
       position: defaultValues?.position || '',
       contract: defaultValues?.contract || 'cdi',
@@ -45,9 +42,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       forceManager: defaultValues?.forceManager || false,
       isManager: defaultValues?.isManager || false,
       professionalEmail: defaultValues?.professionalEmail || '',
-      company: defaultValues?.company as string || '',
-      manager: defaultValues?.manager || '',
-      managerId: defaultValues?.managerId || '',
+      streetNumber: '',
+      streetName: '',
+      city: '',
+      zipCode: '',
+      region: ''
     }
   });
 
@@ -58,6 +57,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           defaultPhotoUrl={getPhotoUrl(defaultValues?.photoMeta) || defaultValues?.photoURL || defaultValues?.photo || ''} 
         />
         <PersonalInfoFields />
+        <CompanyDepartmentFields />
         <FormActions 
           onCancel={onCancel} 
           isSubmitting={isSubmitting} 
