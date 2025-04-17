@@ -4,33 +4,20 @@ export interface BadgeData {
   date: string;
   employeeId: string;
   employeeName: string;
-  department?: string;
-  company?: string;
+  department: string;
   accessLevel: string;
-  status: 'success' | 'warning' | 'danger' | string;
+  status: string;
   statusText: string;
+  company?: string;  // Nouveau champ pour l'entreprise
 }
-
-export interface BadgesTableProps {
-  badgesList: BadgeData[];
-  onBadgeClick: (badgeId: string) => void;
-  loading?: boolean;
-}
-
-export interface CreateBadgeDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onBadgeCreated: (newBadge: BadgeData) => Promise<void>;
-  employees?: any[];
-}
-
-export const getInitials = (firstName: string, lastName: string) => {
-  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-};
 
 export const generateBadgeNumber = (): string => {
-  // Generate a shorter, more memorizable badge number
-  const prefix = 'B';
-  const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4-digit number between 1000-9999
-  return `${prefix}${randomDigits}`;
+  // Format: BAD-YYMMDD-XXXX où XXXX est un nombre aléatoire entre 1000 et 9999
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const random = Math.floor(1000 + Math.random() * 9000);
+  
+  return `BAD-${year}${month}${day}-${random}`;
 };

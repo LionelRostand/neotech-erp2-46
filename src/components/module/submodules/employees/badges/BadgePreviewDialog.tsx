@@ -1,198 +1,149 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
-import { toast } from 'sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
-import { jsPDF } from 'jspdf';
-import { Company } from '@/components/module/submodules/companies/types';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { AlignJustify, Building, Calendar, User, ShieldCheck, Info, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (isOpen: boolean) => void;
   selectedBadge: BadgeData | null;
   selectedEmployee: Employee | null;
   onDeleteClick?: (badge: BadgeData) => void;
 }
 
-const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
-  isOpen,
+const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({ 
+  isOpen, 
   onOpenChange,
   selectedBadge,
   selectedEmployee,
   onDeleteClick
 }) => {
-  const { companies } = useCompaniesData();
-  
   if (!selectedBadge) return null;
   
-  const getCompanyName = (): string => {
-    if (!selectedEmployee) return "Enterprise";
-    
-    if (!selectedEmployee.company) return "Enterprise";
-    
-    // Si company est un string (ID), chercher l'entreprise correspondante
-    if (typeof selectedEmployee.company === 'string') {
-      const companyData = companies.find(c => c.id === selectedEmployee.company);
-      return companyData?.name || selectedEmployee.company;
-    }
-    
-    // Si c'est un objet Company
-    const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || companyObj.id || "Enterprise";
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
   };
   
-  const companyName = getCompanyName();
-  const employeeId = selectedEmployee?.id || 'N/A';
-  
-  const handleDownloadBadge = () => {
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: [85, 54]
-    });
-    
-    doc.setFillColor(240, 240, 240);
-    doc.rect(0, 0, 85, 54, 'F');
-    
-    let headerColor;
-    if (selectedBadge.status === 'success') {
-      headerColor = [34, 197, 94];
-    } else if (selectedBadge.status === 'warning') {
-      headerColor = [234, 179, 8];
-    } else {
-      headerColor = [239, 68, 68];
+  const handleDelete = () => {
+    if (onDeleteClick && selectedBadge) {
+      onDeleteClick(selectedBadge);
     }
-    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-    doc.rect(0, 0, 85, 12, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(companyName.toUpperCase(), 5, 7);
-    
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8);
-    
-    // Ajout de l'ID du badge et de l'employé
-    doc.text(`Badge ID: ${selectedBadge.id}`, 5, 18);
-    doc.text(`Employee ID: ${employeeId}`, 5, 23);
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(selectedBadge.employeeName, 42.5, 30, { align: 'center' });
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 36, { align: 'center' });
-    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 41, { align: 'center' });
-    
-    let statusColor;
-    if (selectedBadge.status === 'success') {
-      statusColor = [34, 197, 94];
-    } else if (selectedBadge.status === 'warning') {
-      statusColor = [234, 179, 8];
-    } else {
-      statusColor = [239, 68, 68];
-    }
-    
-    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
-    
-    // Footer
-    doc.setFillColor(70, 70, 70);
-    doc.rect(0, 50, 85, 4, 'F');
-    doc.setFontSize(6);
-    doc.setTextColor(255, 255, 255);
-    doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
-    
-    // QR Code style box
-    doc.setFillColor(0, 0, 0);
-    doc.rect(5, 36, 10, 10, 'F');
-    doc.setFillColor(255, 255, 255);
-    doc.rect(6, 37, 8, 8, 'F');
-    doc.setFillColor(0, 0, 0);
-    doc.rect(7, 38, 6, 6, 'F');
+  };
 
-    doc.save(`badge-${selectedBadge.id}.pdf`);
-    
-    toast.success("Badge téléchargé avec succès");
-  };
-  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Aperçu du Badge</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <div>Détails du badge</div>
+            {onDeleteClick && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <AlignJustify className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="py-4">
-          <div className="bg-gray-100 rounded-md p-6 mb-4">
-            <div className={`h-8 w-full mb-3 rounded-t flex items-center px-3 ${
-              selectedBadge.status === 'success' ? 'bg-green-500' : 
-              selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-            }`}>
-              <span className="text-white font-bold text-sm">{companyName.toUpperCase()}</span>
-            </div>
-            
-            <div className="text-center mb-3">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">ID Badge: {selectedBadge.id}</p>
-                <p className="text-sm text-gray-500">ID Employé: {employeeId}</p>
+        <ScrollArea className="max-h-[75vh]">
+          <div className="space-y-6 p-2">
+            <div className="flex flex-col items-center justify-center py-6 text-center bg-gray-50 rounded-lg">
+              <Avatar className="h-24 w-24 mb-4">
+                {selectedEmployee?.photoURL ? (
+                  <AvatarImage src={selectedEmployee.photoURL} alt={selectedBadge.employeeName} />
+                ) : (
+                  <AvatarFallback className="text-2xl">{getInitials(selectedBadge.employeeName)}</AvatarFallback>
+                )}
+              </Avatar>
+              <h3 className="text-xl font-bold mb-1">{selectedBadge.employeeName}</h3>
+              <p className="text-muted-foreground">{selectedBadge.department}</p>
+              <div className="mt-4 flex items-center">
+                <ShieldCheck className="h-5 w-5 mr-2 text-primary" />
+                <span className="text-primary font-medium">{selectedBadge.accessLevel}</span>
               </div>
-              <h3 className="text-lg font-bold mt-2">{selectedBadge.employeeName}</h3>
-              <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
-            <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Département:</span> {selectedBadge.department || 'N/A'}</p>
-              <p><span className="font-medium">Niveau d'accès:</span> {selectedBadge.accessLevel || 'Standard'}</p>
-              <p><span className="font-medium">Statut:</span> 
-                <span className={`ml-1 ${
-                  selectedBadge.status === 'success' ? 'text-green-600' : 
-                  selectedBadge.status === 'warning' ? 'text-amber-600' : 'text-red-600'
-                }`}>
-                  {selectedBadge.statusText}
-                </span>
-              </p>
-              <p><span className="font-medium">Date d'émission:</span> {selectedBadge.date}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <Info className="h-4 w-4 mr-2" />
+                  Numéro de badge
+                </p>
+                <p className="font-medium">{selectedBadge.id}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Date de création
+                </p>
+                <p className="font-medium">{selectedBadge.date}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  ID Employé
+                </p>
+                <p className="font-medium">{selectedBadge.employeeId}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <Building className="h-4 w-4 mr-2" />
+                  Entreprise
+                </p>
+                <p className="font-medium">{selectedBadge.company || "Non spécifiée"}</p>
+              </div>
             </div>
             
             {selectedEmployee && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
-                  <p><span className="font-medium">Poste:</span> {selectedEmployee.position}</p>
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-medium mb-3">Informations supplémentaires</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedEmployee.email && (
+                    <div className="space-y-1 col-span-2">
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="font-medium">{selectedEmployee.email}</p>
+                    </div>
+                  )}
+                  {selectedEmployee.phone && (
+                    <div className="space-y-1 col-span-2">
+                      <p className="text-sm text-muted-foreground">Téléphone</p>
+                      <p className="font-medium">{selectedEmployee.phone}</p>
+                    </div>
+                  )}
+                  {selectedEmployee.position && (
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Poste</p>
+                      <p className="font-medium">{selectedEmployee.position}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleDownloadBadge} 
-              className="flex-1" 
-              variant="outline"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Télécharger le badge
-            </Button>
-            
-            {onDeleteClick && selectedBadge && (
-              <Button 
-                onClick={() => onDeleteClick(selectedBadge)}
-                variant="destructive"
-                className="flex-shrink-0"
-              >
-                Supprimer
-              </Button>
-            )}
-          </div>
-        </div>
+        </ScrollArea>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
