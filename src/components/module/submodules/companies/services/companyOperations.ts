@@ -14,19 +14,12 @@ export const createCompany = async (data: Partial<Company>): Promise<Company> =>
       employeesCount: 0
     };
 
-    // Add to Firestore - Fix the collection path issue by using the string directly
-    const collectionPath = COLLECTIONS.COMPANIES;
-    console.log("Using collection path:", collectionPath); // Debug log
+    console.log("Creating company with collection path:", COLLECTIONS.COMPANIES);
     
-    // Check if collection path is valid before proceeding
-    if (!collectionPath || collectionPath === '') {
-      throw new Error('Invalid collection path for companies');
-    }
-    
-    const docRef = await addDoc(collection(db, collectionPath), companyData);
+    // Add to Firestore using the proper collection path
+    const docRef = await addDoc(collection(db, COLLECTIONS.COMPANIES), companyData);
     
     // Return the created company with properly formatted data for client-side use
-    // Convert serverTimestamp to string for client usage
     return {
       id: docRef.id,
       ...data,
@@ -40,3 +33,4 @@ export const createCompany = async (data: Partial<Company>): Promise<Company> =>
     throw error;
   }
 };
+
