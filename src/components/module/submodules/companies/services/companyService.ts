@@ -1,9 +1,8 @@
-
 import { 
   collection, 
   doc, 
   getDocs, 
-  getDoc,  // Added this import
+  getDoc, 
   query, 
   addDoc, 
   updateDoc, 
@@ -16,8 +15,9 @@ import { db } from '@/lib/firebase';
 import { Company, CompanyFilters } from '../types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { createCompany as createCompanyOp } from './companyOperations';
+import { Company } from '../types';
 
-// Helper function to determine company size based on employee count
 const determineCompanySize = (employeesCount: number): string => {
   if (employeesCount <= 10) return 'Très petite entreprise';
   if (employeesCount <= 50) return 'Petite entreprise';
@@ -30,10 +30,8 @@ class CompanyService {
     try {
       let q = collection(db, COLLECTIONS.COMPANIES);
       
-      // Build query with filters
       let queryRef = query(q);
       
-      // Apply filters one by one
       if (filters.status) {
         queryRef = query(queryRef, where('status', '==', filters.status));
       }
@@ -47,7 +45,6 @@ class CompanyService {
         queryRef = query(queryRef, where('address.city', '==', filters.location));
       }
       
-      // Apply sorting if specified
       if (filters.sortBy) {
         const sortOrder = filters.sortOrder === 'desc' ? 'desc' : 'asc';
         queryRef = query(queryRef, orderBy(filters.sortBy, sortOrder));
@@ -56,9 +53,7 @@ class CompanyService {
       const querySnapshot = await getDocs(queryRef || q);
       const companies: Company[] = [];
       
-      // For each company, count its employees
       for (const doc of querySnapshot.docs) {
-        // Get employee count for this company
         const employeesQuery = query(
           collection(db, COLLECTIONS.HR.EMPLOYEES),
           where('company', '==', doc.id)
@@ -66,7 +61,6 @@ class CompanyService {
         const employeesSnapshot = await getDocs(employeesQuery);
         const employeesCount = employeesSnapshot.size;
         
-        // Update company size if needed
         const companyData = doc.data();
         const size = determineCompanySize(employeesCount);
         
@@ -107,19 +101,8 @@ class CompanyService {
     }
   }
 
-  async createCompany(company: Omit<Company, 'id'>): Promise<Company> {
-    try {
-      const docRef = await addDoc(collection(db, COLLECTIONS.COMPANIES), company);
-      const newCompany = await this.getCompany(docRef.id);
-      if (newCompany) {
-        return newCompany;
-      } else {
-        throw new Error("Failed to retrieve newly created company");
-      }
-    } catch (error: any) {
-      console.error("Error creating company:", error);
-      throw new Error(`Failed to create company: ${error.message}`);
-    }
+  async createCompany(company: Partial<Company>): Promise<Company> {
+    return await createCompanyOp(company);
   }
 
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {

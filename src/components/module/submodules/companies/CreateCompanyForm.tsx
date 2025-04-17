@@ -17,6 +17,7 @@ import {
 import { Building2, Save, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { companyService } from "./services/companyService";
 
 const formSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -57,12 +58,19 @@ const CreateCompanyForm = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // TODO: Implement company creation logic
+      const companyData = {
+        ...data,
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      await companyService.createCompany(companyData);
       toast.success("Entreprise créée avec succès");
       navigate("/modules/employees/companies");
     } catch (error) {
-      toast.error("Erreur lors de la création de l'entreprise");
       console.error("Error creating company:", error);
+      toast.error("Erreur lors de la création de l'entreprise");
     }
   };
 
