@@ -43,9 +43,8 @@ export const employeesModule: AppModule = {
     { id: "employees-attendance", name: "Présences", href: "/modules/employees/attendance", icon: createIcon(Clock) },
     { id: "employees-timesheet", name: "Feuilles de temps", href: "/modules/employees/timesheet", icon: createIcon(ClipboardCheck) },
     
-    // Gestion des congés et absences
+    // Gestion des congés 
     { id: "employees-leaves", name: "Congés", href: "/modules/employees/leaves", icon: createIcon(SunMedium) },
-    { id: "employees-absences", name: "Absences", href: "/modules/employees/absences", icon: createIcon(Calendar) },
     
     // Documents et contrats (added Départements to this section)
     { id: "employees-contracts", name: "Contrats", href: "/modules/employees/contracts", icon: createIcon(FileSignature) },

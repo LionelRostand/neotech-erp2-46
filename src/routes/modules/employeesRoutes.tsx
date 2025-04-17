@@ -12,7 +12,6 @@ import EmployeesBadges from "@/components/module/submodules/employees/EmployeesB
 import EmployeesAttendance from "@/components/module/submodules/EmployeesAttendance";
 import EmployeesDashboard from "@/components/module/submodules/EmployeesDashboard";
 import EmployeesTimesheet from "@/components/module/submodules/EmployeesTimesheet";
-import EmployeesAbsences from "@/components/module/submodules/absences/EmployeesAbsences";
 import EmployeesContracts from "@/components/module/submodules/contracts/EmployeesContracts";
 import EmployeesDocuments from "@/components/module/submodules/documents/EmployeesDocuments";
 import EmployeesEvaluations from "@/components/module/submodules/evaluations/EmployeesEvaluations";
@@ -41,7 +40,6 @@ export const EmployeesRoutes = (
     <Route path="attendance" element={<EmployeesAttendance />} />
     <Route path="timesheet" element={<EmployeesTimesheet />} />
     <Route path="leaves" element={<EmployeesLeaves />} />
-    <Route path="absences" element={<EmployeesAbsences />} />
     <Route path="contracts" element={<EmployeesContracts />} />
     <Route path="documents" element={<EmployeesDocuments />} />
     <Route path="evaluations" element={<EmployeesEvaluations />} />

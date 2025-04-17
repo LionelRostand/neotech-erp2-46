@@ -8,7 +8,6 @@ import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 import EmployeesLeaves from '../leaves/EmployeesLeaves';
 import SalarySlips from '../salaries/SalarySlips';
 import EmployeesTimesheet from '../EmployeesTimesheet';
-import EmployeesAbsences from '../absences/EmployeesAbsences';
 import EmployeesContracts from '../contracts/EmployeesContracts';
 import EmployeesDocuments from '../documents/EmployeesDocuments';
 import EmployeesEvaluations from '../evaluations/EmployeesEvaluations';
@@ -46,8 +45,6 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-leaves':
       console.log('Rendering leaves component');
       return <EmployeesLeaves />;
-    case 'employees-absences':
-      return <EmployeesAbsences />;
     case 'employees-contracts':
       console.log('Rendering contracts component');
       return <EmployeesContracts />;
