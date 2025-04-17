@@ -205,11 +205,15 @@ export const usePayslipGenerator = () => {
     showPreview,
     setShowPreview,
     currentPayslip,
+    setCurrentPayslip,
     generatePayslip,
     selectedCompanyId,
     handleCompanySelect,
     handleEmployeeSelect,
     selectedEmployeeId,
-    setSelectedEmployeeId
+    setSelectedEmployeeId,
+    // Additional properties needed by the components
+    selectedCompany,
+    setSelectedCompany
   };
 };

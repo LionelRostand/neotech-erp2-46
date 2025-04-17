@@ -1,38 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
+
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { toast } from 'sonner';
 import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
-import PayslipFormControls from './PayslipFormControls';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types/employee';
-import PayslipViewer from './PayslipViewer';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import CompanySelect from './CompanySelect';
+import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 
 interface NewPayslipDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  employees: Employee[];
+  onGenerate: () => void;
 }
 
-const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
-  isOpen,
-  onClose,
-  employees
-}) => {
-  const { companies } = useHrModuleData();
-  
+const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({ open, onClose, onGenerate }) => {
   const {
     employeeName,
     setEmployeeName,
@@ -44,230 +29,157 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
     setOvertimeHours,
     overtimeRate,
     setOvertimeRate,
-    companyName,
-    setCompanyName,
-    companyAddress,
-    setCompanyAddress,
-    companySiret,
-    setCompanySiret,
-    showPreview,
+    generatePayslip,
     setShowPreview,
-    currentPayslip,
-    setCurrentPayslip,
-    handleEmployeeSelect,
+    selectedCompanyId,
     handleCompanySelect,
-    generatePayslip
+    handleEmployeeSelect,
+    selectedEmployeeId,
+    setSelectedEmployeeId,
+    selectedCompany
   } = usePayslipGenerator();
 
-  const months = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ];
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({length: 5}, (_, i) => currentYear - 2 + i);
-  
-  const [selectedMonth, setSelectedMonth] = useState(months[new Date().getMonth()]);
-  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
+  const { employees } = useEmployeeData();
+  const { companies } = useFirebaseCompanies();
+  const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
 
-  useEffect(() => {
-    if (selectedMonth && selectedYear) {
-      setPeriod(`${selectedMonth} ${selectedYear}`);
+  // Update employee name when selected from dropdown
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    handleEmployeeSelect(employeeId, employees);
+  };
+
+  // Update gross salary when contract salary changes
+  React.useEffect(() => {
+    if (contractSalary > 0) {
+      setGrossSalary(contractSalary.toString());
     }
-  }, [selectedMonth, selectedYear, setPeriod]);
+  }, [contractSalary, setGrossSalary]);
 
   const handleGeneratePayslip = () => {
     const payslip = generatePayslip();
-    if (payslip) {
-      setShowPreview(true);
-    }
+    setShowPreview(true);
+    onGenerate();
   };
-
-  const handleViewSample = () => {
-    setEmployeeName("Pierre Dupont");
-    setGrossSalary("2500");
-    setOvertimeHours("10");
-    setOvertimeRate("25");
-    setCompanyName("Entreprise ACME");
-    setCompanyAddress("15 rue des Lilas, 75001 Paris");
-    setCompanySiret("123 456 789 00012");
-    setPeriod(`${selectedMonth} ${selectedYear}`);
-  };
-
-  const handleEmployeeSelection = (value: string) => {
-    if (employees && employees.length > 0) {
-      handleEmployeeSelect(value, employees);
-    }
-  };
-
-  const handleCompanySelection = (value: string) => {
-    if (companies && companies.length > 0) {
-      const selectedCompany = companies.find(company => company.id === value);
-      if (selectedCompany) {
-        handleCompanySelect(value, companies);
-        setCompanyName(selectedCompany.name);
-        setCompanyAddress(
-          `${selectedCompany.address?.street || ''}, ${selectedCompany.address?.postalCode || ''} ${selectedCompany.address?.city || ''}`
-        );
-        setCompanySiret(selectedCompany.siret || '');
-        toast.success(`Entreprise ${selectedCompany.name} sélectionnée`);
-      }
-    }
-  };
-
-  if (showPreview && currentPayslip) {
-    return (
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) {
-          setShowPreview(false);
-          onClose();
-        }
-      }}>
-        <DialogContent className="max-w-5xl">
-          <PayslipViewer 
-            payslip={currentPayslip} 
-            onClose={() => {
-              setShowPreview(false);
-              onClose();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        onClose();
-      }
-    }}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Générer une nouvelle fiche de paie</DialogTitle>
+          <DialogTitle>Nouvelle fiche de paie</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Employé</label>
-              <Select 
-                onValueChange={handleEmployeeSelection}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un employé" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem 
-                      key={employee.id} 
-                      value={employee.id}
-                    >
-                      {employee.firstName} {employee.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Entreprise</label>
-              <Select 
-                onValueChange={handleCompanySelection}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies && companies.map((company) => (
-                    <SelectItem 
-                      key={company.id} 
-                      value={company.id}
-                    >
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
+        <div className="grid gap-4 py-4">
+          <div>
+            <label htmlFor="dialog-employee" className="block text-sm font-medium mb-1">
+              Employé
+            </label>
+            <Select value={selectedEmployeeId} onValueChange={handleEmployeeChange}>
+              <SelectTrigger id="dialog-employee">
+                <SelectValue placeholder="Sélectionner un employé" />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((employee: Employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Mois</label>
-              <Select 
-                value={selectedMonth}
-                onValueChange={setSelectedMonth}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un mois" />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((month) => (
-                    <SelectItem key={month} value={month}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Année</label>
-              <Select 
-                value={selectedYear}
-                onValueChange={setSelectedYear}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner une année" />
-                </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Salaire brut (€)</label>
-            <Input
-              type="number"
-              value={grossSalary}
-              onChange={(e) => setGrossSalary(e.target.value)}
-              placeholder="Ex: 2500"
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Entreprise
+            </label>
+            <CompanySelect
+              selectedCompanyId={selectedCompanyId}
+              onCompanySelect={(id) => handleCompanySelect(id, companies || [])}
+              companies={companies}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Heures supplémentaires</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="dialog-period" className="block text-sm font-medium mb-1">
+                Période
+              </label>
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger id="dialog-period">
+                  <SelectValue placeholder="Sélectionner la période" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="janvier 2025">Janvier 2025</SelectItem>
+                  <SelectItem value="février 2025">Février 2025</SelectItem>
+                  <SelectItem value="mars 2025">Mars 2025</SelectItem>
+                  <SelectItem value="avril 2025">Avril 2025</SelectItem>
+                  <SelectItem value="mai 2025">Mai 2025</SelectItem>
+                  <SelectItem value="juin 2025">Juin 2025</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label htmlFor="dialog-gross-salary" className="block text-sm font-medium mb-1">
+                Salaire brut annuel
+              </label>
               <Input
-                type="number"
+                id="dialog-gross-salary"
+                value={grossSalary}
+                onChange={(e) => setGrossSalary(e.target.value)}
+                placeholder="Salaire brut annuel"
+                className={contractSalary > 0 ? "bg-gray-50" : ""}
+              />
+              {contractSalary > 0 && (
+                <p className="text-xs text-gray-500 mt-1">Récupéré du contrat</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="dialog-overtime-hours" className="block text-sm font-medium mb-1">
+                Heures supplémentaires
+              </label>
+              <Input
+                id="dialog-overtime-hours"
                 value={overtimeHours}
                 onChange={(e) => setOvertimeHours(e.target.value)}
-                placeholder="Ex: 10"
+                placeholder="Heures supplémentaires"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Majoration (%)</label>
+            <div>
+              <label htmlFor="dialog-overtime-rate" className="block text-sm font-medium mb-1">
+                Taux de majoration (%)
+              </label>
               <Input
-                type="number"
+                id="dialog-overtime-rate"
                 value={overtimeRate}
                 onChange={(e) => setOvertimeRate(e.target.value)}
-                placeholder="Ex: 25"
+                placeholder="Taux de majoration"
               />
             </div>
           </div>
 
-          <PayslipFormControls
-            handleViewSample={handleViewSample}
-            handleGeneratePaySlip={handleGeneratePayslip}
-          />
+          {/* Display company details if selected */}
+          {selectedCompany && (
+            <div className="p-3 bg-gray-50 rounded-md text-sm">
+              <p><strong>Entreprise:</strong> {selectedCompany.name}</p>
+              {selectedCompany.address && (
+                <p><strong>Adresse:</strong> {selectedCompany.address.street}, {selectedCompany.address.postalCode} {selectedCompany.address.city}</p>
+              )}
+              <p><strong>SIRET:</strong> {selectedCompany.siret || "Non spécifié"}</p>
+            </div>
+          )}
         </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={handleGeneratePayslip}>
+            Générer la fiche de paie
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
