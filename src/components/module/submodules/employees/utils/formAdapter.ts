@@ -52,12 +52,16 @@ export const formValuesToEmployee = (
   // Gestion des métadonnées de photo
   if (formValues.photoMeta) {
     employeeData.photoMeta = {
-      data: formValues.photoMeta.data,
-      fileName: formValues.photoMeta.fileName,
-      fileType: formValues.photoMeta.fileType,
-      fileSize: formValues.photoMeta.fileSize,
-      updatedAt: formValues.photoMeta.updatedAt
+      fileName: formValues.photoMeta.fileName || `photo_${Date.now()}.jpg`,
+      fileType: formValues.photoMeta.fileType || 'image/jpeg',
+      fileSize: formValues.photoMeta.fileSize || 100000,
+      updatedAt: formValues.photoMeta.updatedAt || new Date().toISOString()
     };
+    
+    // Only add data if it exists
+    if (formValues.photoMeta.data) {
+      (employeeData.photoMeta as EmployeePhotoMeta).data = formValues.photoMeta.data;
+    }
   } else if (formValues.photo && !employeeData.photoMeta) {
     // Create photo metadata if photo exists but no metadata
     employeeData.photoMeta = createPhotoMeta(formValues.photo);

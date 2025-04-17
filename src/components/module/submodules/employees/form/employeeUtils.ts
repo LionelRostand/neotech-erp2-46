@@ -24,6 +24,7 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     managerId: formData.managerId || '',
     forceManager: formData.forceManager,
     isManager: formData.isManager,
+    // Adding address fields
     streetNumber: formData.streetNumber,
     streetName: formData.streetName,
     city: formData.city,
@@ -31,7 +32,7 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     region: formData.region
   };
 
-  // Handle photo and photoMeta
+  // Handle photo and photoURL
   if (formData.photo) {
     employee.photo = formData.photo;
     employee.photoURL = formData.photo;
@@ -41,12 +42,16 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
   // Handle photoMeta with required fields
   if (formData.photoMeta) {
     employee.photoMeta = {
-      data: formData.photoMeta.data,
-      fileName: formData.photoMeta.fileName,
-      fileType: formData.photoMeta.fileType,
-      fileSize: formData.photoMeta.fileSize,
-      updatedAt: formData.photoMeta.updatedAt
+      fileName: formData.photoMeta.fileName || `photo_${Date.now()}.jpg`,
+      fileType: formData.photoMeta.fileType || 'image/jpeg',
+      fileSize: formData.photoMeta.fileSize || 100000,
+      updatedAt: formData.photoMeta.updatedAt || new Date().toISOString()
     };
+    
+    // Only add data if it exists
+    if (formData.photoMeta.data) {
+      (employee.photoMeta as EmployeePhotoMeta).data = formData.photoMeta.data;
+    }
   } else if (formData.photo && !employee.photoMeta) {
     // Create photo metadata if photo exists but no metadata
     employee.photoMeta = createPhotoMeta(formData.photo);
