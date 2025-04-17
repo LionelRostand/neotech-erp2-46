@@ -25,6 +25,12 @@ export const useFirebaseCompanies = () => {
     
     try {
       console.log('Récupération des entreprises depuis Firestore...');
+      
+      // Vérifions que le chemin de la collection est correct
+      if (!COLLECTIONS.COMPANIES) {
+        throw new Error('Le chemin de la collection des entreprises n\'est pas défini');
+      }
+      
       const companiesRef = collection(db, COLLECTIONS.COMPANIES);
       const q = query(companiesRef, orderBy('name', 'asc'));
       

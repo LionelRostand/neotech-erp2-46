@@ -67,13 +67,21 @@ export const addCompany = async (company: Partial<Company>): Promise<Company> =>
   try {
     console.log('Ajout d\'une entreprise dans Firestore:', company);
     
+    // S'assurer que la collection est bien définie
+    if (!COLLECTIONS.COMPANIES) {
+      throw new Error('Le chemin de la collection des entreprises n\'est pas défini');
+    }
+    
     const companyData = {
       ...company,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      employeesCount: 0 // Initialiser le nombre d'employés à 0 pour une nouvelle entreprise
     };
     
-    const docRef = await addDoc(collection(db, COLLECTIONS.COMPANIES), companyData);
+    // Utiliser explicitement le chemin de la collection COMPANIES
+    const companiesCollectionRef = collection(db, COLLECTIONS.COMPANIES);
+    const docRef = await addDoc(companiesCollectionRef, companyData);
     
     toast.success('Entreprise ajoutée avec succès');
     
@@ -83,6 +91,7 @@ export const addCompany = async (company: Partial<Company>): Promise<Company> =>
     } as Company;
   } catch (error) {
     console.error('Erreur lors de l\'ajout de l\'entreprise:', error);
+    toast.error(`Erreur lors de l'ajout de l'entreprise: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     throw error;
   }
 };
