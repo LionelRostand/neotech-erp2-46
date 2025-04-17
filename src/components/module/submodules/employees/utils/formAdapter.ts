@@ -51,7 +51,13 @@ export const formValuesToEmployee = (
 
   // Gestion des métadonnées de photo
   if (formValues.photoMeta) {
-    employeeData.photoMeta = formValues.photoMeta;
+    employeeData.photoMeta = {
+      data: formValues.photoMeta.data,
+      fileName: formValues.photoMeta.fileName,
+      fileType: formValues.photoMeta.fileType,
+      fileSize: formValues.photoMeta.fileSize,
+      updatedAt: formValues.photoMeta.updatedAt
+    };
   } else if (formValues.photo && !employeeData.photoMeta) {
     // Create photo metadata if photo exists but no metadata
     employeeData.photoMeta = createPhotoMeta(formValues.photo);
@@ -98,7 +104,7 @@ export const employeeToFormValues = (
     birthDate: employee.birthDate || '',
     managerId: employee.managerId || '',
     status: (employee.status || 'active') as any,
-    photo: employee.photo || employee.photoURL || '',
+    photo: employee.photo || employee.photoURL || employee.photoData || '',
     photoMeta: photoMeta,
     professionalEmail: employee.professionalEmail || '',
     forceManager: employee.forceManager || false,
