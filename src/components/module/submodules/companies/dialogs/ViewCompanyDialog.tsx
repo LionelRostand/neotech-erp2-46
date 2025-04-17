@@ -71,10 +71,10 @@ const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, on
             </div>
           </div>
 
-          {company.description && (
+          {company.notes && (
             <div>
-              <h3 className="font-semibold mb-2">Description</h3>
-              <p className="text-sm text-muted-foreground">{company.description}</p>
+              <h3 className="font-semibold mb-2">Notes</h3>
+              <p className="text-sm text-muted-foreground">{company.notes}</p>
             </div>
           )}
 
