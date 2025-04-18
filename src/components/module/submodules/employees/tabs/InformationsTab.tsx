@@ -1,9 +1,10 @@
-
 import React, { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { createEmployeeWithAccount } from '@/services/userService';
 import { 
   Calendar, 
   Mail, 
@@ -13,7 +14,8 @@ import {
   Building2, 
   IdCard,
   Save,
-  X
+  X,
+  SendHorizontal
 } from 'lucide-react';
 
 interface InformationsTabProps {
@@ -27,6 +29,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEmployee, setEditedEmployee] = useState<Employee>(employee);
+  const [isSending, setIsSending] = useState(false);
 
   const formatAddress = () => {
     if (typeof employee.address === 'string') {
@@ -59,13 +62,49 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
     setIsEditing(false);
   };
 
+  const handleSendCredentials = async () => {
+    if (!editedEmployee.email || !editedEmployee.professionalEmail) {
+      toast.error("L'email personnel et professionnel sont requis");
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const result = await createEmployeeWithAccount(editedEmployee, editedEmployee.professionalEmail);
+      
+      if (result.success) {
+        toast.success("Credentials envoyés avec succès");
+        if (result.employee && onEmployeeUpdated) {
+          onEmployeeUpdated(result.employee);
+        }
+      } else {
+        toast.error("Erreur lors de l'envoi des credentials");
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error("Erreur lors de l'envoi des credentials");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
         {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)}>
-            Modifier
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsEditing(true)}>
+              Modifier
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleSendCredentials}
+              disabled={isSending || !employee.email || !employee.professionalEmail}
+            >
+              <SendHorizontal className="h-4 w-4 mr-2" />
+              Envoyer les credentials
+            </Button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleCancel}>
