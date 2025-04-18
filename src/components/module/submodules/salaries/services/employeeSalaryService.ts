@@ -18,11 +18,17 @@ export const addPayslipToEmployee = async (employeeId: string, payslipId: string
     
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     
-    await updateDoc(employeeRef, {
-      payslips: arrayUnion(payslipId)
-    });
-    
-    return true;
+    // Vérifier que nous avons des valeurs définies avant d'utiliser arrayUnion
+    // car Firebase n'accepte pas les valeurs undefined dans arrayUnion
+    if (payslipId) {
+      await updateDoc(employeeRef, {
+        payslips: arrayUnion(payslipId)
+      });
+      return true;
+    } else {
+      console.error("Cannot add undefined payslipId to employee record");
+      return false;
+    }
   } catch (error) {
     console.error("Error adding payslip to employee:", error);
     return false;

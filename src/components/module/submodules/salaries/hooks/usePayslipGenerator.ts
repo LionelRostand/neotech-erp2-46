@@ -54,6 +54,13 @@ export const usePayslipGenerator = () => {
 
     const netSalary = totalGross - totalDeductions;
 
+    // Récupérer le mois et l'année à partir de la période (ex: "Janvier 2025")
+    const [month, yearStr] = period.split(' ');
+    const year = parseInt(yearStr);
+
+    const employeeFirstName = employeeName.split(' ')[0] || '';
+    const employeeLastName = employeeName.split(' ').slice(1).join(' ') || '';
+
     const payslip: PaySlip = {
       id: '',
       employeeId: selectedEmployeeId,
@@ -72,13 +79,16 @@ export const usePayslipGenerator = () => {
       netSalary,
       hoursWorked: 151.67 + overtime,
       paymentDate: new Date().toISOString(),
-      status: 'draft',
+      status: 'Généré',
       date: new Date().toISOString(),
-      month: period.split(' ')[0],
-      year: parseInt(period.split(' ')[1]),
+      month: month,
+      year: year,
+      employerName: 'Votre Entreprise', // Remplir avec des valeurs par défaut
+      employerAddress: '123 Rue de Paris, 75000 Paris',
+      employerSiret: '123 456 789 00012',
       employee: {
-        firstName: employeeName.split(' ')[0],
-        lastName: employeeName.split(' ')[1],
+        firstName: employeeFirstName,
+        lastName: employeeLastName,
         employeeId: selectedEmployeeId,
         role: '',
         socialSecurityNumber: '',

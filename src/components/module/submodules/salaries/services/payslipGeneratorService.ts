@@ -4,13 +4,13 @@ import { generatePayslipPdf } from '../utils/payslipPdfUtils';
 import { addEmployeeDocument } from '../../employees/services/documentService';
 import { savePaySlip } from './payslipService';
 import { toast } from 'sonner';
+import { addPayslipToEmployee } from './employeeSalaryService';
 
 export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<boolean> => {
   try {
     // 1. Sauvegarder la fiche de paie dans Firestore
     const savedPayslip = await savePaySlip({
       ...payslipData,
-      status: 'Généré',
       date: new Date().toISOString()
     });
 
@@ -25,7 +25,7 @@ export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<bool
     // 3. Construire le nom du fichier
     const formattedMonth = payslipData.month?.toLowerCase() || 'periode';
     const year = payslipData.year || new Date().getFullYear();
-    const employeeName = payslipData.employee.lastName.toLowerCase();
+    const employeeName = payslipData.employee?.lastName?.toLowerCase() || 'employe';
     const fileName = `bulletin_de_paie_${employeeName}_${formattedMonth}_${year}.pdf`;
 
     // 4. Sauvegarder dans les documents de l'employé
@@ -41,9 +41,14 @@ export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<bool
       };
 
       await addEmployeeDocument(payslipData.employeeId, documentData);
+      
+      // 5. Ajouter l'ID de la fiche de paie à l'employé
+      if (savedPayslip.id) {
+        await addPayslipToEmployee(payslipData.employeeId, savedPayslip.id);
+      }
     }
 
-    // 5. Sauvegarder le PDF localement
+    // 6. Sauvegarder le PDF localement
     doc.save(fileName);
 
     toast.success('Fiche de paie générée et enregistrée avec succès');
