@@ -24,7 +24,7 @@ import { AppModule, createIcon } from '../types/modules';
 
 export const employeesModule: AppModule = {
   id: 1,
-  name: "Employés",
+  name: "RESSOURCES HUMAINES",
   description: "Gestion des ressources humaines, contrats, congés et administration du personnel",
   href: "/modules/employees",
   icon: createIcon(Users),
