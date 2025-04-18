@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LayoutDashboard, Package } from 'lucide-react';
 import NavLink from './NavLink';
@@ -28,7 +27,9 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
   const { focusedSection } = useSidebar();
   const { userData } = useAuth();
   
+  console.log('User Data:', userData); // Debugging log
   const isAdmin = userData?.email === 'admin@neotech-consulting.com';
+  console.log('Is Admin:', isAdmin); // Debugging log
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
@@ -42,7 +43,6 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
 
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
-      {/* Dashboard Link with submenu */}
       <Accordion 
         type="single" 
         collapsible 
@@ -76,7 +76,6 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </AccordionItem>
       </Accordion>
       
-      {/* Link to applications page to install more - Only for admin */}
       {isAdmin && (
         <NavLink
           icon={<Package size={18} />}
@@ -89,30 +88,25 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         />
       )}
       
-      {/* Module Categories */}
       <div className="mt-2" id="applications-section">
-        {/* GESTION D'ENTREPRISE */}
         <CategorySection 
           category="business" 
           modules={businessModules} 
           onNavigate={onNavigate} 
         />
         
-        {/* SERVICES SPÉCIALISÉS */}
         <CategorySection 
           category="services" 
           modules={serviceModules} 
           onNavigate={onNavigate} 
         />
         
-        {/* PRÉSENCE NUMÉRIQUE */}
         <CategorySection 
           category="digital" 
           modules={digitalModules} 
           onNavigate={onNavigate} 
         />
         
-        {/* COMMUNICATION */}
         <CategorySection 
           category="communication" 
           modules={communicationModules} 
@@ -126,7 +120,6 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         )}
       </div>
       
-      {/* Spacer to push content to the bottom */}
       <div className="flex-grow min-h-8"></div>
     </nav>
   );
