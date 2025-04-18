@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, updateDoc, doc, getDoc, Timestamp, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, getDoc, Timestamp, deleteDoc, getDocs } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -113,5 +113,69 @@ export const getEmployeeDocuments = async (employeeId: string) => {
   } catch (error) {
     console.error("Error getting employee documents:", error);
     return [];
+  }
+};
+
+/**
+ * Get all document types from the database
+ */
+export const getDocumentTypes = async (): Promise<string[]> => {
+  try {
+    // Default document types if no custom types are found
+    const defaultTypes = [
+      'CV',
+      'Contrat de travail',
+      'Fiche de paie',
+      'Diplôme',
+      'Pièce d\'identité',
+      'Attestation',
+      'Certificat',
+      'Autre'
+    ];
+    
+    try {
+      // Try to get custom document types from settings
+      const settingsRef = doc(db, COLLECTIONS.HR.SETTINGS, 'documentTypes');
+      const settingsSnap = await getDoc(settingsRef);
+      
+      if (settingsSnap.exists()) {
+        const data = settingsSnap.data();
+        if (data.types && Array.isArray(data.types) && data.types.length > 0) {
+          return data.types;
+        }
+      }
+      
+      // If custom types don't exist, analyze existing documents to get types
+      const docsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
+      const snapshot = await getDocs(docsRef);
+      
+      if (!snapshot.empty) {
+        const types = new Set<string>();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.type && typeof data.type === 'string') {
+            types.add(data.type);
+          }
+        });
+        
+        // Combine existing types with default types
+        const allTypes = [...Array.from(types), ...defaultTypes];
+        // Remove duplicates
+        return Array.from(new Set(allTypes));
+      }
+    } catch (error) {
+      console.warn("Error fetching custom document types:", error);
+    }
+    
+    // Return default types if everything else fails
+    return defaultTypes;
+  } catch (error) {
+    console.error("Error getting document types:", error);
+    return [
+      'CV',
+      'Contrat',
+      'Fiche de paie',
+      'Autre'
+    ];
   }
 };
