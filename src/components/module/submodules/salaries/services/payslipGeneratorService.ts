@@ -47,6 +47,7 @@ export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<bool
         status: 'Généré'
       };
 
+      // Ajouter le document à l'employé
       await addEmployeeDocument(payslipData.employeeId, documentData);
       
       // 5. Ajouter l'ID de la fiche de paie à l'employé

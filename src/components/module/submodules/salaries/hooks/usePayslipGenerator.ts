@@ -22,10 +22,25 @@ export const usePayslipGenerator = () => {
 
   const handleCompanySelect = (companyId: string) => {
     setSelectedCompanyId(companyId);
-    const company = employees.find(emp => emp.company === companyId)?.company;
-    if (typeof company === 'object') {
-      setSelectedCompany(company);
+    const employee = employees.find(emp => emp.company === companyId);
+    let company = null;
+    
+    if (employee && employee.company) {
+      if (typeof employee.company === 'object') {
+        company = employee.company;
+      } else {
+        // Try to find company information from other employees
+        const employeeWithCompanyObject = employees.find(emp => 
+          typeof emp.company === 'object' && emp.company.id === companyId
+        );
+        
+        if (employeeWithCompanyObject && typeof employeeWithCompanyObject.company === 'object') {
+          company = employeeWithCompanyObject.company;
+        }
+      }
     }
+    
+    setSelectedCompany(company);
   };
 
   const handleEmployeeSelect = (employeeId: string, employeesList: Employee[]) => {
@@ -33,9 +48,23 @@ export const usePayslipGenerator = () => {
     if (employee) {
       setSelectedEmployeeId(employeeId);
       setEmployeeName(`${employee.firstName} ${employee.lastName}`);
-      if (employee.company && typeof employee.company === 'object') {
-        setSelectedCompany(employee.company);
-        setSelectedCompanyId(employee.company.id);
+      
+      if (employee.company) {
+        if (typeof employee.company === 'object') {
+          setSelectedCompany(employee.company);
+          setSelectedCompanyId(employee.company.id);
+        } else {
+          setSelectedCompanyId(employee.company);
+          
+          // Try to find company information from other employees
+          const employeeWithCompanyObject = employeesList.find(emp => 
+            typeof emp.company === 'object' && emp.company.id === employee.company
+          );
+          
+          if (employeeWithCompanyObject && typeof employeeWithCompanyObject.company === 'object') {
+            setSelectedCompany(employeeWithCompanyObject.company);
+          }
+        }
       }
     }
   };
@@ -77,11 +106,15 @@ export const usePayslipGenerator = () => {
       hoursWorked: 151.67, // Durée légale mensuelle en France
       paymentDate: new Date().toISOString(),
       details: generatePayslipDetails(Number(grossSalary), Number(overtimeHours), Number(overtimeRate)),
-      status: 'Généré'
+      status: 'Généré',
+      date: new Date().toISOString()
     };
 
-    await generateAndSavePayslip(payslipData);
-    return payslipData;
+    const success = await generateAndSavePayslip(payslipData);
+    if (success) {
+      return payslipData;
+    }
+    return null;
   };
 
   const calculateNetSalary = (gross: number): number => {
