@@ -1,11 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, FileDown, Plus } from 'lucide-react';
-import { formatCurrency } from '@/lib/formatters';
-import { formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { PaySlip } from '@/types/payslip';
 import { getAllPayslips } from '../services/payslipService';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -58,7 +56,6 @@ const PayslipList: React.FC = () => {
     setShowNewPayslipDialog(false);
   };
 
-  // Find employee department
   const getEmployeeDepartment = (employeeId: string) => {
     const employee = employees.find(emp => emp.id === employeeId);
     return employee?.department || 'Non spécifié';
@@ -134,14 +131,12 @@ const PayslipList: React.FC = () => {
         )}
       </CardContent>
       
-      {/* Payslip Details Dialog */}
       <Dialog open={!!selectedPayslip} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-4xl">
           {selectedPayslip && <PayslipDetails payslip={selectedPayslip} />}
         </DialogContent>
       </Dialog>
       
-      {/* New Payslip Dialog */}
       <NewPayslipDialog 
         open={showNewPayslipDialog} 
         onClose={handleNewPayslipClose}

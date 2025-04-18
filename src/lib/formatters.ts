@@ -41,6 +41,15 @@ export function formatDateFR(date: Date | string): string {
 }
 
 /**
+ * Format a date - alias to formatDateFR for compatibility
+ * @param date The date to format
+ * @returns Formatted date string
+ */
+export function formatDate(date: Date | string): string {
+  return formatDateFR(date);
+}
+
+/**
  * Format a percentage
  * @param value The value to format as percentage
  * @returns Formatted percentage string
