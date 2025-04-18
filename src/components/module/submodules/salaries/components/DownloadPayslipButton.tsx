@@ -56,11 +56,13 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       if (payslip.employeeId) {
         const documentData = {
           name: `Bulletin de paie - ${payslip.period}`,
+          title: `Bulletin de paie - ${payslip.period}`,
           type: 'Fiche de paie',
           date: payslip.date || new Date().toISOString(),
           fileType: 'application/pdf',
           fileData: pdfBase64,
-          employeeId: payslip.employeeId
+          employeeId: payslip.employeeId,
+          url: pdfBase64
         };
 
         await addEmployeeDocument(payslip.employeeId, documentData);

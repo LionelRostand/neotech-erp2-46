@@ -9,6 +9,8 @@ import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import CompanySelect from './CompanySelect';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
+import { toast } from 'sonner';
+import { savePaySlip, savePaySlipToEmployeeDocuments } from '../services/payslipService';
 
 interface NewPayslipDialogProps {
   open: boolean;
@@ -54,10 +56,40 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({ open, onClose, onGe
     }
   }, [contractSalary, setGrossSalary]);
 
-  const handleGeneratePayslip = () => {
-    generatePayslip();
-    setShowPreview(true);
-    onGenerate();
+  const handleGeneratePayslip = async () => {
+    if (!selectedEmployeeId) {
+      toast.error("Veuillez sélectionner un employé");
+      return;
+    }
+    
+    if (!period) {
+      toast.error("Veuillez sélectionner une période");
+      return;
+    }
+    
+    if (!grossSalary || Number(grossSalary) <= 0) {
+      toast.error("Le salaire brut doit être supérieur à 0");
+      return;
+    }
+    
+    try {
+      const payslip = generatePayslip();
+      if (payslip) {
+        console.log("Fiche de paie générée:", payslip);
+        
+        // Save payslip to Firestore
+        const savedPayslip = await savePaySlip(payslip);
+        
+        // Generate PDF and add to employee documents
+        await savePaySlipToEmployeeDocuments(savedPayslip);
+        
+        toast.success("Fiche de paie générée et ajoutée aux documents de l'employé");
+        onGenerate(); // Refresh the payslips list
+      }
+    } catch (error) {
+      console.error("Erreur lors de la génération de la fiche de paie:", error);
+      toast.error("Erreur lors de la génération de la fiche de paie");
+    }
   };
 
   return (

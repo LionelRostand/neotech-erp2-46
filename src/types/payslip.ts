@@ -56,4 +56,6 @@ export interface PaySlip {
   // Adding the missing properties
   paymentMethod?: string;
   notes?: string;
+  pdfUrl?: string;
+  department?: string;
 }

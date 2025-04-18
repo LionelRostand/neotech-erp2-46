@@ -1,57 +1,43 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Company } from '@/components/module/submodules/companies/types';
-import { Loader2, Building2 } from 'lucide-react';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface CompanySelectProps {
   selectedCompanyId: string;
   onCompanySelect: (companyId: string) => void;
+  label?: string;
 }
 
 const CompanySelect: React.FC<CompanySelectProps> = ({ 
   selectedCompanyId, 
-  onCompanySelect 
+  onCompanySelect,
+  label = "Entreprise" 
 }) => {
-  const { companies, isLoading } = useFirebaseCompanies();
-  
-  const handleValueChange = (value: string) => {
-    const selectedCompany = companies?.find(company => company.id === value);
-    if (selectedCompany) {
-      onCompanySelect(value);
-    }
+  const { companies } = useHrModuleData();
+
+  const handleChange = (value: string) => {
+    onCompanySelect(value);
   };
-  
+
   return (
     <div>
-      <label htmlFor="company-select" className="block text-sm font-medium text-gray-700 mb-1">
-        Entreprise
+      <label htmlFor="company-select" className="block text-sm font-medium mb-1">
+        {label}
       </label>
-      
-      <Select value={selectedCompanyId} onValueChange={handleValueChange}>
-        <SelectTrigger id="company-select" className="w-full">
+      <Select value={selectedCompanyId} onValueChange={handleChange}>
+        <SelectTrigger id="company-select">
           <SelectValue placeholder="Sélectionner une entreprise" />
         </SelectTrigger>
         <SelectContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-2">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              <span>Chargement...</span>
-            </div>
-          ) : companies && companies.length > 0 ? (
-            companies.map((company) => (
-              <SelectItem key={company.id} value={company.id} className="flex items-center">
-                <div className="flex items-center">
-                  <Building2 className="h-4 w-4 mr-2 text-gray-500" />
-                  {company.name}
-                </div>
+          {companies && companies.length > 0 ? (
+            companies.map(company => (
+              <SelectItem key={company.id} value={company.id}>
+                {company.name}
               </SelectItem>
             ))
           ) : (
-            <div className="px-2 py-2 text-sm text-muted-foreground">
-              Aucune entreprise disponible
-            </div>
+            <SelectItem value="default">Entreprise par défaut</SelectItem>
           )}
         </SelectContent>
       </Select>

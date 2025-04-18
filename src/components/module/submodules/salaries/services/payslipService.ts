@@ -48,11 +48,13 @@ export const savePaySlipToEmployeeDocuments = async (payslip: PaySlip): Promise<
     const documentData = {
       type: 'Fiche de paie',
       name: `Bulletin de paie - ${payslip.period}`,
+      title: `Bulletin de paie - ${payslip.period}`,
       fileType: 'application/pdf',
       fileData: pdfBase64,
       date: new Date().toISOString(),
       employeeId: payslip.employeeId,
-      documentId: `payslip_${payslip.id}`
+      documentId: `payslip_${payslip.id}`,
+      url: pdfBase64
     };
     
     // Add document to employee profile
