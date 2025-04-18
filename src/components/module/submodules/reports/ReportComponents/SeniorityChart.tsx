@@ -48,16 +48,43 @@ export const SeniorityChart = () => {
         position: 'top' as const,
         labels: {
           boxWidth: 12,
-          padding: 15
+          padding: 15,
+          font: {
+            size: 12
+          }
         }
       }
     },
     scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            size: 11
+          }
+        }
+      },
       y: {
         beginAtZero: true,
         ticks: {
-          precision: 0
+          precision: 0,
+          font: {
+            size: 11
+          }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)'
         }
+      }
+    },
+    layout: {
+      padding: {
+        left: 10,
+        right: 20,
+        top: 0,
+        bottom: 10
       }
     }
   };

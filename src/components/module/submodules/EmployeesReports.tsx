@@ -34,17 +34,17 @@ const reportComponents = [
 const EmployeesReports = () => {
   return (
     <ScrollArea className="h-full">
-      <div className="container mx-auto p-4 space-y-6">
-        <h2 className="text-3xl font-bold mb-6">Rapports RH</h2>
+      <div className="container mx-auto p-6">
+        <h2 className="text-3xl font-bold mb-8">Rapports RH</h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {reportComponents.map((report) => {
             const ReportComponent = report.component;
             const Icon = report.icon;
             
             return (
               <Card key={report.id} className="shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <CardTitle className="text-lg font-medium">
                     <div className="flex items-center space-x-2">
                       <Icon className="w-5 h-5" />
@@ -53,8 +53,8 @@ const EmployeesReports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">{report.description}</p>
-                  <div className="h-[300px] w-full">
+                  <p className="text-sm text-muted-foreground mb-6">{report.description}</p>
+                  <div className="h-[350px] w-full">
                     <ReportComponent />
                   </div>
                 </CardContent>
