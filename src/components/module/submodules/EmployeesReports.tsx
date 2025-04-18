@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HeadcountByDepartment } from './reports/ReportComponents/HeadcountByDepartment';
 import { MonthlyAbsence } from './reports/ReportComponents/MonthlyAbsence';
 import { SeniorityChart } from './reports/ReportComponents/SeniorityChart';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, UserCheck, Calendar, Award, GraduationCap, BadgePercent, BarChart, PieChart } from 'lucide-react';
+import { Users, UserCheck, Calendar } from 'lucide-react';
 
 const reportComponents = [
   {
@@ -34,10 +34,10 @@ const reportComponents = [
 const EmployeesReports = () => {
   return (
     <ScrollArea className="h-full">
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-4 space-y-6">
         <h2 className="text-3xl font-bold mb-6">Rapports RH</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {reportComponents.map((report) => {
             const ReportComponent = report.component;
             const Icon = report.icon;
@@ -54,7 +54,9 @@ const EmployeesReports = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">{report.description}</p>
-                  <ReportComponent />
+                  <div className="h-[300px] w-full">
+                    <ReportComponent />
+                  </div>
                 </CardContent>
               </Card>
             );

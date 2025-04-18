@@ -46,12 +46,24 @@ export const SeniorityChart = () => {
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          boxWidth: 12,
+          padding: 15
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0
+        }
       }
     }
   };
 
   return (
-    <div className="w-full h-[350px] p-4">
+    <div className="w-full h-full">
       <BarChart data={data} options={options} />
     </div>
   );

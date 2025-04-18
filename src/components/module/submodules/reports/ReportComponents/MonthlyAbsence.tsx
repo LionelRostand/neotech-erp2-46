@@ -18,8 +18,9 @@ export const MonthlyAbsence = () => {
       label: 'Absences',
       data: monthlyData,
       borderColor: 'rgb(234, 88, 12)',
-      backgroundColor: 'rgba(234, 88, 12, 0.5)',
-      tension: 0.3
+      backgroundColor: 'rgba(234, 88, 12, 0.1)',
+      tension: 0.3,
+      fill: true
     }]
   };
 
@@ -29,12 +30,29 @@ export const MonthlyAbsence = () => {
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          boxWidth: 12,
+          padding: 15
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0
+        }
       }
     }
   };
 
   return (
-    <div className="w-full h-[350px] p-4">
+    <div className="w-full h-full">
       <LineChart data={data} options={options} />
     </div>
   );
