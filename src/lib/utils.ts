@@ -11,7 +11,6 @@ export function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   
   if (isNaN(d.getTime())) {
-    // If the date is invalid, try to parse it as a French date (DD/MM/YYYY)
     if (typeof date === 'string' && date.includes('/')) {
       const parts = date.split('/');
       if (parts.length === 3) {
@@ -58,7 +57,6 @@ export function calculateAge(birthDate: string | Date): number {
   let date: Date;
   
   if (typeof birthDate === 'string') {
-    // If the format is DD/MM/YYYY (French format)
     if (birthDate.includes('/')) {
       const parts = birthDate.split('/');
       if (parts.length === 3) {
@@ -90,5 +88,3 @@ export function truncate(str: string, length: number): string {
   if (!str) return '';
   return str.length > length ? str.substring(0, length) + '...' : str;
 }
-
-export { formatCurrency } from './formatters';
