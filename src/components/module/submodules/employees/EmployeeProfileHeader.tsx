@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Mail, Phone, MapPin, IdCard, Building2, Pencil } from 'lucide-react';
+import { Briefcase, Mail, Phone, Building2, Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
-import { Company } from '@/components/module/submodules/companies/types';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
 
 interface EmployeeProfileHeaderProps {
@@ -60,15 +59,9 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     return '';
   };
 
-  const getFormattedAddress = () => {
-    const parts = [
-      employee.streetNumber,
-      employee.streetName,
-      employee.city,
-      employee.zipCode,
-      employee.region
-    ].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : 'Adresse non renseignée';
+  const getEmail = () => {
+    // Prioritize professional email if available
+    return employee.professionalEmail || employee.email || '';
   };
 
   const getCompanyName = () => {
@@ -99,11 +92,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               />
               <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
             </Avatar>
-            
-            <div className="flex items-center text-sm text-muted-foreground">
-              <IdCard className="h-4 w-4 mr-2" />
-              <span>{employee.id || 'ID non disponible'}</span>
-            </div>
           </div>
           
           <div className="flex-1 space-y-2">
@@ -133,7 +121,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 py-2">
               <div className="flex items-center gap-2 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <span>{employee.department || 'Département non spécifié'}</span>
@@ -144,22 +132,11 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                 <span>{employee.phone || 'Non renseigné'}</span>
               </div>
               
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span title="Email personnel">{employee.email}</span>
-                </div>
-                {employee.professionalEmail && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span title="Email professionnel">{employee.professionalEmail}</span>
-                  </div>
-                )}
-              </div>
-              
               <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate" title={getFormattedAddress()}>{getFormattedAddress()}</span>
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span title={employee.professionalEmail ? "Email professionnel" : "Email personnel"}>
+                  {getEmail()}
+                </span>
               </div>
             </div>
           </div>

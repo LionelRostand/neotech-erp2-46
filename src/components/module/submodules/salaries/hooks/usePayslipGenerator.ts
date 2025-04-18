@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { generateAndSavePayslip } from '../services/payslipGeneratorService';
@@ -21,6 +21,8 @@ export const usePayslipGenerator = () => {
   const { employees } = useEmployeeData();
 
   const handleCompanySelect = (companyId: string) => {
+    if (!companyId) return;
+    
     setSelectedCompanyId(companyId);
     const employee = employees.find(emp => emp.company === companyId);
     let company = null;
@@ -44,6 +46,8 @@ export const usePayslipGenerator = () => {
   };
 
   const handleEmployeeSelect = (employeeId: string, employeesList: Employee[]) => {
+    if (!employeeId) return;
+    
     const employee = employeesList.find(emp => emp.id === employeeId);
     if (employee) {
       setSelectedEmployeeId(employeeId);
@@ -69,9 +73,32 @@ export const usePayslipGenerator = () => {
     }
   };
 
+  const validateData = (): boolean => {
+    if (!selectedEmployeeId) {
+      toast.error('Veuillez sélectionner un employé');
+      return false;
+    }
+
+    if (!selectedCompanyId || !selectedCompany) {
+      toast.error('Veuillez sélectionner une entreprise');
+      return false;
+    }
+
+    if (!period) {
+      toast.error('Veuillez sélectionner une période');
+      return false;
+    }
+
+    if (!grossSalary || Number(grossSalary) <= 0) {
+      toast.error('Le salaire brut doit être supérieur à 0');
+      return false;
+    }
+
+    return true;
+  };
+
   const generatePayslip = async () => {
-    if (!selectedEmployeeId || !selectedCompany) {
-      toast.error('Veuillez sélectionner un employé et une entreprise');
+    if (!validateData()) {
       return null;
     }
 
@@ -97,9 +124,10 @@ export const usePayslipGenerator = () => {
       period: period,
       month: month,
       year: parseInt(year),
-      employerName: selectedCompany.name,
-      employerAddress: `${selectedCompany.address?.street}, ${selectedCompany.address?.postalCode} ${selectedCompany.address?.city}`,
-      employerSiret: selectedCompany.siret || '',
+      employerName: selectedCompany?.name || '',
+      employerAddress: selectedCompany?.address ? 
+        `${selectedCompany.address.street}, ${selectedCompany.address.postalCode} ${selectedCompany.address.city}` : '',
+      employerSiret: selectedCompany?.siret || '',
       grossSalary: Number(grossSalary),
       netSalary: calculateNetSalary(Number(grossSalary)),
       totalDeductions: calculateDeductions(Number(grossSalary)),
@@ -109,6 +137,12 @@ export const usePayslipGenerator = () => {
       status: 'Généré',
       date: new Date().toISOString()
     };
+
+    console.log("Données pour fiche de paie:", { 
+      employeeId: selectedEmployeeId, 
+      companyId: selectedCompanyId,
+      selectedCompany
+    });
 
     const success = await generateAndSavePayslip(payslipData);
     if (success) {
