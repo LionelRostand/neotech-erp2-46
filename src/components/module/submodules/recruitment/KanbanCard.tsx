@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { RecruitmentPost, CandidateApplication } from '@/types/recruitment';
 import { Check, X, GripHorizontal } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 interface KanbanCardProps {
   item: RecruitmentPost;
@@ -22,15 +26,45 @@ export default function KanbanCard({ item, isDragging }: KanbanCardProps) {
   });
   
   const handleTechnicalInterviewResult = async (candidateId: string, passed: boolean) => {
-    const candidate = item.candidates?.find(c => c.id === candidateId);
-    if (!candidate) return;
-    candidate.technicalInterviewStatus = passed ? 'passed' : 'failed';
+    try {
+      const candidate = item.candidates?.find(c => c.id === candidateId);
+      if (!candidate) return;
+      
+      candidate.technicalInterviewStatus = passed ? 'passed' : 'failed';
+      
+      // Update in Firestore
+      const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, item.id);
+      await updateDoc(postRef, {
+        candidates: item.candidates,
+        updatedAt: new Date()
+      });
+      
+      toast.success(`Entretien technique ${passed ? 'validé' : 'refusé'}`);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de l\'entretien technique:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
   };
 
   const handleNormalInterviewResult = async (candidateId: string, passed: boolean) => {
-    const candidate = item.candidates?.find(c => c.id === candidateId);
-    if (!candidate) return;
-    candidate.normalInterviewStatus = passed ? 'passed' : 'failed';
+    try {
+      const candidate = item.candidates?.find(c => c.id === candidateId);
+      if (!candidate) return;
+      
+      candidate.normalInterviewStatus = passed ? 'passed' : 'failed';
+      
+      // Update in Firestore
+      const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, item.id);
+      await updateDoc(postRef, {
+        candidates: item.candidates,
+        updatedAt: new Date()
+      });
+      
+      toast.success(`Entretien normal ${passed ? 'validé' : 'refusé'}`);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de l\'entretien normal:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
   };
 
   const style = transform ? {
