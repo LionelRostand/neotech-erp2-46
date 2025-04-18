@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -113,7 +114,7 @@ export const usePayslipGenerator = () => {
       {
         label: 'Salaire de base',
         base: '151.67 h',
-        rate: `${baseHourlyRate.toFixed(2)} €/h',
+        rate: `${baseHourlyRate.toFixed(2)} €/h`,
         amount: gross,
         type: 'earning'
       },
