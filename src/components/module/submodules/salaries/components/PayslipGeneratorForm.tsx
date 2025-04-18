@@ -50,35 +50,19 @@ const PayslipGeneratorForm: React.FC<PayslipGeneratorFormProps> = ({ onPayslipGe
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Soumission du formulaire, données:", {
+      employeeId: selectedEmployeeId,
+      companyId: selectedCompanyId,
+      period
+    });
     
-    // Validate form before generating payslip
-    if (!selectedEmployeeId) {
-      toast.error("Veuillez sélectionner un employé");
-      return;
-    }
-    
-    if (!selectedCompanyId) {
-      toast.error("Veuillez sélectionner une entreprise");
-      return;
-    }
-    
-    if (!period) {
-      toast.error("Veuillez sélectionner une période");
-      return;
-    }
-    
-    if (!grossSalary || Number(grossSalary) <= 0) {
-      toast.error("Le salaire brut doit être supérieur à 0");
-      return;
-    }
-    
-    // Generate the payslip according to French labor laws
+    // Try to generate the payslip
     try {
       const payslip = await generatePayslip();
       if (payslip && onPayslipGenerated) {
         onPayslipGenerated(payslip);
+        console.log("Fiche de paie générée:", payslip);
       }
-      console.log("Fiche de paie générée:", payslip);
       setShowPreview(true);
     } catch (error) {
       console.error("Erreur lors de la génération de la fiche de paie:", error);
@@ -87,6 +71,7 @@ const PayslipGeneratorForm: React.FC<PayslipGeneratorFormProps> = ({ onPayslipGe
   };
 
   const handleEmployeeChange = (employeeId: string) => {
+    console.log("Employé sélectionné:", employeeId);
     setSelectedEmployeeId(employeeId);
     handleEmployeeSelect(employeeId, employees);
   };

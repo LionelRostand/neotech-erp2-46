@@ -17,10 +17,8 @@ const CompanySelect: React.FC<CompanySelectProps> = ({
   const { companies, isLoading } = useFirebaseCompanies();
   
   const handleValueChange = (value: string) => {
-    const selectedCompany = companies?.find(company => company.id === value);
-    if (selectedCompany) {
-      onCompanySelect(value);
-    }
+    console.log("Entreprise sélectionnée:", value);
+    onCompanySelect(value);
   };
   
   return (

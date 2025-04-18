@@ -74,17 +74,25 @@ export const usePayslipGenerator = () => {
   };
 
   const validateData = (): boolean => {
-    if (!selectedEmployeeId) {
+    // Log values for debugging
+    console.log("Validation des données:", {
+      selectedEmployeeId,
+      selectedCompanyId,
+      period,
+      grossSalary
+    });
+
+    if (!selectedEmployeeId || selectedEmployeeId === '') {
       toast.error('Veuillez sélectionner un employé');
       return false;
     }
 
-    if (!selectedCompanyId || !selectedCompany) {
+    if (!selectedCompanyId || selectedCompanyId === '') {
       toast.error('Veuillez sélectionner une entreprise');
       return false;
     }
 
-    if (!period) {
+    if (!period || period === '') {
       toast.error('Veuillez sélectionner une période');
       return false;
     }
@@ -144,11 +152,20 @@ export const usePayslipGenerator = () => {
       selectedCompany
     });
 
-    const success = await generateAndSavePayslip(payslipData);
-    if (success) {
-      return payslipData;
+    try {
+      const success = await generateAndSavePayslip(payslipData);
+      if (success) {
+        toast.success("Fiche de paie générée avec succès");
+        return payslipData;
+      } else {
+        toast.error("Erreur lors de la génération de la fiche de paie");
+        return null;
+      }
+    } catch (error) {
+      console.error("Erreur lors de la génération:", error);
+      toast.error("Erreur lors de la génération de la fiche de paie");
+      return null;
     }
-    return null;
   };
 
   const calculateNetSalary = (gross: number): number => {
