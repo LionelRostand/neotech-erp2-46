@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Mail, Phone, MapPin, IdCard } from 'lucide-react';
+import { Briefcase, Mail, Phone, MapPin, IdCard, Building2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
+import { Company } from '@/components/module/submodules/companies/types';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -69,6 +69,18 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     return employee.address || '';
   };
 
+  // Helper method to get company name
+  const getCompanyName = () => {
+    if (!employee.company) return 'Non spécifiée';
+    
+    if (typeof employee.company === 'string') {
+      return employee.company;
+    }
+    
+    const company = employee.company as Company;
+    return company.name || 'Non spécifiée';
+  };
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
@@ -82,7 +94,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
             </Avatar>
             
-            {/* New section to display employee ID */}
             <div className="flex items-center text-sm text-muted-foreground">
               <IdCard className="h-4 w-4 mr-2" />
               <span>{employee.id || 'ID non disponible'}</span>
@@ -93,7 +104,10 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
-                <p className="text-muted-foreground">{employee.position || employee.title}</p>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Briefcase className="h-4 w-4" />
+                  <p className="text-sm">{employee.position} @ {getCompanyName()}</p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {getStatusBadge()}
@@ -129,4 +143,3 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 };
 
 export default EmployeeProfileHeader;
-
