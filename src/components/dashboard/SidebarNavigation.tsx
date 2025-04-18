@@ -28,17 +28,8 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
   const { focusedSection } = useSidebar();
   const { userData, isAdmin } = useAuth();
   
-  console.log('User Data:', userData); // Debugging log
-  console.log('Is Admin from useAuth:', isAdmin); // Get isAdmin directly from useAuth
-  
-  // Fallback admin detection in case isAdmin from useAuth is not available
-  const isAdminByEmail = userData?.email === 'admin@neotech-consulting.com';
-  const isAdminByRole = userData?.role === 'admin';
-  const finalIsAdmin = isAdmin || isAdminByEmail || isAdminByRole;
-  
-  console.log('Is Admin by Email:', isAdminByEmail);
-  console.log('Is Admin by Role:', isAdminByRole);
-  console.log('Final Is Admin:', finalIsAdmin);
+  console.log('User Data in SidebarNavigation:', userData); 
+  console.log('Is Admin flag from useAuth:', isAdmin);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
@@ -85,7 +76,7 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </AccordionItem>
       </Accordion>
       
-      {finalIsAdmin && (
+      {isAdmin && (
         <NavLink
           icon={<Package size={18} />}
           label="Gérer les applications"
