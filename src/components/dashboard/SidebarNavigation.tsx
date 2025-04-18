@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LayoutDashboard, Package } from 'lucide-react';
 import NavLink from './NavLink';
@@ -16,6 +15,7 @@ import CategorySection from './CategorySection';
 import { SidebarProvider } from './SidebarContext';
 import { useSidebar } from './useSidebar';
 import { CategoryService } from './CategoryService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarNavigationProps {
   installedModules: AppModule[];
@@ -25,14 +25,15 @@ interface SidebarNavigationProps {
 const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps) => {
   const location = useLocation();
   const { focusedSection } = useSidebar();
+  const { userData } = useAuth();
   
-  // Group modules by category
+  const isAdmin = userData?.email === 'admin@neotech-consulting.com';
+  
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
   const digitalModules = CategoryService.getModulesByCategory(installedModules, 'digital');
   const communicationModules = CategoryService.getModulesByCategory(installedModules, 'communication');
   
-  // Check if we're on the root route (/) or other dashboard routes
   const isOnDashboardRoute = 
     location.pathname === '/' || 
     location.pathname === '/dashboard/performance' || 
@@ -74,16 +75,18 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </AccordionItem>
       </Accordion>
       
-      {/* Link to applications page to install more */}
-      <NavLink
-        icon={<Package size={18} />}
-        label="Gérer les applications"
-        href="/applications"
-        isActive={location.pathname === '/applications'}
-        onClick={() => onNavigate('/applications')}
-        className={`mt-2 ${focusedSection === 'applications' ? 'ring-2 ring-neotech-primary ring-opacity-50' : ''}`}
-        showLabelWhenCollapsed={true}
-      />
+      {/* Link to applications page to install more - Only for admin */}
+      {isAdmin && (
+        <NavLink
+          icon={<Package size={18} />}
+          label="Gérer les applications"
+          href="/applications"
+          isActive={location.pathname === '/applications'}
+          onClick={() => onNavigate('/applications')}
+          className={`mt-2 ${focusedSection === 'applications' ? 'ring-2 ring-neotech-primary ring-opacity-50' : ''}`}
+          showLabelWhenCollapsed={true}
+        />
+      )}
       
       {/* Module Categories */}
       <div className="mt-2" id="applications-section">
