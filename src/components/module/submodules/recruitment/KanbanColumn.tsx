@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useDroppable } from "@dnd-kit/core";
-import { RecruitmentPost, CandidateApplication } from '@/types/recruitment';
+import { RecruitmentPost } from '@/types/recruitment';
 import KanbanCard from './KanbanCard';
 import AddCandidateDialog from './AddCandidateDialog';
 
@@ -16,15 +16,6 @@ interface KanbanColumnProps {
 export default function KanbanColumn({ id, title, items, onSort, isOrganizing }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({ id });
 
-  const handleCandidateAdded = (post: RecruitmentPost, candidate: CandidateApplication) => {
-    // Handle the candidate being added through the existing Firestore update logic
-    if (!post.candidates) {
-      post.candidates = [];
-    }
-    post.candidates.push(candidate);
-    // The parent component should handle the Firestore update
-  };
-
   return (
     <div className="flex flex-col min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
@@ -37,7 +28,12 @@ export default function KanbanColumn({ id, title, items, onSort, isOrganizing }:
         {id === 'En cours' && items.length > 0 && (
           <AddCandidateDialog 
             recruitmentId={items[0].id} 
-            onCandidateAdded={(candidate) => handleCandidateAdded(items[0], candidate)}
+            onCandidateAdded={(candidate) => {
+              if (!items[0].candidates) {
+                items[0].candidates = [];
+              }
+              items[0].candidates.push(candidate);
+            }}
           />
         )}
       </div>
@@ -47,7 +43,7 @@ export default function KanbanColumn({ id, title, items, onSort, isOrganizing }:
         className="flex flex-col gap-2 min-h-[200px]"
       >
         {items.map((item) => (
-          <KanbanCard key={item.id} item={item} />
+          <KanbanCard key={item.id} item={item} type="recruitment" />
         ))}
       </div>
     </div>
