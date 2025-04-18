@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { PlugZap } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useSmtpConfig } from '@/hooks/useSmtpConfig';
 
 const SmtpConfig = () => {
+  const { config, loading, saveConfig } = useSmtpConfig();
   const [isTesting, setIsTesting] = useState(false);
   const [formData, setFormData] = useState({
     server: '',
@@ -16,6 +18,12 @@ const SmtpConfig = () => {
     password: '',
     useSSL: false
   });
+
+  React.useEffect(() => {
+    if (config) {
+      setFormData(config);
+    }
+  }, [config]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -30,6 +38,15 @@ const SmtpConfig = () => {
       ...prev,
       useSSL: checked
     }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await saveConfig(formData);
+    } catch (error) {
+      console.error('Error saving config:', error);
+    }
   };
 
   const handleTestConnection = async () => {
@@ -51,6 +68,10 @@ const SmtpConfig = () => {
     }
   };
 
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Chargement...</div>;
+  }
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6">
@@ -58,7 +79,7 @@ const SmtpConfig = () => {
         <p className="mb-4">Configurez vos paramètres email pour l'envoi de notifications.</p>
         
         <div className="bg-white rounded-lg border p-6 shadow-sm">
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="smtp-server" className="text-sm font-medium">Serveur SMTP</label>

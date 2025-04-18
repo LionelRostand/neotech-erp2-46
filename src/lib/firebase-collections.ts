@@ -1,4 +1,3 @@
-
 // Define Firestore collection paths here to ensure consistency
 export const COLLECTIONS = {
   MESSAGES: {
@@ -130,5 +129,6 @@ export const COLLECTIONS = {
     CATEGORIES: 'library_categories',
     SETTINGS: 'library_settings',
     STATS: 'library_stats'
-  }
+  },
+  SMTP_CONFIG: 'smtp_config',
 };
