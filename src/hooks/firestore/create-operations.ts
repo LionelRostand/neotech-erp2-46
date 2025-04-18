@@ -1,4 +1,3 @@
-
 import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -13,7 +12,7 @@ import { toast } from 'sonner';
 export const addDocument = async (collectionPath: string, data: any) => {
   try {
     // Vérifier si les données ont un ID valide
-    const hasId = data && data.id && typeof data.id === 'string' && data.id.trim() !== '';
+    let hasId = data && data.id && typeof data.id === 'string' && data.id.trim() !== '';
     
     console.log(`Adding document to collection: ${collectionPath}`, data);
     console.log(`Document has valid ID? ${hasId ? 'Yes: ' + data.id : 'No'}`);
