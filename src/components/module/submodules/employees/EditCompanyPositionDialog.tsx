@@ -46,10 +46,10 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
         return;
       }
       
-      const updatedEmployee = await updateEmployee(employee.id, data);
+      const result = await updateEmployee(employee.id, data);
       
-      if (updatedEmployee) {
-        onEmployeeUpdated(updatedEmployee as Employee);
+      if (result) {
+        onEmployeeUpdated(result);
         toast.success('Informations mises à jour avec succès');
         onOpenChange(false);
       }

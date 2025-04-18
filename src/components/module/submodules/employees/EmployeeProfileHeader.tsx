@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -109,19 +110,22 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Briefcase className="h-4 w-4" />
-                  <p className="text-sm">
-                    {employee.position || 'Poste non spécifié'} @ {getCompanyName()}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-2 h-6 w-6"
-                      onClick={() => setShowEditDialog(true)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center text-muted-foreground">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    <span className="text-sm">
+                      {employee.position || 'Poste non spécifié'} @ {getCompanyName()}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEditDialog(true)}
+                    className="ml-2"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Button>
                 </div>
               </div>
               <div className="flex items-center gap-2">
