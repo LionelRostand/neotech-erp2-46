@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import CompanySelect from '@/components/module/submodules/salaries/components/CompanySelect';
+import CompanySelect from './CompanySelect';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 
 const PayslipGeneratorForm: React.FC = () => {
