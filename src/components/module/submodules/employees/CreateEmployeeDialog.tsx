@@ -13,7 +13,10 @@ import EmployeeForm from './EmployeeForm';
 import { useEmployeeService } from '@/hooks/useEmployeeService';
 import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from './form/employeeFormSchema';
-import { formToEmployee } from './form/employeeUtils';
+import { formValuesToEmployee } from './utils/formAdapter';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { addDocument } from '@/hooks/firestore/create-operations';
+import { toast } from 'sonner';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -32,15 +35,24 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   const handleSubmit = async (data: EmployeeFormValues) => {
     setIsSubmitting(true);
     try {
-      const employeeData = formToEmployee(data);
-      const newEmployee = await addEmployee(employeeData);
+      // Convertir les données du formulaire en objet employé
+      const employeeData = formValuesToEmployee(data);
       
-      if (newEmployee) {
-        onCreated(newEmployee as Employee);
+      console.log('Données employé à sauvegarder:', employeeData);
+      
+      // Ajouter directement le document à Firestore
+      const result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
+      
+      if (result && result.id) {
+        toast.success(`L'employé ${data.firstName} ${data.lastName} a été créé avec succès`);
+        onCreated(result as Employee);
         onOpenChange(false);
+      } else {
+        toast.error("Erreur lors de la création de l'employé");
       }
     } catch (error) {
       console.error('Error creating employee:', error);
+      toast.error(`Erreur lors de la création de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }

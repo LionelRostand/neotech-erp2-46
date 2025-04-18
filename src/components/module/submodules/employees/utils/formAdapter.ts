@@ -38,7 +38,7 @@ export const formValuesToEmployee = (
     zipCode: formValues.zipCode,
     region: formValues.region,
     // Conserver l'ID existant si disponible
-    id: existingEmployee?.id || crypto.randomUUID(),
+    id: existingEmployee?.id || undefined,
     updatedAt: new Date().toISOString(),
   };
 
@@ -51,7 +51,7 @@ export const formValuesToEmployee = (
 
   // Gestion des métadonnées de photo
   if (formValues.photoMeta) {
-    employeeData.photoMeta = {
+    const photoMeta: EmployeePhotoMeta = {
       fileName: formValues.photoMeta.fileName || `photo_${Date.now()}.jpg`,
       fileType: formValues.photoMeta.fileType || 'image/jpeg',
       fileSize: formValues.photoMeta.fileSize || 100000,
@@ -60,18 +60,17 @@ export const formValuesToEmployee = (
     
     // Only add data if it exists
     if (formValues.photoMeta.data) {
-      employeeData.photoMeta = {
-        ...employeeData.photoMeta,
-        data: formValues.photoMeta.data
-      };
+      photoMeta.data = formValues.photoMeta.data;
     }
+    
+    employeeData.photoMeta = photoMeta;
   } else if (formValues.photo && !employeeData.photoMeta) {
     // Create photo metadata if photo exists but no metadata
     employeeData.photoMeta = createPhotoMeta(formValues.photo);
   }
 
   // Si c'est un nouvel employé, ajouter la date de création
-  if (!existingEmployee) {
+  if (!existingEmployee || !existingEmployee.id) {
     employeeData.createdAt = new Date().toISOString();
   }
 

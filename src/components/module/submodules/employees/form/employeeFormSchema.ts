@@ -3,10 +3,10 @@ import { z } from 'zod';
 
 // Define a schema for photo metadata that matches our interface exactly
 const photoMetaSchema = z.object({
-  fileName: z.string(),
-  fileType: z.string(),
-  fileSize: z.number(),
-  updatedAt: z.string(),
+  fileName: z.string().default(`photo_${Date.now()}.jpg`),
+  fileType: z.string().default('image/jpeg'),
+  fileSize: z.number().default(100000),
+  updatedAt: z.string().default(new Date().toISOString()),
   data: z.string().optional()
 }).optional();
 

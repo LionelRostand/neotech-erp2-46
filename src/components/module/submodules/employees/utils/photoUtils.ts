@@ -26,11 +26,11 @@ export const createPhotoMeta = (photoData?: string): EmployeePhotoMeta | undefin
   if (!photoData) return undefined;
   
   return {
-    fileName: `photo_${Date.now()}.jpg`, // Required field
-    fileType: 'image/jpeg', // Required field
-    fileSize: estimatePhotoSize(photoData), // Required field
-    updatedAt: new Date().toISOString(), // Required field
-    data: photoData // Optional field
+    fileName: `photo_${Date.now()}.jpg`,
+    fileType: 'image/jpeg',
+    fileSize: estimatePhotoSize(photoData),
+    updatedAt: new Date().toISOString(),
+    data: photoData
   };
 };
 
