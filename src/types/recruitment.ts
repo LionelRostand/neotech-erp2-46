@@ -19,9 +19,13 @@ export interface CandidateApplication {
   interviewDate?: string;
   evaluationScore?: number;
   
-  // Additional properties needed by components
+  // Nouveaux champs pour le processus de recrutement
   candidateName?: string;
   candidateEmail?: string;
+  technicalInterviewStatus?: 'pending' | 'passed' | 'failed';
+  normalInterviewStatus?: 'pending' | 'passed' | 'failed';
+  proposedSalary?: number;
+  offerStatus?: 'pending' | 'accepted' | 'rejected';
   currentStage?: string;
   stageHistory?: RecruitmentStage[];
   recruitmentId?: string;
