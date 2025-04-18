@@ -108,11 +108,11 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{employee.email || 'Email non renseigné'}</span>
+                    <span>Email personnel : {employee.email || 'Email non renseigné'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{employee.phone || 'Téléphone non renseigné'}</span>
+                    <span>Téléphone : {employee.phone || 'Téléphone non renseigné'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -133,6 +133,10 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                   <div className="flex items-center gap-2 text-sm">
                     <Briefcase className="h-4 w-4 text-muted-foreground" />
                     <span>Poste : {employee.position || 'Non spécifié'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>Email professionnel : {employee.professionalEmail || 'Non spécifié'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
