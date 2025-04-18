@@ -62,11 +62,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
   // Adresse formatée pour l'affichage
   const getFormattedAddress = () => {
-    if (typeof employee.address === 'object') {
-      const addr = employee.address;
-      return `${addr.street || ''}, ${addr.postalCode || ''} ${addr.city || ''}, ${addr.country || ''}`;
-    }
-    return employee.address || '';
+    const parts = [
+      employee.streetNumber,
+      employee.streetName,
+      employee.city,
+      employee.zipCode,
+      employee.region
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : 'Adresse non renseignée';
   };
 
   // Helper method to get company name
@@ -106,7 +109,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="h-4 w-4" />
-                  <p className="text-sm">{employee.position} @ {getCompanyName()}</p>
+                  <p className="text-sm">{employee.position || 'Poste non spécifié'} @ {getCompanyName()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -116,8 +119,8 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 py-2">
               <div className="flex items-center gap-2 text-sm">
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span>{employee.department}</span>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <span>{employee.department || 'Département non spécifié'}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm">
@@ -125,14 +128,22 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                 <span>{employee.phone || 'Non renseigné'}</span>
               </div>
               
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{employee.email}</span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span title="Email personnel">{employee.email}</span>
+                </div>
+                {employee.professionalEmail && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span title="Email professionnel">{employee.professionalEmail}</span>
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate">{getFormattedAddress()}</span>
+                <span className="truncate" title={getFormattedAddress()}>{getFormattedAddress()}</span>
               </div>
             </div>
           </div>

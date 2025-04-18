@@ -12,7 +12,7 @@ const photoMetaSchema = z.object({
 export const employeeFormSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis' }),
   lastName: z.string().min(1, { message: 'Le nom est requis' }),
-  email: z.string().email({ message: 'Email invalide' }),
+  email: z.string().email({ message: 'Email personnel invalide' }),
   phone: z.string().optional(),
   streetNumber: z.string().optional(),
   streetName: z.string().optional(),
