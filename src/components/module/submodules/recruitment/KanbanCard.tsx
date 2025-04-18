@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,8 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     candidate.technicalInterviewStatus = passed ? 'passed' : 'failed';
     // Si l'entretien technique est échoué, on arrête le processus
     if (!passed) {
-      candidate.currentStage = 'Entretiens';
-      candidate.status = 'rejected';
+      candidate.currentStage = 'Fermée';
+      item.status = 'Fermée';
     }
     // Si les deux entretiens sont validés, on passe à l'étape Offre
     else if (candidate.normalInterviewStatus === 'passed' && candidate.technicalInterviewStatus === 'passed') {
@@ -33,10 +32,18 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     if (!candidate) return;
 
     candidate.normalInterviewStatus = passed ? 'passed' : 'failed';
-    // Si l'entretien normal est échoué, on arrête le processus
+    
+    // Si l'entretien normal est échoué, on passe directement à Fermée
     if (!passed) {
-      candidate.currentStage = 'Entretiens';
+      candidate.currentStage = 'Fermée';
+      item.status = 'Fermée';
       candidate.status = 'rejected';
+    }
+    // Si l'entretien normal est validé et qu'il n'y a pas d'entretien technique,
+    // on passe directement à l'étape Offre
+    else {
+      candidate.currentStage = 'Offre';
+      item.status = 'Offre';
     }
   };
 
