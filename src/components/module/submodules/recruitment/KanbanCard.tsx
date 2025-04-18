@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -147,7 +148,7 @@ export default function KanbanCard({ item }: KanbanCardProps) {
             <div className="mt-2">
               <Button 
                 size="sm"
-                onClick={() => handleSalaryProposal(candidate.id, 45000)} // Valeur exemple
+                onClick={() => handleSalaryProposal(candidate.id, 45000)}
               >
                 Proposer salaire (45k€)
               </Button>
