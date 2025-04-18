@@ -17,7 +17,7 @@ const EmployeesHierarchy: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   
-  const { hierarchyData, isLoading, refreshHierarchy, departmentStats } = useHierarchyData();
+  const { hierarchyData, isLoading, refreshHierarchy, departmentStats, createDefaultCEO } = useHierarchyData();
 
   const handleRefresh = useCallback(() => {
     console.log("Déclenchement du rafraîchissement de la hiérarchie");

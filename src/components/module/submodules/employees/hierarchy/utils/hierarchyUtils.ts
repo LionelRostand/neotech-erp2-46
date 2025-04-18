@@ -1,5 +1,60 @@
-
+import { Employee } from '@/types/employee';
 import { ChartNode, HierarchyNode } from '../types';
+
+/**
+ * Find the CEO or top-level manager in the employees list
+ * @param employees List of employees to search through
+ * @returns The CEO/top employee or null if none found
+ */
+export const findCEO = (employees: Employee[]): Employee | null => {
+  // First look for employees without a manager or with forceManager=true
+  const potentialCEOs = employees.filter(emp => 
+    !emp.managerId || emp.forceManager === true
+  );
+  
+  // If there are multiple candidates, prefer the one with forceManager=true
+  const forcedManagers = potentialCEOs.filter(emp => emp.forceManager === true);
+  if (forcedManagers.length > 0) {
+    return forcedManagers[0];
+  }
+  
+  // Otherwise, take the first employee without a manager
+  if (potentialCEOs.length > 0) {
+    return potentialCEOs[0];
+  }
+  
+  // If no clear CEO, return null
+  return null;
+};
+
+/**
+ * Create a hierarchical tree structure starting from a root employee
+ * @param rootEmployee The top-level employee (usually CEO)
+ * @param allEmployees All employees list
+ * @returns A hierarchy node representing the organizational structure
+ */
+export const createHierarchyTree = (rootEmployee: Employee, allEmployees: Employee[]): HierarchyNode => {
+  // Create the root node
+  const rootNode: HierarchyNode = {
+    id: rootEmployee.id,
+    name: `${rootEmployee.firstName} ${rootEmployee.lastName}`,
+    title: rootEmployee.position || rootEmployee.title || 'CEO',
+    manager: rootEmployee.manager || undefined,
+    color: rootEmployee.department ? `hsl(${hashStringToNumber(rootEmployee.department)}, 70%, 50%)` : undefined,
+    imageUrl: rootEmployee.photoURL || rootEmployee.photo || '',
+    children: []
+  };
+  
+  // Find all direct reports (employees whose managerId is the root employee's id)
+  const directReports = allEmployees.filter(emp => emp.managerId === rootEmployee.id);
+  
+  // For each direct report, recursively build their hierarchy
+  rootNode.children = directReports.map(report => 
+    createHierarchyTree(report, allEmployees)
+  );
+  
+  return rootNode;
+};
 
 /**
  * Converts a HierarchyNode to a ChartNode
@@ -138,4 +193,16 @@ export const getSyncedStats = (hierarchyData: HierarchyNode | ChartNode | null, 
     maxDepth: getMaxDepth(hierarchyData),
     departmentsRepresented: Math.max(calculatedDepartments, departmentsCount || 0)
   };
+};
+
+/**
+ * Helper function to convert a string to a consistent number (for color generation)
+ */
+const hashStringToNumber = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash % 360); // Get a value between 0-360 for HSL color
 };

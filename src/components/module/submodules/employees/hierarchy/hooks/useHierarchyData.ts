@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
@@ -15,6 +15,10 @@ export const useHierarchyData = () => {
   const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
   const [leader, setLeader] = useState<Employee | null>(null);
   const [isCreatingDefaultCEO, setIsCreatingDefaultCEO] = useState(false);
+  const [departmentStats, setDepartmentStats] = useState({
+    departmentsCount: 0,
+    managersCount: 0
+  });
 
   // Fonction pour créer un CEO par défaut
   const createDefaultCEO = async () => {
@@ -31,6 +35,36 @@ export const useHierarchyData = () => {
       setIsCreatingDefaultCEO(false);
     }
   };
+
+  // Function to refresh hierarchy data
+  const refreshHierarchy = useCallback(async () => {
+    if (refetchEmployees) {
+      await refetchEmployees();
+    }
+  }, [refetchEmployees]);
+
+  // Calculate departments statistics
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      // Get unique departments
+      const uniqueDepartments = new Set(
+        employees.map(emp => emp.department).filter(Boolean)
+      );
+      
+      // Count managers (employees who have direct reports)
+      const managersIds = new Set();
+      employees.forEach(emp => {
+        if (emp.managerId) {
+          managersIds.add(emp.managerId);
+        }
+      });
+      
+      setDepartmentStats({
+        departmentsCount: uniqueDepartments.size,
+        managersCount: managersIds.size
+      });
+    }
+  }, [employees]);
 
   // Génération de la hiérarchie à partir des employés
   useEffect(() => {
@@ -66,6 +100,8 @@ export const useHierarchyData = () => {
     isLoading,
     error,
     isCreatingDefaultCEO,
-    createDefaultCEO
+    createDefaultCEO,
+    refreshHierarchy,
+    departmentStats
   };
 };
