@@ -143,8 +143,8 @@ const PayslipGeneratorForm: React.FC = () => {
         </div>
       </div>
       
-      <div className="pt-4 flex justify-end">
-        <Button type="submit" className="w-full md:w-auto">
+      <div className="pt-4">
+        <Button type="submit" className="w-full">
           Générer la fiche de paie
         </Button>
       </div>
