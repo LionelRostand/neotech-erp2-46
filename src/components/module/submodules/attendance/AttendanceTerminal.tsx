@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,11 +52,44 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
     if (!employee) {
       // Check if input might be a badge number
       const badgePattern = /^B-?\d+$/i;
+      
+      // La logique suivante est améliorée pour la reconnaissance des badges
       if (badgePattern.test(id)) {
-        // This is potentially a badge ID, let's try to find the employee by badge
-        // Logic to check for employee by badge would go here if we had access to badges
-        // For now, we'll show a helpful message
-        toast.info("Identification par badge en cours d'implémentation");
+        console.log('Format de badge détecté:', id);
+        // Standardize badge format (remove B-, B prefix and keep only digits)
+        const badgeNumber = id.replace(/^b-?/i, '');
+        
+        // Chercher dans la collection d'employés
+        for (const emp of employees) {
+          // Check employee documents for badge
+          if (emp.documents && Array.isArray(emp.documents)) {
+            const hasBadge = emp.documents.some(doc => 
+              (doc.type === 'badge' || doc.name?.toLowerCase().includes('badge')) && 
+              (doc.id === id || doc.id?.includes(badgeNumber) || doc.name?.includes(badgeNumber))
+            );
+            
+            if (hasBadge) {
+              console.log('Badge trouvé pour employé:', emp.firstName, emp.lastName);
+              return emp;
+            }
+          }
+          
+          // Check if employee ID ends with badge number
+          if (emp.id.endsWith(badgeNumber)) {
+            console.log('ID employé correspondant au numéro de badge:', emp.firstName, emp.lastName);
+            return emp;
+          }
+        }
+        
+        // Fallback: try matching format B-YYMMDD-XXXX where XXXX might be the employee ID
+        if (id.match(/^B-\d{6}-\d+$/i)) {
+          const empIdPart = id.split('-')[2];
+          employee = employees.find(emp => emp.id.includes(empIdPart));
+          if (employee) {
+            console.log('Correspondance partielle trouvée:', employee.firstName, employee.lastName);
+            return employee;
+          }
+        }
       }
     }
     
@@ -67,12 +99,16 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
         `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(id.toLowerCase()) ||
         `${emp.lastName} ${emp.firstName}`.toLowerCase().includes(id.toLowerCase())
       );
+      
+      if (employee) {
+        console.log('Employé trouvé par nom:', employee.firstName, employee.lastName);
+      }
     }
     
     if (employee) {
       console.log('Employé trouvé:', employee);
     } else {
-      console.log('Aucun employé trouvé avec cet ID ou nom');
+      console.log('Aucun employé trouvé avec cet ID ou badge');
     }
     
     return employee;
@@ -91,13 +127,13 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
   // Gérer la validation d'entrée
   const handleCheckIn = () => {
     if (!employeeId) {
-      toast.error("Veuillez entrer votre identifiant d'employé.");
+      toast.error("Veuillez entrer votre identifiant d'employé ou numéro de badge.");
       return;
     }
     
     const employee = findEmployee(employeeId);
     if (!employee) {
-      toast.error("Employé non trouvé. Veuillez vérifier votre identifiant.");
+      toast.error("Employé non trouvé. Veuillez vérifier votre identifiant ou numéro de badge.");
       return;
     }
     
@@ -126,13 +162,13 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
   // Gérer la validation de sortie
   const handleCheckOut = () => {
     if (!employeeId) {
-      toast.error("Veuillez entrer votre identifiant d'employé.");
+      toast.error("Veuillez entrer votre identifiant d'employé ou numéro de badge.");
       return;
     }
     
     const employee = findEmployee(employeeId);
     if (!employee) {
-      toast.error("Employé non trouvé. Veuillez vérifier votre identifiant.");
+      toast.error("Employé non trouvé. Veuillez vérifier votre identifiant ou numéro de badge.");
       return;
     }
     
@@ -170,13 +206,13 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="employee-id" className="text-sm font-medium">
-              Identifiant employé
+              Identifiant employé ou badge
             </label>
             <Input
               id="employee-id"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
-              placeholder="Saisissez votre ID employé ou Badge ID"
+              placeholder="ID employé ou numéro de badge (ex: B-123456)"
               className="text-lg"
             />
           </div>
