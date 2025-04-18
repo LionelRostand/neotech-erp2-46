@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, RefreshCw, Building, Users } from 'lucide-react';
+import { Search, RefreshCw, Building, Users, Plus } from 'lucide-react';
 import HierarchyVisualization from './hierarchy/HierarchyVisualization';
 import DepartmentHierarchy from './hierarchy/components/DepartmentHierarchy';
 import { useHierarchyData } from './hierarchy/hooks/useHierarchyData';
@@ -17,7 +17,7 @@ const EmployeesHierarchy: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   
-  const { hierarchyData, isLoading, refreshHierarchy, departmentStats } = useHierarchyData();
+  const { hierarchyData, isLoading, refreshHierarchy, departmentStats, createDefaultCEO } = useHierarchyData();
 
   // Fonction pour rafraîchir la hiérarchie
   const handleRefresh = useCallback(() => {
@@ -25,6 +25,12 @@ const EmployeesHierarchy: React.FC = () => {
     refreshHierarchy();
     setRefreshKey(prev => prev + 1);
   }, [refreshHierarchy]);
+
+  // Fonction pour créer un PDG par défaut
+  const handleCreateDefaultCEO = useCallback(() => {
+    console.log("Création d'un PDG par défaut");
+    createDefaultCEO();
+  }, [createDefaultCEO]);
 
   // Calculer les statistiques basées sur la hiérarchie
   const stats = useMemo(() => {
@@ -49,6 +55,17 @@ const EmployeesHierarchy: React.FC = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
           </Button>
+          
+          {!hierarchyData && (
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={handleCreateDefaultCEO}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Créer PDG par défaut
+            </Button>
+          )}
         </div>
       </div>
 
@@ -129,7 +146,7 @@ const EmployeesHierarchy: React.FC = () => {
               viewMode={viewMode} 
               searchQuery={searchQuery}
               data={hierarchyData}
-              onRefresh={handleRefresh}
+              onRefresh={handleCreateDefaultCEO}
             />
           ) : (
             <DepartmentHierarchy />

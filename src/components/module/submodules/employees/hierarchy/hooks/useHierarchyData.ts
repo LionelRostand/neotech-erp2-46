@@ -5,6 +5,9 @@ import { HierarchyNode } from '../types';
 import { Employee } from '@/types/employee';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { subscribeToDepartmentUpdates } from '@/components/module/submodules/departments/utils/departmentUtils';
+import { toast } from 'sonner';
+import { addDocument } from '@/hooks/firestore/create-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 /**
  * Hook personnalisé pour récupérer et construire les données de hiérarchie
@@ -16,8 +19,9 @@ export const useHierarchyData = () => {
     managersCount: 0 
   });
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [isCreatingCEO, setIsCreatingCEO] = useState(false);
   
-  const { employees } = useEmployeeData();
+  const { employees, refetchEmployees } = useEmployeeData();
   const { departments, refetch: refetchDepartments } = useFirebaseDepartments();
   
   // Fonction pour rafraîchir la hiérarchie manuellement
@@ -25,7 +29,50 @@ export const useHierarchyData = () => {
     console.log("Rafraîchissement manuel de la hiérarchie");
     setRefreshCounter(prev => prev + 1);
     refetchDepartments();
-  }, [refetchDepartments]);
+    refetchEmployees();
+  }, [refetchDepartments, refetchEmployees]);
+  
+  // Fonction pour créer automatiquement un PDG si aucun n'existe
+  const createDefaultCEO = useCallback(async () => {
+    if (isCreatingCEO) return;
+    
+    try {
+      setIsCreatingCEO(true);
+      const departmentId = departments?.[0]?.id || '';
+      
+      // Créer un nouvel employé PDG
+      const newCEO = {
+        firstName: "Direction",
+        lastName: "Générale",
+        email: "direction@entreprise.com",
+        phone: "",
+        position: "PDG",
+        department: departmentId,
+        departmentId: departmentId,
+        status: "active",
+        photo: "",
+        isManager: true,
+        professionalEmail: "direction@entreprise.com",
+        contract: "cdi",
+        hireDate: new Date().toISOString().split('T')[0],
+        forceManager: true,
+      };
+      
+      console.log("Création d'un PDG par défaut:", newCEO);
+      const result = await addDocument(COLLECTIONS.HR.EMPLOYEES, newCEO);
+      
+      if (result && result.id) {
+        toast.success("Un PDG par défaut a été créé pour initialiser l'organigramme");
+        await refetchEmployees();
+        setRefreshCounter(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création du PDG par défaut:", error);
+      toast.error("Impossible de créer un PDG par défaut");
+    } finally {
+      setIsCreatingCEO(false);
+    }
+  }, [departments, isCreatingCEO, refetchEmployees]);
   
   // S'abonner aux mises à jour des départements et des employés
   useEffect(() => {
@@ -56,20 +103,27 @@ export const useHierarchyData = () => {
     
     // Trouver le PDG ou le dirigeant principal (sans manager)
     const ceo = employees.find(emp => 
-      !emp.managerId && 
+      (!emp.managerId || emp.forceManager === true) && 
       (emp.position?.toLowerCase().includes('pdg') || 
        emp.position?.toLowerCase().includes('ceo') || 
-       emp.position?.toLowerCase().includes('directeur général'))
+       emp.position?.toLowerCase().includes('directeur général') ||
+       emp.position?.toLowerCase().includes('président') ||
+       emp.position?.toLowerCase().includes('direction'))
     );
     
     if (!ceo) {
       console.log("Aucun dirigeant principal trouvé dans les données");
+      setHierarchyData(null);
       return;
     }
     
+    console.log("PDG/Dirigeant principal trouvé:", ceo.firstName, ceo.lastName, ceo.position);
+    
     // Fonction récursive pour construire l'arbre hiérarchique
     const buildHierarchyTree = (manager: Employee): HierarchyNode => {
-      const subordinates = employees.filter(emp => emp.managerId === manager.id);
+      const subordinates = employees.filter(emp => emp.managerId === manager.id && emp.id !== manager.id);
+      
+      console.log(`${manager.firstName} ${manager.lastName} a ${subordinates.length} subordonnés directs`);
       
       // Trouver le département du manager
       const managerDept = departments?.find(dept => 
@@ -89,6 +143,7 @@ export const useHierarchyData = () => {
     
     // Construire l'arbre à partir du PDG
     const hierarchyTree = buildHierarchyTree(ceo);
+    console.log("Arbre hiérarchique construit:", hierarchyTree);
     setHierarchyData(hierarchyTree);
     
     // Mettre à jour les statistiques des départements
@@ -110,6 +165,7 @@ export const useHierarchyData = () => {
     hierarchyData,
     departmentStats,
     isLoading: !hierarchyData,
-    refreshHierarchy
+    refreshHierarchy,
+    createDefaultCEO
   };
 };

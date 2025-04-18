@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -7,6 +7,7 @@ import OrgChartNode from './components/OrgChartNode';
 import TreeViewNode from './components/TreeViewNode';
 import { Employee } from '@/types/employee';
 import { ChartNode, HierarchyVisualizationProps } from './types';
+import EmptyHierarchy from './components/EmptyHierarchy';
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
   viewMode, 
@@ -69,6 +70,15 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
     setSelectedEmployee(employee);
   };
 
+  // Vérifier si nous avons des données valides pour afficher la hiérarchie
+  const hasValidHierarchyData = useMemo(() => {
+    return data && 
+           (('position' in data && data.position) || 
+            ('title' in data && data.title)) &&
+           data.children &&
+           data.id;
+  }, [data]);
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -80,28 +90,20 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
           
           <TabsContent value="orgChart" className="min-h-[400px]">
             <div className="mt-4 space-y-8">
-              {data && 'position' in data ? (
+              {hasValidHierarchyData ? (
                 renderOrgChartNodes([data as ChartNode])
-              ) : data && !('position' in data) ? (
-                <div>Displaying hierarchy data...</div>
               ) : (
-                <div className="text-center text-gray-500 py-8">
-                  Aucune hiérarchie d'employé n'a été trouvée.
-                </div>
+                <EmptyHierarchy onRefresh={onRefresh} />
               )}
             </div>
           </TabsContent>
           
           <TabsContent value="treeView" className="min-h-[400px]">
             <div className="mt-4">
-              {data && 'position' in data ? (
+              {hasValidHierarchyData ? (
                 renderTreeViewNodes([data as ChartNode])
-              ) : data && !('position' in data) ? (
-                <div>Displaying hierarchy data...</div>
               ) : (
-                <div className="text-center text-gray-500 py-8">
-                  Aucune hiérarchie d'employé n'a été trouvée.
-                </div>
+                <EmptyHierarchy onRefresh={onRefresh} />
               )}
             </div>
           </TabsContent>
