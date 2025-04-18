@@ -51,9 +51,9 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
           
           // Also set the photoMeta with all required fields
           form.setValue('photoMeta', {
-            fileName: file.name,         // Required field
-            fileType: file.type,         // Required field
-            fileSize: file.size,         // Required field
+            fileName: file.name || `photo_${Date.now()}.jpg`,         // Required field
+            fileType: file.type || 'image/jpeg',         // Required field
+            fileSize: file.size || 100000,         // Required field
             updatedAt: new Date().toISOString(), // Required field
             data: base64Data            // Optional field
           });
