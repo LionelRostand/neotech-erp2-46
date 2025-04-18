@@ -11,7 +11,7 @@ export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<bool
     // 1. Sauvegarder la fiche de paie dans Firestore
     const savedPayslip = await savePaySlip({
       ...payslipData,
-      date: new Date().toISOString()
+      status: 'Généré'
     });
 
     if (!savedPayslip) {
@@ -19,7 +19,13 @@ export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<bool
     }
 
     // 2. Générer le PDF
-    const doc = generatePayslipPdf(payslipData);
+    const doc = generatePayslipPdf({
+      ...payslipData,
+      employerName: payslipData.employerName,
+      employerAddress: payslipData.employerAddress,
+      employerSiret: payslipData.employerSiret
+    });
+    
     const pdfBase64 = doc.output('datauristring');
 
     // 3. Construire le nom du fichier
@@ -37,7 +43,8 @@ export const generateAndSavePayslip = async (payslipData: PaySlip): Promise<bool
         date: new Date().toISOString(),
         fileType: 'application/pdf',
         fileData: pdfBase64,
-        employeeId: payslipData.employeeId
+        employeeId: payslipData.employeeId,
+        status: 'Généré'
       };
 
       await addEmployeeDocument(payslipData.employeeId, documentData);

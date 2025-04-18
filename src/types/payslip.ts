@@ -3,9 +3,9 @@ export interface PaySlipEmployee {
   firstName: string;
   lastName: string;
   employeeId: string;
-  role: string;
-  socialSecurityNumber: string;
-  startDate: string;
+  role?: string;
+  socialSecurityNumber?: string;
+  startDate?: string;
 }
 
 export interface PaySlipDetail {
@@ -19,6 +19,7 @@ export interface PaySlipDetail {
 
 export interface PaySlip {
   id: string;
+  employeeId: string;
   employee: PaySlipEmployee;
   period: string;
   details: PaySlipDetail[];
@@ -30,6 +31,11 @@ export interface PaySlip {
   employerName: string;
   employerAddress: string;
   employerSiret: string;
+  paymentMethod?: string;
+  month?: string;
+  year?: number;
+  status?: "draft" | "published" | "paid" | "Généré" | "Envoyé" | "Validé";
+  date?: string;
   // Champs spécifiques pour la législation française
   conges?: {
     acquired: number;
@@ -46,14 +52,4 @@ export interface PaySlip {
     netSalary: number;
     taxableIncome: number;
   };
-  status?: "draft" | "published" | "paid" | "Généré" | "Envoyé" | "Validé";
-  date?: string;
-  employeeId?: string;
-  employeeName?: string;
-  month?: string;
-  year?: number;
-  
-  // Adding the missing properties
-  paymentMethod?: string;
-  notes?: string;
 }
