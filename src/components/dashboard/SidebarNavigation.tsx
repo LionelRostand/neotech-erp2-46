@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LayoutDashboard, Package } from 'lucide-react';
 import NavLink from './NavLink';
@@ -25,11 +26,19 @@ interface SidebarNavigationProps {
 const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps) => {
   const location = useLocation();
   const { focusedSection } = useSidebar();
-  const { userData } = useAuth();
+  const { userData, isAdmin } = useAuth();
   
   console.log('User Data:', userData); // Debugging log
-  const isAdmin = userData?.email === 'admin@neotech-consulting.com';
-  console.log('Is Admin:', isAdmin); // Debugging log
+  console.log('Is Admin from useAuth:', isAdmin); // Get isAdmin directly from useAuth
+  
+  // Fallback admin detection in case isAdmin from useAuth is not available
+  const isAdminByEmail = userData?.email === 'admin@neotech-consulting.com';
+  const isAdminByRole = userData?.role === 'admin';
+  const finalIsAdmin = isAdmin || isAdminByEmail || isAdminByRole;
+  
+  console.log('Is Admin by Email:', isAdminByEmail);
+  console.log('Is Admin by Role:', isAdminByRole);
+  console.log('Final Is Admin:', finalIsAdmin);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
@@ -76,7 +85,7 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </AccordionItem>
       </Accordion>
       
-      {isAdmin && (
+      {finalIsAdmin && (
         <NavLink
           icon={<Package size={18} />}
           label="Gérer les applications"

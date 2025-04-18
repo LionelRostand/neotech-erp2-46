@@ -4,11 +4,16 @@ import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/co
 import { useAuth } from './useAuth';
 
 export const usePermissions = (moduleId?: string) => {
-  const { currentUser, isOffline } = useAuth();
+  const { currentUser, isOffline, isAdmin: authIsAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
   const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(authIsAdmin);
+
+  useEffect(() => {
+    // Update isAdmin when authIsAdmin changes
+    setIsAdmin(authIsAdmin);
+  }, [authIsAdmin]);
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -23,10 +28,12 @@ export const usePermissions = (moduleId?: string) => {
         
         if (userPermissions) {
           setPermissions(userPermissions.permissions);
-          setIsAdmin(!!userPermissions.isAdmin);
+          // Use both the permissions isAdmin flag and the auth isAdmin flag
+          setIsAdmin(authIsAdmin || !!userPermissions.isAdmin);
         } else {
           setPermissions(null);
-          setIsAdmin(false);
+          // Still use the auth isAdmin flag if permissions couldn't be loaded
+          setIsAdmin(authIsAdmin);
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des permissions:', error);
@@ -37,15 +44,18 @@ export const usePermissions = (moduleId?: string) => {
     };
 
     fetchPermissions();
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, authIsAdmin]);
 
   const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
     if (!currentUser?.uid) return false;
     
+    if (isAdmin) {
+      return true; // Admin has all permissions
+    }
+    
     if (isOffline) {
       console.log('Mode hors ligne: utilisation des permissions en cache');
       // En mode hors ligne, on utilise les permissions déjà chargées
-      if (isAdmin) return true;
       return !!permissions?.[module]?.[action];
     }
 
