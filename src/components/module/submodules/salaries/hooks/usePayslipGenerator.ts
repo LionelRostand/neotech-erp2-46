@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -31,7 +30,6 @@ export const usePayslipGenerator = () => {
       if (typeof employee.company === 'object') {
         company = employee.company;
       } else {
-        // Try to find company information from other employees
         const employeeWithCompanyObject = employees.find(emp => 
           typeof emp.company === 'object' && emp.company.id === companyId
         );
@@ -60,7 +58,6 @@ export const usePayslipGenerator = () => {
         } else {
           setSelectedCompanyId(employee.company);
           
-          // Try to find company information from other employees
           const employeeWithCompanyObject = employeesList.find(emp => 
             typeof emp.company === 'object' && emp.company.id === employee.company
           );
@@ -74,7 +71,6 @@ export const usePayslipGenerator = () => {
   };
 
   const validateData = (): boolean => {
-    // Log values for debugging
     console.log("Validation des données:", {
       selectedEmployeeId,
       selectedCompanyId,
@@ -103,6 +99,53 @@ export const usePayslipGenerator = () => {
     }
 
     return true;
+  };
+
+  const generatePayslipDetails = (gross: number, overtimeHours: number, overtimeRate: number): PaySlip['details'] => {
+    const baseHourlyRate = gross / 151.67; // Taux horaire de base
+    const overtimeAmount = overtimeHours * baseHourlyRate * (1 + overtimeRate / 100);
+    
+    const healthInsurance = gross * 0.073; // 7.3% Assurance maladie
+    const pensionContribution = gross * 0.0315; // 3.15% Cotisation retraite
+    const unemploymentInsurance = gross * 0.024; // 2.4% Assurance chômage
+
+    return [
+      {
+        label: 'Salaire de base',
+        base: '151.67 h',
+        rate: `${baseHourlyRate.toFixed(2)} €/h',
+        amount: gross,
+        type: 'earning'
+      },
+      {
+        label: 'Heures supplémentaires',
+        base: `${overtimeHours} h`,
+        rate: `${overtimeRate}%`,
+        amount: overtimeAmount,
+        type: 'earning'
+      },
+      {
+        label: 'Assurance maladie',
+        base: `${gross.toFixed(2)} €`,
+        rate: '7.3%',
+        amount: healthInsurance,
+        type: 'deduction'
+      },
+      {
+        label: 'Cotisation retraite',
+        base: `${gross.toFixed(2)} €`,
+        rate: '3.15%',
+        amount: pensionContribution,
+        type: 'deduction'
+      },
+      {
+        label: 'Assurance chômage',
+        base: `${gross.toFixed(2)} €`,
+        rate: '2.4%',
+        amount: unemploymentInsurance,
+        type: 'deduction'
+      }
+    ];
   };
 
   const generatePayslip = async () => {
@@ -139,18 +182,22 @@ export const usePayslipGenerator = () => {
       grossSalary: Number(grossSalary),
       netSalary: calculateNetSalary(Number(grossSalary)),
       totalDeductions: calculateDeductions(Number(grossSalary)),
-      hoursWorked: 151.67, // Durée légale mensuelle en France
+      hoursWorked: 151.67,
       paymentDate: new Date().toISOString(),
       details: generatePayslipDetails(Number(grossSalary), Number(overtimeHours), Number(overtimeRate)),
       status: 'Généré',
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      conges: {
+        acquired: 25,
+        taken: 0,
+        balance: 25
+      },
+      rtt: {
+        acquired: 12,
+        taken: 0,
+        balance: 12
+      }
     };
-
-    console.log("Données pour fiche de paie:", { 
-      employeeId: selectedEmployeeId, 
-      companyId: selectedCompanyId,
-      selectedCompany
-    });
 
     try {
       const success = await generateAndSavePayslip(payslipData);
@@ -174,36 +221,7 @@ export const usePayslipGenerator = () => {
   };
 
   const calculateDeductions = (gross: number): number => {
-    // Taux de charges sociales simplifié pour l'exemple (23%)
     return gross * 0.23;
-  };
-
-  const generatePayslipDetails = (gross: number, overtimeHours: number, overtimeRate: number): PaySlip['details'] => {
-    const baseHourlyRate = gross / 151.67; // Taux horaire de base
-    const overtimeAmount = overtimeHours * baseHourlyRate * (1 + overtimeRate / 100);
-
-    return [
-      {
-        label: 'Salaire de base',
-        base: '151.67 h',
-        amount: gross,
-        type: 'earning'
-      },
-      {
-        label: 'Heures supplémentaires',
-        base: `${overtimeHours} h`,
-        rate: `${overtimeRate}%`,
-        amount: overtimeAmount,
-        type: 'earning'
-      },
-      {
-        label: 'Cotisations sociales',
-        base: `${gross}`,
-        rate: '23%',
-        amount: calculateDeductions(gross),
-        type: 'deduction'
-      }
-    ];
   };
 
   return {
