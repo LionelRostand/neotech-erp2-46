@@ -41,7 +41,14 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
           className="w-24 h-24 rounded-full bg-neotech-primary flex items-center justify-center text-white text-4xl font-bold shadow-lg"
           animate={{ 
             scale: [1, 1.1, 1],
-            rotate: [0, 5, 0, -5, 0]
+            rotate: [0, 5, 0, -5, 0],
+            boxShadow: [
+              '0 0 0px rgba(0,0,0,0)',
+              '0 0 10px rgba(0,0,0,0.2)',
+              '0 0 20px rgba(0,0,0,0.3)',
+              '0 0 30px rgba(0,0,0,0.2)',
+              '0 0 0px rgba(0,0,0,0)'
+            ]
           }}
           transition={{ 
             duration: 4,
