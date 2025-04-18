@@ -13,7 +13,7 @@ export interface HierarchyNode {
   children: HierarchyNode[];
 }
 
-export type ChartNode = Omit<HierarchyNode, 'employee'> & {
+export type ChartNode = {
   id: string;
   name: string;
   position: string;
@@ -21,6 +21,7 @@ export type ChartNode = Omit<HierarchyNode, 'employee'> & {
   departmentColor?: string;
   imageUrl?: string;
   children: ChartNode[];
+  employee?: Employee; // Make employee optional in ChartNode
 };
 
 export type { Employee };

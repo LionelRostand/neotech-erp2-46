@@ -70,4 +70,5 @@ export interface RecruitmentPost {
   applicationCount?: number;
   applications_count?: number;
   interviews_scheduled?: number;
+  proposedSalary?: number; // Added this property
 }

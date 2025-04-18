@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -13,13 +14,14 @@ import {
   User, 
   Calendar, 
   MapPin, 
+  FileText, 
   Briefcase, 
-  TrendingUp, 
+  Check, 
+  Edit, 
   DollarSign,
-  Users
-} from 'lucide-react';
+  Tag
+} from "lucide-react";
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { RecruitmentPost } from '@/types/recruitment';
 import EditRecruitmentDialog from './EditRecruitmentDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +43,25 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [proposedSalary, setProposedSalary] = useState('');
   const { toast } = useToast();
+
+  // Early return with null if the dialog shouldn't be open
+  if (!open) return null;
+  
+  // If recruitment is null, render a placeholder or loading state
+  if (!recruitment) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Détails de l'offre</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center text-gray-500">
+            Aucune donnée disponible pour cette offre.
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const handleProposeSalary = async () => {
     if (!recruitment || !recruitment.id) return;
@@ -73,154 +94,133 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
         return 'bg-green-100 text-green-800';
       case 'En cours':
         return 'bg-blue-100 text-blue-800';
-      case 'Fermée':
-        return 'bg-amber-100 text-amber-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'Haute':
-      case 'High':
-        return 'bg-red-100 text-red-800';
-      case 'Moyenne':
-      case 'Medium':
+      case 'Entretiens':
+        return 'bg-purple-100 text-purple-800';
+      case 'Offre':
         return 'bg-orange-100 text-orange-800';
-      case 'Basse':
-      case 'Low':
-        return 'bg-blue-100 text-blue-800';
+      case 'Fermée':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const formatSalary = (salary: any): string => {
-    if (!salary) return 'Non précisé';
-    if (typeof salary === 'string') return salary;
-    if (typeof salary === 'object' && 'min' in salary && 'max' in salary) {
-      return `${salary.min}-${salary.max} ${salary.currency || '€'}`;
-    }
-    return 'Non précisé';
-  };
-
-  const formatContractType = (type: string): string => {
-    switch (type) {
-      case 'full-time': return 'Temps plein';
-      case 'part-time': return 'Temps partiel';
-      case 'temporary': return 'Temporaire';
-      case 'internship': return 'Stage';
-      case 'freelance': return 'Freelance';
-      default: return type;
-    }
-  };
-
-  const handleEditSuccess = () => {
-    toast({
-      title: "Mise à jour réussie",
-      description: "Les informations du recrutement ont été mises à jour."
-    });
-    // In a real app, we would refresh the data here
-  };
-
+  // Now we're sure recruitment is not null, safe to use its properties
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">{recruitment.position}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6 py-4">
-            {/* Header with key info */}
-            <div className="flex flex-wrap gap-3 items-center">
-              <Badge variant="outline" className={getStatusColor(recruitment.status)}>
+            <DialogTitle className="flex justify-between items-center">
+              <span>{recruitment.position}</span>
+              <Badge className={getStatusColor(recruitment.status)}>
                 {recruitment.status}
               </Badge>
-              <Badge variant="outline" className={getPriorityColor(recruitment.priority)}>
-                Priorité: {recruitment.priority}
-              </Badge>
-              <div className="text-sm text-gray-500 ml-auto">
-                Ouvert le {recruitment.openDate || recruitment.publishDate}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-2">
+                  <Briefcase className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Département</h3>
+                    <p className="text-gray-600">{recruitment.department}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Localisation</h3>
+                    <p className="text-gray-600">{recruitment.location}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <DollarSign className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Salaire</h3>
+                    <p className="text-gray-600">
+                      {typeof recruitment.salary === 'object' 
+                        ? `${recruitment.salary.min} - ${recruitment.salary.max} ${recruitment.salary.currency}`
+                        : recruitment.salary || 'Non spécifié'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <User className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Responsable</h3>
+                    <p className="text-gray-600">{recruitment.hiringManagerName || 'Non assigné'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Date d'ouverture</h3>
+                    <p className="text-gray-600">{recruitment.openDate || recruitment.publishDate}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Date limite</h3>
+                    <p className="text-gray-600">{recruitment.applicationDeadline || recruitment.closingDate || 'Non spécifiée'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <Tag className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Type de contrat</h3>
+                    <p className="text-gray-600">
+                      {recruitment.contractType === 'full-time' ? 'CDI' : 
+                       recruitment.contractType === 'part-time' ? 'Temps partiel' :
+                       recruitment.contractType === 'temporary' ? 'CDD' :
+                       recruitment.contractType === 'internship' ? 'Stage' :
+                       recruitment.contractType === 'freelance' ? 'Freelance' :
+                       recruitment.contractType || 'Non spécifié'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <FileText className="h-5 w-5 text-gray-500 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Candidatures</h3>
+                    <p className="text-gray-600">
+                      {recruitment.applicationCount || recruitment.applications_count || 0} candidat(s)
+                      {recruitment.interviews_scheduled ? ` · ${recruitment.interviews_scheduled} entretien(s) programmé(s)` : ''}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
             
-            {/* Key details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center">
-                <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Type:</span> {formatContractType(recruitment.contractType)}
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Localisation:</span> {recruitment.location}
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                <Users className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Département:</span> {recruitment.department}
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Salaire:</span> {formatSalary(recruitment.salary)}
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Responsable:</span> {recruitment.hiringManagerName || 'Non spécifié'}
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Date limite:</span> {recruitment.applicationDeadline || recruitment.closingDate || 'Non définie'}
-                </span>
-              </div>
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-2">Description</h3>
+              <p className="text-gray-600 whitespace-pre-line">{recruitment.description}</p>
             </div>
             
-            <Separator />
-            
-            {/* Description */}
-            <div className="space-y-3">
-              <h3 className="font-medium">Description du poste</h3>
-              <p className="text-sm text-gray-700 whitespace-pre-line">
-                {recruitment.description}
-              </p>
-            </div>
-            
-            {/* Requirements */}
-            <div className="space-y-3">
-              <h3 className="font-medium">Prérequis et compétences</h3>
-              <p className="text-sm text-gray-700 whitespace-pre-line">
-                {typeof recruitment.requirements === 'string'
-                  ? recruitment.requirements
-                  : Array.isArray(recruitment.requirements)
-                    ? recruitment.requirements.join('\n')
-                    : 'Non précisé'
-                }
-              </p>
-            </div>
-            
-            {/* Application stats */}
-            <div className="bg-gray-50 p-3 rounded-md">
-              <div className="flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm">
-                  <span className="font-medium">Candidatures reçues:</span> {recruitment.applicationCount || recruitment.applications_count || 0}
-                </span>
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-2">Exigences</h3>
+              <div className="text-gray-600">
+                {Array.isArray(recruitment.requirements) ? (
+                  <ul className="list-disc list-inside">
+                    {recruitment.requirements.map((req, i) => (
+                      <li key={i}>{req}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="whitespace-pre-line">{recruitment.requirements}</p>
+                )}
               </div>
             </div>
             
@@ -261,22 +261,32 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Fermer
-            </Button>
-            <Button onClick={() => setShowEditDialog(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditDialog(true)}
+              className="gap-1"
+            >
+              <Edit className="h-4 w-4" />
               Modifier
+            </Button>
+            <Button onClick={() => onOpenChange(false)}>
+              <Check className="h-4 w-4 mr-1" />
+              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <EditRecruitmentDialog 
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        recruitment={recruitment}
-        onSuccess={handleEditSuccess}
-      />
+      
+      {showEditDialog && (
+        <EditRecruitmentDialog
+          open={showEditDialog}
+          onOpenChange={(open) => {
+            setShowEditDialog(open);
+            if (!open) onOpenChange(false);
+          }}
+          recruitment={recruitment}
+        />
+      )}
     </>
   );
 };
