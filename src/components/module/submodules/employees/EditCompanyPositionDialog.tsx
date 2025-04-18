@@ -34,14 +34,17 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(editSchema),
     defaultValues: {
-      company: employee.company || '',
+      company: typeof employee.company === 'string' ? employee.company : employee.company?.name || '',
       position: employee.position || '',
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     try {
-      if (!employee.id) return;
+      if (!employee.id) {
+        toast.error('ID de l\'employé non trouvé');
+        return;
+      }
       
       const updatedEmployee = await updateEmployee(employee.id, data);
       

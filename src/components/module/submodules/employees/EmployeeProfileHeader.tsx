@@ -77,8 +77,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
       return employee.company;
     }
     
-    const company = employee.company as Company;
-    return company.name || 'Non spécifiée';
+    return employee.company.name || 'Non spécifiée';
   };
 
   const handleEmployeeUpdated = (updatedEmployee: Employee) => {
@@ -113,7 +112,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="h-4 w-4" />
                   <p className="text-sm">
-                    {employee.position || 'Poste non spécifié'} @ {employee.company || 'Non spécifiée'}
+                    {employee.position || 'Poste non spécifié'} @ {getCompanyName()}
                     <Button
                       variant="ghost"
                       size="icon"
