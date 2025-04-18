@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
-import { updateEmployee } from '@/hooks/firebase/update-operations';
+import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
@@ -59,9 +59,9 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
 
       // Mettre à jour l'employé dans Firestore
       if (employee.id) {
-        const success = await updateEmployee(COLLECTIONS.HR.EMPLOYEES, employee.id, updatedData);
+        const result = await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, updatedData);
         
-        if (success) {
+        if (result) {
           toast.success("Informations professionnelles mises à jour avec succès");
           
           // Mettre à jour l'employé dans l'interface
