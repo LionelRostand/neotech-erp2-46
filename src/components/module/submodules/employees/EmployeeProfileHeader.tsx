@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Mail, Phone, MapPin, IdCard, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Briefcase, Mail, Phone, MapPin, IdCard, Building2, Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
+import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -15,12 +17,12 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
   employee, 
   onEmployeeUpdate 
 }) => {
-  // Fonction pour obtenir les initiales de l'employé
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
   const getInitials = () => {
     return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
   };
 
-  // Fonction pour définir le statut avec le bon style
   const getStatusBadge = () => {
     switch (employee.status) {
       case 'active':
@@ -39,9 +41,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     }
   };
 
-  // Sélectionner l'URL de la photo à utiliser
   const getPhotoUrl = () => {
-    // Vérifier chaque propriété d'image dans un ordre de priorité logique
     const sources = [
       { name: 'photoData', value: employee.photoData },
       { name: 'photoURL', value: employee.photoURL },
@@ -55,12 +55,10 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
       }
     }
 
-    // Si aucune source n'est trouvée, on retourne une chaîne vide
     console.log("Aucune source d'image valide trouvée pour l'employé:", employee.id);
     return '';
   };
 
-  // Adresse formatée pour l'affichage
   const getFormattedAddress = () => {
     const parts = [
       employee.streetNumber,
@@ -72,7 +70,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     return parts.length > 0 ? parts.join(', ') : 'Adresse non renseignée';
   };
 
-  // Helper method to get company name
   const getCompanyName = () => {
     if (!employee.company) return 'Non spécifiée';
     
@@ -82,6 +79,12 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     
     const company = employee.company as Company;
     return company.name || 'Non spécifiée';
+  };
+
+  const handleEmployeeUpdated = (updatedEmployee: Employee) => {
+    if (onEmployeeUpdate) {
+      onEmployeeUpdate(updatedEmployee);
+    }
   };
 
   return (
@@ -109,7 +112,17 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="h-4 w-4" />
-                  <p className="text-sm">{employee.position || 'Poste non spécifié'} @ {getCompanyName()}</p>
+                  <p className="text-sm">
+                    {employee.position || 'Poste non spécifié'} @ {employee.company || 'Non spécifiée'}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-2 h-6 w-6"
+                      onClick={() => setShowEditDialog(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -149,6 +162,13 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
           </div>
         </div>
       </CardContent>
+
+      <EditCompanyPositionDialog 
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        employee={employee}
+        onEmployeeUpdated={handleEmployeeUpdated}
+      />
     </Card>
   );
 };

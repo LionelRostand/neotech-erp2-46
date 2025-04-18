@@ -1,8 +1,9 @@
 
-import { HierarchyNode, ChartNode } from '../types';
+import type { Employee } from '@/types/employee';
 
-// Re-export the types to make them available from this location
-export { HierarchyNode, ChartNode };
+export interface HierarchyNode {
+  employee: Employee;
+  children: HierarchyNode[];
+}
 
-// Add any additional hierarchy-specific types here
-
+export type { Employee };
