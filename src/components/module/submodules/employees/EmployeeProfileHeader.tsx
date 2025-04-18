@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Mail, Phone, Building2, Pencil } from 'lucide-react';
+import { Briefcase, Mail, Phone, Building2, Pencil, MapPin, Calendar, IdCard } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
@@ -41,29 +41,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     }
   };
 
-  const getPhotoUrl = () => {
-    const sources = [
-      { name: 'photoData', value: employee.photoData },
-      { name: 'photoURL', value: employee.photoURL },
-      { name: 'photo', value: employee.photo }
-    ];
-    
-    for (const source of sources) {
-      if (source.value && typeof source.value === 'string' && source.value.length > 0) {
-        console.log(`Utilisation de la source d'image: ${source.name}`);
-        return source.value;
-      }
-    }
-
-    console.log("Aucune source d'image valide trouvée pour l'employé:", employee.id);
-    return '';
-  };
-
-  const getEmail = () => {
-    // Prioritize professional email if available
-    return employee.professionalEmail || employee.email || '';
-  };
-
   const getCompanyName = () => {
     if (!employee.company) return 'Non spécifiée';
     
@@ -87,14 +64,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
           <div className="flex flex-col items-center">
             <Avatar className="w-24 h-24 border-2 border-primary/10 mb-2">
               <AvatarImage 
-                src={getPhotoUrl()} 
+                src={employee.photoURL || employee.photo} 
                 alt={`${employee.firstName} ${employee.lastName}`} 
               />
               <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
             </Avatar>
           </div>
           
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
@@ -121,22 +98,55 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 py-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span>{employee.department || 'Département non spécifié'}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Informations personnelles</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>Date de naissance : {employee.birthDate || 'Non renseignée'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{employee.email || 'Email non renseigné'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{employee.phone || 'Téléphone non renseigné'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {typeof employee.address === 'string' 
+                        ? employee.address 
+                        : employee.address 
+                          ? `${employee.address.street}, ${employee.address.city} ${employee.address.postalCode}` 
+                          : 'Adresse non renseignée'}
+                    </span>
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{employee.phone || 'Non renseigné'}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span title={employee.professionalEmail ? "Email professionnel" : "Email personnel"}>
-                  {getEmail()}
-                </span>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Informations professionnelles</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    <span>Poste : {employee.position || 'Non spécifié'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span>Département : {employee.department || 'Non spécifié'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>Date d'embauche : {employee.hireDate || 'Non renseignée'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <IdCard className="h-4 w-4 text-muted-foreground" />
+                    <span>Type de contrat : {employee.contract || 'Non spécifié'}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
