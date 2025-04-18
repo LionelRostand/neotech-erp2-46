@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
-import { Settings, ChevronRight, Menu } from 'lucide-react';
+import { Settings, ChevronRight, Menu, Globe, Lock, Mail, Shield } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import NavLink from './NavLink';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
