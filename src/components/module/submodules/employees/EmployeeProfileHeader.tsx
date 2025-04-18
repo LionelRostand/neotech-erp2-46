@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Mail, Phone, MapPin } from 'lucide-react';
+import { Briefcase, Mail, Phone, MapPin, IdCard } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 
@@ -73,13 +73,21 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     <Card className="w-full">
       <CardContent className="pt-6">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <Avatar className="w-24 h-24 border-2 border-primary/10">
-            <AvatarImage 
-              src={getPhotoUrl()} 
-              alt={`${employee.firstName} ${employee.lastName}`} 
-            />
-            <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
-          </Avatar>
+          <div className="flex flex-col items-center">
+            <Avatar className="w-24 h-24 border-2 border-primary/10 mb-2">
+              <AvatarImage 
+                src={getPhotoUrl()} 
+                alt={`${employee.firstName} ${employee.lastName}`} 
+              />
+              <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
+            </Avatar>
+            
+            {/* New section to display employee ID */}
+            <div className="flex items-center text-sm text-muted-foreground">
+              <IdCard className="h-4 w-4 mr-2" />
+              <span>{employee.id || 'ID non disponible'}</span>
+            </div>
+          </div>
           
           <div className="flex-1 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -121,3 +129,4 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 };
 
 export default EmployeeProfileHeader;
+
