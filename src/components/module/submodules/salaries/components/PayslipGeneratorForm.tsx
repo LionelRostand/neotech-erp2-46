@@ -7,6 +7,7 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CompanySelect from './CompanySelect';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
+import { toast } from 'sonner';
 
 const PayslipGeneratorForm: React.FC = () => {
   const { employees } = useEmployeeData();
@@ -44,9 +45,38 @@ const PayslipGeneratorForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payslip = generatePayslip();
-    console.log("Fiche de paie générée:", payslip);
-    setShowPreview(true);
+    
+    // Validate form before generating payslip
+    if (!selectedEmployeeId) {
+      toast.error("Veuillez sélectionner un employé");
+      return;
+    }
+    
+    if (!selectedCompanyId) {
+      toast.error("Veuillez sélectionner une entreprise");
+      return;
+    }
+    
+    if (!period) {
+      toast.error("Veuillez sélectionner une période");
+      return;
+    }
+    
+    if (!grossSalary || Number(grossSalary) <= 0) {
+      toast.error("Le salaire brut doit être supérieur à 0");
+      return;
+    }
+    
+    // Generate the payslip according to French labor laws
+    try {
+      const payslip = generatePayslip();
+      console.log("Fiche de paie générée:", payslip);
+      setShowPreview(true);
+      toast.success("Fiche de paie générée avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la génération de la fiche de paie:", error);
+      toast.error("Erreur lors de la génération de la fiche de paie");
+    }
   };
 
   const handleEmployeeChange = (employeeId: string) => {
@@ -139,6 +169,7 @@ const PayslipGeneratorForm: React.FC = () => {
             onChange={(e) => setOvertimeRate(e.target.value)}
             placeholder="Pourcentage de majoration"
           />
+          <p className="text-xs text-gray-500 mt-1">Selon le Code du travail français : 25% pour les 8 premières heures, 50% au-delà</p>
         </div>
       </div>
       
