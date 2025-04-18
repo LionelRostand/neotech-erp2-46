@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Search, Bell, Mail, User, Key, Languages, Shield, LogOut } from 'lucide-react';
+import { useAlertsData } from '@/hooks/useAlertsData';
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu,
@@ -18,9 +18,11 @@ import { signOut } from 'firebase/auth';
 import { toast } from 'sonner';
 
 const TopBar = () => {
+  const { alerts } = useAlertsData();
+  const activeAlerts = alerts?.filter(alert => alert.status === 'Active').length || 0;
+  
   const navigate = useNavigate();
 
-  // Fonction de déconnexion
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -47,11 +49,18 @@ const TopBar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="relative"
+            onClick={() => navigate('/modules/employees/alerts')}
+          >
             <Bell size={20} />
-            <span className="absolute top-0 right-0 w-4 h-4 bg-neotech-primary text-white rounded-full text-xs flex items-center justify-center">
-              2
-            </span>
+            {activeAlerts > 0 && (
+              <span className="absolute top-0 right-0 w-4 h-4 bg-neotech-primary text-white rounded-full text-xs flex items-center justify-center">
+                {activeAlerts}
+              </span>
+            )}
           </Button>
           
           <Button variant="ghost" size="icon" className="relative">

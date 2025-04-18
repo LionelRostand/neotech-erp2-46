@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface CreateAlertDialogProps {
   onClose: () => void;
@@ -48,30 +50,33 @@ const CreateAlertDialog: React.FC<CreateAlertDialogProps> = ({ onClose }) => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // Simuler l'envoi de données à Firebase
-    const newAlert = {
-      id: uuidv4(),
-      title: data.title,
-      type: data.type,
-      severity: data.severity,
-      status: "Active",
-      description: data.description,
-      employeeId: data.employeeId || null,
-      assignedToId: data.assignedToId || null,
-      createdDate: new Date().toISOString(),
-    };
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      // Créer l'alerte dans Firestore
+      const alertData = {
+        ...data,
+        status: "Active",
+        createdDate: new Date().toISOString(),
+      };
 
-    console.log("Nouvelle alerte à ajouter:", newAlert);
+      await addDoc(collection(db, COLLECTIONS.HR.ALERTS), alertData);
 
-    // Afficher une notification
-    toast({
-      title: "Alerte créée",
-      description: "La nouvelle alerte a été créée avec succès"
-    });
+      // Afficher une notification
+      toast({
+        title: "Alerte créée",
+        description: "La nouvelle alerte a été créée avec succès"
+      });
 
-    // Fermer le dialogue
-    onClose();
+      // Fermer le dialogue
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la création de l'alerte:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création de l'alerte",
+        variant: "destructive"
+      });
+    }
   };
 
   const alertTypes = ['Contrat', 'Absence', 'Document', 'Congé', 'Évaluation', 'Autre'];
