@@ -9,6 +9,25 @@ interface ModuleAnimationProps {
   animationStep: number;
 }
 
+// Define an array of colors for modules
+const moduleColors = [
+  'bg-purple-500',
+  'bg-blue-500',
+  'bg-green-500',
+  'bg-yellow-500',
+  'bg-red-500',
+  'bg-pink-500',
+  'bg-indigo-500',
+  'bg-teal-500',
+  'bg-orange-500',
+  'bg-cyan-500',
+  'bg-lime-500',
+  'bg-emerald-500',
+  'bg-violet-500',
+  'bg-fuchsia-500',
+  'bg-rose-500',
+];
+
 const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: ModuleAnimationProps) => {
   return (
     <motion.div 
@@ -40,6 +59,7 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
             const module = modules.find(m => m.id === moduleId);
             if (!module) return null;
             
+            const colorIndex = index % moduleColors.length;
             const angle = (index * (360 / visibleModules.length) + animationStep * 5) % 360;
             const radius = 180;
             const x = radius * Math.cos(angle * Math.PI / 180);
@@ -48,7 +68,7 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
             return (
               <motion.div
                 key={module.id}
-                className="absolute bg-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ring-2 ring-neotech-primary"
+                className={`absolute ${moduleColors[colorIndex]} p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28`}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ 
                   opacity: 1, 
@@ -64,11 +84,11 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
                   y: { duration: 2 }
                 }}
               >
-                <div className="mb-2 text-2xl text-neotech-primary">
+                <div className="mb-2 text-2xl text-white">
                   {module.icon}
                 </div>
-                <span className="text-sm font-medium text-gray-800">{module.name}</span>
-                <span className="text-xs mt-1 text-neotech-primary">Installé</span>
+                <span className="text-sm font-medium text-white">{module.name}</span>
+                <span className="text-xs mt-1 text-white/80">Installé</span>
               </motion.div>
             );
           })
