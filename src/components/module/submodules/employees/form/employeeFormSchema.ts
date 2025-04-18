@@ -1,14 +1,13 @@
 
 import { z } from 'zod';
 
-// Define a schema for photo metadata that matches our interface exactly
 const photoMetaSchema = z.object({
-  fileName: z.string().default(`photo_${Date.now()}.jpg`),
-  fileType: z.string().default('image/jpeg'),
-  fileSize: z.number().default(100000),
-  updatedAt: z.string().default(new Date().toISOString()),
+  fileName: z.string(),
+  fileType: z.string(),
+  fileSize: z.number(),
+  updatedAt: z.string(),
   data: z.string().optional()
-}).optional();
+});
 
 export const employeeFormSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis' }),
@@ -29,10 +28,10 @@ export const employeeFormSchema = z.object({
   managerId: z.string().optional(),
   status: z.enum(['active', 'inactive', 'onLeave', 'Actif', 'En congé', 'Suspendu', 'Inactif']),
   photo: z.string().optional(),
-  photoMeta: photoMetaSchema,
+  photoMeta: photoMetaSchema.optional(),
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   forceManager: z.boolean().default(false),
-  isManager: z.boolean().optional(),
+  isManager: z.boolean().default(false),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
