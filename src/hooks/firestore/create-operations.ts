@@ -1,58 +1,52 @@
+
 import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
-/**
- * Add a document to a collection
- * @param collectionPath The collection path
- * @param data The document data
- * @returns A promise that resolves with the document reference
- */
+// Fonction pour générer un ID court et unique
+const generateShortId = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const length = 8;
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 export const addDocument = async (collectionPath: string, data: any) => {
   try {
-    // Vérifier si les données ont un ID valide
-    let hasId = data && data.id && typeof data.id === 'string' && data.id.trim() !== '';
+    // Générer un ID court pour le nouveau document
+    const shortId = generateShortId();
     
-    console.log(`Adding document to collection: ${collectionPath}`, data);
-    console.log(`Document has valid ID? ${hasId ? 'Yes: ' + data.id : 'No'}`);
+    console.log(`Adding document to collection: ${collectionPath} with ID: ${shortId}`, data);
     
-    // Vérifier si l'objet contient des champs d'image (photo, photoURL, photoData)
+    // Préparer les données avec l'ID court
+    const documentData = {
+      ...data,
+      id: shortId // Assigner l'ID court
+    };
+    
+    // Vérifier si l'objet contient des champs d'image
     if (data.photo || data.photoURL || data.photoData) {
       console.log('Le document contient des données d\'image, s\'assurant qu\'elles sont correctement stockées');
       
-      // S'assurer que toutes les propriétés de photos sont cohérentes
       const photoData = data.photoData || data.photo || data.photoURL || '';
       
       if (photoData && typeof photoData === 'string') {
-        data.photo = photoData;
-        data.photoURL = photoData;
-        data.photoData = photoData;
+        documentData.photo = photoData;
+        documentData.photoURL = photoData;
+        documentData.photoData = photoData;
       }
     }
     
-    // Remove id field if it's undefined or invalid to prevent Firestore errors
-    if (data.id === undefined || data.id === null || data.id === '') {
-      delete data.id;
-      hasId = false;
-    }
+    // Utiliser setDoc avec l'ID généré
+    const docRef = doc(db, collectionPath, shortId);
+    await setDoc(docRef, documentData);
     
-    if (hasId) {
-      // Si un ID est fourni, utiliser setDoc pour éviter la duplication
-      console.log(`Using setDoc with provided ID: ${data.id}`);
-      const { id, ...dataWithoutId } = data;
-      const docRef = doc(db, collectionPath, id);
-      await setDoc(docRef, dataWithoutId);
-      console.log(`Document set successfully with ID: ${id}`);
-      return { id, ...dataWithoutId };
-    } else {
-      // Sinon utiliser addDoc pour générer un nouvel ID
-      console.log(`Using addDoc to generate new ID`);
-      const collectionRef = collection(db, collectionPath);
-      const docRef = await addDoc(collectionRef, data);
-      console.log(`Document added successfully with new ID: ${docRef.id}`);
-      return { id: docRef.id, ...data };
-    }
+    console.log(`Document set successfully with ID: ${shortId}`);
+    return documentData;
   } catch (error) {
     console.error(`Error adding document to ${collectionPath}:`, error);
     toast.error(`Erreur lors de l'ajout du document: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);

@@ -1,4 +1,3 @@
-
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from './photoUtils';
@@ -30,17 +29,15 @@ export const formValuesToEmployee = (
     professionalEmail: formValues.professionalEmail,
     forceManager: formValues.forceManager,
     isManager: formValues.isManager,
-    // Ajouter les champs d'adresse
     streetNumber: formValues.streetNumber,
     streetName: formValues.streetName,
     city: formValues.city,
     zipCode: formValues.zipCode,
     region: formValues.region,
-    // Conserver l'ID existant si disponible et valide
     updatedAt: new Date().toISOString(),
   };
 
-  // Only add ID if it's valid and exists
+  // Keep existing ID if it exists (for updates)
   if (existingEmployee?.id) {
     employeeData.id = existingEmployee.id;
   }
@@ -57,18 +54,16 @@ export const formValuesToEmployee = (
     const photoMeta: EmployeePhotoMeta = {
       fileName: formValues.photoMeta.fileName || `photo_${Date.now()}.jpg`,
       fileType: formValues.photoMeta.fileType || 'image/jpeg',
-      fileSize: formValues.photoMeta.fileSize || 100000,
+      fileSize: formValues.photoMeta.fileSize || 0,
       updatedAt: formValues.photoMeta.updatedAt || new Date().toISOString()
     };
     
-    // Only add data if it exists
     if (formValues.photoMeta.data) {
       photoMeta.data = formValues.photoMeta.data;
     }
     
     employeeData.photoMeta = photoMeta;
   } else if (formValues.photo && !employeeData.photoMeta) {
-    // Create photo metadata if photo exists but no metadata
     employeeData.photoMeta = createPhotoMeta(formValues.photo);
   }
 
