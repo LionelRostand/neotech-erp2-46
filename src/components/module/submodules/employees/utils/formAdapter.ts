@@ -1,3 +1,4 @@
+
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from './photoUtils';
@@ -42,11 +43,15 @@ export const formValuesToEmployee = (
     employeeData.id = existingEmployee.id;
   }
 
-  // Gestion de la photo
+  // Preserve existing photo if no new one is provided
   if (formValues.photo) {
     employeeData.photo = formValues.photo;
     employeeData.photoURL = formValues.photo;
     employeeData.photoData = formValues.photo;
+  } else if (existingEmployee?.photo) {
+    employeeData.photo = existingEmployee.photo;
+    employeeData.photoURL = existingEmployee.photoURL;
+    employeeData.photoData = existingEmployee.photoData;
   }
 
   // Gestion des métadonnées de photo
@@ -65,6 +70,9 @@ export const formValuesToEmployee = (
     employeeData.photoMeta = photoMeta;
   } else if (formValues.photo && !employeeData.photoMeta) {
     employeeData.photoMeta = createPhotoMeta(formValues.photo);
+  } else if (existingEmployee?.photoMeta) {
+    // Preserve existing photoMeta if no new photo is provided
+    employeeData.photoMeta = existingEmployee.photoMeta;
   }
 
   // Si c'est un nouvel employé, ajouter la date de création

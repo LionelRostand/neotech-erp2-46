@@ -1,390 +1,361 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { 
+  Card, 
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle, 
+} from '@/components/ui/card';
+import { 
+  Phone, 
+  Mail, 
+  MapPin,
+  Building2,
+  CalendarDays,
+  Edit,
+  Save,
+  X,
+  User
+} from 'lucide-react';
+import { Employee } from '@/types/employee';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Save, XCircle } from 'lucide-react';
-import { formatDate } from '@/lib/formatters';
-import { Employee, EmployeeAddress } from '@/types/employee';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { updateEmployeeDoc } from '@/services/employeeService';
 
 interface InformationsTabProps {
   employee: Employee;
   onEmployeeUpdated?: (updatedEmployee: Employee) => void;
-  isEditing?: boolean;
-  onFinishEditing?: () => void;
 }
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ 
-  employee, 
-  onEmployeeUpdated,
-  isEditing: isEditingProp = false,
-  onFinishEditing
+  employee,
+  onEmployeeUpdated
 }) => {
-  const [isEditing, setIsEditing] = useState(isEditingProp);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: employee.firstName,
-    lastName: employee.lastName,
-    email: employee.email,
+    streetNumber: employee.streetNumber || '',
+    streetName: employee.streetName || '',
+    city: employee.city || '',
+    zipCode: employee.zipCode || '',
+    region: employee.region || '',
     phone: employee.phone || '',
-    position: employee.position || '',
-    department: employee.department || '',
-    hireDate: employee.hireDate || '',
-    street: typeof employee.address === 'object' ? employee.address.street : '',
-    city: typeof employee.address === 'object' ? employee.address.city : '',
-    postalCode: typeof employee.address === 'object' ? employee.address.postalCode : '',
-    country: typeof employee.address === 'object' ? employee.address.country : 'France',
-    status: employee.status || 'active',
-    contract: employee.contract || '',
-    socialSecurityNumber: employee.socialSecurityNumber || '',
-    birthDate: employee.birthDate || '',
-    manager: employee.manager || '',
-    professionalEmail: employee.professionalEmail || ''
+    email: employee.email || '',
+    birthDate: employee.birthDate || ''
   });
+  const [isSaving, setIsSaving] = useState(false);
   
-  // Use isEditingProp if it's provided
-  useEffect(() => {
-    setIsEditing(isEditingProp);
-  }, [isEditingProp]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      email: employee.email,
-      phone: employee.phone || '',
-      position: employee.position || '',
-      department: employee.department || '',
-      hireDate: employee.hireDate || '',
-      street: typeof employee.address === 'object' ? employee.address.street : '',
-      city: typeof employee.address === 'object' ? employee.address.city : '',
-      postalCode: typeof employee.address === 'object' ? employee.address.postalCode : '',
-      country: typeof employee.address === 'object' ? employee.address.country : 'France',
-      status: employee.status || 'active',
-      contract: employee.contract || '',
-      socialSecurityNumber: employee.socialSecurityNumber || '',
-      birthDate: employee.birthDate || '',
-      manager: employee.manager || '',
-      professionalEmail: employee.professionalEmail || ''
-    });
-    setIsEditing(false);
-    if (onFinishEditing) {
-      onFinishEditing();
-    }
-  };
-
+  
   const handleSave = async () => {
     try {
-      const addressObj: EmployeeAddress = {
-        street: formData.street,
-        city: formData.city,
-        postalCode: formData.postalCode,
-        country: formData.country
+      setIsSaving(true);
+      
+      // Preserve existing photo and photoMeta data
+      const updateData = {
+        ...formData,
+        // Explicitly include these to ensure they're preserved
+        photo: employee.photo,
+        photoURL: employee.photoURL,
+        photoData: employee.photoData,
+        photoMeta: employee.photoMeta,
+        updatedAt: new Date().toISOString()
       };
-
-      const updatedEmployee = await updateEmployeeDoc(employee.id, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        position: formData.position,
-        department: formData.department,
-        hireDate: formData.hireDate,
-        address: addressObj,
-        status: formData.status as Employee['status'],
-        contract: formData.contract,
-        socialSecurityNumber: formData.socialSecurityNumber,
-        birthDate: formData.birthDate,
-        manager: formData.manager,
-        professionalEmail: formData.professionalEmail
-      });
-
-      if (updatedEmployee) {
-        toast.success('Informations mises à jour avec succès');
-        if (typeof onEmployeeUpdated === 'function') {
-          onEmployeeUpdated(updatedEmployee);
-        }
-        setIsEditing(false);
-        if (onFinishEditing) {
-          onFinishEditing();
-        }
+      
+      const updatedEmployee = await updateDocument(
+        COLLECTIONS.HR.EMPLOYEES, 
+        employee.id, 
+        updateData
+      );
+      
+      toast.success('Informations mises à jour avec succès');
+      setIsEditing(false);
+      
+      if (onEmployeeUpdated && updatedEmployee) {
+        onEmployeeUpdated({
+          ...employee,
+          ...updateData
+        } as Employee);
       }
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des informations:', error);
-      toast.error('Erreur lors de la mise à jour des informations: ' + (error as Error).message);
+      console.error("Erreur lors de la mise à jour:", error);
+      toast.error('Erreur lors de la mise à jour des informations');
+    } finally {
+      setIsSaving(false);
     }
   };
-
+  
+  const handleCancel = () => {
+    setFormData({
+      streetNumber: employee.streetNumber || '',
+      streetName: employee.streetName || '',
+      city: employee.city || '',
+      zipCode: employee.zipCode || '',
+      region: employee.region || '',
+      phone: employee.phone || '',
+      email: employee.email || '',
+      birthDate: employee.birthDate || ''
+    });
+    setIsEditing(false);
+  };
+  
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-medium">Informations personnelles</h3>
+    <div className="grid grid-cols-1 gap-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle>Informations personnelles</CardTitle>
+            <CardDescription>Coordonnées et informations de l'employé</CardDescription>
+          </div>
           {!isEditing ? (
-            <Button variant="outline" size="sm" onClick={handleEdit}>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsEditing(true)}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Modifier
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancel}>
-                <XCircle className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleCancel}
+              >
+                <X className="h-4 w-4 mr-2" />
                 Annuler
               </Button>
-              <Button variant="default" size="sm" onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Enregistrer
+              <Button 
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enregistrement...
+                  </span>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Enregistrer
+                  </>
+                )}
               </Button>
             </div>
           )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Prénom</label>
-              {isEditing ? (
-                <Input 
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.firstName}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Nom</label>
-              {isEditing ? (
-                <Input 
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.lastName}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              {isEditing ? (
-                <Input 
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.email}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Email professionnel</label>
-              {isEditing ? (
-                <Input 
-                  name="professionalEmail"
-                  value={formData.professionalEmail}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.professionalEmail || '-'}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Téléphone</label>
-              {isEditing ? (
-                <Input 
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.phone || '-'}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Date de naissance</label>
-              {isEditing ? (
-                <Input 
-                  name="birthDate"
-                  value={formData.birthDate}
-                  onChange={handleChange}
-                  className="mt-1"
-                  placeholder="JJ/MM/AAAA"
-                />
-              ) : (
-                <p className="mt-1">{employee.birthDate ? formatDate(employee.birthDate) : '-'}</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Adresse</label>
-              {isEditing ? (
-                <div className="space-y-2 mt-1">
-                  <Input 
-                    name="street"
-                    value={formData.street}
-                    onChange={handleChange}
-                    placeholder="Rue"
-                  />
-                  <Input 
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleChange}
-                    placeholder="Code postal"
-                  />
-                  <Input 
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="Ville"
-                  />
-                  <Input 
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    placeholder="Pays"
-                  />
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-2">
+                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Nom complet</p>
+                    <p className="text-sm text-muted-foreground">{employee.firstName} {employee.lastName}</p>
+                  </div>
                 </div>
-              ) : (
-                <p className="mt-1">
-                  {typeof employee.address === 'object' 
-                    ? `${employee.address.street}, ${employee.address.postalCode} ${employee.address.city}, ${employee.address.country}` 
-                    : employee.address || '-'}
-                </p>
-              )}
+                
+                <div className="flex items-start gap-2">
+                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Téléphone</p>
+                    {isEditing ? (
+                      <Input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="Numéro de téléphone"
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{employee.phone || 'Non spécifié'}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Email personnel</p>
+                    {isEditing ? (
+                      <Input
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Adresse email"
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{employee.email || 'Non spécifié'}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <CalendarDays className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Date de naissance</p>
+                    {isEditing ? (
+                      <Input
+                        name="birthDate"
+                        type="date"
+                        value={formData.birthDate}
+                        onChange={handleChange}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {employee.birthDate || 'Non spécifiée'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium mb-2 flex items-center">
+                    <MapPin className="h-5 w-5 text-muted-foreground mr-2" />
+                    Adresse
+                  </p>
+                  
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div className="md:col-span-1">
+                          <Input
+                            name="streetNumber"
+                            value={formData.streetNumber}
+                            onChange={handleChange}
+                            placeholder="N°"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Input
+                            name="streetName"
+                            value={formData.streetName}
+                            onChange={handleChange}
+                            placeholder="Nom de rue"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <Input
+                          name="zipCode"
+                          value={formData.zipCode}
+                          onChange={handleChange}
+                          placeholder="Code postal"
+                        />
+                        <Input
+                          name="city"
+                          value={formData.city}
+                          onChange={handleChange}
+                          placeholder="Ville"
+                        />
+                      </div>
+                      
+                      <Input
+                        name="region"
+                        value={formData.region}
+                        onChange={handleChange}
+                        placeholder="Région"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      {employee.streetNumber || employee.streetName ? (
+                        <p>{employee.streetNumber} {employee.streetName}</p>
+                      ) : null}
+                      
+                      {employee.zipCode || employee.city ? (
+                        <p>{employee.zipCode} {employee.city}</p>
+                      ) : null}
+                      
+                      {employee.region ? (
+                        <p>{employee.region}</p>
+                      ) : null}
+                      
+                      {!employee.streetNumber && !employee.streetName && !employee.zipCode && !employee.city && !employee.region && (
+                        <p>Aucune adresse enregistrée</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Entreprise et position</CardTitle>
+          <CardDescription>Informations professionnelles de l'employé</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-start gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Entreprise</p>
+                  <p className="text-sm text-muted-foreground">{employee.company || 'Non spécifiée'}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Poste</p>
+                  <p className="text-sm text-muted-foreground">{employee.position || 'Non spécifié'}</p>
+                </div>
+              </div>
             </div>
             
-            <div>
-              <label className="text-sm font-medium">Numéro de sécurité sociale</label>
-              {isEditing ? (
-                <Input 
-                  name="socialSecurityNumber"
-                  value={formData.socialSecurityNumber}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.socialSecurityNumber || '-'}</p>
+            <div className="space-y-4">
+              <div className="flex items-start gap-2">
+                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Département</p>
+                  <p className="text-sm text-muted-foreground">{employee.department || 'Non spécifié'}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Email professionnel</p>
+                  <p className="text-sm text-muted-foreground">{employee.professionalEmail || 'Non spécifié'}</p>
+                </div>
+              </div>
+              
+              {employee.isManager && (
+                <div className="flex items-start gap-2">
+                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Statut de manager</p>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Manager
+                      </span>
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-        </div>
-        
-        <h3 className="text-lg font-medium mt-8 mb-4">Informations professionnelles</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Poste</label>
-              {isEditing ? (
-                <Input 
-                  name="position"
-                  value={formData.position}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.position || '-'}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Département</label>
-              {isEditing ? (
-                <Input 
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.department || '-'}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Date d'embauche</label>
-              {isEditing ? (
-                <Input 
-                  name="hireDate"
-                  value={formData.hireDate}
-                  onChange={handleChange}
-                  className="mt-1"
-                  placeholder="JJ/MM/AAAA"
-                />
-              ) : (
-                <p className="mt-1">{employee.hireDate ? formatDate(employee.hireDate) : '-'}</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Type de contrat</label>
-              {isEditing ? (
-                <Input 
-                  name="contract"
-                  value={formData.contract}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.contract || '-'}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Manager</label>
-              {isEditing ? (
-                <Input 
-                  name="manager"
-                  value={formData.manager}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.manager || '-'}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Statut</label>
-              {isEditing ? (
-                <Input 
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-              ) : (
-                <p className="mt-1">{employee.status || 'Actif'}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
