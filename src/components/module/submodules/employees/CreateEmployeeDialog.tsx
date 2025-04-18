@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import EmployeeForm from './EmployeeForm';
 import { useEmployeeService } from '@/hooks/useEmployeeService';
 import { Employee } from '@/types/employee';
@@ -35,12 +36,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   const handleSubmit = async (data: EmployeeFormValues) => {
     setIsSubmitting(true);
     try {
-      // Convertir les données du formulaire en objet employé
       const employeeData = formValuesToEmployee(data);
       
-      console.log('Données employé à sauvegarder:', employeeData);
-      
-      // Ajouter directement le document à Firestore
       const result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
       
       if (result && result.id) {
@@ -60,7 +57,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Ajouter un nouvel employé</DialogTitle>
           <DialogDescription>
@@ -68,14 +65,17 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <EmployeeForm
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
-          isSubmitting={isSubmitting}
-        />
+        <ScrollArea className="flex-grow overflow-y-auto pr-4">
+          <EmployeeForm
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+            isSubmitting={isSubmitting}
+          />
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default CreateEmployeeDialog;
+
