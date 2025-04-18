@@ -11,9 +11,10 @@ interface KanbanColumnProps {
   items: RecruitmentPost[];
   onSort?: () => void;
   isOrganizing?: boolean;
+  currentlyDraggingId?: string | null;
 }
 
-export default function KanbanColumn({ id, title, items, onSort, isOrganizing }: KanbanColumnProps) {
+export default function KanbanColumn({ id, title, items, onSort, isOrganizing, currentlyDraggingId }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({ id });
 
   return (
@@ -40,10 +41,17 @@ export default function KanbanColumn({ id, title, items, onSort, isOrganizing }:
       
       <div
         ref={setNodeRef}
-        className="flex flex-col gap-2 min-h-[200px]"
+        className={`flex flex-col gap-2 min-h-[200px] ${
+          currentlyDraggingId ? 'bg-blue-50 border-2 border-dashed border-blue-300 rounded-md p-2' : ''
+        }`}
       >
         {items.map((item) => (
-          <KanbanCard key={item.id} item={item} type="recruitment" />
+          <KanbanCard 
+            key={item.id} 
+            item={item} 
+            type="recruitment" 
+            isDragging={item.id === currentlyDraggingId}
+          />
         ))}
       </div>
     </div>

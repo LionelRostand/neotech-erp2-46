@@ -16,6 +16,7 @@ const RecruitmentKanban: React.FC = () => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizingColumn, setOrganizingColumn] = useState('');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecruitmentPosts = async () => {
@@ -71,8 +72,16 @@ const RecruitmentKanban: React.FC = () => {
     return recruitmentPosts.filter(post => post.status === status);
   };
 
+  const handleDragStart = (event: { active: { id: string } }) => {
+    // Store the ID of the item being dragged
+    setDraggingId(event.active.id as string);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    
+    // Clear dragging state
+    setDraggingId(null);
     
     if (!over) return;
     
@@ -100,27 +109,64 @@ const RecruitmentKanban: React.FC = () => {
       
       const validStatus = overId as StatusType;
       
+      // Create a copy of the post with the updated status
       const updatedPost = {
         ...recruitmentPosts[postIndex],
         status: validStatus
       };
       
-      // Update in Firestore
+      // Update local state first for immediate feedback
+      const updatedPosts = [...recruitmentPosts];
+      updatedPosts[postIndex] = updatedPost;
+      setRecruitmentPosts(updatedPosts);
+      
+      // Then update in Firestore
       const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, activeId);
       await updateDoc(postRef, {
         status: validStatus,
         updatedAt: new Date()
       });
       
-      // Update local state
-      const updatedPosts = [...recruitmentPosts];
-      updatedPosts[postIndex] = updatedPost;
-      setRecruitmentPosts(updatedPosts);
-      
       toast.success(`Offre déplacée vers "${validStatus}"`);
     } catch (error) {
+      // Revert local state if Firebase update fails
       console.error('Error updating post status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
+      
+      // Reload the data to ensure consistency
+      const fetchRecruitmentPosts = async () => {
+        try {
+          const q = query(
+            collection(db, COLLECTIONS.HR.RECRUITMENT),
+            orderBy('createdAt', 'desc')
+          );
+          
+          const querySnapshot = await getDocs(q);
+          
+          const posts: RecruitmentPost[] = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            let validStatus: StatusType = 'Ouverte';
+            if (data.status && typeof data.status === 'string' && 
+                (statuses as readonly string[]).includes(data.status)) {
+              validStatus = data.status as StatusType;
+            }
+            
+            posts.push({
+              id: doc.id,
+              ...data,
+              status: validStatus
+            } as RecruitmentPost);
+          });
+          
+          setRecruitmentPosts(posts);
+        } catch (fetchError) {
+          console.error('Error reloading recruitment posts:', fetchError);
+        }
+      };
+      
+      fetchRecruitmentPosts();
     }
   };
 
@@ -172,6 +218,7 @@ const RecruitmentKanban: React.FC = () => {
   return (
     <DndContext
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <div className="flex overflow-x-auto pb-4 gap-4">
@@ -183,6 +230,7 @@ const RecruitmentKanban: React.FC = () => {
             items={getPostsByStatus(status)}
             onSort={() => sortColumn(status)}
             isOrganizing={organizingColumn === status}
+            currentlyDraggingId={draggingId}
           />
         ))}
       </div>

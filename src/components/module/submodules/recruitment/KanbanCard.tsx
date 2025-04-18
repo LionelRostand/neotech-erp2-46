@@ -1,28 +1,30 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RecruitmentPost, CandidateApplication } from '@/types/recruitment';
-import { Check, X } from 'lucide-react';
+import { Check, X, GripHorizontal } from 'lucide-react';
+import { useDraggable } from '@dnd-kit/core';
 
 interface KanbanCardProps {
   item: RecruitmentPost;
   type: string;
+  isDragging?: boolean;
 }
 
-export default function KanbanCard({ item }: KanbanCardProps) {
+export default function KanbanCard({ item, isDragging }: KanbanCardProps) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: item.id,
+  });
+  
   const handleTechnicalInterviewResult = async (candidateId: string, passed: boolean) => {
     const candidate = item.candidates?.find(c => c.id === candidateId);
     if (!candidate) return;
 
     candidate.technicalInterviewStatus = passed ? 'passed' : 'failed';
     
-    if (!passed) {
-      candidate.currentStage = 'Fermée';
-      item.status = 'Fermée';
-    } else {
-      candidate.currentStage = 'Offre';
-      item.status = 'Offre';
-    }
+    // Nous ne modifions pas le statut de l'offre ici pour permettre le drag and drop
+    // Le changement de statut se fera via drag and drop
   };
 
   const handleNormalInterviewResult = async (candidateId: string, passed: boolean) => {
@@ -31,11 +33,8 @@ export default function KanbanCard({ item }: KanbanCardProps) {
 
     candidate.normalInterviewStatus = passed ? 'passed' : 'failed';
     
-    if (!passed) {
-      candidate.currentStage = 'Fermée';
-      item.status = 'Fermée';
-      candidate.status = 'rejected';
-    }
+    // Nous ne modifions pas le statut de l'offre ici pour permettre le drag and drop
+    // Le changement de statut se fera via drag and drop
   };
 
   const handleSalaryProposal = async (candidateId: string, salary: number) => {
@@ -49,8 +48,6 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     
     if (accepted) {
       candidate.offerStatus = 'accepted';
-      candidate.currentStage = 'Fermée';
-      item.status = 'Fermée';
       
       // Création de l'employé
       const newEmployee = {
@@ -70,14 +67,32 @@ export default function KanbanCard({ item }: KanbanCardProps) {
       console.log('Nouvel employé créé:', newEmployee);
     } else {
       candidate.offerStatus = 'rejected';
-      candidate.currentStage = 'Fermée';
-      item.status = 'Fermée';
     }
   };
 
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: 999,
+    opacity: 0.8,
+    cursor: 'grabbing',
+  } : undefined;
+
   return (
-    <Card className="p-4 mb-2 bg-white">
-      <h3 className="font-semibold mb-2">{item.position}</h3>
+    <Card 
+      className={`p-4 mb-2 ${isDragging ? 'border-2 border-blue-500 shadow-lg' : 'bg-white'}`}
+      ref={setNodeRef} 
+      style={style}
+      {...attributes}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="font-semibold">{item.position}</h3>
+        <div 
+          className="cursor-grab p-1 rounded hover:bg-gray-100"
+          {...listeners}
+        >
+          <GripHorizontal size={16} className="text-gray-400" />
+        </div>
+      </div>
       <div className="text-sm text-gray-500 mb-2">{item.department}</div>
       
       {item.candidates && item.candidates.map((candidate) => (
