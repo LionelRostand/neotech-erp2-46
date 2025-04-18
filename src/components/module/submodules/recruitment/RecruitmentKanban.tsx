@@ -100,27 +100,42 @@ const RecruitmentKanban: React.FC = () => {
       
       const validStatus = overId as StatusType;
       
+      // Créer une copie du tableau pour ne pas modifier l'état directement
+      const updatedPosts = [...recruitmentPosts];
       const updatedPost = {
-        ...recruitmentPosts[postIndex],
+        ...updatedPosts[postIndex],
         status: validStatus
       };
       
-      // Update in Firestore
+      // Mettre à jour l'état local avant la mise à jour Firestore
+      updatedPosts[postIndex] = updatedPost;
+      setRecruitmentPosts(updatedPosts);
+      
+      // Mettre à jour dans Firestore
       const postRef = doc(db, COLLECTIONS.HR.RECRUITMENT, activeId);
       await updateDoc(postRef, {
         status: validStatus,
         updatedAt: new Date()
       });
       
-      // Update local state
-      const updatedPosts = [...recruitmentPosts];
-      updatedPosts[postIndex] = updatedPost;
-      setRecruitmentPosts(updatedPosts);
-      
       toast.success(`Offre déplacée vers "${validStatus}"`);
     } catch (error) {
       console.error('Error updating post status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
+      // Recharger les données en cas d'erreur pour rétablir l'état correct
+      const q = query(
+        collection(db, COLLECTIONS.HR.RECRUITMENT),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const posts: RecruitmentPost[] = [];
+      querySnapshot.forEach((doc) => {
+        posts.push({
+          id: doc.id,
+          ...doc.data()
+        } as RecruitmentPost);
+      });
+      setRecruitmentPosts(posts);
     }
   };
 
