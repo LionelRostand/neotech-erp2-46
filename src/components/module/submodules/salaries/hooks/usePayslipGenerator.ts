@@ -1,237 +1,270 @@
 
 import { useState, useCallback } from 'react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { v4 as uuidv4 } from 'uuid';
+import { PaySlip, PaySlipDetail } from '../types/payslip';
 import { Company } from '@/components/module/submodules/companies/types';
-import { PaySlip, PaySlipDetail } from '@/types/payslip';
 import { Employee } from '@/types/employee';
-import { formatCurrency } from '@/lib/formatters';
-import { toast } from 'sonner';
+import { savePaySlip } from '../services/payslipService';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export const usePayslipGenerator = () => {
-  const [employeeName, setEmployeeName] = useState<string>('');
-  const [period, setPeriod] = useState<string>('');
-  const [grossSalary, setGrossSalary] = useState<string>('0');
-  const [overtimeHours, setOvertimeHours] = useState<string>('0');
-  const [overtimeRate, setOvertimeRate] = useState<string>('25');
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [showPreview, setShowPreview] = useState<boolean>(false);
+  // État pour les données du formulaire
+  const [employeeName, setEmployeeName] = useState('');
+  const [period, setPeriod] = useState('');
+  const [grossSalary, setGrossSalary] = useState('');
+  const [overtimeHours, setOvertimeHours] = useState('0');
+  const [overtimeRate, setOvertimeRate] = useState('25');
+  const [showPreview, setShowPreview] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [currentPayslip, setCurrentPayslip] = useState<PaySlip | null>(null);
 
+  const { companies } = useEmployeeData();
+
   // Handle company selection
-  const handleCompanySelect = useCallback((companyId: string, companies: Company[]) => {
-    if (!companies || !companyId) return;
-    
+  const handleCompanySelect = useCallback((companyId: string) => {
     setSelectedCompanyId(companyId);
-    
-    // Find the selected company
     const company = companies.find(c => c.id === companyId);
-    if (company) {
-      setSelectedCompany(company);
-    }
-  }, []);
+    setSelectedCompany(company || null);
+  }, [companies]);
 
   // Handle employee selection
   const handleEmployeeSelect = useCallback((employeeId: string, employees: Employee[]) => {
-    if (!employees || !employeeId) return;
-    
-    setSelectedEmployeeId(employeeId);
-    
     const employee = employees.find(e => e.id === employeeId);
     if (employee) {
+      setSelectedEmployee(employee);
       setEmployeeName(`${employee.firstName} ${employee.lastName}`);
     }
   }, []);
 
-  // Calculate social security contributions as per French labor code
-  const calculateFrenchSocialContributions = (monthlySalary: number) => {
-    // French social security rates (simplified version)
-    const healthInsurance = monthlySalary * 0.07;  // 7%
-    const pensionContribution = monthlySalary * 0.11;  // 11%
-    const unemploymentInsurance = monthlySalary * 0.024;  // 2.4%
-    const complementaryPension = monthlySalary * 0.038;  // 3.8%
-    const csg = monthlySalary * 0.098;  // 9.8% CSG/CRDS
+  // Générer la fiche de paie selon le Code du travail français
+  const generatePayslip = useCallback(() => {
+    if (!selectedEmployee || !selectedCompany) {
+      console.error("Employé ou entreprise non sélectionné");
+      return null;
+    }
+
+    // Vérifier que le salaire brut est un nombre valide
+    const annualGrossSalary = parseFloat(grossSalary);
+    if (isNaN(annualGrossSalary) || annualGrossSalary <= 0) {
+      console.error("Salaire brut invalide");
+      return null;
+    }
+
+    // Calculer le salaire mensuel (en France, c'est généralement l'annuel / 12)
+    const monthlyGrossSalary = annualGrossSalary / 12;
+
+    // Heures travaillées par mois (base légale française : 35h × 52/12 semaines = 151.67h)
+    const standardMonthlyHours = 151.67;
     
-    const totalContributions = healthInsurance + pensionContribution + 
-                               unemploymentInsurance + complementaryPension + csg;
+    // Calcul des heures supplémentaires
+    const overtimeHoursValue = parseFloat(overtimeHours) || 0;
     
+    // Taux de majoration des heures supplémentaires
+    // Code du travail français : 25% pour les 8 premières heures, 50% au-delà
+    const firstOvertimeRate = 0.25; // 25% pour les 8 premières heures
+    const secondOvertimeRate = 0.50; // 50% au-delà
+    
+    // Calculer le taux horaire
+    const hourlyRate = monthlyGrossSalary / standardMonthlyHours;
+    
+    // Calculer la rémunération des heures supplémentaires
+    let overtimeAmount = 0;
+    if (overtimeHoursValue > 0) {
+      const firstOvertimeHours = Math.min(overtimeHoursValue, 8);
+      const secondOvertimeHours = Math.max(0, overtimeHoursValue - 8);
+      
+      overtimeAmount = 
+        hourlyRate * firstOvertimeHours * (1 + firstOvertimeRate) +
+        hourlyRate * secondOvertimeHours * (1 + secondOvertimeRate);
+    }
+    
+    // Calculer le salaire brut total (mensuel + heures supplémentaires)
+    const totalGrossSalary = monthlyGrossSalary + overtimeAmount;
+    
+    // Calculer les charges sociales (approximatif selon le système français)
+    // Charges salariales : environ 22% du brut
+    const employeeContributions = totalGrossSalary * 0.22;
+    
+    // Charges patronales : environ 42% du brut (non visible sur la fiche de paie)
+    const employerContributions = totalGrossSalary * 0.42;
+    
+    // Calculer le salaire net
+    const netSalary = totalGrossSalary - employeeContributions;
+    
+    // Créer les détails de la fiche de paie
     const details: PaySlipDetail[] = [
       {
-        label: "Sécurité sociale - Maladie",
-        amount: healthInsurance,
-        type: "deduction",
-        base: formatCurrency(monthlySalary),
-        rate: "7%"
-      },
-      {
-        label: "Retraite de base",
-        amount: pensionContribution,
-        type: "deduction",
-        base: formatCurrency(monthlySalary),
-        rate: "11%"
-      },
-      {
-        label: "Assurance chômage",
-        amount: unemploymentInsurance,
-        type: "deduction",
-        base: formatCurrency(monthlySalary),
-        rate: "2.4%"
-      },
-      {
-        label: "Retraite complémentaire",
-        amount: complementaryPension,
-        type: "deduction",
-        base: formatCurrency(monthlySalary),
-        rate: "3.8%"
-      },
-      {
-        label: "CSG/CRDS",
-        amount: csg,
-        type: "deduction",
-        base: formatCurrency(monthlySalary),
-        rate: "9.8%"
+        label: "Salaire de base",
+        base: `${standardMonthlyHours} heures`,
+        amount: monthlyGrossSalary,
+        type: "earning"
       }
     ];
     
-    return { totalContributions, details };
-  };
-
-  // Generate payslip according to French labor law
-  const generatePayslip = useCallback(() => {
-    if (!selectedEmployeeId || !period || !selectedCompany) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return null;
+    // Ajouter les heures supplémentaires si présentes
+    if (overtimeHoursValue > 0) {
+      const firstOvertimeHours = Math.min(overtimeHoursValue, 8);
+      if (firstOvertimeHours > 0) {
+        details.push({
+          label: "Heures supplémentaires (125%)",
+          base: `${firstOvertimeHours} heures`,
+          rate: "25%",
+          amount: hourlyRate * firstOvertimeHours * (1 + firstOvertimeRate),
+          type: "earning"
+        });
+      }
+      
+      const secondOvertimeHours = Math.max(0, overtimeHoursValue - 8);
+      if (secondOvertimeHours > 0) {
+        details.push({
+          label: "Heures supplémentaires (150%)",
+          base: `${secondOvertimeHours} heures`,
+          rate: "50%",
+          amount: hourlyRate * secondOvertimeHours * (1 + secondOvertimeRate),
+          type: "earning"
+        });
+      }
     }
-
+    
+    // Ajouter les charges sociales
+    details.push(
+      {
+        label: "Sécurité sociale - Maladie",
+        rate: "0.75%",
+        amount: totalGrossSalary * 0.0075,
+        type: "deduction"
+      },
+      {
+        label: "Sécurité sociale - Vieillesse plafonnée",
+        rate: "6.90%",
+        amount: totalGrossSalary * 0.069,
+        type: "deduction"
+      },
+      {
+        label: "Sécurité sociale - Vieillesse déplafonnée",
+        rate: "0.40%",
+        amount: totalGrossSalary * 0.004,
+        type: "deduction"
+      },
+      {
+        label: "Assurance chômage",
+        rate: "2.40%",
+        amount: totalGrossSalary * 0.024,
+        type: "deduction"
+      },
+      {
+        label: "Retraite complémentaire (AGIRC-ARRCO)",
+        rate: "3.15%",
+        amount: totalGrossSalary * 0.0315,
+        type: "deduction"
+      },
+      {
+        label: "CEG (Contribution d'équilibre général)",
+        rate: "0.86%",
+        amount: totalGrossSalary * 0.0086,
+        type: "deduction"
+      },
+      {
+        label: "CSG déductible",
+        rate: "6.80%",
+        amount: totalGrossSalary * 0.068,
+        type: "deduction"
+      },
+      {
+        label: "CSG/CRDS non déductible",
+        rate: "2.90%",
+        amount: totalGrossSalary * 0.029,
+        type: "deduction"
+      }
+    );
+    
+    // Générer un ID unique
+    const payslipId = uuidv4();
+    
+    // Obtenir la date actuelle
+    const currentDate = new Date();
+    const formattedDate = format(currentDate, 'dd/MM/yyyy');
+    
+    // Créer le mois et l'année à partir de la période
+    const [month, year] = period.split(" ");
+    
+    // Calculer les congés et RTT (valeurs exemples)
+    const conges = {
+      acquired: 2.5, // 2.5 jours par mois travaillé
+      taken: 0,
+      balance: 25 // Solde maximum en France
+    };
+    
+    const rtt = {
+      acquired: 1,
+      taken: 0,
+      balance: 12
+    };
+    
+    // Créer la fiche de paie
+    const payslip: PaySlip = {
+      id: payslipId,
+      employee: {
+        firstName: selectedEmployee.firstName,
+        lastName: selectedEmployee.lastName,
+        employeeId: selectedEmployee.id,
+        role: selectedEmployee.position || selectedEmployee.role || "Employé",
+        socialSecurityNumber: selectedEmployee.socialSecurityNumber || "1 99 99 99 999 999 99",
+        startDate: selectedEmployee.startDate
+      },
+      period: period,
+      details: details,
+      grossSalary: totalGrossSalary,
+      totalDeductions: employeeContributions,
+      netSalary: netSalary,
+      hoursWorked: standardMonthlyHours + parseFloat(overtimeHours || "0"),
+      paymentDate: format(new Date(parseInt(year), new Date().getMonth() + 1, 0), 'dd/MM/yyyy'),
+      employerName: selectedCompany.name,
+      employerAddress: selectedCompany.address ? 
+        `${selectedCompany.address.street}, ${selectedCompany.address.postalCode} ${selectedCompany.address.city}` : 
+        "Adresse non spécifiée",
+      employerSiret: selectedCompany.siret || "SIRET non spécifié",
+      conges,
+      rtt,
+      annualCumulative: {
+        grossSalary: annualGrossSalary,
+        netSalary: netSalary * 12,
+        taxableIncome: netSalary * 12 * 0.975 // Base imposable approximative
+      },
+      status: "Généré",
+      date: formattedDate,
+      employeeId: selectedEmployee.id,
+      employeeName: `${selectedEmployee.firstName} ${selectedEmployee.lastName}`,
+      month,
+      year: parseInt(year),
+      paymentMethod: "Virement bancaire"
+    };
+    
+    // Sauvegarder la fiche de paie
     try {
-      // Convert strings to numbers
-      const annualGrossSalary = Number(grossSalary) || 0;
-      const overtimeHoursNum = Number(overtimeHours) || 0;
-      const overtimeRateNum = Number(overtimeRate) || 25;
-      
-      // Standard hours per month in France (35h/week * 52 weeks / 12 months)
-      const standardMonthlyHours = 151.67;
-      
-      // Calculate monthly gross salary
-      const monthlyGrossSalary = annualGrossSalary / 12;
-      
-      // Calculate hourly rate
-      const hourlyRate = monthlyGrossSalary / standardMonthlyHours;
-      
-      // Calculate overtime pay according to French labor code
-      let overtimePay = 0;
-      if (overtimeHoursNum > 0) {
-        // In France: first 8 hours at 25%, above that at 50%
-        const firstEightHours = Math.min(overtimeHoursNum, 8);
-        const remainingHours = Math.max(0, overtimeHoursNum - 8);
-        
-        overtimePay = (firstEightHours * hourlyRate * 1.25) + 
-                      (remainingHours * hourlyRate * 1.5);
-      }
-      
-      // Calculate total gross with overtime
-      const totalGrossSalary = monthlyGrossSalary + overtimePay;
-      
-      // Calculate French social security contributions
-      const { totalContributions, details: deductionDetails } = 
-        calculateFrenchSocialContributions(totalGrossSalary);
-      
-      // Calculate net salary
-      const netSalary = totalGrossSalary - totalContributions;
-      
-      // Create earnings details
-      const earningDetails: PaySlipDetail[] = [
-        {
-          label: "Salaire mensuel de base",
-          amount: monthlyGrossSalary,
-          type: "earning",
-          base: `${standardMonthlyHours} heures`,
-          rate: formatCurrency(hourlyRate) + "/h"
-        }
-      ];
-      
-      // Add overtime if applicable
-      if (overtimeHoursNum > 0) {
-        const firstEightHours = Math.min(overtimeHoursNum, 8);
-        const remainingHours = Math.max(0, overtimeHoursNum - 8);
-        
-        if (firstEightHours > 0) {
-          earningDetails.push({
-            label: "Heures supplémentaires (25%)",
-            amount: firstEightHours * hourlyRate * 1.25,
-            type: "earning",
-            base: `${firstEightHours} heures`,
-            rate: "25%"
-          });
-        }
-        
-        if (remainingHours > 0) {
-          earningDetails.push({
-            label: "Heures supplémentaires (50%)",
-            amount: remainingHours * hourlyRate * 1.5,
-            type: "earning",
-            base: `${remainingHours} heures`,
-            rate: "50%"
-          });
-        }
-      }
-      
-      // Create complete payslip
-      const payslip: PaySlip = {
-        id: uuidv4(),
-        employeeId: selectedEmployeeId,
-        employeeName: employeeName,
-        period: period,
-        details: [...earningDetails, ...deductionDetails],
-        grossSalary: totalGrossSalary,
-        netSalary: netSalary,
-        totalDeductions: totalContributions,
-        date: new Date().toISOString(),
-        status: "Généré",
-        department: "",
-        hoursWorked: standardMonthlyHours + (overtimeHoursNum || 0),
-        employerName: selectedCompany.name,
-        employerAddress: selectedCompany.address ? 
-          `${selectedCompany.address.street}, ${selectedCompany.address.postalCode} ${selectedCompany.address.city}` : 
-          "",
-        employerSiret: selectedCompany.siret || "",
-        // French specific fields
-        conges: {
-          acquired: 2.5, // 2.5 days per month in France
-          taken: 0,
-          balance: 2.5
-        },
-        rtt: {
-          acquired: 1,  // Typical RTT value
-          taken: 0,
-          balance: 1
-        },
-        annualCumulative: {
-          grossSalary: totalGrossSalary,
-          netSalary: netSalary,
-          taxableIncome: netSalary * 0.9 // Approximation for "net imposable"
-        }
-      };
-      
-      // Store the current payslip
+      // Enregistrer la fiche de paie dans l'état local
       setCurrentPayslip(payslip);
-      console.log("Generated payslip:", payslip);
+      
+      // Optionnellement, enregistrer dans la base de données
+      // savePaySlip(payslip);
       
       return payslip;
     } catch (error) {
-      console.error('Error generating payslip:', error);
-      toast.error("Erreur lors de la génération de la fiche de paie");
-      return null;
+      console.error("Erreur lors de la sauvegarde de la fiche de paie:", error);
+      return payslip; // Retourner quand même la fiche générée
     }
   }, [
-    selectedEmployeeId,
-    employeeName,
-    period,
-    grossSalary,
-    overtimeHours,
-    overtimeRate,
-    selectedCompany
+    selectedEmployee, 
+    selectedCompany, 
+    grossSalary, 
+    overtimeHours, 
+    overtimeRate, 
+    period
   ]);
 
   return {
@@ -254,6 +287,7 @@ export const usePayslipGenerator = () => {
     selectedEmployeeId,
     setSelectedEmployeeId,
     selectedCompany,
+    selectedEmployee,
     currentPayslip
   };
 };

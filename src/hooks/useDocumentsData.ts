@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { formatDate } from '@/lib/formatters';
@@ -46,11 +47,46 @@ export const useDocumentsData = () => {
         }
       }
       
+      // Formatter la date avec sécurité (gérer les objets Timestamp de Firestore)
+      let formattedUploadDate = '';
+      
+      try {
+        // Vérifier si uploadDate est un objet Timestamp (avec seconds et nanoseconds)
+        if (document.uploadDate && typeof document.uploadDate === 'object' && 'seconds' in document.uploadDate) {
+          // Convertir le Timestamp Firestore en chaîne de date
+          const timestamp = document.uploadDate;
+          const date = new Date(timestamp.seconds * 1000);
+          formattedUploadDate = formatDate(date);
+        } else if (document.createdAt && typeof document.createdAt === 'object' && 'seconds' in document.createdAt) {
+          // Même traitement pour createdAt si c'est un Timestamp
+          const timestamp = document.createdAt;
+          const date = new Date(timestamp.seconds * 1000);
+          formattedUploadDate = formatDate(date);
+        } else if (document.date && typeof document.date === 'object' && 'seconds' in document.date) {
+          // Même traitement pour date si c'est un Timestamp
+          const timestamp = document.date;
+          const date = new Date(timestamp.seconds * 1000);
+          formattedUploadDate = formatDate(date);
+        } else {
+          // Utiliser la première date valide disponible en string
+          const dateStr = document.uploadDate || document.createdAt || document.date || '';
+          if (dateStr && typeof dateStr === 'string') {
+            formattedUploadDate = formatDate(dateStr);
+            if (!formattedUploadDate) {
+              formattedUploadDate = dateStr; // Use original string if formatting fails
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Erreur lors du formatage de date:', e);
+        formattedUploadDate = 'Date non valide';
+      }
+      
       return {
         id: document.id,
         title: document.title || document.filename || document.name || 'Document sans titre',
         type: document.type || 'Autre',
-        uploadDate: formatDate(document.uploadDate || document.createdAt || document.date),
+        uploadDate: formattedUploadDate,
         fileSize: document.fileSize,
         fileType: document.fileType,
         url: document.url,
@@ -61,34 +97,38 @@ export const useDocumentsData = () => {
         description: document.description,
         filename: document.filename,
         name: document.name,
-        createdAt: document.createdAt,
-        date: document.date
+        // Store original dates as strings for other components
+        createdAt: typeof document.createdAt === 'string' ? document.createdAt : 
+                 (document.createdAt && typeof document.createdAt === 'object' && 'seconds' in document.createdAt) ?
+                 new Date(document.createdAt.seconds * 1000).toISOString() : undefined,
+        date: typeof document.date === 'string' ? document.date :
+             (document.date && typeof document.date === 'object' && 'seconds' in document.date) ?
+             new Date(document.date.seconds * 1000).toISOString() : undefined
       } as HrDocument;
     });
   }, [hrDocuments, employees]);
 
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
-
   // Obtenir des statistiques sur les documents
   const documentStats = useMemo(() => {
-    // Grouper par type de document
-    const typeCount = formattedDocuments.reduce((acc, doc) => {
-      acc[doc.type] = (acc[doc.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return {
-      total: formattedDocuments.length,
-      byType: typeCount
-    };
+    try {
+      // Grouper par type de document
+      const typeCount = formattedDocuments.reduce((acc, doc) => {
+        const type = doc.type || 'Autre';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      return {
+        total: formattedDocuments.length,
+        byType: typeCount
+      };
+    } catch (error) {
+      console.error('Error calculating document stats:', error);
+      return {
+        total: formattedDocuments.length,
+        byType: {}
+      };
+    }
   }, [formattedDocuments]);
   
   return {

@@ -34,14 +34,15 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       }
       
       // Vérifier la présence des données essentielles
-      if (!payslip.employeeName) {
+      if (!payslip.employee || !payslip.employee.firstName || !payslip.employee.lastName) {
         throw new Error('Les informations de l\'employé sont manquantes');
       }
       
       // Construction du nom de fichier français
-      const formattedPeriod = payslip.period?.toLowerCase() || 'periode';
-      const employeeName = payslip.employeeName.replace(' ', '_').toLowerCase();
-      const fileName = `bulletin_de_paie_${employeeName}_${formattedPeriod}.pdf`;
+      const formattedMonth = payslip.month?.toLowerCase() || 'periode';
+      const year = payslip.year || new Date().getFullYear();
+      const employeeName = payslip.employee.lastName.toLowerCase();
+      const fileName = `bulletin_de_paie_${employeeName}_${formattedMonth}_${year}.pdf`;
       
       // Génération du PDF selon le format français
       const doc = generatePayslipPdf(payslip);
@@ -55,9 +56,10 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       // Ajout du document au profil de l'employé si l'ID de l'employé existe
       if (payslip.employeeId) {
         const documentData = {
-          name: `Bulletin de paie - ${payslip.period}`,
+          id: `payslip_${payslip.id || new Date().getTime()}`,
+          name: `Bulletin de paie - ${payslip.month || 'période'} ${payslip.year || year}`,
           type: 'Fiche de paie',
-          date: payslip.date || new Date().toISOString(),
+          date: new Date().toISOString(),
           fileType: 'application/pdf',
           fileData: pdfBase64,
           employeeId: payslip.employeeId
@@ -81,9 +83,9 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
   };
 
   return (
-    <Button onClick={handleDownload} variant="ghost" size="icon">
-      <FileDown className="h-4 w-4" />
-      <span className="sr-only">Télécharger PDF</span>
+    <Button onClick={handleDownload} variant="outline" size="sm">
+      <FileDown className="h-4 w-4 mr-2" />
+      Télécharger PDF
     </Button>
   );
 };

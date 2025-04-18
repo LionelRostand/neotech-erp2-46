@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -44,8 +43,14 @@ export function formatDateTime(date: string | Date): string {
   });
 }
 
-// Use the formatCurrency from formatters.ts instead of defining it here
-// This function has been removed to avoid duplicate exports
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+}
 
 export function calculateAge(birthDate: string | Date): number {
   if (!birthDate) return 0;
@@ -86,5 +91,4 @@ export function truncate(str: string, length: number): string {
   return str.length > length ? str.substring(0, length) + '...' : str;
 }
 
-// Import the formatCurrency function from formatters.ts
 export { formatCurrency } from './formatters';

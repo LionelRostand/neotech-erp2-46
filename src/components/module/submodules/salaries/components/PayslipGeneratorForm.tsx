@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import CompanySelect from './CompanySelect';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 import { toast } from 'sonner';
-import { savePaySlip, savePaySlipToEmployeeDocuments } from '../services/payslipService';
 
 const PayslipGeneratorForm: React.FC = () => {
   const { employees } = useEmployeeData();
@@ -44,7 +43,7 @@ const PayslipGeneratorForm: React.FC = () => {
     }
   }, [contractSalary, setGrossSalary]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form before generating payslip
@@ -71,17 +70,9 @@ const PayslipGeneratorForm: React.FC = () => {
     // Generate the payslip according to French labor laws
     try {
       const payslip = generatePayslip();
-      
-      if (payslip) {
-        console.log("Fiche de paie générée:", payslip);
-        
-        // Save payslip to Firestore (optional at this stage)
-        // const savedPayslip = await savePaySlip(payslip);
-        
-        // Show preview
-        setShowPreview(true);
-        toast.success("Fiche de paie générée avec succès");
-      }
+      console.log("Fiche de paie générée:", payslip);
+      setShowPreview(true);
+      toast.success("Fiche de paie générée avec succès");
     } catch (error) {
       console.error("Erreur lors de la génération de la fiche de paie:", error);
       toast.error("Erreur lors de la génération de la fiche de paie");
