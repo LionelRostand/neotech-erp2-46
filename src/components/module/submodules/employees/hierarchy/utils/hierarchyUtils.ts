@@ -1,208 +1,126 @@
+
 import { Employee } from '@/types/employee';
-import { ChartNode, HierarchyNode } from '../types';
+import { HierarchyNode } from '../types/hierarchy-types';
 
 /**
- * Find the CEO or top-level manager in the employees list
- * @param employees List of employees to search through
- * @returns The CEO/top employee or null if none found
+ * Trouve le CEO ou le responsable principal dans la liste des employés
  */
 export const findCEO = (employees: Employee[]): Employee | null => {
-  // First look for employees without a manager or with forceManager=true
-  const potentialCEOs = employees.filter(emp => 
-    !emp.managerId || emp.forceManager === true
+  // D'abord, rechercher explicitement le PDG/CEO par son titre
+  const ceo = employees.find(emp => 
+    (emp.title?.toLowerCase().includes('ceo') || 
+     emp.title?.toLowerCase().includes('pdg') ||
+     emp.title?.toLowerCase().includes('président') ||
+     emp.title?.toLowerCase().includes('directeur général') ||
+     emp.position?.toLowerCase().includes('ceo') || 
+     emp.position?.toLowerCase().includes('pdg') ||
+     emp.position?.toLowerCase().includes('président') ||
+     emp.position?.toLowerCase().includes('directeur général')) &&
+    (!emp.managerId || emp.managerId === '')
   );
+
+  if (ceo) return ceo;
+
+  // Si aucun PDG n'est trouvé, chercher le premier employé sans manager
+  const topLevelEmployee = employees.find(emp => !emp.managerId || emp.managerId === '');
   
-  // If there are multiple candidates, prefer the one with forceManager=true
-  const forcedManagers = potentialCEOs.filter(emp => emp.forceManager === true);
-  if (forcedManagers.length > 0) {
-    return forcedManagers[0];
-  }
-  
-  // Otherwise, take the first employee without a manager
-  if (potentialCEOs.length > 0) {
-    return potentialCEOs[0];
-  }
-  
-  // If no clear CEO, return null
-  return null;
+  // Si toujours rien, prendre le premier employé de la liste
+  return topLevelEmployee || (employees.length > 0 ? employees[0] : null);
 };
 
 /**
- * Create a hierarchical tree structure starting from a root employee
- * @param rootEmployee The top-level employee (usually CEO)
- * @param allEmployees All employees list
- * @returns A hierarchy node representing the organizational structure
+ * Crée un arbre hiérarchique à partir d'un employé racine
  */
 export const createHierarchyTree = (rootEmployee: Employee, allEmployees: Employee[]): HierarchyNode => {
-  // Create the root node
-  const rootNode: HierarchyNode = {
-    id: rootEmployee.id,
-    name: `${rootEmployee.firstName} ${rootEmployee.lastName}`,
-    title: rootEmployee.position || rootEmployee.title || 'CEO',
-    manager: rootEmployee.manager || undefined,
-    color: rootEmployee.department ? `hsl(${hashStringToNumber(rootEmployee.department)}, 70%, 50%)` : undefined,
-    imageUrl: rootEmployee.photoURL || rootEmployee.photo || '',
-    children: []
-  };
-  
-  // Find all direct reports (employees whose managerId is the root employee's id)
-  const directReports = allEmployees.filter(emp => emp.managerId === rootEmployee.id);
-  
-  // For each direct report, recursively build their hierarchy
-  rootNode.children = directReports.map(report => 
-    createHierarchyTree(report, allEmployees)
-  );
-  
-  return rootNode;
-};
-
-/**
- * Converts a HierarchyNode to a ChartNode
- */
-export const convertToChartNode = (node: HierarchyNode): ChartNode => {
-  return {
-    id: node.id,
-    name: node.name,
-    position: node.title,
-    department: node.manager ? `Manager: ${node.manager}` : undefined,
-    departmentColor: node.color,
-    imageUrl: node.imageUrl,
-    children: node.children.map(child => convertToChartNode(child))
-  };
-};
-
-/**
- * Helper function to check if a node or its children match the search query
- */
-export const nodeMatchesSearch = (node: ChartNode | HierarchyNode, query: string): boolean => {
-  if (!query.trim()) return true;
-  
-  const searchLower = query.toLowerCase();
-  const nodeName = node.name.toLowerCase();
-  const nodePosition = 'position' in node ? node.position.toLowerCase() : node.title.toLowerCase();
-  const nodeDepartment = 'department' in node && node.department ? node.department.toLowerCase() : '';
-  const nodeManager = !('position' in node) && node.manager ? node.manager.toLowerCase() : '';
-  
-  if (
-    nodeName.includes(searchLower) ||
-    nodePosition.includes(searchLower) ||
-    nodeDepartment.includes(searchLower) ||
-    nodeManager.includes(searchLower)
-  ) {
-    return true;
-  }
-  
-  // Check children
-  return node.children.some(child => nodeMatchesSearch(child, searchLower));
-};
-
-/**
- * Helper function to get total count of nodes in hierarchy
- */
-export const countNodes = (node: ChartNode | HierarchyNode): number => {
-  if (!node) return 0;
-  
-  let count = 1; // Count this node
-  
-  // Add count of all children
-  if (node.children && node.children.length > 0) {
-    count += node.children.reduce((acc, child) => acc + countNodes(child), 0);
-  }
-  
-  return count;
-};
-
-/**
- * Helper function to get the maximum depth of a node
- */
-export const getMaxDepth = (node: ChartNode | HierarchyNode): number => {
-  if (!node || !node.children || node.children.length === 0) {
-    return 1;
-  }
-  
-  const childrenDepths = node.children.map(child => getMaxDepth(child));
-  const maxChildDepth = Math.max(...childrenDepths);
-  
-  return 1 + maxChildDepth;
-};
-
-/**
- * Helper function to count manager nodes (nodes with children)
- */
-export const countManagerNodes = (node: ChartNode | HierarchyNode): number => {
-  if (!node) return 0;
-  
-  // This node is a manager if it has children
-  const isManager = node.children && node.children.length > 0 ? 1 : 0;
-  
-  // Add count of managers in children
-  const managersInChildren = node.children 
-    ? node.children.reduce((acc, child) => acc + countManagerNodes(child), 0) 
-    : 0;
-  
-  return isManager + managersInChildren;
-};
-
-/**
- * Helper function to extract all departments from a hierarchy
- */
-export const getAllDepartments = (node: ChartNode | HierarchyNode): Set<string> => {
-  const departments = new Set<string>();
-  
-  const addDepartmentsRecursive = (n: ChartNode | HierarchyNode) => {
-    // Add department from this node
-    if ('department' in n && n.department) {
-      departments.add(n.department);
-    } else if ('color' in n && n.color) {
-      // If a node has a color, it usually indicates a department
-      departments.add(n.name);
-    } else if ('departmentColor' in n && n.departmentColor) {
-      // Handle ChartNode which has departmentColor instead of color
-      departments.add(n.name);
+  // Fonction récursive pour construire l'arbre
+  const buildTree = (employee: Employee): HierarchyNode => {
+    // Trouver tous les subordonnés directs de cet employé
+    const directReports = allEmployees.filter(emp => emp.managerId === employee.id);
+    
+    // Construire le nœud pour cet employé
+    const node: HierarchyNode = {
+      id: employee.id,
+      name: `${employee.firstName} ${employee.lastName}`,
+      title: employee.title || employee.position || 'Employé',
+      position: employee.position || employee.title || 'Employé',
+      department: employee.department || 'Non spécifié',
+      imageUrl: employee.photoURL || '',
+      employee: employee,
+      children: []
+    };
+    
+    // Construire récursivement les sous-arbres pour chaque subordonné
+    if (directReports.length > 0) {
+      node.children = directReports.map(subordinate => buildTree(subordinate));
     }
     
-    // Get departments from children
-    if (n.children) {
-      n.children.forEach(child => addDepartmentsRecursive(child));
-    }
+    return node;
   };
   
-  addDepartmentsRecursive(node);
-  return departments;
+  // Commencer la construction à partir de l'employé racine
+  return buildTree(rootEmployee);
 };
 
 /**
- * Function to sync counters with department data
+ * Calcule des statistiques basées sur l'arbre hiérarchique
  */
-export const getSyncedStats = (hierarchyData: HierarchyNode | ChartNode | null, departmentsCount: number, managersCount: number) => {
+export const calculateHierarchyStats = (hierarchyData: HierarchyNode | null) => {
   if (!hierarchyData) {
     return {
       totalEmployees: 0,
-      managerCount: managersCount || 0,
+      managerCount: 0,
       maxDepth: 0,
-      departmentsRepresented: departmentsCount || 0
+      departmentsRepresented: 0
     };
   }
 
-  const calculatedManagers = countManagerNodes(hierarchyData);
-  const calculatedDepartments = getAllDepartments(hierarchyData).size;
-  
+  let totalEmployees = 0;
+  let managerCount = 0;
+  let maxDepth = 0;
+  const departments = new Set<string>();
+
+  // Fonction récursive pour explorer l'arbre
+  const traverseTree = (node: HierarchyNode, depth: number) => {
+    totalEmployees++;
+    maxDepth = Math.max(maxDepth, depth);
+    
+    if (node.department) {
+      departments.add(node.department);
+    }
+    
+    if (node.children.length > 0) {
+      managerCount++;
+      node.children.forEach(child => traverseTree(child, depth + 1));
+    }
+  };
+
+  traverseTree(hierarchyData, 1);
+
   return {
-    totalEmployees: countNodes(hierarchyData),
-    managerCount: Math.max(calculatedManagers, managersCount || 0),
-    maxDepth: getMaxDepth(hierarchyData),
-    departmentsRepresented: Math.max(calculatedDepartments, departmentsCount || 0)
+    totalEmployees,
+    managerCount,
+    maxDepth,
+    departmentsRepresented: departments.size
   };
 };
 
 /**
- * Helper function to convert a string to a consistent number (for color generation)
+ * Synchroniser les statistiques de l'arbre hiérarchique avec d'autres sources
  */
-const hashStringToNumber = (str: string): number => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash % 360); // Get a value between 0-360 for HSL color
+export const getSyncedStats = (
+  hierarchyData: HierarchyNode | null,
+  totalDepartments: number,
+  totalManagers: number
+) => {
+  const stats = calculateHierarchyStats(hierarchyData);
+  
+  return {
+    ...stats,
+    // Si les départements représentés sont plus grands que le total des départements,
+    // utiliser les départements représentés
+    departmentsRepresented: Math.max(stats.departmentsRepresented, totalDepartments),
+    
+    // Idem pour les managers
+    managerCount: Math.max(stats.managerCount, totalManagers)
+  };
 };

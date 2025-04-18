@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -5,86 +6,52 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: string | Date): string {
-  if (!date) return '';
+export function getInitials(name?: string): string {
+  if (!name) return '??';
   
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length === 0) return '??';
   
-  if (isNaN(d.getTime())) {
-    if (typeof date === 'string' && date.includes('/')) {
-      const parts = date.split('/');
-      if (parts.length === 3) {
-        const d = new Date(+parts[2], +parts[1] - 1, +parts[0]);
-        return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      }
-    }
-    return typeof date === 'string' ? date : '';
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase();
   }
   
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '';
   
   const d = typeof date === 'string' ? new Date(date) : date;
+  if (!(d instanceof Date) || isNaN(d.getTime())) return '';
   
-  if (isNaN(d.getTime())) {
-    return typeof date === 'string' ? date : '';
-  }
-  
-  return d.toLocaleDateString('fr-FR', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return d.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
   });
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number, currency: string = 'EUR'): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    currency
   }).format(amount);
 }
 
-export function calculateAge(birthDate: string | Date): number {
-  if (!birthDate) return 0;
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   
-  let date: Date;
-  
-  if (typeof birthDate === 'string') {
-    if (birthDate.includes('/')) {
-      const parts = birthDate.split('/');
-      if (parts.length === 3) {
-        date = new Date(+parts[2], +parts[1] - 1, +parts[0]);
-      } else {
-        date = new Date(birthDate);
-      }
-    } else {
-      date = new Date(birthDate);
-    }
-  } else {
-    date = birthDate;
-  }
-  
-  if (isNaN(date.getTime())) return 0;
-  
-  const today = new Date();
-  let age = today.getFullYear() - date.getFullYear();
-  const monthDiff = today.getMonth() - date.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
-    age--;
-  }
-  
-  return age;
-}
-
-export function truncate(str: string, length: number): string {
-  if (!str) return '';
-  return str.length > length ? str.substring(0, length) + '...' : str;
+  return function(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null;
+      func(...args);
+    };
+    
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }

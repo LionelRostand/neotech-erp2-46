@@ -5,6 +5,10 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { HierarchyNode } from '../types/hierarchy-types';
 import { findCEO, createHierarchyTree } from '../utils/hierarchyUtils';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 /**
  * Hook pour gérer les données de la hiérarchie des employés
@@ -24,13 +28,36 @@ export const useHierarchyData = () => {
   const createDefaultCEO = async () => {
     try {
       setIsCreatingDefaultCEO(true);
-      // TODO: Implémenter la création d'un CEO par défaut
-      // Pour l'instant, juste rafraîchir les données
+      
+      // Créer un nouveau CEO dans Firestore
+      const defaultCEO = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'ceo@company.com',
+        position: 'CEO',
+        title: 'Directeur Général',
+        department: 'Direction',
+        managerId: '',  // Pas de manager
+        isManager: true,
+        status: 'active',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        hireDate: new Date().toISOString(),
+        forceManager: true
+      };
+      
+      // Ajouter le CEO à la collection employees
+      await addDoc(collection(db, COLLECTIONS.HR.EMPLOYEES), defaultCEO);
+      
+      toast.success('CEO par défaut créé avec succès');
+      
+      // Actualiser les données
       if (refetchEmployees) {
         await refetchEmployees();
       }
     } catch (error) {
       console.error("Erreur lors de la création du CEO par défaut:", error);
+      toast.error("Erreur lors de la création du CEO");
     } finally {
       setIsCreatingDefaultCEO(false);
     }
@@ -74,16 +101,21 @@ export const useHierarchyData = () => {
       return;
     }
 
+    console.log(`Génération de la hiérarchie à partir de ${employees.length} employés`);
+    
     try {
       // Identifier le PDG ou le responsable principal
       const ceo = findCEO(employees);
       setLeader(ceo);
 
       if (!ceo) {
+        console.log("Aucun CEO trouvé dans les données");
         setHierarchyData(null);
         return;
       }
 
+      console.log(`CEO trouvé: ${ceo.firstName} ${ceo.lastName}`);
+      
       // Créer l'arbre hiérarchique
       const hierarchyTree = createHierarchyTree(ceo, employees);
       setHierarchyData(hierarchyTree);

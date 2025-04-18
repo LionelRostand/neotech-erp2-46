@@ -6,8 +6,15 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import OrgChartNode from './components/OrgChartNode';
 import TreeViewNode from './components/TreeViewNode';
 import { Employee } from '@/types/employee';
-import { ChartNode, HierarchyVisualizationProps } from './types';
+import { ChartNode, HierarchyNode } from './types/hierarchy-types';
 import EmptyHierarchy from './components/EmptyHierarchy';
+
+interface HierarchyVisualizationProps {
+  viewMode: 'orgChart' | 'treeView';
+  searchQuery?: string;
+  data: HierarchyNode | null;
+  onRefresh?: () => void;
+}
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
   viewMode, 
@@ -18,6 +25,24 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
   const { employees } = useEmployeeData();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  // Convertir HierarchyNode en ChartNode pour la visualisation
+  const convertToChartNode = (node: HierarchyNode): ChartNode => {
+    return {
+      id: node.id,
+      name: node.name || `${node.employee.firstName} ${node.employee.lastName}`,
+      position: node.position || node.title || node.employee.position || 'Employé',
+      department: node.department || node.employee.department,
+      departmentColor: node.departmentColor,
+      imageUrl: node.imageUrl || node.employee.photoURL,
+      children: node.children.map(child => convertToChartNode(child))
+    };
+  };
+
+  const chartData = useMemo(() => {
+    if (!data) return null;
+    return convertToChartNode(data);
+  }, [data]);
 
   // Handle toggle node expansion in tree view
   const handleToggleExpand = (nodeId: string) => {
@@ -37,7 +62,6 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
     return nodes.map(node => (
       <OrgChartNode
         key={node.id}
-        employee={node as any} // Cast to Employee for compatibility
         node={node}
         searchQuery={searchQuery}
         onSelect={() => handleSelectEmployee(node.id)}
@@ -52,7 +76,6 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
     return nodes.map(node => (
       <TreeViewNode
         key={node.id}
-        employee={node as any} // Cast to Employee for compatibility
         node={node}
         expanded={expandedNodes.has(node.id)}
         onToggleExpand={() => handleToggleExpand(node.id)}
@@ -72,12 +95,8 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
 
   // Vérifier si nous avons des données valides pour afficher la hiérarchie
   const hasValidHierarchyData = useMemo(() => {
-    return data && 
-           (('position' in data && data.position) || 
-            ('title' in data && data.title)) &&
-           data.children &&
-           data.id;
-  }, [data]);
+    return chartData && chartData.id;
+  }, [chartData]);
 
   return (
     <Card>
@@ -90,8 +109,8 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
           
           <TabsContent value="orgChart" className="min-h-[400px]">
             <div className="mt-4 space-y-8">
-              {hasValidHierarchyData ? (
-                renderOrgChartNodes([data as ChartNode])
+              {hasValidHierarchyData && chartData ? (
+                renderOrgChartNodes([chartData])
               ) : (
                 <EmptyHierarchy onRefresh={onRefresh} />
               )}
@@ -100,8 +119,8 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
           
           <TabsContent value="treeView" className="min-h-[400px]">
             <div className="mt-4">
-              {hasValidHierarchyData ? (
-                renderTreeViewNodes([data as ChartNode])
+              {hasValidHierarchyData && chartData ? (
+                renderTreeViewNodes([chartData])
               ) : (
                 <EmptyHierarchy onRefresh={onRefresh} />
               )}

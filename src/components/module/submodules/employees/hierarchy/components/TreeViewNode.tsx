@@ -1,91 +1,101 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { getEmployeeInitials, getAvatarColorFromName, getPositionStyleClasses } from "../../utils/employeeUtils";
-import { Employee } from '@/types/employee';
-import { getPhotoUrl } from '../../utils/photoUtils';
-import { ChartNode } from '../types';
+import { ChevronRight, ChevronDown, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ChartNode } from '../types/hierarchy-types';
 
 interface TreeViewNodeProps {
-  employee: Employee;
-  node?: ChartNode | any;
+  node: ChartNode;
   expanded: boolean;
-  onToggleExpand: () => void;
-  onSelectNode: (employee: Employee) => void;
+  searchQuery: string;
   children?: React.ReactNode;
-  searchQuery?: string;
+  onToggleExpand: () => void;
+  onSelectNode: () => void;
+  depth?: number;
 }
 
 const TreeViewNode: React.FC<TreeViewNodeProps> = ({
-  employee,
   node,
   expanded,
+  searchQuery,
+  children,
   onToggleExpand,
   onSelectNode,
-  children,
-  searchQuery = ''
+  depth = 0,
 }) => {
-  // If node is provided, use it instead of employee directly
-  const employeeData = node || employee;
-  
-  const avatarColor = getAvatarColorFromName(employeeData.firstName + employeeData.lastName);
-  const positionClasses = getPositionStyleClasses(employeeData.position || '');
-  const photoUrl = getPhotoUrl(employeeData.photoMeta);
+  // Vérifier si le nœud correspond à la recherche
+  const matchesSearch = searchQuery
+    ? node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      node.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (node.department && node.department.toLowerCase().includes(searchQuery.toLowerCase()))
+    : true;
 
-  // Highlight if this node matches the search query
-  const isHighlighted = searchQuery && (
-    employeeData.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employeeData.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employeeData.position?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Si le nœud ne correspond pas à la recherche et qu'il n'a pas d'enfants qui correspondent,
+  // ne pas l'afficher
+  if (searchQuery && !matchesSearch && !React.Children.count(children)) {
+    return null;
+  }
+
+  // Indentation basée sur la profondeur
+  const indentStyle = {
+    paddingLeft: `${depth * 20}px`,
+  };
 
   return (
-    <div className="mt-2">
+    <div className={`mb-1 ${matchesSearch ? 'opacity-100' : 'opacity-70'}`}>
       <div 
-        className={`flex items-center p-2 rounded-md hover:bg-gray-100 ${isHighlighted ? 'bg-yellow-50 border border-yellow-200' : ''}`}
+        className={`flex items-center p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+          matchesSearch && searchQuery ? 'bg-blue-50' : ''
+        }`} 
+        style={indentStyle}
       >
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0 mr-2"
-          onClick={onToggleExpand}
-        >
-          {expanded ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-          <span className="sr-only">Toggle</span>
-        </Button>
+        {React.Children.count(children) > 0 ? (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6 mr-1" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand();
+            }}
+          >
+            {expanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        ) : (
+          <div className="w-7 h-6"></div>
+        )}
         
         <div 
           className="flex items-center flex-grow cursor-pointer"
-          onClick={() => onSelectNode(employeeData)}
+          onClick={onSelectNode}
         >
-          <Avatar className={`h-8 w-8 mr-2 ${avatarColor}`}>
-            {photoUrl ? (
-              <AvatarImage src={photoUrl} alt={employeeData.firstName} />
-            ) : (
-              <AvatarFallback>{getEmployeeInitials(employeeData)}</AvatarFallback>
-            )}
+          <Avatar className="h-8 w-8 mr-2">
+            <AvatarImage src={node.imageUrl} />
+            <AvatarFallback>{getInitials(node.name)}</AvatarFallback>
           </Avatar>
-          
           <div>
-            <div className="text-sm font-medium">{employeeData.firstName} {employeeData.lastName}</div>
-            <div className={`text-xs ${positionClasses}`}>{employeeData.position || 'N/A'}</div>
+            <p className="font-medium text-sm">{node.name}</p>
+            <div className="flex items-center text-xs text-gray-500">
+              <span>{node.position}</span>
+              {node.department && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span>{node.department}</span>
+                </>
+              )}
+            </div>
           </div>
-          
-          <Badge variant="outline" className="ml-auto">
-            {employeeData.department || 'No Department'}
-          </Badge>
         </div>
       </div>
       
       {expanded && children && (
-        <div className="ml-6 pl-2 border-l border-gray-200">
+        <div className="ml-2 children-container">
           {children}
         </div>
       )}
