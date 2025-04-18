@@ -12,11 +12,11 @@ import { toast } from 'sonner';
  */
 export const addDocument = async (collectionPath: string, data: any) => {
   try {
-    // Vérifier si les données ont un ID
-    const hasId = data && data.id && typeof data.id === 'string';
+    // Vérifier si les données ont un ID valide
+    const hasId = data && data.id && typeof data.id === 'string' && data.id.trim() !== '';
     
     console.log(`Adding document to collection: ${collectionPath}`, data);
-    console.log(`Document has ID? ${hasId ? 'Yes: ' + data.id : 'No'}`);
+    console.log(`Document has valid ID? ${hasId ? 'Yes: ' + data.id : 'No'}`);
     
     // Vérifier si l'objet contient des champs d'image (photo, photoURL, photoData)
     if (data.photo || data.photoURL || data.photoData) {
@@ -30,6 +30,12 @@ export const addDocument = async (collectionPath: string, data: any) => {
         data.photoURL = photoData;
         data.photoData = photoData;
       }
+    }
+    
+    // Remove id field if it's undefined or invalid to prevent Firestore errors
+    if (data.id === undefined || data.id === null || data.id === '') {
+      delete data.id;
+      hasId = false;
     }
     
     if (hasId) {

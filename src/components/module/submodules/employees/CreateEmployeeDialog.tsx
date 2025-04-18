@@ -38,6 +38,11 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
     try {
       const employeeData = formValuesToEmployee(data);
       
+      // Remove the id field if it's undefined to avoid Firestore errors
+      if (employeeData.id === undefined) {
+        delete employeeData.id;
+      }
+      
       const result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
       
       if (result && result.id) {
@@ -78,4 +83,3 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
 };
 
 export default CreateEmployeeDialog;
-

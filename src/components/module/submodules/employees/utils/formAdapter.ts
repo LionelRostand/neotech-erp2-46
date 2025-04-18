@@ -15,7 +15,6 @@ export const formValuesToEmployee = (
 ): Partial<Employee> => {
   // Créer l'objet employé à partir des valeurs du formulaire
   const employeeData: Partial<Employee> = {
-    ...existingEmployee,
     firstName: formValues.firstName,
     lastName: formValues.lastName,
     email: formValues.email,
@@ -37,10 +36,14 @@ export const formValuesToEmployee = (
     city: formValues.city,
     zipCode: formValues.zipCode,
     region: formValues.region,
-    // Conserver l'ID existant si disponible
-    id: existingEmployee?.id || undefined,
+    // Conserver l'ID existant si disponible et valide
     updatedAt: new Date().toISOString(),
   };
+
+  // Only add ID if it's valid and exists
+  if (existingEmployee?.id) {
+    employeeData.id = existingEmployee.id;
+  }
 
   // Gestion de la photo
   if (formValues.photo) {
