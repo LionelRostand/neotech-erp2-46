@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Mail, Phone, Building2, Pencil, MapPin, Calendar, IdCard } from 'lucide-react';
+import { Briefcase, Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
@@ -71,7 +71,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             </Avatar>
           </div>
           
-          <div className="flex-1 space-y-4">
+          <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
@@ -95,62 +95,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {getStatusBadge()}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Informations personnelles</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Date de naissance : {employee.birthDate || 'Non renseignée'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>Email personnel : {employee.email || 'Email non renseigné'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>Téléphone : {employee.phone || 'Téléphone non renseigné'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {typeof employee.address === 'string' 
-                        ? employee.address 
-                        : employee.address 
-                          ? `${employee.address.street}, ${employee.address.city} ${employee.address.postalCode}` 
-                          : 'Adresse non renseignée'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Informations professionnelles</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span>Poste : {employee.position || 'Non spécifié'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>Email professionnel : {employee.professionalEmail || 'Non spécifié'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span>Département : {employee.department || 'Non spécifié'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Date d'embauche : {employee.hireDate || 'Non renseignée'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <IdCard className="h-4 w-4 text-muted-foreground" />
-                    <span>Type de contrat : {employee.contract || 'Non spécifié'}</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
