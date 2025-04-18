@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,13 +18,11 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     
     if (!passed) {
       candidate.currentStage = 'Fermée';
-      candidate.status = 'rejected';
+      item.status = 'Fermée';
     } else {
       candidate.currentStage = 'Offre';
+      item.status = 'Offre';
     }
-    
-    // Ne pas modifier le statut global de l'offre ici
-    // Cela interfère avec le drag and drop
   };
 
   const handleNormalInterviewResult = async (candidateId: string, passed: boolean) => {
@@ -36,14 +33,9 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     
     if (!passed) {
       candidate.currentStage = 'Fermée';
+      item.status = 'Fermée';
       candidate.status = 'rejected';
-    } else {
-      // Passer à l'entretien technique
-      candidate.technicalInterviewStatus = 'pending';
     }
-    
-    // Ne pas modifier le statut global de l'offre ici
-    // Cela interfère avec le drag and drop
   };
 
   const handleSalaryProposal = async (candidateId: string, salary: number) => {
@@ -58,6 +50,7 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     if (accepted) {
       candidate.offerStatus = 'accepted';
       candidate.currentStage = 'Fermée';
+      item.status = 'Fermée';
       
       // Création de l'employé
       const newEmployee = {
@@ -78,6 +71,7 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     } else {
       candidate.offerStatus = 'rejected';
       candidate.currentStage = 'Fermée';
+      item.status = 'Fermée';
     }
   };
 
@@ -153,7 +147,7 @@ export default function KanbanCard({ item }: KanbanCardProps) {
             <div className="mt-2">
               <Button 
                 size="sm"
-                onClick={() => handleSalaryProposal(candidate.id, 45000)}
+                onClick={() => handleSalaryProposal(candidate.id, 45000)} // Valeur exemple
               >
                 Proposer salaire (45k€)
               </Button>
