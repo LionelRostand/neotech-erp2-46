@@ -1,71 +1,55 @@
 
 import React from 'react';
-import { useDroppable } from '@dnd-kit/core';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowDownUp, Loader2 } from 'lucide-react';
-import { RecruitmentPost } from '@/types/recruitment';
+import { useDroppable } from "@dnd-kit/core";
+import { RecruitmentPost, CandidateApplication } from '@/types/recruitment';
 import KanbanCard from './KanbanCard';
+import AddCandidateDialog from './AddCandidateDialog';
 
 interface KanbanColumnProps {
   id: string;
   title: string;
   items: RecruitmentPost[];
-  onSort: () => void;
-  isOrganizing: boolean;
+  onSort?: () => void;
+  isOrganizing?: boolean;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ 
-  id, 
-  title, 
-  items, 
-  onSort, 
-  isOrganizing 
-}) => {
-  const { setNodeRef } = useDroppable({
-    id: id,
-  });
+export default function KanbanColumn({ id, title, items, onSort, isOrganizing }: KanbanColumnProps) {
+  const { setNodeRef } = useDroppable({ id });
+
+  const handleCandidateAdded = (post: RecruitmentPost, candidate: CandidateApplication) => {
+    // Handle the candidate being added through the existing Firestore update logic
+    if (!post.candidates) {
+      post.candidates = [];
+    }
+    post.candidates.push(candidate);
+    // The parent component should handle the Firestore update
+  };
 
   return (
-    <Card className="min-w-[300px] max-w-[300px] h-[calc(100vh-220px)]">
-      <CardHeader className="py-2 px-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center">
-            {title}
-            <span className="ml-2 text-xs font-normal bg-gray-100 px-1.5 py-0.5 rounded-full">
-              {items.length}
-            </span>
-          </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8" 
-            onClick={onSort}
-            disabled={isOrganizing}
-          >
-            {isOrganizing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ArrowDownUp className="h-4 w-4" />
-            )}
-          </Button>
+    <div className="flex flex-col min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold">{title}</h3>
+          <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+            {items.length}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="p-2 overflow-auto h-[calc(100%-60px)]">
-        <div ref={setNodeRef} className="space-y-2 min-h-[100px]">
-          {items.length === 0 ? (
-            <div className="h-20 border border-dashed rounded-md flex items-center justify-center text-xs text-gray-400">
-              Déposez les offres ici
-            </div>
-          ) : (
-            items.map((item) => (
-              <KanbanCard key={item.id} item={item} type="offer" />
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        {id === 'En cours' && items.length > 0 && (
+          <AddCandidateDialog 
+            recruitmentId={items[0].id} 
+            onCandidateAdded={(candidate) => handleCandidateAdded(items[0], candidate)}
+          />
+        )}
+      </div>
+      
+      <div
+        ref={setNodeRef}
+        className="flex flex-col gap-2 min-h-[200px]"
+      >
+        {items.map((item) => (
+          <KanbanCard key={item.id} item={item} />
+        ))}
+      </div>
+    </div>
   );
-};
-
-export default KanbanColumn;
+}
