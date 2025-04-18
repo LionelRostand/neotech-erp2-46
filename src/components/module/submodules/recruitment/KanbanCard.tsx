@@ -15,59 +15,22 @@ interface KanbanCardProps {
 export default function KanbanCard({ item, isDragging }: KanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: item.id,
+    // Only allow dragging if both interviews are passed
+    disabled: item.status === 'Entretiens' && item.candidates?.some(c => 
+      c.technicalInterviewStatus !== 'passed' || c.normalInterviewStatus !== 'passed'
+    )
   });
   
   const handleTechnicalInterviewResult = async (candidateId: string, passed: boolean) => {
     const candidate = item.candidates?.find(c => c.id === candidateId);
     if (!candidate) return;
-
     candidate.technicalInterviewStatus = passed ? 'passed' : 'failed';
-    
-    // Nous ne modifions pas le statut de l'offre ici pour permettre le drag and drop
-    // Le changement de statut se fera via drag and drop
   };
 
   const handleNormalInterviewResult = async (candidateId: string, passed: boolean) => {
     const candidate = item.candidates?.find(c => c.id === candidateId);
     if (!candidate) return;
-
     candidate.normalInterviewStatus = passed ? 'passed' : 'failed';
-    
-    // Nous ne modifions pas le statut de l'offre ici pour permettre le drag and drop
-    // Le changement de statut se fera via drag and drop
-  };
-
-  const handleSalaryProposal = async (candidateId: string, salary: number) => {
-    const candidate = item.candidates?.find(c => c.id === candidateId);
-    if (!candidate) return;
-
-    candidate.proposedSalary = salary;
-    candidate.offerStatus = 'pending';
-    // Simulons une réponse positive du candidat
-    const accepted = true; // Dans un cas réel, cela viendrait de l'interaction avec le candidat
-    
-    if (accepted) {
-      candidate.offerStatus = 'accepted';
-      
-      // Création de l'employé
-      const newEmployee = {
-        id: candidate.id,
-        firstName: candidate.firstName,
-        lastName: candidate.lastName,
-        email: candidate.email,
-        phone: candidate.phone || '',
-        position: item.position,
-        department: item.department,
-        startDate: new Date().toISOString(),
-        salary: candidate.proposedSalary,
-        status: 'active'
-      };
-      
-      // Ici, vous devriez avoir une fonction pour ajouter l'employé dans la base de données
-      console.log('Nouvel employé créé:', newEmployee);
-    } else {
-      candidate.offerStatus = 'rejected';
-    }
   };
 
   const style = transform ? {
@@ -154,28 +117,6 @@ export default function KanbanCard({ item, isDragging }: KanbanCardProps) {
                     </span>
                   )}
                 </div>
-              )}
-            </div>
-          )}
-
-          {item.status === 'Offre' && candidate.technicalInterviewStatus === 'passed' && candidate.normalInterviewStatus === 'passed' && !candidate.proposedSalary && (
-            <div className="mt-2">
-              <Button 
-                size="sm"
-                onClick={() => handleSalaryProposal(candidate.id, 45000)} // Valeur exemple
-              >
-                Proposer salaire (45k€)
-              </Button>
-            </div>
-          )}
-
-          {candidate.proposedSalary && (
-            <div className="mt-2 text-sm">
-              Salaire proposé: {candidate.proposedSalary}€/an
-              {candidate.offerStatus && (
-                <span className={`ml-2 ${candidate.offerStatus === 'accepted' ? 'text-green-500' : 'text-red-500'}`}>
-                  ({candidate.offerStatus})
-                </span>
               )}
             </div>
           )}

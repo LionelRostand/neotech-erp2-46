@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, closestCenter, DragStartEvent } from '@dnd-kit/core';
 import { collection, doc, getDocs, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -72,9 +71,9 @@ const RecruitmentKanban: React.FC = () => {
     return recruitmentPosts.filter(post => post.status === status);
   };
 
-  const handleDragStart = (event: { active: { id: string } }) => {
-    // Store the ID of the item being dragged
-    setDraggingId(event.active.id as string);
+  const handleDragStart = (event: DragStartEvent) => {
+    const draggedId = String(event.active.id);
+    setDraggingId(draggedId);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
