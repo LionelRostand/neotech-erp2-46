@@ -1,12 +1,15 @@
 
 import React from 'react';
+import { PaySlip } from '@/types/payslip';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { PaySlip } from '../types/payslip';
-import { ChevronLeft, Download, Printer } from 'lucide-react';
-import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
-import { formatCurrency } from '@/lib/utils';
+import { ArrowLeft, FileDown, Save, Send } from 'lucide-react';
+import { formatCurrency } from '@/lib/formatters';
+import { useNavigate } from 'react-router-dom';
+import { savePaySlip, savePaySlipToEmployeeDocuments } from '../services/payslipService';
+import { toast } from 'sonner';
+import { generatePayslipPdf } from '../utils/payslipPdfUtils';
+import DownloadPayslipButton from './DownloadPayslipButton';
 
 interface PayslipDetailsProps {
   payslip: PaySlip;
@@ -14,233 +17,218 @@ interface PayslipDetailsProps {
 }
 
 const PayslipDetails: React.FC<PayslipDetailsProps> = ({ payslip, onBack }) => {
-  const { setShowPreview } = usePayslipGenerator();
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      setShowPreview(false);
+  const navigate = useNavigate();
+  const [isSaving, setIsSaving] = React.useState(false);
+  
+  const handleSavePayslip = async () => {
+    setIsSaving(true);
+    try {
+      // Save to database
+      const savedPayslip = await savePaySlip(payslip);
+      
+      // Save to employee documents
+      await savePaySlipToEmployeeDocuments(savedPayslip);
+      
+      toast.success('Fiche de paie enregistrée et ajoutée aux documents de l\'employé');
+      
+      // Navigate to history tab
+      navigate('/modules/employees/salaries?tab=history');
+    } catch (error) {
+      console.error('Error saving payslip:', error);
+      toast.error('Erreur lors de l\'enregistrement de la fiche de paie');
+    } finally {
+      setIsSaving(false);
     }
   };
-
-  const handlePrint = () => {
-    window.print();
+  
+  const handleDownloadPdf = () => {
+    try {
+      const doc = generatePayslipPdf(payslip);
+      doc.save(`bulletin_${payslip.employeeName.replace(' ', '_')}_${payslip.period.replace(' ', '_')}.pdf`);
+      toast.success('Fiche de paie téléchargée');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    }
   };
+  
+  // Group details by type
+  const earnings = payslip.details.filter(detail => detail.type === 'earning');
+  const deductions = payslip.details.filter(detail => detail.type === 'deduction');
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-4 md:p-8 rounded-lg shadow-md print:shadow-none">
-      <div className="flex justify-between items-center mb-6 print:hidden">
-        <Button variant="outline" onClick={handleBack}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Retour
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Imprimer
-          </Button>
-          <Button>
-            <Download className="h-4 w-4 mr-2" />
-            Télécharger PDF
-          </Button>
-        </div>
-      </div>
-
-      <div className="print:block">
-        {/* En-tête */}
-        <div className="flex flex-col md:flex-row justify-between mb-8">
+    <Card className="w-full">
+      <CardHeader className="bg-muted/50">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold mb-1">Bulletin de paie</h1>
-            <p className="text-gray-600">Période : {payslip.period}</p>
-            <p className="text-gray-600">Date de paiement : {payslip.paymentDate}</p>
+            <CardTitle className="text-2xl">Bulletin de paie</CardTitle>
+            <CardDescription>
+              {payslip.employeeName} - Période : {payslip.period}
+            </CardDescription>
           </div>
-          <div className="mt-4 md:mt-0 text-right">
-            <h2 className="font-bold">{payslip.employerName}</h2>
-            <p className="text-sm text-gray-600">{payslip.employerAddress}</p>
-            <p className="text-sm text-gray-600">SIRET : {payslip.employerSiret}</p>
+          {onBack && (
+            <Button variant="outline" size="sm" onClick={onBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="p-6 space-y-8">
+        {/* Employee & Company info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <h3 className="font-semibold text-lg">Informations employé</h3>
+            <p>Nom : {payslip.employeeName}</p>
+            <p>Heures travaillées : {payslip.hoursWorked || 0}</p>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="font-semibold text-lg">Informations employeur</h3>
+            <p>Nom : {payslip.employerName}</p>
+            {payslip.employerAddress && <p>Adresse : {payslip.employerAddress}</p>}
+            {payslip.employerSiret && <p>SIRET : {payslip.employerSiret}</p>}
           </div>
         </div>
-
-        {/* Informations de l'employé */}
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-medium">Informations Employé</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p><span className="font-medium">Nom :</span> {payslip.employee.lastName}</p>
-                <p><span className="font-medium">Prénom :</span> {payslip.employee.firstName}</p>
-                <p><span className="font-medium">Poste :</span> {payslip.employee.role}</p>
-              </div>
-              <div>
-                <p><span className="font-medium">N° Sécurité Sociale :</span> {payslip.employee.socialSecurityNumber}</p>
-                <p><span className="font-medium">Date d'embauche :</span> {payslip.employee.startDate}</p>
-                <p><span className="font-medium">Mode de paiement :</span> {payslip.paymentMethod || "Virement bancaire"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Détails de rémunération */}
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-medium">Détail de la rémunération</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Libellé</th>
-                    <th className="text-right py-2">Base</th>
-                    <th className="text-right py-2">Taux</th>
-                    <th className="text-right py-2">Montant (€)</th>
+        
+        {/* Payslip details */}
+        <div className="space-y-6">
+          {/* Earnings section */}
+          <div>
+            <h3 className="font-semibold text-lg mb-2">Rémunérations</h3>
+            <div className="border rounded-md">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubrique</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {payslip.details.filter(detail => detail.type === "earning").map((detail, index) => (
-                    <tr key={index} className="border-b border-gray-100">
-                      <td className="py-2">{detail.label}</td>
-                      <td className="text-right py-2">{detail.base || "-"}</td>
-                      <td className="text-right py-2">{detail.rate || "-"}</td>
-                      <td className="text-right py-2">{formatCurrency(detail.amount)}</td>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {earnings.map((earning, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">{earning.label}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">{earning.base || ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">{earning.rate || ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">{formatCurrency(earning.amount)}</td>
                     </tr>
                   ))}
-                  <tr className="font-bold">
-                    <td colSpan={3} className="py-3 text-right">Salaire brut</td>
-                    <td className="py-3 text-right">{formatCurrency(payslip.grossSalary)}</td>
+                  <tr className="bg-muted/50 font-medium">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm" colSpan={3}>Salaire brut</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-right">{formatCurrency(payslip.grossSalary)}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Cotisations sociales */}
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-medium">Cotisations sociales</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Libellé</th>
-                    <th className="text-right py-2">Base</th>
-                    <th className="text-right py-2">Taux salarial</th>
-                    <th className="text-right py-2">Montant (€)</th>
+          </div>
+          
+          {/* Deductions section */}
+          <div>
+            <h3 className="font-semibold text-lg mb-2">Cotisations et contributions</h3>
+            <div className="border rounded-md">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubrique</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {payslip.details.filter(detail => detail.type === "deduction").map((detail, index) => (
-                    <tr key={index} className="border-b border-gray-100">
-                      <td className="py-2">{detail.label}</td>
-                      <td className="text-right py-2">{formatCurrency(payslip.grossSalary)}</td>
-                      <td className="text-right py-2">{detail.rate || "-"}</td>
-                      <td className="text-right py-2">-{formatCurrency(detail.amount)}</td>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {deductions.map((deduction, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">{deduction.label}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">{deduction.base || ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">{deduction.rate || ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">{formatCurrency(deduction.amount)}</td>
                     </tr>
                   ))}
-                  <tr className="font-bold">
-                    <td colSpan={3} className="py-3 text-right">Total des cotisations</td>
-                    <td className="py-3 text-right">-{formatCurrency(payslip.totalDeductions)}</td>
+                  <tr className="bg-muted/50 font-medium">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm" colSpan={3}>Total des cotisations</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-right">{formatCurrency(payslip.totalDeductions)}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Résumé */}
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-medium">Résumé</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <table className="w-full">
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="py-2">Salaire brut</td>
-                      <td className="text-right py-2">{formatCurrency(payslip.grossSalary)}</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-2">Total des cotisations</td>
-                      <td className="text-right py-2">-{formatCurrency(payslip.totalDeductions)}</td>
-                    </tr>
-                    <tr className="font-bold text-lg">
-                      <td className="py-3">Net à payer</td>
-                      <td className="text-right py-3">{formatCurrency(payslip.netSalary)}</td>
-                    </tr>
+          </div>
+          
+          {/* Net salary */}
+          <div className="border rounded-md bg-primary/5 p-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-lg">Net à payer</h3>
+              <span className="font-bold text-xl">{formatCurrency(payslip.netSalary)}</span>
+            </div>
+          </div>
+          
+          {/* Leave balances */}
+          {(payslip.conges || payslip.rtt) && (
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Congés et RTT</h3>
+              <div className="border rounded-md">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-muted">
                     <tr>
-                      <td className="pt-4 text-sm text-gray-600" colSpan={2}>
-                        Net imposable: {formatCurrency(payslip.netSalary * 0.975)}
-                      </td>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acquis</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pris</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Solde</th>
                     </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {payslip.conges && (
+                      <tr>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm">Congés payés</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{payslip.conges.acquired}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{payslip.conges.taken}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{payslip.conges.balance}</td>
+                      </tr>
+                    )}
+                    {payslip.rtt && (
+                      <tr>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm">RTT</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{payslip.rtt.acquired}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{payslip.rtt.taken}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{payslip.rtt.balance}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-              
-              <div>
-                <h4 className="font-medium mb-2">Cumuls annuels</h4>
-                <div className="space-y-2 text-sm">
-                  <p>Brut cumulé : {formatCurrency(payslip.annualCumulative?.grossSalary || 0)}</p>
-                  <p>Net imposable cumulé : {formatCurrency(payslip.annualCumulative?.taxableIncome || 0)}</p>
-                </div>
-
-                <h4 className="font-medium mt-4 mb-2">Congés</h4>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <p className="text-gray-600">Acquis</p>
-                    <p className="font-medium">{payslip.conges?.acquired || 0} j</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Pris</p>
-                    <p className="font-medium">{payslip.conges?.taken || 0} j</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Solde</p>
-                    <p className="font-medium">{payslip.conges?.balance || 0} j</p>
-                  </div>
-                </div>
-
-                <h4 className="font-medium mt-4 mb-2">RTT</h4>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <p className="text-gray-600">Acquis</p>
-                    <p className="font-medium">{payslip.rtt?.acquired || 0} j</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Pris</p>
-                    <p className="font-medium">{payslip.rtt?.taken || 0} j</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Solde</p>
-                    <p className="font-medium">{payslip.rtt?.balance || 0} j</p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-xs text-gray-500 mt-8">
-          <p>
-            En application de l'article R. 3243-4 du Code du travail, vous êtes tenu de conserver ce bulletin de paie sans limitation de durée.
-          </p>
-          <p className="mt-1">
-            Net à payer avant impôt sur le revenu : {formatCurrency(payslip.netSalary)} | Impôt sur le revenu prélevé à la source : 0.00 €
-          </p>
-          <p className="mt-1">
-            Bulletin conforme à la législation française du Code du travail
-          </p>
+          )}
         </div>
-      </div>
-    </div>
+        
+        <div className="pt-4 text-xs text-muted-foreground">
+          <p>En application de l'article L.144-2 du Code du travail, vous pouvez avoir accès aux éléments de calcul de votre rémunération.</p>
+          <p>Ce bulletin de paie doit être conservé sans limitation de durée.</p>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="border-t p-6 flex flex-wrap gap-3 justify-end">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleDownloadPdf}
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          Télécharger PDF
+        </Button>
+        
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={handleSavePayslip}
+          disabled={isSaving}
+        >
+          <Save className="mr-2 h-4 w-4" />
+          {isSaving ? 'Sauvegarde en cours...' : 'Sauvegarder et archiver'}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

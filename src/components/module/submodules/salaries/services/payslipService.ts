@@ -1,90 +1,105 @@
 
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, Timestamp, DocumentReference } from 'firebase/firestore';
-import { PaySlipData } from '../types/payslip-types';
+import { collection, doc, getDoc, getDocs, addDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { PaySlip } from '@/types/payslip';
+import { generatePayslipPdf } from '../utils/payslipPdfUtils';
+import { addEmployeeDocument } from '../../employees/services/documentService';
+import { toast } from 'sonner';
 
-// Functions for managing payslips
-
-// Create a new payslip
-export const createPaySlip = async (payslipData: Omit<PaySlipData, 'id'>): Promise<PaySlipData> => {
+// Save a payslip to the Firestore database
+export const savePaySlip = async (payslip: PaySlip): Promise<PaySlip> => {
   try {
-    // Ensure we use a valid collection path
+    // Create a reference to the payslips collection
     const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+    
+    // Add document with timestamp
     const docRef = await addDoc(payslipsRef, {
-      ...payslipData,
+      ...payslip,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     });
-
-    // Get the document to return complete data
-    const docSnap = await getDoc(docRef);
-    const docId = docRef.id;
-
-    if (!docSnap.exists()) {
-      throw new Error("Document does not exist after creation");
-    }
-
-    // Return the document data with the ID
-    return { id: docId, ...docSnap.data() } as unknown as PaySlipData;
+    
+    // Return the document with its new ID
+    return {
+      ...payslip,
+      id: docRef.id
+    };
   } catch (error) {
-    console.error("Error creating payslip:", error);
-    throw error;
+    console.error('Error saving payslip:', error);
+    throw new Error('Failed to save payslip');
   }
 };
 
-// Function to fetch all payslips for an employee
-export const getEmployeePaySlips = async (employeeId: string): Promise<PaySlipData[]> => {
+// Save payslip PDF to employee documents
+export const savePaySlipToEmployeeDocuments = async (payslip: PaySlip): Promise<boolean> => {
   try {
-    // Ensure we use a valid collection path
-    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
-    const q = query(
-      payslipsRef,
-      where("employeeId", "==", employeeId),
-      orderBy("period", "desc")
-    );
-
-    const querySnapshot = await getDocs(q);
-    const payslips: PaySlipData[] = [];
-
-    querySnapshot.forEach((doc) => {
-      payslips.push({
-        id: doc.id,
-        ...doc.data()
-      } as PaySlipData);
-    });
-
-    return payslips;
+    if (!payslip.employeeId) {
+      throw new Error('No employee ID associated with payslip');
+    }
+    
+    // Generate PDF
+    const doc = generatePayslipPdf(payslip);
+    
+    // Get PDF as base64 data
+    const pdfBase64 = doc.output('datauristring');
+    
+    // Create document metadata
+    const documentData = {
+      type: 'Fiche de paie',
+      name: `Bulletin de paie - ${payslip.period}`,
+      fileType: 'application/pdf',
+      fileData: pdfBase64,
+      date: new Date().toISOString(),
+      employeeId: payslip.employeeId,
+      documentId: `payslip_${payslip.id}`
+    };
+    
+    // Add document to employee profile
+    await addEmployeeDocument(payslip.employeeId, documentData);
+    
+    return true;
   } catch (error) {
-    console.error("Error fetching employee payslips:", error);
+    console.error('Error saving payslip to employee documents:', error);
+    toast.error("Erreur lors de l'enregistrement du document");
+    return false;
+  }
+};
+
+// Get all payslips
+export const getAllPayslips = async (): Promise<PaySlip[]> => {
+  try {
+    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+    const q = query(payslipsRef, orderBy('date', 'desc'));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as PaySlip));
+  } catch (error) {
+    console.error('Error fetching payslips:', error);
     return [];
   }
 };
 
-// Function to update an existing payslip
-export const updatePaySlip = async (payslipId: string, data: Partial<PaySlipData>): Promise<PaySlipData> => {
+// Get payslips for a specific employee
+export const getEmployeePayslips = async (employeeId: string): Promise<PaySlip[]> => {
   try {
-    // Ensure we use a valid collection path
-    const payslipRef = doc(db, COLLECTIONS.HR.PAYSLIPS, payslipId);
+    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+    const q = query(
+      payslipsRef, 
+      where('employeeId', '==', employeeId),
+      orderBy('date', 'desc')
+    );
+    const snapshot = await getDocs(q);
     
-    await updateDoc(payslipRef, {
-      ...data,
-      updatedAt: Timestamp.now()
-    });
-
-    // Return the updated document
-    const updatedDoc = await getDoc(payslipRef);
-    
-    if (!updatedDoc.exists()) {
-      throw new Error("Document does not exist after update");
-    }
-    
-    return { id: payslipId, ...updatedDoc.data() } as unknown as PaySlipData;
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as PaySlip));
   } catch (error) {
-    console.error("Error updating payslip:", error);
-    throw error;
+    console.error('Error fetching employee payslips:', error);
+    return [];
   }
 };
-
-// Function to save a new payslip (alias for createPaySlip for backward compatibility)
-export const savePaySlip = createPaySlip;
