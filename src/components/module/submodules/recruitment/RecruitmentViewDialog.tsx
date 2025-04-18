@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -8,6 +7,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   User, 
   Calendar, 
@@ -22,6 +23,9 @@ import { Separator } from '@/components/ui/separator';
 import { RecruitmentPost } from '@/types/recruitment';
 import EditRecruitmentDialog from './EditRecruitmentDialog';
 import { useToast } from '@/hooks/use-toast';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface RecruitmentViewDialogProps {
   open: boolean;
@@ -35,9 +39,33 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
   recruitment
 }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [proposedSalary, setProposedSalary] = useState('');
   const { toast } = useToast();
 
-  if (!recruitment) return null;
+  const handleProposeSalary = async () => {
+    if (!recruitment || !recruitment.id) return;
+    
+    try {
+      const docRef = doc(db, COLLECTIONS.HR.RECRUITMENT, recruitment.id);
+      await updateDoc(docRef, {
+        proposedSalary: Number(proposedSalary)
+      });
+      
+      toast({
+        title: "Salaire proposé",
+        description: "La proposition de salaire a été enregistrée avec succès",
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erreur lors de la proposition de salaire:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer la proposition de salaire",
+        variant: "destructive"
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -195,6 +223,41 @@ const RecruitmentViewDialog: React.FC<RecruitmentViewDialogProps> = ({
                 </span>
               </div>
             </div>
+            
+            {recruitment.status === 'Offre' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-4">
+                <h3 className="font-medium text-green-800 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Proposition de salaire
+                </h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="salary">Montant proposé (€)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="salary"
+                      type="number"
+                      value={proposedSalary}
+                      onChange={(e) => setProposedSalary(e.target.value)}
+                      placeholder="Ex: 45000"
+                      className="max-w-[200px]"
+                    />
+                    <Button 
+                      onClick={handleProposeSalary}
+                      disabled={!proposedSalary}
+                    >
+                      Proposer
+                    </Button>
+                  </div>
+                  
+                  {recruitment.proposedSalary && (
+                    <p className="text-sm text-green-600">
+                      Salaire actuel proposé: {recruitment.proposedSalary}€
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
