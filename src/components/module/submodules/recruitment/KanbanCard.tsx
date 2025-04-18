@@ -15,13 +15,11 @@ export default function KanbanCard({ item }: KanbanCardProps) {
     if (!candidate) return;
 
     candidate.technicalInterviewStatus = passed ? 'passed' : 'failed';
-    // Si l'entretien technique est échoué, on arrête le processus
+    
     if (!passed) {
       candidate.currentStage = 'Fermée';
       item.status = 'Fermée';
-    }
-    // Si les deux entretiens sont validés, on passe à l'étape Offre
-    else if (candidate.normalInterviewStatus === 'passed' && candidate.technicalInterviewStatus === 'passed') {
+    } else {
       candidate.currentStage = 'Offre';
       item.status = 'Offre';
     }
@@ -33,17 +31,10 @@ export default function KanbanCard({ item }: KanbanCardProps) {
 
     candidate.normalInterviewStatus = passed ? 'passed' : 'failed';
     
-    // Si l'entretien normal est échoué, on passe directement à Fermée
     if (!passed) {
       candidate.currentStage = 'Fermée';
       item.status = 'Fermée';
       candidate.status = 'rejected';
-    }
-    // Si l'entretien normal est validé et qu'il n'y a pas d'entretien technique,
-    // on passe directement à l'étape Offre
-    else {
-      candidate.currentStage = 'Offre';
-      item.status = 'Offre';
     }
   };
 
