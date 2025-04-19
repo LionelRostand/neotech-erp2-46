@@ -1,4 +1,3 @@
-
 export interface Repair {
   id: string;
   vehicleId: string;
@@ -47,4 +46,32 @@ export interface Vehicle {
   mileage: number;
   lastServiceDate?: string;
   status: 'active' | 'inactive' | 'maintenance';
+}
+
+export interface Invoice {
+  id: string;
+  repairId?: string;
+  vehicleId: string;
+  vehicleName: string;
+  clientId: string;
+  clientName: string;
+  date: string;
+  dueDate: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  items: InvoiceItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  notes?: string;
+  paymentMethod?: string;
+  paymentDate?: string;
+}
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  type: 'part' | 'labor';
 }

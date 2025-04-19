@@ -7,6 +7,7 @@ import GarageClientsDashboard from '../garage/clients/GarageClientsDashboard';
 import GarageVehiclesDashboard from '../garage/vehicles/GarageVehiclesDashboard';
 import GarageAppointmentsDashboard from '../garage/appointments/GarageAppointmentsDashboard';
 import GarageRepairsDashboard from '../garage/repairs/GarageRepairsDashboard';
+import GarageInvoicesDashboard from '../garage/invoices/GarageInvoicesDashboard';
 
 export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering garage submodule:', submoduleId);
@@ -22,6 +23,8 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageAppointmentsDashboard />;
     case 'garage-repairs':
       return <GarageRepairsDashboard />;
+    case 'garage-invoices':
+      return <GarageInvoicesDashboard />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
