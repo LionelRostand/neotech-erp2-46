@@ -13,7 +13,7 @@ interface Reservation {
 }
 
 interface RecentReservationsProps {
-  reservations: Reservation[];
+  reservations?: Reservation[];
 }
 
 const RecentReservations: React.FC<RecentReservationsProps> = ({ reservations = [] }) => {

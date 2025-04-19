@@ -8,7 +8,7 @@ interface BadgesTableProps {
   onBadgeClick: (badgeId: string) => void;
 }
 
-const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick }) => {
+const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick }) => {
   // Convert badges data to table format
   const badgesData: Transaction[] = Array.isArray(badgesList) ? badgesList.map(badge => ({
     id: badge.id,
