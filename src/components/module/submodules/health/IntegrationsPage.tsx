@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import DashboardLayout from '@/components/DashboardLayout';
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import IntegrationEmptyState from './components/integrations/IntegrationEmptyState';
@@ -93,67 +92,65 @@ const IntegrationsPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Intégrations</h1>
-          <Button onClick={handleAddIntegration}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle Intégration
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center p-8">Chargement des intégrations...</div>
-        ) : error ? (
-          <div className="text-red-500 p-4">Erreur de chargement : {error.toString()}</div>
-        ) : integrations.length === 0 ? (
-          <IntegrationEmptyState onAdd={handleAddIntegration} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {integrations.map(integration => (
-              <Card key={integration.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <div className="text-2xl">{integration.icon}</div>
-                      <CardTitle>{integration.name}</CardTitle>
-                    </div>
-                    <Badge className={integration.status === 'active' ? 'bg-green-500' : 'bg-red-500'}>
-                      {integration.status === 'active' ? 'Actif' : 'Inactif'}
-                    </Badge>
-                  </div>
-                  <CardDescription>{integration.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="text-sm">
-                    <p className="flex justify-between text-muted-foreground">
-                      <span>Dernière synchronisation:</span>
-                      <span>{formatDate(integration.lastSync)}</span>
-                    </p>
-                    <p className="flex justify-between text-muted-foreground mt-1">
-                      <span>Type:</span>
-                      <span className="capitalize">{integration.type}</span>
-                    </p>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id={`status-${integration.id}`}
-                      checked={integration.status === 'active'}
-                      onCheckedChange={() => toggleIntegrationStatus(integration.id)}
-                    />
-                    <Label htmlFor={`status-${integration.id}`}>Activer</Label>
-                  </div>
-                  <Button variant="outline" size="sm">Configurer</Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        )}
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Intégrations</h1>
+        <Button onClick={handleAddIntegration}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouvelle Intégration
+        </Button>
       </div>
-    </DashboardLayout>
+
+      {isLoading ? (
+        <div className="flex justify-center p-8">Chargement des intégrations...</div>
+      ) : error ? (
+        <div className="text-red-500 p-4">Erreur de chargement : {error.toString()}</div>
+      ) : integrations.length === 0 ? (
+        <IntegrationEmptyState onAdd={handleAddIntegration} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {integrations.map(integration => (
+            <Card key={integration.id}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl">{integration.icon}</div>
+                    <CardTitle>{integration.name}</CardTitle>
+                  </div>
+                  <Badge className={integration.status === 'active' ? 'bg-green-500' : 'bg-red-500'}>
+                    {integration.status === 'active' ? 'Actif' : 'Inactif'}
+                  </Badge>
+                </div>
+                <CardDescription>{integration.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="text-sm">
+                  <p className="flex justify-between text-muted-foreground">
+                    <span>Dernière synchronisation:</span>
+                    <span>{formatDate(integration.lastSync)}</span>
+                  </p>
+                  <p className="flex justify-between text-muted-foreground mt-1">
+                    <span>Type:</span>
+                    <span className="capitalize">{integration.type}</span>
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id={`status-${integration.id}`}
+                    checked={integration.status === 'active'}
+                    onCheckedChange={() => toggleIntegrationStatus(integration.id)}
+                  />
+                  <Label htmlFor={`status-${integration.id}`}>Activer</Label>
+                </div>
+                <Button variant="outline" size="sm">Configurer</Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

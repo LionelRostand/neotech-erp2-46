@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { modules } from '@/data/modules';
-import SubmoduleHeader from './submodules/SubmoduleHeader';
+import React, { useEffect, useState } from 'react';
 import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
+import { modules } from '@/data/modules';
+import { SubModule } from '@/data/types/modules';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -10,22 +10,35 @@ interface SubmodulePageProps {
 }
 
 const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) => {
-  // Find the module
-  const module = modules.find(m => m.id === moduleId);
-  if (!module) return <div>Module not found</div>;
+  const [submodule, setSubmodule] = useState<SubModule | null>(null);
   
-  // Find the submodule
-  const submodule = module.submodules.find(sm => sm.id === submoduleId);
-  if (!submodule) return <div>Submodule not found</div>;
+  useEffect(() => {
+    console.log(`SubmodulePage - Looking for submodule: ${submoduleId} in module: ${moduleId}`);
+    
+    // Find the module with the given ID
+    const module = modules.find(m => m.id === moduleId);
+    
+    if (module) {
+      // Find the submodule with the given ID within the module
+      const foundSubmodule = module.submodules.find(sm => sm.id === submoduleId);
+      
+      if (foundSubmodule) {
+        console.log(`SubmodulePage - Found submodule: ${foundSubmodule.name}`);
+        setSubmodule(foundSubmodule);
+      } else {
+        console.error(`SubmodulePage - Submodule not found: ${submoduleId}`);
+      }
+    } else {
+      console.error(`SubmodulePage - Module not found: ${moduleId}`);
+    }
+  }, [moduleId, submoduleId]);
 
-  console.log('Rendering submodule:', submoduleId, 'for module:', module.name);
+  if (!submodule) {
+    return <div>Loading submodule...</div>;
+  }
 
   return (
-    <div className="space-y-6">
-      <SubmoduleHeader 
-        module={module}
-        submodule={submodule}
-      />
+    <div className="submodule-content">
       {renderSubmoduleContent({ submoduleId, submodule })}
     </div>
   );
