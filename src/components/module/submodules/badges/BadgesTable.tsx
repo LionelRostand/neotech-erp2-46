@@ -8,31 +8,22 @@ interface BadgesTableProps {
   onBadgeClick: (badgeId: string) => void;
 }
 
-const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick }) => {
-  // Convert badges data to table format with a null check
-  const badgesData: Transaction[] = Array.isArray(badgesList) 
-    ? badgesList.map(badge => ({
-        id: badge.id,
-        date: badge.date,
-        client: badge.employeeName,
-        amount: badge.accessLevel,
-        status: badge.status,
-        statusText: badge.statusText
-      }))
-    : [];
+const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick }) => {
+  // Convert badges data to table format
+  const badgesData: Transaction[] = badgesList.map(badge => ({
+    id: badge.id,
+    date: badge.date,
+    client: badge.employeeName,
+    amount: badge.accessLevel,
+    status: badge.status,
+    statusText: badge.statusText
+  }));
 
   return (
     <div className="mb-8">
       <DataTable 
         title="Registre des Badges" 
         data={badgesData}
-        columns={[
-          { header: 'ID', accessorKey: 'id' },
-          { header: 'Date', accessorKey: 'date' },
-          { header: 'Employé', accessorKey: 'client' },
-          { header: 'Niveau', accessorKey: 'amount' },
-          { header: 'Statut', accessorKey: 'statusText' }
-        ]}
         className="cursor-pointer"
         onRowClick={(row) => onBadgeClick(row.id.replace('#', ''))}
       />

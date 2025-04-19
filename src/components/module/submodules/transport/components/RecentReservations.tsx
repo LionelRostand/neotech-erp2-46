@@ -16,7 +16,7 @@ interface RecentReservationsProps {
   reservations: Reservation[];
 }
 
-const RecentReservations: React.FC<RecentReservationsProps> = ({ reservations = [] }) => {
+const RecentReservations: React.FC<RecentReservationsProps> = ({ reservations }) => {
   const { toast } = useToast();
 
   return (
@@ -24,11 +24,26 @@ const RecentReservations: React.FC<RecentReservationsProps> = ({ reservations = 
       title="Réservations récentes"
       data={reservations}
       columns={[
-        { header: 'ID', accessorKey: 'id' },
-        { header: 'Date', accessorKey: 'date' },
-        { header: 'Client', accessorKey: 'client' },
-        { header: 'Service', accessorKey: 'service' },
-        { header: 'Statut', accessorKey: 'statusText' }
+        { key: 'id', header: 'ID' },
+        { key: 'date', header: 'Date' },
+        { key: 'client', header: 'Client' },
+        { key: 'service', header: 'Service' },
+        { 
+          key: 'status', 
+          header: 'Statut',
+          cell: ({ row }) => {
+            const { status, statusText } = row.original;
+            return (
+              <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                ${status === 'success' ? 'bg-green-100 text-green-800' : ''}
+                ${status === 'warning' ? 'bg-yellow-100 text-yellow-800' : ''}
+                ${status === 'danger' ? 'bg-red-100 text-red-800' : ''}
+              `}>
+                {statusText}
+              </span>
+            );
+          }
+        }
       ]}
       onRowClick={(row) => toast({
         title: "Détails de la réservation",

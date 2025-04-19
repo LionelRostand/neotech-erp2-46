@@ -113,19 +113,17 @@ const Index = () => {
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: '0.3s' }}>
-            {transactions && (
-              <DataTable 
-                title="Dernières transactions"
-                data={transactions}
-                columns={[
-                  { header: 'ID', accessorKey: 'id' },
-                  { header: 'Date', accessorKey: 'date' },
-                  { header: 'Client', accessorKey: 'client' },
-                  { header: 'Montant', accessorKey: 'amount' },
-                  { header: 'Statut', accessorKey: 'statusText' }
-                ]}
-              />
-            )}
+            <DataTable 
+              title="Dernières transactions"
+              data={transactions}
+              columns={[
+                { header: 'ID', accessorKey: 'id' },
+                { header: 'Date', accessorKey: 'date' },
+                { header: 'Client', accessorKey: 'client' },
+                { header: 'Montant', accessorKey: 'amount' },
+                { header: 'Statut', accessorKey: 'statusText' }
+              ]}
+            />
           </div>
         </>
       ) : (
