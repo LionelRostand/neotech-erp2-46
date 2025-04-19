@@ -10,14 +10,14 @@ interface BadgesTableProps {
 
 const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick }) => {
   // Convert badges data to table format
-  const badgesData: Transaction[] = badgesList.map(badge => ({
+  const badgesData: Transaction[] = Array.isArray(badgesList) ? badgesList.map(badge => ({
     id: badge.id,
     date: badge.date,
     client: badge.employeeName,
     amount: badge.accessLevel,
     status: badge.status,
     statusText: badge.statusText
-  }));
+  })) : [];
 
   return (
     <div className="mb-8">
