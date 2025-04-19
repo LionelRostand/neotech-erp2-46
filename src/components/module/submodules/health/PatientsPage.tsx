@@ -1,36 +1,22 @@
+
 import React, { useState } from 'react';
-import { User, Plus, FileSearch } from 'lucide-react';
+import { User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import type { Patient } from './types/health-types';
-import FormDialog from "./dialogs/FormDialog";
-import AddPatientForm from "./forms/AddPatientForm";
-import { useFirestore } from "@/hooks/useFirestore";
-import { COLLECTIONS } from "@/lib/firebase-collections";
-import { toast } from "sonner";
-import type { PatientFormValues } from "./schemas/formSchemas";
+import FormDialog from './dialogs/FormDialog';
+import AddPatientForm from './forms/AddPatientForm';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
+import type { PatientFormValues } from './schemas/formSchemas';
+import PatientsTable from './components/PatientsTable';
 
-const PatientsPage: React.FC = () => {
+const PatientsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { patients, isLoading } = useHealthData();
   const { add } = useFirestore(COLLECTIONS.HEALTH.PATIENTS);
-
-  const filteredPatients = patients?.filter(patient => {
-    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  }) || [];
 
   const handleAddPatient = async (data: PatientFormValues) => {
     try {
@@ -54,7 +40,7 @@ const PatientsPage: React.FC = () => {
           <User className="h-6 w-6 text-primary" />
           Patients
         </h1>
-        <Button>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau Patient
         </Button>
@@ -62,7 +48,6 @@ const PatientsPage: React.FC = () => {
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <FileSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             placeholder="Rechercher un patient..."
             className="pl-9"
@@ -71,58 +56,8 @@ const PatientsPage: React.FC = () => {
           />
         </div>
       </div>
-      
-      <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
-        {isLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="w-full">
-                <Skeleton className="h-12 w-full" />
-              </div>
-            ))}
-          </div>
-        ) : filteredPatients.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-500 mb-2">Aucun patient trouvé</p>
-            <p className="text-gray-400 text-sm">Ajoutez votre premier patient en cliquant sur le bouton "Nouveau Patient"</p>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Téléphone</TableHead>
-                <TableHead>Date de naissance</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>
-                    <div className="font-medium">{patient.firstName} {patient.lastName}</div>
-                  </TableCell>
-                  <TableCell>{patient.email || '-'}</TableCell>
-                  <TableCell>{patient.phone || '-'}</TableCell>
-                  <TableCell>{patient.birthDate || '-'}</TableCell>
-                  <TableCell>
-                    <Badge className={patient.status === 'active' ? 'bg-green-500' : 'bg-red-500'}>
-                      {patient.status === 'active' ? 'Actif' : 'Inactif'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm">
-                      Voir
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+
+      <PatientsTable searchQuery={searchQuery} />
 
       <FormDialog
         open={isAddDialogOpen}
