@@ -32,12 +32,11 @@ export const useAnalyticsData = () => {
       try {
         setLoading(true);
         
-        // Récupération des statistiques globales
+        // Récupérer les statistiques globales pour le tableau
         const statsQuery = query(collection(db, 'analyticsStats'), limit(1));
-        const statsSnapshot = await getDocs(statsQuery);
-        
-        if (!statsSnapshot.empty) {
-          const data = statsSnapshot.docs[0].data() as AnalyticsStats;
+        const statsDoc = await getDocs(statsQuery);
+        if (!statsDoc.empty) {
+          const data = statsDoc.docs[0].data() as AnalyticsStats;
           setStats({
             revenue: data.revenue || 0,
             growth: data.growth || 0,
@@ -46,13 +45,12 @@ export const useAnalyticsData = () => {
           });
         }
 
-        // Récupération des données mensuelles
+        // Récupérer les données mensuelles pour le tableau
         const monthlyQuery = query(
           collection(db, 'monthlyAnalytics'),
           orderBy('month', 'desc'),
           limit(12)
         );
-        
         const monthlySnapshot = await getDocs(monthlyQuery);
         const monthlyDataArray = monthlySnapshot.docs.map(doc => ({
           month: doc.data().month,
@@ -61,9 +59,10 @@ export const useAnalyticsData = () => {
         }));
         
         setMonthlyData(monthlyDataArray);
+
       } catch (error) {
         console.error('Erreur lors de la récupération des données analytics:', error);
-        toast.error('Erreur lors du chargement des données analytics');
+        toast.error('Erreur lors du chargement des données du tableau analytics');
       } finally {
         setLoading(false);
       }
@@ -74,3 +73,4 @@ export const useAnalyticsData = () => {
 
   return { stats, monthlyData, loading };
 };
+

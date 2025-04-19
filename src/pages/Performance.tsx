@@ -6,7 +6,6 @@ import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { Card } from '@/components/ui/card';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
-import AnalyticsTable from '@/components/analytics/AnalyticsTable';
 
 const Performance = () => {
   const { stats, monthlyData, loading } = useAnalyticsData();
