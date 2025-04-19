@@ -1,10 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Shield, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import InsuranceEmptyState from './components/insurance/InsuranceEmptyState';
+import AddInsuranceDialog from './components/insurance/AddInsuranceDialog';
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
@@ -23,13 +23,8 @@ interface InsuranceProvider {
 }
 
 const InsurancePage: React.FC = () => {
-  // Fetch insurance providers from Firestore
-  const { data: providers, isLoading, error } = useCollectionData(
-    COLLECTIONS.HEALTH.INSURANCE,
-    []
-  );
-
-  const insuranceProviders: InsuranceProvider[] = [
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProvider[]>([
     {
       id: '1',
       name: 'AssurSanté Plus',
@@ -68,7 +63,7 @@ const InsurancePage: React.FC = () => {
       },
       description: 'Couverture santé internationale pour expatriés et voyageurs fréquents.'
     }
-  ];
+  ]);
 
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -84,8 +79,11 @@ const InsurancePage: React.FC = () => {
   };
 
   const handleAddProvider = () => {
-    // Will be implemented later
-    console.log('Add insurance provider');
+    setIsAddDialogOpen(true);
+  };
+
+  const handleProviderAdded = (newProvider: InsuranceProvider) => {
+    setInsuranceProviders([...insuranceProviders, newProvider]);
   };
 
   return (
@@ -101,11 +99,7 @@ const InsurancePage: React.FC = () => {
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center p-8">Chargement des assurances...</div>
-      ) : error ? (
-        <div className="text-red-500 p-4">Erreur de chargement : {error.toString()}</div>
-      ) : (insuranceProviders.length === 0 && !providers?.length) ? (
+      {insuranceProviders.length === 0 ? (
         <InsuranceEmptyState onAdd={handleAddProvider} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -151,6 +145,12 @@ const InsurancePage: React.FC = () => {
           ))}
         </div>
       )}
+
+      <AddInsuranceDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onInsuranceAdded={handleProviderAdded}
+      />
     </div>
   );
 };
