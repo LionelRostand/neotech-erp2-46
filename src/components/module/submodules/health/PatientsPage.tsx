@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User, Plus, FileSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,15 +14,38 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHealthData } from '@/hooks/modules/useHealthData';
 import type { Patient } from './types/health-types';
+import FormDialog from "./dialogs/FormDialog";
+import AddPatientForm from "./forms/AddPatientForm";
+import { useFirestore } from "@/hooks/useFirestore";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { toast } from "sonner";
+import type { PatientFormValues } from "./schemas/formSchemas";
 
 const PatientsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { patients, isLoading } = useHealthData();
+  const { add } = useFirestore(COLLECTIONS.HEALTH.PATIENTS);
 
   const filteredPatients = patients?.filter(patient => {
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
     return fullName.includes(searchQuery.toLowerCase());
   }) || [];
+
+  const handleAddPatient = async (data: PatientFormValues) => {
+    try {
+      await add({
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setIsAddDialogOpen(false);
+      toast.success("Patient ajouté avec succès");
+    } catch (error) {
+      console.error("Error adding patient:", error);
+      toast.error("Erreur lors de l'ajout du patient");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -101,6 +123,18 @@ const PatientsPage: React.FC = () => {
           </Table>
         )}
       </div>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouveau Patient"
+        description="Ajouter un nouveau patient au système"
+      >
+        <AddPatientForm
+          onSubmit={handleAddPatient}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };

@@ -12,14 +12,16 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import FormDialog from "./dialogs/FormDialog";
+import AddAppointmentForm from "./forms/AddAppointmentForm";
+import { AppointmentFormValues } from "./schemas/formSchemas";
 
 const AppointmentsPage: React.FC = () => {
   const { appointments, patients, doctors, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { update } = useFirestore(COLLECTIONS.HEALTH.APPOINTMENTS);
+  const { add } = useFirestore(COLLECTIONS.HEALTH.APPOINTMENTS);
 
-  // Get patient and doctor names for display
   const getPatientName = (patientId: string) => {
     const patient = patients?.find(p => p.id === patientId);
     return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
@@ -30,7 +32,6 @@ const AppointmentsPage: React.FC = () => {
     return doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : 'Médecin inconnu';
   };
 
-  // Search functionality
   const filteredAppointments = appointments?.filter(appointment => {
     const patientName = getPatientName(appointment.patientId).toLowerCase();
     const doctorName = getDoctorName(appointment.doctorId).toLowerCase();
@@ -42,7 +43,6 @@ const AppointmentsPage: React.FC = () => {
            appointment.status.toLowerCase().includes(searchTerm.toLowerCase());
   }) || [];
 
-  // Status updates
   const handleCompleteAppointment = async (appointment: Appointment) => {
     try {
       if (appointment.id) {
@@ -72,6 +72,21 @@ const AppointmentsPage: React.FC = () => {
     } catch (error) {
       console.error('Error cancelling appointment:', error);
       toast.error('Erreur lors de l\'annulation du rendez-vous');
+    }
+  };
+
+  const handleAddAppointment = async (data: AppointmentFormValues) => {
+    try {
+      await add({
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setIsAddDialogOpen(false);
+      toast.success("Rendez-vous ajouté avec succès");
+    } catch (error) {
+      console.error("Error adding appointment:", error);
+      toast.error("Erreur lors de l'ajout du rendez-vous");
     }
   };
 
@@ -190,6 +205,20 @@ const AppointmentsPage: React.FC = () => {
           searchPlaceholder="Rechercher un rendez-vous..."
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouveau Rendez-vous"
+        description="Planifier un nouveau rendez-vous"
+      >
+        <AddAppointmentForm
+          onSubmit={handleAddAppointment}
+          onCancel={() => setIsAddDialogOpen(false)}
+          patients={patients || []}
+          doctors={doctors || []}
+        />
+      </FormDialog>
     </div>
   );
 };

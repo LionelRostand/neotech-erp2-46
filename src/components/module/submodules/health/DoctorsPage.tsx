@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserCog, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,13 +8,34 @@ import { Doctor } from './types/health-types';
 import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
+import FormDialog from "./dialogs/FormDialog";
+import AddDoctorForm from "./forms/AddDoctorForm";
+import { useFirestore } from "@/hooks/useFirestore";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import type { DoctorFormValues } from "./schemas/formSchemas";
 
 const DoctorsPage: React.FC = () => {
   const { doctors, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Search functionality
+  const { add } = useFirestore(COLLECTIONS.HEALTH.DOCTORS);
+
+  const handleAddDoctor = async (data: DoctorFormValues) => {
+    try {
+      await add({
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setIsAddDialogOpen(false);
+      toast.success("Médecin ajouté avec succès");
+    } catch (error) {
+      console.error("Error adding doctor:", error);
+      toast.error("Erreur lors de l'ajout du médecin");
+    }
+  };
+
   const filteredDoctors = doctors?.filter(doctor => 
     doctor.lastName.toLowerCase().includes(searchTerm.toLowerCase()) || 
     doctor.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,6 +122,18 @@ const DoctorsPage: React.FC = () => {
           className="w-full"
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouveau Médecin"
+        description="Ajouter un nouveau médecin"
+      >
+        <AddDoctorForm
+          onSubmit={handleAddDoctor}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };

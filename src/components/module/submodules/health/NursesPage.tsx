@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Clipboard, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,34 @@ import { Staff } from './types/health-types';
 import DataTable from '@/components/DataTable';
 import { toast } from 'sonner';
 import StatusBadge from '@/components/StatusBadge';
+import FormDialog from "./dialogs/FormDialog";
+import AddNurseForm from "./forms/AddNurseForm";
+import { useFirestore } from "@/hooks/useFirestore";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import type { NurseFormValues } from "./schemas/formSchemas";
 
 const NursesPage: React.FC = () => {
   const { staff, isLoading } = useHealthData();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Filter only nursing staff
+  const { add } = useFirestore(COLLECTIONS.HEALTH.STAFF);
+
+  const handleAddNurse = async (data: NurseFormValues) => {
+    try {
+      await add({
+        ...data,
+        role: "nurse",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setIsAddDialogOpen(false);
+      toast.success("Infirmier(ère) ajouté(e) avec succès");
+    } catch (error) {
+      console.error("Error adding nurse:", error);
+      toast.error("Erreur lors de l'ajout de l'infirmier(ère)");
+    }
+  };
+
   const nurses = staff?.filter(s => 
     s.role === 'nurse' || 
     s.role === 'infirmier' || 
@@ -90,6 +111,18 @@ const NursesPage: React.FC = () => {
           className="w-full"
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouvel Infirmier"
+        description="Ajouter un nouvel infirmier"
+      >
+        <AddNurseForm
+          onSubmit={handleAddNurse}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };

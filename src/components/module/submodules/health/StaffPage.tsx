@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Users2, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,16 +5,37 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
 import { Staff } from './types/health-types';
-import DataTable from '@/components/DataTable'; // Changed to default import
+import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
+import FormDialog from "./dialogs/FormDialog";
+import AddStaffForm from "./forms/AddStaffForm";
+import { useFirestore } from "@/hooks/useFirestore";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import type { StaffFormValues } from "./schemas/formSchemas";
 
 const StaffPage: React.FC = () => {
   const { staff, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Search functionality
+  const { add } = useFirestore(COLLECTIONS.HEALTH.STAFF);
+
+  const handleAddStaff = async (data: StaffFormValues) => {
+    try {
+      await add({
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setIsAddDialogOpen(false);
+      toast.success("Personnel ajouté avec succès");
+    } catch (error) {
+      console.error("Error adding staff member:", error);
+      toast.error("Erreur lors de l'ajout du personnel");
+    }
+  };
+
   const filteredStaff = staff?.filter(member => 
     member.lastName.toLowerCase().includes(searchTerm.toLowerCase()) || 
     member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,6 +127,18 @@ const StaffPage: React.FC = () => {
           searchPlaceholder="Rechercher un membre du personnel..."
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouveau Personnel"
+        description="Ajouter un nouveau membre du personnel"
+      >
+        <AddStaffForm
+          onSubmit={handleAddStaff}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };
