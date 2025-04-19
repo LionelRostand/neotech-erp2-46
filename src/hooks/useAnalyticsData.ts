@@ -35,7 +35,7 @@ export const useAnalyticsData = () => {
         // Récupérer les statistiques globales
         const statsDoc = await getDocs(collection(db, 'analyticsStats'));
         if (!statsDoc.empty) {
-          const data = statsDoc.docs[0].data();
+          const data = statsDoc.docs[0].data() as AnalyticsStats;
           setStats({
             revenue: data.revenue || 0,
             growth: data.growth || 0,
@@ -44,7 +44,7 @@ export const useAnalyticsData = () => {
           });
         }
 
-        // Récupérer les données mensuelles
+        // Récupérer les données mensuelles pour le tableau
         const monthlyQuery = query(
           collection(db, 'monthlyAnalytics'),
           orderBy('month', 'desc'),
