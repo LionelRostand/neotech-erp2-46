@@ -4,39 +4,32 @@ import { Clipboard, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ConsultationsList from './components/consultations/ConsultationList';
 import AddConsultationDialog from './components/consultations/AddConsultationDialog';
-import type { Consultation } from './types/health-types';
+import type { Consultation, Patient, Doctor } from './types/health-types';
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
 import { fetchCollectionData } from './utils/fetchCollectionData';
-
-interface Patient {
-  id: string;
-  name: string;
-}
-
-interface Doctor {
-  id: string;
-  name: string;
-}
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const ConsultationsPage: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
-  const { add } = useFirestore('consultations');
+  const { add } = useFirestore(COLLECTIONS.HEALTH.CONSULTATIONS);
 
-  // Fetch patients and doctors data
+  // Fetch patients and doctors data from Firestore
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // In a real app, you would fetch actual data from your backend
-        // For this example, we'll use mock data
-        const patientsData = await fetchPatientsData();
-        const doctorsData = await fetchDoctorsData();
+        // Fetch actual data from Firestore collections
+        const patientsData = await fetchCollectionData<Patient>(COLLECTIONS.HEALTH.PATIENTS);
+        const doctorsData = await fetchCollectionData<Doctor>(COLLECTIONS.HEALTH.DOCTORS);
+        
         setPatients(patientsData);
         setDoctors(doctorsData);
+        console.log('Loaded patients:', patientsData.length);
+        console.log('Loaded doctors:', doctorsData.length);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Erreur lors du chargement des données');
@@ -47,34 +40,6 @@ const ConsultationsPage: React.FC = () => {
 
     fetchData();
   }, []);
-
-  // Mock function to fetch patients (in a real app this would be a database call)
-  const fetchPatientsData = async (): Promise<Patient[]> => {
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          { id: '1', name: 'Jean Dupont' },
-          { id: '2', name: 'Marie Martin' },
-          { id: '3', name: 'Pierre Durand' },
-        ]);
-      }, 500);
-    });
-  };
-
-  // Mock function to fetch doctors
-  const fetchDoctorsData = async (): Promise<Doctor[]> => {
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          { id: '1', name: 'Dr. Bernard' },
-          { id: '2', name: 'Dr. Lambert' },
-          { id: '3', name: 'Dr. Robert' },
-        ]);
-      }, 500);
-    });
-  };
 
   const handleAddConsultation = async (consultation: Consultation) => {
     try {
@@ -107,6 +72,8 @@ const ConsultationsPage: React.FC = () => {
         open={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onConsultationAdded={handleAddConsultation}
+        patients={patients}
+        doctors={doctors}
       />
     </div>
   );

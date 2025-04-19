@@ -1,197 +1,89 @@
-export interface Patient {
-  id: string;
+
+// Base Type with common fields
+export interface BaseEntity {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Patient extends BaseEntity {
   firstName: string;
   lastName: string;
-  dateOfBirth: Date | string;
-  gender: 'male' | 'female' | 'other';
-  address?: string;
-  phone?: string;
   email?: string;
-  insuranceId?: string;
+  phone?: string;
+  birthDate?: string;
+  gender?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+  };
   bloodType?: string;
-  allergens?: string[];
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  emergencyContact?: {
+    name?: string;
+    phone?: string;
+    relationship?: string;
+  };
+  insuranceId?: string;
+  medicalHistory?: string[];
+  allergies?: string[];
+  status?: 'active' | 'inactive';
 }
 
-export interface Doctor {
-  id: string;
+export interface Doctor extends BaseEntity {
   firstName: string;
   lastName: string;
-  speciality: string;
-  phone?: string;
   email?: string;
-  available: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  phone?: string;
+  specialty?: string;
+  licenseNumber?: string;
+  department?: string;
+  availability?: {
+    monday?: string[];
+    tuesday?: string[];
+    wednesday?: string[];
+    thursday?: string[];
+    friday?: string[];
+    saturday?: string[];
+    sunday?: string[];
+  };
+  status?: 'active' | 'inactive' | 'on-leave';
 }
 
-export interface Appointment {
-  id: string;
+export interface Consultation extends BaseEntity {
   patientId: string;
   doctorId: string;
-  date: Date | string;
-  startTime: string;
-  endTime: string;
-  status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed';
+  date: string;
+  time: string;
+  consultationType: string;
   notes?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export interface LabTest {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  type: string;
-  requestedDate: Date | string;
-  scheduledDate?: Date | string;
-  completedDate?: Date | string;
-  results?: string;
-  status: 'requested' | 'scheduled' | 'completed' | 'cancelled';
-  notes?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export interface MedicalRecord {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  date: Date | string;
-  diagnosis: string;
-  treatment?: string;
-  notes?: string;
-  attachments?: string[];
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  digitallySignedBy?: string;
-  signatureDate?: Date | string;
-}
-
-export interface Consultation {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  date: Date | string;
-  chiefComplaint: string;
-  symptoms: string;
   diagnosis?: string;
   treatment?: string;
   prescriptionIds?: string[];
-  labTestIds?: string[];
-  followUp?: Date | string;
-  notes?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  vitalSigns?: VitalSigns;
-  medicalImages?: MedicalImage[];
-  physicalExam?: string;
-  assessment?: string;
-  plan?: string;
-  medicalHistory?: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'in-progress';
 }
 
-export interface VitalSigns {
-  temperature?: number;
-  heartRate?: number;
-  bloodPressure?: {
-    systolic: number;
-    diastolic: number;
-  };
-  respiratoryRate?: number;
-  oxygenSaturation?: number;
-  height?: number;
-  weight?: number;
-  bmi?: number;
-  pain?: number;
-}
-
-export interface MedicalImage {
-  id: string;
-  type: 'xray' | 'mri' | 'ct' | 'ultrasound' | 'other';
-  date: Date | string;
-  url: string;
-  description?: string;
-  bodyPart?: string;
-  findings?: string;
-  requestedBy: string;
-  technician?: string;
-}
-
-export interface StaffMember {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: StaffRole;
-  department?: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  dateOfBirth?: Date | string;
-  dateHired: Date | string;
-  status: 'active' | 'on-leave' | 'terminated';
-  permissions: string[];
-  specialization?: string;
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-  schedule?: WorkSchedule[];
-  absences?: Absence[];
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export type StaffRole = 'doctor' | 'nurse' | 'secretary' | 'technician' | 'director' | 'pharmacist' | 'lab_technician';
-
-export interface WorkSchedule {
-  id: string;
-  staffId: string;
-  startDate: Date | string;
-  endDate: Date | string;
-  shifts: Shift[];
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export interface Shift {
-  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-  startTime: string;
-  endTime: string;
-  isOnCall: boolean;
-}
-
-export interface Absence {
-  id: string;
-  staffId: string;
-  startDate: Date | string;
-  endDate: Date | string;
-  type: 'vacation' | 'sick' | 'personal' | 'maternity' | 'paternity' | 'other';
-  status: 'pending' | 'approved' | 'rejected';
-  reason?: string;
-  approvedBy?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export interface Prescription {
-  id: string;
+export interface Appointment extends BaseEntity {
   patientId: string;
   doctorId: string;
-  date: Date | string;
-  medications: Medication[];
+  date: string;
+  time: string;
+  duration: number; // in minutes
+  reason?: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
   notes?: string;
+}
+
+export interface Prescription extends BaseEntity {
+  patientId: string;
+  doctorId: string;
+  consultationId?: string;
+  date: string;
+  medications: Medication[];
+  instructions?: string;
   status: 'active' | 'completed' | 'cancelled';
-  isDigitallySigned: boolean;
-  signedBy?: string;
-  signatureDate?: Date | string;
-  sentToPharmacy?: boolean;
-  pharmacyId?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  refills?: number;
 }
 
 export interface Medication {
@@ -199,114 +91,126 @@ export interface Medication {
   dosage: string;
   frequency: string;
   duration: string;
-  instructions?: string;
-  quantity: number;
-}
-
-export interface PharmacyItem {
-  id: string;
-  name: string;
-  genericName?: string;
-  category: string;
-  type: 'tablet' | 'capsule' | 'liquid' | 'injection' | 'topical' | 'other';
-  dosage: string;
-  manufacturer: string;
-  batchNumber: string;
-  expiryDate: Date | string;
-  stockQuantity: number;
-  reorderLevel: number;
-  unitPrice: number;
-  location?: string;
-  needsPrescription: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export interface PharmacySale {
-  id: string;
-  date: Date | string;
-  patientId?: string;
-  prescriptionId?: string;
-  items: {
-    medicationId: string;
-    quantity: number;
-    unitPrice: number;
-  }[];
-  totalAmount: number;
-  paymentMethod?: 'cash' | 'card' | 'insurance' | 'other';
-  staffId: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-export interface PharmacyRestock {
-  id: string;
-  date: Date | string;
-  supplier: string;
-  invoiceNumber: string;
-  items: {
-    medicationId: string;
-    quantity: number;
-    unitPrice: number;
-    batchNumber: string;
-    expiryDate: Date | string;
-  }[];
-  totalAmount: number;
-  receivedBy: string;
   notes?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
 }
 
-export interface Insurance {
-  id: string;
-  name: string;
-  type: 'public' | 'private' | 'mutual';
-  coverageLevel: 'basic' | 'advanced' | 'premium';
-  contact: {
-    address: string;
-    phone: string;
-    email: string;
-  };
-  coverageDetails: {
-    consultations: number;
-    medications: number;
-    hospitalization: number;
-    specialistVisits: number;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface InsuranceClaim {
-  id: string;
+export interface MedicalRecord extends BaseEntity {
   patientId: string;
-  insuranceId: string;
-  amount: number;
+  consultations: string[]; // IDs of consultations
+  prescriptions: string[]; // IDs of prescriptions
+  documents: string[]; // IDs or paths to documents
+  notes?: string;
+}
+
+export interface Staff extends BaseEntity {
+  firstName: string;
+  lastName: string;
+  role: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  status: 'active' | 'inactive' | 'on-leave';
+}
+
+export interface Invoice extends BaseEntity {
+  patientId: string;
+  consultationId?: string;
   date: string;
-  description?: string;
-  documents?: string[];
-  status: 'pending' | 'processing' | 'approved' | 'rejected';
-  responseDate?: string;
-  responseDetails?: string;
-  reimbursedAmount?: number;
-  createdAt: string;
-  updatedAt: string;
+  dueDate: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  paymentMethod?: string;
+  paymentDate?: string;
 }
 
-export interface PatientInsurance {
-  id: string;
-  patientId: string;
-  insuranceId: string;
-  policyNumber: string;
-  startDate: string;
-  endDate?: string;
-  isPrimary: boolean;
-  additionalDetails?: {
-    beneficiaryNumber?: string;
-    groupNumber?: string;
-    employerName?: string;
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Insurance extends BaseEntity {
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  coverageDetails?: string;
+  status: 'active' | 'inactive';
+}
+
+export interface Laboratory extends BaseEntity {
+  patientId: string;
+  doctorId: string;
+  date: string;
+  testType: string;
+  results?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  notes?: string;
+}
+
+export interface Inventory extends BaseEntity {
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  supplier?: string;
+  expiryDate?: string;
+  reorderLevel?: number;
+  status: 'in-stock' | 'low-stock' | 'out-of-stock';
+}
+
+export interface HealthSettings extends BaseEntity {
+  clinicName: string;
+  address?: {
+    street?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  contact?: {
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+  workingHours?: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  };
+  taxRate?: number;
+  logo?: string;
+  currency?: string;
+  language?: string;
+}
+
+export interface HealthPermission extends BaseEntity {
+  userId: string;
+  role: 'admin' | 'doctor' | 'nurse' | 'receptionist' | 'accountant' | 'lab-technician';
+  modules: {
+    patients?: boolean;
+    appointments?: boolean;
+    consultations?: boolean;
+    prescriptions?: boolean;
+    medicalRecords?: boolean;
+    laboratory?: boolean;
+    billing?: boolean;
+    inventory?: boolean;
+    reports?: boolean;
+    settings?: boolean;
+  };
 }

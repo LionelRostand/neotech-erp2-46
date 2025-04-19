@@ -7,18 +7,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ConsultationForm from '../../ConsultationForm';
-import type { Consultation } from '../../types/health-types';
+import type { Consultation, Patient, Doctor } from '../../types/health-types';
 
 interface AddConsultationDialogProps {
   open: boolean;
   onClose: () => void;
   onConsultationAdded: (consultation: Consultation) => void;
+  patients: Patient[];
+  doctors: Doctor[];
 }
 
 const AddConsultationDialog: React.FC<AddConsultationDialogProps> = ({
   open,
   onClose,
-  onConsultationAdded
+  onConsultationAdded,
+  patients,
+  doctors
 }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -29,8 +33,8 @@ const AddConsultationDialog: React.FC<AddConsultationDialogProps> = ({
         <ConsultationForm 
           onSubmit={onConsultationAdded}
           onCancel={onClose}
-          patients={[]} // We need to pass patients and doctors props
-          doctors={[]}
+          patients={patients}
+          doctors={doctors}
         />
       </DialogContent>
     </Dialog>

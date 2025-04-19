@@ -47,6 +47,36 @@ export const useHealthData = () => {
     [orderBy('date', 'desc')]
   );
 
+  // Fetch prescriptions
+  const {
+    data: prescriptions,
+    isLoading: isPrescriptionsLoading,
+    error: prescriptionsError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.PRESCRIPTIONS,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch medical records
+  const {
+    data: medicalRecords,
+    isLoading: isMedicalRecordsLoading,
+    error: medicalRecordsError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.MEDICAL_RECORDS,
+    []
+  );
+
+  // Fetch laboratory
+  const {
+    data: laboratoryTests,
+    isLoading: isLaboratoryLoading,
+    error: laboratoryError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.LABORATORY,
+    [orderBy('date', 'desc')]
+  );
+
   // Fetch insurance
   const { 
     data: insurance, 
@@ -67,14 +97,61 @@ export const useHealthData = () => {
     [orderBy('lastName')]
   );
 
+  // Fetch billing
+  const {
+    data: billing,
+    isLoading: isBillingLoading,
+    error: billingError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.BILLING,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch inventory
+  const {
+    data: inventory,
+    isLoading: isInventoryLoading,
+    error: inventoryError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.INVENTORY,
+    []
+  );
+
+  // Fetch settings
+  const {
+    data: settings,
+    isLoading: isSettingsLoading,
+    error: settingsError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.SETTINGS,
+    []
+  );
+
+  // Fetch permissions
+  const {
+    data: permissions,
+    isLoading: isPermissionsLoading,
+    error: permissionsError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.PERMISSIONS,
+    []
+  );
+
   // Check if any data is still loading
   const isLoading = 
     isPatientsLoading || 
     isDoctorsLoading || 
     isAppointmentsLoading || 
     isConsultationsLoading || 
+    isPrescriptionsLoading ||
+    isMedicalRecordsLoading ||
+    isLaboratoryLoading ||
     isInsuranceLoading || 
-    isStaffLoading;
+    isStaffLoading ||
+    isBillingLoading ||
+    isInventoryLoading ||
+    isSettingsLoading ||
+    isPermissionsLoading;
 
   // Combine all possible errors
   const error = 
@@ -82,16 +159,30 @@ export const useHealthData = () => {
     doctorsError || 
     appointmentsError || 
     consultationsError || 
+    prescriptionsError ||
+    medicalRecordsError ||
+    laboratoryError ||
     insuranceError ||
-    staffError;
+    staffError ||
+    billingError ||
+    inventoryError ||
+    settingsError ||
+    permissionsError;
 
   return {
     patients,
     doctors,
     appointments,
     consultations,
+    prescriptions,
+    medicalRecords,
+    laboratoryTests,
     insurance,
     staff,
+    billing,
+    inventory,
+    settings,
+    permissions,
     isLoading,
     error
   };
