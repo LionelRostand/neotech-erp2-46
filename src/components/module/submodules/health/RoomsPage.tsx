@@ -1,79 +1,44 @@
+
 import React, { useState } from 'react';
 import { BedDouble, Plus, Search, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useHealthData } from '@/hooks/modules/useHealthData';
+import { useCollectionData } from '@/hooks/useCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import DataTable from '@/components/DataTable';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import FormDialog from './dialogs/FormDialog';
 import AddRoomForm from './forms/AddRoomForm';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { Room } from './types/health-types';
 
 const RoomsPage: React.FC = () => {
-  const { patients, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
-  const rooms = [
-    {
-      id: "R101",
-      roomNumber: "101",
-      type: "Single",
-      floor: "1",
-      bedsTotal: 1,
-      bedsAvailable: 1,
-      isAvailable: true,
-      currentPatientId: null,
-      notes: "Chambre privée avec salle de bain"
-    },
-    {
-      id: "R102",
-      roomNumber: "102",
-      type: "Single",
-      floor: "1",
-      bedsTotal: 1,
-      bedsAvailable: 0,
-      isAvailable: false,
-      currentPatientId: patients?.[0]?.id || "P001",
-      notes: "Chambre privée avec salle de bain"
-    },
-    {
-      id: "R201",
-      roomNumber: "201",
-      type: "Double",
-      floor: "2",
-      bedsTotal: 2,
-      bedsAvailable: 1,
-      isAvailable: true,
-      currentPatientId: patients?.[1]?.id || "P002",
-      notes: "Chambre double standard"
-    },
-    {
-      id: "R301",
-      roomNumber: "301",
-      type: "Suite",
-      floor: "3",
-      bedsTotal: 1,
-      bedsAvailable: 1,
-      isAvailable: true,
-      currentPatientId: null,
-      notes: "Suite VIP avec espace salon"
-    }
-  ];
 
-  const getPatientName = (patientId: string | null) => {
-    if (!patientId) return 'Aucun';
-    const patient = patients?.find(p => p.id === patientId);
-    return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
-  };
-
-  const filteredRooms = rooms.filter(room => 
-    room.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    room.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    room.floor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (room.currentPatientId && getPatientName(room.currentPatientId).toLowerCase().includes(searchTerm.toLowerCase()))
+  const { data: rooms, isLoading } = useCollectionData<Room>(
+    COLLECTIONS.HEALTH.ROOMS
   );
+  
+  const filteredRooms = rooms?.filter(room => 
+    room.roomNumber?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    room.type?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    room.floor?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const handleAddRoom = async (data: Room) => {
+    try {
+      // We will implement this later when asked
+      console.log('New room:', data);
+      setIsAddDialogOpen(false);
+      toast.success("Chambre ajoutée avec succès");
+    } catch (error) {
+      console.error("Error adding room:", error);
+      toast.error("Erreur lors de l'ajout de la chambre");
+    }
+  };
 
   const columns = [
     {
@@ -120,11 +85,8 @@ const RoomsPage: React.FC = () => {
       ),
     },
     {
-      accessorKey: 'currentPatientId',
-      header: 'Patient',
-      cell: ({ row }) => (
-        <div>{getPatientName(row.original.currentPatientId)}</div>
-      ),
+      accessorKey: 'notes',
+      header: 'Notes',
     },
     {
       id: 'actions',
@@ -144,11 +106,21 @@ const RoomsPage: React.FC = () => {
     },
   ];
 
-  const handleAddRoom = (data: any) => {
-    console.log('New room:', data);
-    setIsAddDialogOpen(false);
-    toast.success("Chambre ajoutée avec succès");
-  };
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-[200px]" />
+          <Skeleton className="h-10 w-[150px]" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-16 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -157,7 +129,7 @@ const RoomsPage: React.FC = () => {
           <BedDouble className="h-6 w-6 text-primary" />
           Chambres
         </h1>
-        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle Chambre
         </Button>
@@ -174,13 +146,22 @@ const RoomsPage: React.FC = () => {
       </div>
 
       <Card className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
-        <DataTable
-          columns={columns}
-          data={filteredRooms}
-          isLoading={isLoading}
-          noDataText="Aucune chambre trouvée"
-          searchPlaceholder="Rechercher une chambre..."
-        />
+        {filteredRooms.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500 mb-2">Aucune chambre trouvée</p>
+            <p className="text-gray-400 text-sm">
+              {searchTerm ? "Essayez d'autres critères de recherche" : "Ajoutez votre première chambre en cliquant sur le bouton \"Nouvelle Chambre\""}
+            </p>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filteredRooms}
+            isLoading={isLoading}
+            noDataText="Aucune chambre trouvée"
+            searchPlaceholder="Rechercher une chambre..."
+          />
+        )}
       </Card>
 
       <FormDialog
