@@ -49,7 +49,7 @@ export const useHealthData = () => {
     error: appointmentsError 
   } = useCollectionData<Appointment>(
     COLLECTIONS.HEALTH.APPOINTMENTS,
-    [orderBy('date')]
+    [orderBy('date', 'desc')]
   );
 
   // Fetch consultations
@@ -78,8 +78,7 @@ export const useHealthData = () => {
     isLoading: isMedicalRecordsLoading,
     error: medicalRecordsError
   } = useCollectionData<MedicalRecord>(
-    COLLECTIONS.HEALTH.MEDICAL_RECORDS,
-    []
+    COLLECTIONS.HEALTH.MEDICAL_RECORDS
   );
 
   // Fetch laboratory
@@ -92,14 +91,51 @@ export const useHealthData = () => {
     [orderBy('date', 'desc')]
   );
 
+  // Fetch pharmacy
+  const {
+    data: pharmacy,
+    isLoading: isPharmacyLoading,
+    error: pharmacyError
+  } = useCollectionData<Inventory>(
+    COLLECTIONS.HEALTH.PHARMACY
+  );
+
+  // Fetch rooms
+  const {
+    data: rooms,
+    isLoading: isRoomsLoading,
+    error: roomsError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.ROOMS
+  );
+
+  // Fetch hospitalizations
+  const {
+    data: hospitalizations,
+    isLoading: isHospitalizationsLoading,
+    error: hospitalizationsError
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.HOSPITALIZATIONS,
+    [orderBy('admissionDate', 'desc')]
+  );
+
+  // Fetch nurses
+  const {
+    data: nurses,
+    isLoading: isNursesLoading,
+    error: nursesError
+  } = useCollectionData<Staff>(
+    COLLECTIONS.HEALTH.NURSES,
+    [orderBy('lastName')]
+  );
+
   // Fetch insurance
   const { 
     data: insurance, 
     isLoading: isInsuranceLoading, 
     error: insuranceError 
   } = useCollectionData<Insurance>(
-    COLLECTIONS.HEALTH.INSURANCE,
-    []
+    COLLECTIONS.HEALTH.INSURANCE
   );
 
   // Fetch staff
@@ -122,36 +158,6 @@ export const useHealthData = () => {
     [orderBy('date', 'desc')]
   );
 
-  // Fetch inventory
-  const {
-    data: inventory,
-    isLoading: isInventoryLoading,
-    error: inventoryError
-  } = useCollectionData<Inventory>(
-    COLLECTIONS.HEALTH.INVENTORY,
-    []
-  );
-
-  // Fetch settings
-  const {
-    data: settings,
-    isLoading: isSettingsLoading,
-    error: settingsError
-  } = useCollectionData<HealthSettings>(
-    COLLECTIONS.HEALTH.SETTINGS,
-    []
-  );
-
-  // Fetch permissions
-  const {
-    data: permissions,
-    isLoading: isPermissionsLoading,
-    error: permissionsError
-  } = useCollectionData<HealthPermission>(
-    COLLECTIONS.HEALTH.PERMISSIONS,
-    []
-  );
-
   // Check if any data is still loading
   const isLoading = 
     isPatientsLoading || 
@@ -163,10 +169,11 @@ export const useHealthData = () => {
     isLaboratoryLoading ||
     isInsuranceLoading || 
     isStaffLoading ||
-    isBillingLoading ||
-    isInventoryLoading ||
-    isSettingsLoading ||
-    isPermissionsLoading;
+    isNursesLoading ||
+    isPharmacyLoading ||
+    isRoomsLoading ||
+    isHospitalizationsLoading ||
+    isBillingLoading;
 
   // Combine all possible errors
   const error = 
@@ -179,10 +186,11 @@ export const useHealthData = () => {
     laboratoryError ||
     insuranceError ||
     staffError ||
-    billingError ||
-    inventoryError ||
-    settingsError ||
-    permissionsError;
+    nursesError ||
+    pharmacyError ||
+    roomsError ||
+    hospitalizationsError ||
+    billingError;
 
   return {
     patients,
@@ -194,10 +202,11 @@ export const useHealthData = () => {
     laboratoryTests,
     insurance,
     staff,
+    nurses,
+    pharmacy,
+    rooms,
+    hospitalizations,
     billing,
-    inventory,
-    settings,
-    permissions,
     isLoading,
     error
   };
