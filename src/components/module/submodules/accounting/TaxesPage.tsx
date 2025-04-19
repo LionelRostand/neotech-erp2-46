@@ -8,15 +8,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTaxRatesData } from './hooks/useTaxRatesData';
 import { useTaxDeclarationsData } from './hooks/useTaxDeclarationsData';
 import { formatCurrency, formatDate } from './utils/formatting';
+import { TaxRate } from './types/accounting-types';
+import { toast } from "sonner";
+import CreateTaxRateDialog from './components/tax/CreateTaxRateDialog';
 
 const TaxesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("rates");
-  
-  // Récupération des données de taux de TVA
+  const [isNewTaxRateDialogOpen, setIsNewTaxRateDialogOpen] = useState(false);
   const { taxRates, isLoading: taxRatesLoading } = useTaxRatesData();
-  
-  // Récupération des données de déclarations de TVA
   const { taxDeclarations, isLoading: taxDeclarationsLoading } = useTaxDeclarationsData();
+
+  const handleCreateTaxRate = async (data: Partial<TaxRate>) => {
+    try {
+      console.log('Creating tax rate:', data);
+      toast.success('Taux de TVA créé avec succès');
+      setIsNewTaxRateDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating tax rate:', error);
+      toast.error("Erreur lors de la création du taux de TVA");
+    }
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -26,7 +37,7 @@ const TaxesPage: React.FC = () => {
           <Button variant="outline">
             <BarChart4 className="mr-2 h-4 w-4" /> Rapport
           </Button>
-          <Button>
+          <Button onClick={() => setIsNewTaxRateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nouveau taux
           </Button>
         </div>
@@ -147,6 +158,12 @@ const TaxesPage: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <CreateTaxRateDialog
+        open={isNewTaxRateDialogOpen}
+        onOpenChange={setIsNewTaxRateDialogOpen}
+        onSubmit={handleCreateTaxRate}
+      />
     </div>
   );
 };

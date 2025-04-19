@@ -14,3 +14,14 @@ export interface Payment {
   updatedAt?: string;
 }
 
+export interface TaxRate {
+  id: string;
+  name: string;
+  rate: number;
+  description?: string;
+  isDefault: boolean;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
