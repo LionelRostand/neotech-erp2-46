@@ -20,7 +20,7 @@ export interface Column {
 
 interface DataTableProps<T> {
   title: string;
-  data: T[];
+  data?: T[];
   columns?: Column[];
   className?: string;
   onRowClick?: (row: T) => void;
@@ -28,7 +28,7 @@ interface DataTableProps<T> {
 
 const DataTable = <T extends Record<string, any>>({ 
   title, 
-  data, 
+  data = [], // Add default empty array
   columns, 
   className, 
   onRowClick 
@@ -53,38 +53,44 @@ const DataTable = <T extends Record<string, any>>({
         <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-gray-500 text-sm border-b border-gray-100">
-              {tableColumns.map((column, index) => (
-                <th key={index} className="px-6 py-4 font-medium">
-                  {column.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {data.map((item, rowIndex) => (
-              <tr 
-                key={rowIndex}
-                className={cn(
-                  "text-gray-700 text-sm hover:bg-gray-50 transition-colors",
-                  onRowClick && "cursor-pointer"
-                )}
-                onClick={() => onRowClick && onRowClick(item)}
-              >
-                {tableColumns.map((column, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 font-medium">
-                    {column.cell 
-                      ? column.cell({ row: { original: item } })
-                      : item[column.key]
-                    }
-                  </td>
+        {!data || data.length === 0 ? (
+          <div className="py-8 text-center text-gray-500">
+            Aucune donnée disponible
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-gray-500 text-sm border-b border-gray-100">
+                {tableColumns.map((column, index) => (
+                  <th key={index} className="px-6 py-4 font-medium">
+                    {column.header}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.map((item, rowIndex) => (
+                <tr 
+                  key={rowIndex}
+                  className={cn(
+                    "text-gray-700 text-sm hover:bg-gray-50 transition-colors",
+                    onRowClick && "cursor-pointer"
+                  )}
+                  onClick={() => onRowClick && onRowClick(item)}
+                >
+                  {tableColumns.map((column, colIndex) => (
+                    <td key={colIndex} className="px-6 py-4 font-medium">
+                      {column.cell 
+                        ? column.cell({ row: { original: item } })
+                        : item[column.key] || '-'
+                      }
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
