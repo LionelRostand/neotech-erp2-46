@@ -1,22 +1,22 @@
-
 import React, { useState } from 'react';
 import { Building2, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import DataTable from '@/components/DataTable'; // Changed to default import
+import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import FormDialog from './dialogs/FormDialog';
+import AddAdmissionForm from './forms/AddAdmissionForm';
 
 const AdmissionsPage: React.FC = () => {
   const { patients, doctors, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
-  // Mock admissions data since we don't have it in the collections
   const admissions = [
     {
       id: "ADM001",
@@ -42,7 +42,6 @@ const AdmissionsPage: React.FC = () => {
     }
   ];
 
-  // Get patient and doctor names for display
   const getPatientName = (patientId: string) => {
     const patient = patients?.find(p => p.id === patientId);
     return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
@@ -53,7 +52,6 @@ const AdmissionsPage: React.FC = () => {
     return doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : 'Médecin inconnu';
   };
 
-  // Search functionality
   const filteredAdmissions = admissions.filter(admission => {
     const patientName = getPatientName(admission.patientId).toLowerCase();
     const doctorName = getDoctorName(admission.doctorId).toLowerCase();
@@ -124,6 +122,12 @@ const AdmissionsPage: React.FC = () => {
     },
   ];
 
+  const handleAddAdmission = (data: any) => {
+    console.log('New admission:', data);
+    setIsAddDialogOpen(false);
+    toast.success("Admission créée avec succès");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -156,6 +160,18 @@ const AdmissionsPage: React.FC = () => {
           searchPlaceholder="Rechercher une admission..."
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouvelle admission"
+        description="Enregistrer une nouvelle admission"
+      >
+        <AddAdmissionForm
+          onSubmit={handleAddAdmission}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };

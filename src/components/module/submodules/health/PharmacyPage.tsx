@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Pill, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,22 +5,22 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
 import { HealthInventory } from './types/health-types';
-import DataTable from '@/components/DataTable'; // Changed to default import
+import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
+import FormDialog from './dialogs/FormDialog';
+import AddMedicationForm from './forms/AddMedicationForm';
 
 const PharmacyPage: React.FC = () => {
   const { inventory, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Filter medications from inventory
   const medications = inventory?.filter(item => 
     item.category === 'medication' || 
     item.category === 'médicament'
   ) || [];
 
-  // Search functionality
   const filteredMedications = medications.filter(med => 
     med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     med.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -78,6 +77,12 @@ const PharmacyPage: React.FC = () => {
     },
   ];
 
+  const handleAddMedication = (data: any) => {
+    console.log('New medication:', data);
+    setIsAddDialogOpen(false);
+    toast.success("Médicament ajouté avec succès");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -110,6 +115,18 @@ const PharmacyPage: React.FC = () => {
           searchPlaceholder="Rechercher un médicament..."
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouveau médicament"
+        description="Ajouter un nouveau médicament à l'inventaire"
+      >
+        <AddMedicationForm
+          onSubmit={handleAddMedication}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };

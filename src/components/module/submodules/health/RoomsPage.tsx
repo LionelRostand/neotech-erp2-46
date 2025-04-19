@@ -1,20 +1,20 @@
-
 import React, { useState } from 'react';
 import { BedDouble, Plus, Search, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import DataTable from '@/components/DataTable'; // Changed to default import
+import DataTable from '@/components/DataTable';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import FormDialog from './dialogs/FormDialog';
+import AddRoomForm from './forms/AddRoomForm';
 
 const RoomsPage: React.FC = () => {
   const { patients, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
-  // Mock rooms data
   const rooms = [
     {
       id: "R101",
@@ -62,14 +62,12 @@ const RoomsPage: React.FC = () => {
     }
   ];
 
-  // Get patient name for display
   const getPatientName = (patientId: string | null) => {
     if (!patientId) return 'Aucun';
     const patient = patients?.find(p => p.id === patientId);
     return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
   };
 
-  // Search functionality
   const filteredRooms = rooms.filter(room => 
     room.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
     room.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -146,6 +144,12 @@ const RoomsPage: React.FC = () => {
     },
   ];
 
+  const handleAddRoom = (data: any) => {
+    console.log('New room:', data);
+    setIsAddDialogOpen(false);
+    toast.success("Chambre ajoutée avec succès");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -178,6 +182,18 @@ const RoomsPage: React.FC = () => {
           searchPlaceholder="Rechercher une chambre..."
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouvelle chambre"
+        description="Ajouter une nouvelle chambre"
+      >
+        <AddRoomForm
+          onSubmit={handleAddRoom}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };
