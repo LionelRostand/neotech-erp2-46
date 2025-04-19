@@ -8,15 +8,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Column } from '@tanstack/react-table';
 
 export interface DataTableProps<T> {
   title: string;
   data?: T[];  // Make data optional with ?
   columns: { header: string; accessorKey: keyof T }[];
+  onRowClick?: (row: T) => void;  // Add optional onRowClick prop
 }
 
-function DataTable<T>({ title, data = [], columns }: DataTableProps<T>) {  // Add default empty array
+function DataTable<T>({ title, data = [], columns, onRowClick }: DataTableProps<T>) {  // Add default empty array
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
@@ -32,7 +32,11 @@ function DataTable<T>({ title, data = [], columns }: DataTableProps<T>) {  // Ad
             </TableHeader>
             <TableBody>
               {data.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
+                <TableRow 
+                  key={rowIndex}
+                  className={onRowClick ? "cursor-pointer hover:bg-gray-50" : ""}
+                  onClick={() => onRowClick && onRowClick(row)}
+                >
                   {columns.map((column, colIndex) => (
                     <TableCell key={colIndex}>
                       {String(row[column.accessorKey] || '')}
