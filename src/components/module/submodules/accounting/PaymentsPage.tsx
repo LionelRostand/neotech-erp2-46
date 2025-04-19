@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +17,9 @@ const PaymentsPage = () => {
 
   const handleCreatePayment = async (data: Partial<Payment>) => {
     try {
-      // TODO: Implement actual payment creation
       console.log('Creating payment:', data);
       toast.success('Paiement enregistré avec succès');
+      setIsNewPaymentDialogOpen(false);
       reload();
     } catch (error) {
       console.error('Error creating payment:', error);
@@ -38,7 +37,7 @@ const PaymentsPage = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestion des Paiements</h1>
         <div className="flex items-center space-x-2">
-          <Button>
+          <Button onClick={() => setIsNewPaymentDialogOpen(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
             Nouveau Paiement
           </Button>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Payment } from '../types/accounting-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';

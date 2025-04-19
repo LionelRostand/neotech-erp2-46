@@ -1,3 +1,4 @@
+
 export interface Payment {
   id: string;
   invoiceNumber: string;
@@ -12,3 +13,4 @@ export interface Payment {
   createdAt?: string;
   updatedAt?: string;
 }
+
