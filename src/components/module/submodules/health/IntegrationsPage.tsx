@@ -95,7 +95,10 @@ const IntegrationsPage: React.FC = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Intégrations</h1>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Link2 className="h-8 w-8 text-primary" />
+          Intégrations
+        </h1>
         <Button onClick={handleAddIntegration}>
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle Intégration
@@ -151,6 +154,11 @@ const IntegrationsPage: React.FC = () => {
           ))}
         </div>
       )}
+      <AddIntegrationDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onIntegrationAdded={handleIntegrationAdded}
+      />
     </div>
   );
 };
