@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Car, Tools, AlertTriangle } from "lucide-react";
+import { Plus, Car, Wrench, AlertTriangle } from "lucide-react";
 import StatCard from '@/components/StatCard';
 import AddVehicleDialog from './AddVehicleDialog';
 
@@ -29,7 +29,7 @@ const GarageVehiclesDashboard = () => {
         <StatCard
           title="En Maintenance"
           value="12"
-          icon={<Tools className="h-5 w-5 text-amber-500" />}
+          icon={<Wrench className="h-5 w-5 text-amber-500" />}
           description="4 interventions urgentes"
         />
         <StatCard
