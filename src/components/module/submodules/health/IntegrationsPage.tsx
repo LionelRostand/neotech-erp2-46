@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Link2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import IntegrationEmptyState from './components/integrations/IntegrationEmptyState';
+import AddIntegrationDialog from './components/integrations/AddIntegrationDialog';
 
 interface Integration {
   id: string;
@@ -24,14 +24,12 @@ const IntegrationsPage: React.FC = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Fetch integrations from Firestore
   const { data, isLoading, error } = useCollectionData(
     COLLECTIONS.HEALTH.BILLING,
     []
   );
 
   useEffect(() => {
-    // Mock data for display
     setIntegrations([
       {
         id: '1',
@@ -76,7 +74,10 @@ const IntegrationsPage: React.FC = () => {
 
   const handleAddIntegration = () => {
     setIsAddDialogOpen(true);
-    // Will be implemented later
+  };
+
+  const handleIntegrationAdded = (newIntegration: any) => {
+    setIntegrations([...integrations, newIntegration]);
   };
 
   const formatDate = (dateString?: string) => {
