@@ -1,3 +1,4 @@
+
 import { 
   updateDoc,
   setDoc,
@@ -117,5 +118,32 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
       toast.error(`Erreur lors de la sauvegarde: ${errorMessage}`);
       throw error;
     }
+  }
+};
+
+// Function to update employee skills
+export const updateEmployeeSkills = async (collectionName: string, employeeId: string, skills: string[]) => {
+  try {
+    console.log(`Updating skills for employee ${employeeId} in collection ${collectionName}`);
+    
+    const docRef = doc(db, collectionName, employeeId);
+    
+    // Check if the document exists
+    const docSnapshot = await getDoc(docRef);
+    if (!docSnapshot.exists()) {
+      throw new Error(`L'employé avec l'ID ${employeeId} n'existe pas`);
+    }
+    
+    // Update only the skills field
+    await updateDoc(docRef, { 
+      skills,
+      updatedAt: new Date().toISOString() 
+    });
+    
+    console.log(`Skills updated successfully for employee ${employeeId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error updating skills for employee ${employeeId}:`, error);
+    throw error;
   }
 };

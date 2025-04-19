@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Plus, Save, Trash, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { updateEmployeeDoc } from '@/services/employeeService';
+import { updateEmployeeSkills } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface CompetencesTabProps {
   employee: Employee;
@@ -52,23 +53,25 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   
   const handleSave = async () => {
     try {
-      // Mettre à jour l'employé dans la base de données
-      const updatedEmployee = await updateEmployeeDoc(employee.id, {
-        skills
-      });
+      // Update employee in the database with the new skills
+      await updateEmployeeSkills(COLLECTIONS.HR.EMPLOYEES, employee.id, skills);
       
-      if (updatedEmployee) {
-        toast.success('Compétences mises à jour avec succès');
-        
-        // Si un callback de mise à jour a été fourni, l'appeler avec l'employé mis à jour
-        if (typeof onEmployeeUpdated === 'function') {
-          onEmployeeUpdated(updatedEmployee);
-        }
-        
-        setIsEditing(false);
-        if (onFinishEditing) {
-          onFinishEditing();
-        }
+      // Create updated employee object with new skills
+      const updatedEmployee = {
+        ...employee,
+        skills
+      };
+      
+      toast.success('Compétences mises à jour avec succès');
+      
+      // If an update callback was provided, call it with the updated employee
+      if (typeof onEmployeeUpdated === 'function') {
+        onEmployeeUpdated(updatedEmployee);
+      }
+      
+      setIsEditing(false);
+      if (onFinishEditing) {
+        onFinishEditing();
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour des compétences:', error);

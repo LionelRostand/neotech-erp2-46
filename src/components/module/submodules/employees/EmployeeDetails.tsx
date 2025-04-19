@@ -56,6 +56,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   };
 
   const handleEmployeeUpdate = (updatedEmp: Employee) => {
+    console.log('Employee updated:', updatedEmp);
     setUpdatedEmployee(updatedEmp);
   };
 
@@ -100,13 +101,13 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     doc.setFontSize(11);
     
     const personalInfo = [
-      [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
-      [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
+      [`Nom: ${updatedEmployee.lastName}`, `Prénom: ${updatedEmployee.firstName}`],
+      [`Email: ${updatedEmployee.email}`, `Téléphone: ${updatedEmployee.phone || "Non renseigné"}`],
       // Use optional chaining to safely access education
-      [`Date de naissance: ${employee.birthDate || "Non renseignée"}`, `Adresse: ${
-        typeof employee.address === 'object' 
-          ? `${employee.address.street}, ${employee.address.city}` 
-          : employee.address || "Non renseignée"
+      [`Date de naissance: ${updatedEmployee.birthDate || "Non renseignée"}`, `Adresse: ${
+        typeof updatedEmployee.address === 'object' 
+          ? `${updatedEmployee.address.street}, ${updatedEmployee.address.city}` 
+          : updatedEmployee.address || "Non renseignée"
       }`]
     ];
     
@@ -125,10 +126,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     doc.setFontSize(11);
     
     const professionalInfo = [
-      [`Poste: ${employee.position}`, `Département: ${employee.department}`],
-      [`Date d'embauche: ${employee.hireDate}`, `Manager: ${employee.manager || "Aucun"}`],
+      [`Poste: ${updatedEmployee.position}`, `Département: ${updatedEmployee.department}`],
+      [`Date d'embauche: ${updatedEmployee.hireDate}`, `Manager: ${updatedEmployee.manager || "Aucun"}`],
       // Fixed: Using contract instead of contractType
-      [`Type de contrat: ${employee.contract || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
+      [`Type de contrat: ${updatedEmployee.contract || "Non spécifié"}`, `Statut: ${updatedEmployee.status || "Actif"}`]
     ];
     
     yPos += 20;
@@ -139,7 +140,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     });
     
     // Save PDF
-    doc.save(`fiche-employe-${employee.firstName.toLowerCase()}-${employee.lastName.toLowerCase()}.pdf`);
+    doc.save(`fiche-employe-${updatedEmployee.firstName.toLowerCase()}-${updatedEmployee.lastName.toLowerCase()}.pdf`);
     toast.success("Document PDF exporté avec succès");
     
     // Also call the parent onExportPdf to manage any UI updates
@@ -167,8 +168,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           <InformationsTab 
             employee={updatedEmployee}
             onEmployeeUpdated={handleEmployeeUpdate}
-            isEditing={isEditing && activeTab === 'infos'}
-            onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
         
