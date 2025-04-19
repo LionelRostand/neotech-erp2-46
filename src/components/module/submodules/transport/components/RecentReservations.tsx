@@ -16,7 +16,7 @@ interface RecentReservationsProps {
   reservations: Reservation[];
 }
 
-const RecentReservations: React.FC<RecentReservationsProps> = ({ reservations }) => {
+const RecentReservations: React.FC<RecentReservationsProps> = ({ reservations = [] }) => {
   const { toast } = useToast();
 
   return (
