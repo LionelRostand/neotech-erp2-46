@@ -1,98 +1,148 @@
 
-import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash } from "lucide-react";
-
-interface Consultation {
-  id: string;
-  patientName: string;
-  doctorName: string;
-  date: string;
-  time: string;
-  type: string;
-  status: 'pending' | 'completed' | 'cancelled';
-  notes?: string;
-}
+import React, { useState, useEffect } from 'react';
+import { useFirestore } from '@/hooks/useFirestore';
+import { toast } from 'sonner';
+import { Pencil, Trash2, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import type { Consultation } from '../../types/health-types';
 
 interface ConsultationListProps {
-  consultations: Consultation[];
-  onView: (consultation: Consultation) => void;
-  onEdit: (consultation: Consultation) => void;
-  onDelete: (consultation: Consultation) => void;
+  consultations?: Consultation[];
+  onView?: (consultation: Consultation) => void;
+  onEdit?: (consultation: Consultation) => void;
+  onDelete?: (consultationId: string) => void;
 }
 
-const ConsultationList: React.FC<ConsultationListProps> = ({
-  consultations,
+const ConsultationsList: React.FC<ConsultationListProps> = ({
+  consultations: propConsultations,
   onView,
   onEdit,
   onDelete
 }) => {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-500">Terminée</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500">En attente</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Annulée</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { getAll, remove } = useFirestore('consultations');
+
+  const fetchConsultations = async () => {
+    try {
+      setLoading(true);
+      const data = await getAll();
+      setConsultations(data as Consultation[]);
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+      toast.error('Erreur lors du chargement des consultations');
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (propConsultations) {
+      setConsultations(propConsultations);
+      setLoading(false);
+    } else {
+      fetchConsultations();
+    }
+  }, [propConsultations]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await remove(id);
+      toast.success('Consultation supprimée avec succès');
+      // Refresh the list
+      if (!propConsultations) {
+        fetchConsultations();
+      } else if (onDelete) {
+        onDelete(id);
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la suppression de la consultation');
+    }
+  };
+
+  if (loading) {
+    return <div className="py-10 text-center">Chargement des consultations...</div>;
+  }
+
+  if (consultations.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-gray-500">Aucune consultation trouvée</p>
+      </div>
+    );
+  }
+
   return (
-    <Card className="mt-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Patient</TableHead>
-            <TableHead>Médecin</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Heure</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {consultations.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
-                Aucune consultation trouvée
-              </TableCell>
-            </TableRow>
-          ) : (
-            consultations.map((consultation) => (
-              <TableRow key={consultation.id}>
-                <TableCell>{consultation.patientName}</TableCell>
-                <TableCell>{consultation.doctorName}</TableCell>
-                <TableCell>{consultation.date}</TableCell>
-                <TableCell>{consultation.time}</TableCell>
-                <TableCell>{consultation.type}</TableCell>
-                <TableCell>{getStatusBadge(consultation.status)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button size="icon" variant="ghost" onClick={() => onView(consultation)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => onEdit(consultation)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => onDelete(consultation)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </Card>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">Patient</th>
+            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">Médecin</th>
+            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">Date</th>
+            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">Type</th>
+            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">Statut</th>
+            <th className="px-4 py-2 text-right text-sm font-semibold text-gray-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {consultations.map((consultation) => (
+            <tr key={consultation.id} className="hover:bg-gray-50">
+              <td className="px-4 py-3 text-sm">{consultation.patientId}</td>
+              <td className="px-4 py-3 text-sm">{consultation.doctorId}</td>
+              <td className="px-4 py-3 text-sm">
+                {consultation.date instanceof Date
+                  ? consultation.date.toLocaleDateString('fr-FR')
+                  : new Date(consultation.date).toLocaleDateString('fr-FR')}
+              </td>
+              <td className="px-4 py-3 text-sm capitalize">{consultation.type}</td>
+              <td className="px-4 py-3 text-sm">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                  ${consultation.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                    consultation.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
+                    'bg-blue-100 text-blue-800'}`}>
+                  {consultation.status === 'scheduled' ? 'Planifiée' : 
+                   consultation.status === 'completed' ? 'Terminée' : 
+                   consultation.status === 'cancelled' ? 'Annulée' : 
+                   consultation.status === 'in-progress' ? 'En cours' : consultation.status}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-sm text-right space-x-2">
+                {onView && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onView(consultation)} 
+                    className="text-blue-600"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                {onEdit && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onEdit(consultation)} 
+                    className="text-amber-600"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleDelete(consultation.id)} 
+                  className="text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
-export default ConsultationList;
+export default ConsultationsList;

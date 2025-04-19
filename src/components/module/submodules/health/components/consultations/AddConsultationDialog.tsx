@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ConsultationForm from '../ConsultationForm';
+import ConsultationForm from '../../ConsultationForm';
 import type { Consultation } from '../../types/health-types';
 
 interface AddConsultationDialogProps {
@@ -29,6 +29,8 @@ const AddConsultationDialog: React.FC<AddConsultationDialogProps> = ({
         <ConsultationForm 
           onSubmit={onConsultationAdded}
           onCancel={onClose}
+          patients={[]} // We need to pass patients and doctors props
+          doctors={[]}
         />
       </DialogContent>
     </Dialog>
