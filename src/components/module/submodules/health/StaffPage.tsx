@@ -1,182 +1,112 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Filter, Calendar, Shield, Clock } from "lucide-react";
-import StaffList from './components/staff/StaffList';
-import PermissionsManager from './components/staff/PermissionsManager';
-import StaffSchedules from './components/staff/StaffSchedules';
-import StaffLeaves from './components/staff/StaffLeaves';
-import StaffMemberDetail from './components/staff/StaffMemberDetail';
-import { StaffMember } from './types/health-types';
-import { toast } from "@/hooks/use-toast";
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Users2, Plus, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useHealthData } from '@/hooks/modules/useHealthData';
+import { Staff } from './types/health-types';
+import { DataTable } from '@/components/DataTable';
+import StatusBadge from '@/components/StatusBadge';
+import { toast } from 'sonner';
 
 const StaffPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('list');
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const { staff, isLoading } = useHealthData();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const staffCollection = useFirestore(COLLECTIONS.HEALTH.STAFF);
-  
-  const handleViewStaff = (staff: StaffMember) => {
-    setSelectedStaff(staff);
-    setIsEditing(false);
-  };
+  // Search functionality
+  const filteredStaff = staff?.filter(member => 
+    member.lastName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
-  const handleEditStaff = (staff: StaffMember) => {
-    setSelectedStaff(staff);
-    setIsEditing(true);
-  };
-
-  const handleAddStaff = () => {
-    setSelectedStaff(null);
-    setIsCreating(true);
-  };
-
-  const handleBackToList = () => {
-    setSelectedStaff(null);
-    setIsEditing(false);
-    setIsCreating(false);
-  };
-
-  const handleSaveStaff = async (data: StaffMember) => {
-    try {
-      // Update or create the staff member
-      if (data.id && !isCreating) {
-        await staffCollection.update(data.id, data);
-        toast({ 
-          title: "Personnel mis à jour", 
-          description: `Les informations de ${data.firstName} ${data.lastName} ont été mises à jour.`
-        });
-      } else {
-        await staffCollection.add(data);
-        toast({ 
-          title: "Personnel ajouté", 
-          description: `${data.firstName} ${data.lastName} a été ajouté à l'équipe.`
-        });
-      }
-      
-      // Return to list view
-      handleBackToList();
-    } catch (error) {
-      console.error("Error saving staff member:", error);
-      toast({ 
-        title: "Erreur", 
-        description: "Une erreur s'est produite lors de l'enregistrement.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Show staff detail view when a staff member is selected or when creating a new one
-  if (selectedStaff || isCreating) {
-    return (
-      <StaffMemberDetail 
-        staffMember={selectedStaff}
-        onBack={handleBackToList}
-        onSave={handleSaveStaff}
-      />
-    );
-  }
+  const columns = [
+    {
+      accessorKey: 'lastName',
+      header: 'Nom',
+      cell: ({ row }) => (
+        <div className="font-medium">
+          {row.original.lastName} {row.original.firstName}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'role',
+      header: 'Poste',
+    },
+    {
+      accessorKey: 'department',
+      header: 'Service',
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Téléphone',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Statut',
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status} />
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              toast.info("Affichage des détails à implémenter");
+            }}
+          >
+            Voir
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Gestion du Personnel</h2>
-          <p className="text-gray-500">Gérez le personnel médical et administratif</p>
-        </div>
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtrer
-          </Button>
-          <Button size="sm" onClick={handleAddStaff}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Ajouter un membre
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Users2 className="h-6 w-6 text-primary" />
+          Personnel
+        </h1>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouveau Personnel
+        </Button>
       </div>
 
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+      <div className="flex items-center gap-2 w-full max-w-sm">
+        <Search className="w-4 h-4 text-gray-500" />
         <Input
-          type="search"
           placeholder="Rechercher un membre du personnel..."
-          className="pl-8 w-full"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1"
         />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="list">Personnel</TabsTrigger>
-          <TabsTrigger value="permissions">Rôles</TabsTrigger>
-          <TabsTrigger value="schedules">Plannings</TabsTrigger>
-          <TabsTrigger value="leaves">Absences</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list">
-          <Card>
-            <CardContent className="p-6">
-              <StaffList 
-                searchQuery={searchQuery} 
-                onViewStaff={handleViewStaff}
-                onEditStaff={handleEditStaff}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Shield className="h-5 w-5 mr-2 text-blue-500" />
-                Gestion des rôles et permissions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PermissionsManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="schedules">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-blue-500" />
-                Plannings du personnel
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <StaffSchedules />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="leaves">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-blue-500" />
-                Gestion des absences
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <StaffLeaves />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
+        <DataTable
+          columns={columns}
+          data={filteredStaff}
+          isLoading={isLoading}
+          noDataText="Aucun personnel trouvé"
+          searchPlaceholder="Rechercher un membre du personnel..."
+        />
+      </Card>
     </div>
   );
 };

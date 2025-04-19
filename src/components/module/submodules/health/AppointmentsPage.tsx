@@ -1,255 +1,196 @@
 
 import React, { useState } from 'react';
-import { Calendar, Plus, Clock } from 'lucide-react';
+import { Calendar, Plus, Search, X, Check, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
+import { Appointment, Patient, Doctor } from './types/health-types';
+import { DataTable } from '@/components/DataTable';
+import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { useFirestore } from '@/hooks/useFirestore';
-import { Appointment } from './types/health-types';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const AppointmentsPage: React.FC = () => {
   const { appointments, patients, doctors, isLoading } = useHealthData();
-  const { remove } = useFirestore(COLLECTIONS.HEALTH.APPOINTMENTS);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { update } = useFirestore(COLLECTIONS.HEALTH.APPOINTMENTS);
 
-  const handleDeleteAppointment = async (id: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
-      return;
-    }
-    
-    try {
-      await remove(id);
-      toast.success('Rendez-vous supprimé avec succès');
-    } catch (error) {
-      console.error('Error deleting appointment:', error);
-      toast.error('Erreur lors de la suppression du rendez-vous');
-    }
-  };
-
-  const todaysAppointments = appointments?.filter(appointment => {
-    const today = new Date().toISOString().split('T')[0];
-    return appointment.date === today;
-  }) || [];
-
-  const upcomingAppointments = appointments?.filter(appointment => {
-    const today = new Date().toISOString().split('T')[0];
-    return appointment.date > today;
-  })
-  .sort((a, b) => {
-    if (a.date !== b.date) {
-      return a.date.localeCompare(b.date);
-    }
-    return a.time.localeCompare(b.time);
-  })
-  .slice(0, 5) || [];
-
+  // Get patient and doctor names for display
   const getPatientName = (patientId: string) => {
     const patient = patients?.find(p => p.id === patientId);
-    return patient ? `${patient.firstName} ${patient.lastName}` : 'Inconnu';
+    return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
   };
 
   const getDoctorName = (doctorId: string) => {
     const doctor = doctors?.find(d => d.id === doctorId);
-    return doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Inconnu';
+    return doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : 'Médecin inconnu';
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusClasses = {
-      scheduled: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
-      'no-show': 'bg-yellow-100 text-yellow-800',
-    };
+  // Search functionality
+  const filteredAppointments = appointments?.filter(appointment => {
+    const patientName = getPatientName(appointment.patientId).toLowerCase();
+    const doctorName = getDoctorName(appointment.doctorId).toLowerCase();
     
-    const statusLabels = {
-      scheduled: 'Planifié',
-      completed: 'Terminé',
-      cancelled: 'Annulé',
-      'no-show': 'Absent',
-    };
-    
-    const statusClass = statusClasses[status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800';
-    const statusLabel = statusLabels[status as keyof typeof statusLabels] || status;
-    
-    return (
-      <span className={`px-2 py-1 text-xs rounded-full ${statusClass}`}>
-        {statusLabel}
-      </span>
-    );
+    return patientName.includes(searchTerm.toLowerCase()) || 
+           doctorName.includes(searchTerm.toLowerCase()) ||
+           appointment.date.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           appointment.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           appointment.status.toLowerCase().includes(searchTerm.toLowerCase());
+  }) || [];
+
+  // Status updates
+  const handleCompleteAppointment = async (appointment: Appointment) => {
+    try {
+      if (appointment.id) {
+        await update(appointment.id, {
+          ...appointment,
+          status: 'completed',
+          updatedAt: new Date().toISOString()
+        });
+        toast.success('Rendez-vous marqué comme terminé');
+      }
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      toast.error('Erreur lors de la mise à jour du rendez-vous');
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    try {
+      if (appointment.id) {
+        await update(appointment.id, {
+          ...appointment,
+          status: 'cancelled',
+          updatedAt: new Date().toISOString()
+        });
+        toast.success('Rendez-vous annulé');
+      }
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      toast.error('Erreur lors de l\'annulation du rendez-vous');
+    }
+  };
+
+  const columns = [
+    {
+      accessorKey: 'date',
+      header: 'Date',
+      cell: ({ row }) => {
+        try {
+          return format(new Date(row.original.date), 'dd/MM/yyyy', { locale: fr });
+        } catch (error) {
+          return row.original.date;
+        }
+      }
+    },
+    {
+      accessorKey: 'time',
+      header: 'Heure',
+    },
+    {
+      accessorKey: 'patientId',
+      header: 'Patient',
+      cell: ({ row }) => (
+        <div>{getPatientName(row.original.patientId)}</div>
+      ),
+    },
+    {
+      accessorKey: 'doctorId',
+      header: 'Médecin',
+      cell: ({ row }) => (
+        <div>{getDoctorName(row.original.doctorId)}</div>
+      ),
+    },
+    {
+      accessorKey: 'reason',
+      header: 'Motif',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Statut',
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status} />
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const appointment = row.original;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {appointment.status === 'scheduled' || appointment.status === 'confirmed' ? (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleCompleteAppointment(appointment)}
+                >
+                  <Check className="mr-1 h-4 w-4" />
+                  Terminer
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleCancelAppointment(appointment)}
+                >
+                  <X className="mr-1 h-4 w-4" />
+                  Annuler
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  toast.info("Affichage du rendez-vous à implémenter");
+                }}
+              >
+                Voir
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Calendar className="h-6 w-6 text-primary" />
           Rendez-vous
         </h1>
-        <Button onClick={() => setShowAddDialog(true)}>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau Rendez-vous
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="mr-2 h-5 w-5" />
-              Rendez-vous d'aujourd'hui
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {todaysAppointments.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Heure</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Médecin</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {todaysAppointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell>{appointment.time}</TableCell>
-                      <TableCell>{getPatientName(appointment.patientId)}</TableCell>
-                      <TableCell>{getDoctorName(appointment.doctorId)}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                Aucun rendez-vous aujourd'hui
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="mr-2 h-5 w-5" />
-              Prochains rendez-vous
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingAppointments.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Médecin</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcomingAppointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell>
-                        {new Date(appointment.date).toLocaleDateString()}
-                        <div className="text-xs text-gray-500">{appointment.time}</div>
-                      </TableCell>
-                      <TableCell>{getPatientName(appointment.patientId)}</TableCell>
-                      <TableCell>{getDoctorName(appointment.doctorId)}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                Aucun rendez-vous à venir
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="flex items-center gap-2 w-full max-w-sm">
+        <Search className="w-4 h-4 text-gray-500" />
+        <Input
+          placeholder="Rechercher un rendez-vous..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1"
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tous les rendez-vous</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {appointments && appointments.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Heure</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Médecin</TableHead>
-                  <TableHead>Motif</TableHead>
-                  <TableHead>Durée</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {appointments.map((appointment) => (
-                  <TableRow key={appointment.id}>
-                    <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{appointment.time}</TableCell>
-                    <TableCell>{getPatientName(appointment.patientId)}</TableCell>
-                    <TableCell>{getDoctorName(appointment.doctorId)}</TableCell>
-                    <TableCell>{appointment.reason || 'N/A'}</TableCell>
-                    <TableCell>{appointment.duration} min</TableCell>
-                    <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => appointment.id && handleDeleteAppointment(appointment.id)}
-                      >
-                        Supprimer
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-gray-500">Aucun rendez-vous enregistré</p>
-            </div>
-          )}
-        </CardContent>
+      <Card className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
+        <DataTable
+          columns={columns}
+          data={filteredAppointments}
+          isLoading={isLoading}
+          noDataText="Aucun rendez-vous trouvé"
+          searchPlaceholder="Rechercher un rendez-vous..."
+        />
       </Card>
-
-      {/* TODO: Implement appointment dialog component */}
-      {showAddDialog && (
-        // This will be completed in a future implementation
-        <div hidden>
-          {setShowAddDialog(false)}
-        </div>
-      )}
     </div>
   );
 };

@@ -1,673 +1,161 @@
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Building2, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Building2, 
-  UserPlus, 
-  Search, 
-  UserCheck, 
-  UserMinus, 
-  FileText, 
-  Calendar, 
-  BedDouble,
-  BadgeAlert,
-  Bell
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// Types pour les hospitalisations
-interface Admission {
-  id: string;
-  patientName: string;
-  patientId: string;
-  dateAdmitted: string;
-  dateDischarged?: string;
-  roomNumber: string;
-  roomType: 'private' | 'shared' | 'intensive';
-  diagnosis: string;
-  doctor: string;
-  status: 'active' | 'scheduled' | 'discharged' | 'transferred';
-  notes?: string;
-}
-
-// Données de démonstration
-const mockAdmissions: Admission[] = [
-  {
-    id: 'ADM-001',
-    patientName: 'Jean Martin',
-    patientId: 'PAT-4321',
-    dateAdmitted: '2023-09-12',
-    roomNumber: '205',
-    roomType: 'private',
-    diagnosis: 'Pneumonie',
-    doctor: 'Dr. Sophie Laurent',
-    status: 'active',
-    notes: 'Patient sous antibiotiques, surveillance de la saturation en oxygène'
-  },
-  {
-    id: 'ADM-002',
-    patientName: 'Amélie Dubois',
-    patientId: 'PAT-8765',
-    dateAdmitted: '2023-09-14',
-    dateDischarged: '2023-09-20',
-    roomNumber: '110',
-    roomType: 'shared',
-    diagnosis: 'Post-opératoire - Appendicectomie',
-    doctor: 'Dr. Thomas Petit',
-    status: 'discharged',
-    notes: 'Sortie avec prescription d\'antalgiques, suivi dans 10 jours'
-  },
-  {
-    id: 'ADM-003',
-    patientName: 'Marc Leroy',
-    patientId: 'PAT-2468',
-    dateAdmitted: '2023-09-15',
-    roomNumber: '301',
-    roomType: 'intensive',
-    diagnosis: 'Insuffisance cardiaque aiguë',
-    doctor: 'Dr. Marie Fournier',
-    status: 'active',
-    notes: 'Monitoring cardiaque continu, bilan quotidien'
-  },
-  {
-    id: 'ADM-004',
-    patientName: 'Claire Moreau',
-    patientId: 'PAT-1357',
-    dateAdmitted: '2023-09-22',
-    roomNumber: '215',
-    roomType: 'private',
-    diagnosis: 'Fracture du fémur',
-    doctor: 'Dr. Philippe Rousseau',
-    status: 'active'
-  },
-  {
-    id: 'ADM-005',
-    patientName: 'Lucas Bernard',
-    patientId: 'PAT-9753',
-    dateAdmitted: '2023-09-25',
-    roomNumber: 'N/A',
-    roomType: 'shared',
-    diagnosis: 'Chirurgie programmée - Hernie inguinale',
-    doctor: 'Dr. Nathalie Dupont',
-    status: 'scheduled'
-  }
-];
+import { useHealthData } from '@/hooks/modules/useHealthData';
+import { DataTable } from '@/components/DataTable';
+import StatusBadge from '@/components/StatusBadge';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const AdmissionsPage: React.FC = () => {
+  const { patients, doctors, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
-  const [admissions, setAdmissions] = useState<Admission[]>(mockAdmissions);
-  const [isAdmitting, setIsAdmitting] = useState(false);
-  const [newAdmission, setNewAdmission] = useState<Partial<Admission>>({
-    patientName: '',
-    patientId: '',
-    roomNumber: '',
-    roomType: 'shared',
-    diagnosis: '',
-    doctor: '',
-    status: 'scheduled',
-    notes: ''
-  });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
-  const { toast } = useToast();
-
-  const filteredAdmissions = admissions.filter(admission => 
-    admission.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admission.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admission.patientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admission.diagnosis.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const activeAdmissions = admissions.filter(admission => admission.status === 'active');
-  const scheduledAdmissions = admissions.filter(admission => admission.status === 'scheduled');
-  const dischargedAdmissions = admissions.filter(admission => admission.status === 'discharged');
-
-  const handleNewAdmission = () => {
-    if (!newAdmission.patientName || !newAdmission.patientId || !newAdmission.diagnosis || !newAdmission.doctor) {
-      toast({
-        title: "Erreur de validation",
-        description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive"
-      });
-      return;
+  // Mock admissions data since we don't have it in the collections
+  const admissions = [
+    {
+      id: "ADM001",
+      patientId: patients?.[0]?.id || "P001",
+      doctorId: doctors?.[0]?.id || "D001",
+      admissionDate: new Date().toISOString(),
+      dischargeDate: "",
+      reason: "Intervention chirurgicale",
+      roomNumber: "301",
+      status: "active",
+      notes: "Patient admis pour une appendicectomie",
+    },
+    {
+      id: "ADM002",
+      patientId: patients?.[1]?.id || "P002",
+      doctorId: doctors?.[0]?.id || "D001",
+      admissionDate: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+      dischargeDate: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+      reason: "Pneumonie",
+      roomNumber: "205",
+      status: "completed",
+      notes: "Patient sorti après 2 jours d'hospitalisation",
     }
+  ];
 
-    const newId = `ADM-${String(admissions.length + 1).padStart(3, '0')}`;
-    const today = new Date().toISOString().split('T')[0];
+  // Get patient and doctor names for display
+  const getPatientName = (patientId: string) => {
+    const patient = patients?.find(p => p.id === patientId);
+    return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
+  };
+
+  const getDoctorName = (doctorId: string) => {
+    const doctor = doctors?.find(d => d.id === doctorId);
+    return doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : 'Médecin inconnu';
+  };
+
+  // Search functionality
+  const filteredAdmissions = admissions.filter(admission => {
+    const patientName = getPatientName(admission.patientId).toLowerCase();
+    const doctorName = getDoctorName(admission.doctorId).toLowerCase();
+    const room = admission.roomNumber.toLowerCase();
     
-    const admissionRecord: Admission = {
-      id: newId,
-      patientName: newAdmission.patientName!,
-      patientId: newAdmission.patientId!,
-      dateAdmitted: today,
-      roomNumber: newAdmission.roomNumber || 'À attribuer',
-      roomType: newAdmission.roomType as 'private' | 'shared' | 'intensive',
-      diagnosis: newAdmission.diagnosis!,
-      doctor: newAdmission.doctor!,
-      status: newAdmission.status as 'active' | 'scheduled' | 'discharged' | 'transferred',
-      notes: newAdmission.notes
-    };
-    
-    setAdmissions([...admissions, admissionRecord]);
-    setIsAdmitting(false);
-    setNewAdmission({
-      patientName: '',
-      patientId: '',
-      roomNumber: '',
-      roomType: 'shared',
-      diagnosis: '',
-      doctor: '',
-      status: 'scheduled',
-      notes: ''
-    });
+    return patientName.includes(searchTerm.toLowerCase()) || 
+           doctorName.includes(searchTerm.toLowerCase()) ||
+           room.includes(searchTerm.toLowerCase()) ||
+           admission.reason.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
-    toast({
-      title: "Admission créée",
-      description: `L'admission ${newId} a été créée avec succès.`
-    });
-  };
-
-  const handleDischarge = (id: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    setAdmissions(admissions.map(admission => 
-      admission.id === id 
-        ? { ...admission, status: 'discharged', dateDischarged: today } 
-        : admission
-    ));
-
-    toast({
-      title: "Patient sortant",
-      description: `Le patient a été marqué comme sortant avec succès.`
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'discharged': return 'bg-gray-100 text-gray-800';
-      case 'transferred': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Hospitalisé';
-      case 'scheduled': return 'Programmé';
-      case 'discharged': return 'Sortie effectuée';
-      case 'transferred': return 'Transféré';
-      default: return status;
-    }
-  };
-
-  const getRoomTypeText = (type: string) => {
-    switch (type) {
-      case 'private': return 'Privée';
-      case 'shared': return 'Commune';
-      case 'intensive': return 'Soins intensifs';
-      default: return type;
-    }
-  };
+  const columns = [
+    {
+      accessorKey: 'admissionDate',
+      header: 'Date d\'admission',
+      cell: ({ row }) => {
+        try {
+          return format(new Date(row.original.admissionDate), 'dd/MM/yyyy', { locale: fr });
+        } catch (error) {
+          return row.original.admissionDate;
+        }
+      }
+    },
+    {
+      accessorKey: 'patientId',
+      header: 'Patient',
+      cell: ({ row }) => (
+        <div>{getPatientName(row.original.patientId)}</div>
+      ),
+    },
+    {
+      accessorKey: 'doctorId',
+      header: 'Médecin',
+      cell: ({ row }) => (
+        <div>{getDoctorName(row.original.doctorId)}</div>
+      ),
+    },
+    {
+      accessorKey: 'roomNumber',
+      header: 'Chambre',
+    },
+    {
+      accessorKey: 'reason',
+      header: 'Motif',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Statut',
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status} />
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              toast.info("Affichage des détails à implémenter");
+            }}
+          >
+            Voir
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Hospitalisations</h2>
-        <Button 
-          onClick={() => setIsAdmitting(!isAdmitting)}
-          className="flex items-center gap-2"
-        >
-          <UserPlus className="h-4 w-4" />
-          Nouvelle admission
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Building2 className="h-6 w-6 text-primary" />
+          Hospitalisations
+        </h1>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouvelle Admission
         </Button>
       </div>
 
-      {/* Statistiques d'hospitalisation */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Patients hospitalisés</p>
-                <p className="text-2xl font-bold">{activeAdmissions.length}</p>
-              </div>
-              <BedDouble className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Admissions programmées</p>
-                <p className="text-2xl font-bold">{scheduledAdmissions.length}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Sorties ce mois</p>
-                <p className="text-2xl font-bold">{dischargedAdmissions.length}</p>
-              </div>
-              <UserMinus className="h-8 w-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center gap-2 w-full max-w-sm">
+        <Search className="w-4 h-4 text-gray-500" />
+        <Input
+          placeholder="Rechercher une admission..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1"
+        />
       </div>
 
-      {isAdmitting && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Nouvelle admission</CardTitle>
-            <CardDescription>Renseignez les informations d'admission du patient</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="patientName">Nom du patient</Label>
-                <Input 
-                  id="patientName"
-                  value={newAdmission.patientName}
-                  onChange={(e) => setNewAdmission({...newAdmission, patientName: e.target.value})}
-                  placeholder="Nom complet du patient"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="patientId">ID patient</Label>
-                <Input 
-                  id="patientId"
-                  value={newAdmission.patientId}
-                  onChange={(e) => setNewAdmission({...newAdmission, patientId: e.target.value})}
-                  placeholder="ex: PAT-1234"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="doctor">Médecin référent</Label>
-                <Input 
-                  id="doctor"
-                  value={newAdmission.doctor}
-                  onChange={(e) => setNewAdmission({...newAdmission, doctor: e.target.value})}
-                  placeholder="Nom du médecin"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="roomType">Type de chambre</Label>
-                <Select
-                  value={newAdmission.roomType}
-                  onValueChange={(value: 'private' | 'shared' | 'intensive') => 
-                    setNewAdmission({...newAdmission, roomType: value})
-                  }
-                >
-                  <SelectTrigger id="roomType">
-                    <SelectValue placeholder="Sélectionner un type de chambre" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="shared">Commune</SelectItem>
-                    <SelectItem value="private">Privée</SelectItem>
-                    <SelectItem value="intensive">Soins intensifs</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="roomNumber">Numéro de chambre</Label>
-                <Input 
-                  id="roomNumber"
-                  value={newAdmission.roomNumber}
-                  onChange={(e) => setNewAdmission({...newAdmission, roomNumber: e.target.value})}
-                  placeholder="ex: 205"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="status">Statut</Label>
-                <Select
-                  value={newAdmission.status}
-                  onValueChange={(value: 'active' | 'scheduled' | 'discharged' | 'transferred') => 
-                    setNewAdmission({...newAdmission, status: value})
-                  }
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Sélectionner un statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="scheduled">Programmé</SelectItem>
-                    <SelectItem value="active">Actif (immédiat)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="diagnosis">Diagnostic / Raison d'admission</Label>
-                <Input 
-                  id="diagnosis"
-                  value={newAdmission.diagnosis}
-                  onChange={(e) => setNewAdmission({...newAdmission, diagnosis: e.target.value})}
-                  placeholder="Diagnostic médical ou raison d'admission"
-                />
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="notes">Notes médicales</Label>
-                <Input 
-                  id="notes"
-                  value={newAdmission.notes}
-                  onChange={(e) => setNewAdmission({...newAdmission, notes: e.target.value})}
-                  placeholder="Notes supplémentaires, traitements, consignes particulières..."
-                />
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => setIsAdmitting(false)}>Annuler</Button>
-            <Button onClick={handleNewAdmission}>Enregistrer</Button>
-          </CardFooter>
-        </Card>
-      )}
-
-      <Tabs defaultValue="all">
-        <div className="flex justify-between items-center mb-4">
-          <TabsList>
-            <TabsTrigger value="all">Toutes</TabsTrigger>
-            <TabsTrigger value="active">Actuelles</TabsTrigger>
-            <TabsTrigger value="scheduled">Programmées</TabsTrigger>
-            <TabsTrigger value="discharged">Sorties</TabsTrigger>
-          </TabsList>
-          
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un patient..."
-              className="pl-8 w-[250px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-        
-        <TabsContent value="all" className="m-0">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Réf.</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Patient</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Date d'admission</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Chambre</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Diagnostic</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Médecin</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Statut</th>
-                      <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions.map((admission) => (
-                      <tr key={admission.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4">{admission.id}</td>
-                        <td className="py-3 px-4">
-                          <div>
-                            <div className="font-medium">{admission.patientName}</div>
-                            <div className="text-sm text-gray-500">{admission.patientId}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">{admission.dateAdmitted}</td>
-                        <td className="py-3 px-4">
-                          <div>
-                            <div>{admission.roomNumber}</div>
-                            <div className="text-sm text-gray-500">{getRoomTypeText(admission.roomType)}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">{admission.diagnosis}</td>
-                        <td className="py-3 px-4">{admission.doctor}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(admission.status)}`}>
-                            {getStatusText(admission.status)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right space-x-2">
-                          {admission.status === 'active' && (
-                            <Button variant="outline" size="sm" className="mr-2" onClick={() => handleDischarge(admission.id)}>
-                              <UserMinus className="h-4 w-4 mr-1" />
-                              Sortie
-                            </Button>
-                          )}
-                          {admission.status === 'scheduled' && (
-                            <Button variant="outline" size="sm" className="mr-2" onClick={() => {
-                              setAdmissions(admissions.map(a => 
-                                a.id === admission.id ? { ...a, status: 'active' } : a
-                              ));
-                              toast({
-                                title: "Admission activée",
-                                description: "Le patient a été admis avec succès."
-                              });
-                            }}>
-                              <UserCheck className="h-4 w-4 mr-1" />
-                              Admettre
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="sm">
-                            <FileText className="h-4 w-4 mr-1" />
-                            Détails
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="active" className="m-0">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Réf.</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Patient</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Date d'admission</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Durée</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Chambre</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Diagnostic</th>
-                      <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions
-                      .filter(admission => admission.status === 'active')
-                      .map((admission) => {
-                        // Calculer la durée du séjour
-                        const admissionDate = new Date(admission.dateAdmitted);
-                        const today = new Date();
-                        const stayDuration = Math.floor((today.getTime() - admissionDate.getTime()) / (1000 * 3600 * 24));
-                        
-                        return (
-                          <tr key={admission.id} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4">{admission.id}</td>
-                            <td className="py-3 px-4">
-                              <div>
-                                <div className="font-medium">{admission.patientName}</div>
-                                <div className="text-sm text-gray-500">{admission.patientId}</div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">{admission.dateAdmitted}</td>
-                            <td className="py-3 px-4">{stayDuration} jours</td>
-                            <td className="py-3 px-4">
-                              <div>
-                                <div>{admission.roomNumber}</div>
-                                <div className="text-sm text-gray-500">{getRoomTypeText(admission.roomType)}</div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">{admission.diagnosis}</td>
-                            <td className="py-3 px-4 text-right space-x-2">
-                              <Button variant="outline" size="sm" className="mr-2" onClick={() => handleDischarge(admission.id)}>
-                                <UserMinus className="h-4 w-4 mr-1" />
-                                Sortie
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <FileText className="h-4 w-4 mr-1" />
-                                Dossier
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="scheduled" className="m-0">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Réf.</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Patient</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Date prévue</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Chambre</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Motif</th>
-                      <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions
-                      .filter(admission => admission.status === 'scheduled')
-                      .map((admission) => (
-                        <tr key={admission.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-4">{admission.id}</td>
-                          <td className="py-3 px-4">
-                            <div>
-                              <div className="font-medium">{admission.patientName}</div>
-                              <div className="text-sm text-gray-500">{admission.patientId}</div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">{admission.dateAdmitted}</td>
-                          <td className="py-3 px-4">
-                            <div>
-                              <div>{admission.roomNumber !== 'À attribuer' ? admission.roomNumber : 'À attribuer'}</div>
-                              <div className="text-sm text-gray-500">{getRoomTypeText(admission.roomType)}</div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">{admission.diagnosis}</td>
-                          <td className="py-3 px-4 text-right space-x-2">
-                            <Button variant="outline" size="sm" className="mr-2" onClick={() => {
-                              setAdmissions(admissions.map(a => 
-                                a.id === admission.id ? { ...a, status: 'active' } : a
-                              ));
-                              toast({
-                                title: "Admission activée",
-                                description: "Le patient a été admis avec succès."
-                              });
-                            }}>
-                              <UserCheck className="h-4 w-4 mr-1" />
-                              Admettre
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <FileText className="h-4 w-4 mr-1" />
-                              Détails
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="discharged" className="m-0">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Réf.</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Patient</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Admission</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Sortie</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Durée</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">Diagnostic</th>
-                      <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions
-                      .filter(admission => admission.status === 'discharged')
-                      .map((admission) => {
-                        // Calculer la durée du séjour
-                        const admissionDate = new Date(admission.dateAdmitted);
-                        const dischargeDate = new Date(admission.dateDischarged || admissionDate);
-                        const stayDuration = Math.floor((dischargeDate.getTime() - admissionDate.getTime()) / (1000 * 3600 * 24));
-                        
-                        return (
-                          <tr key={admission.id} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4">{admission.id}</td>
-                            <td className="py-3 px-4">
-                              <div>
-                                <div className="font-medium">{admission.patientName}</div>
-                                <div className="text-sm text-gray-500">{admission.patientId}</div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">{admission.dateAdmitted}</td>
-                            <td className="py-3 px-4">{admission.dateDischarged}</td>
-                            <td className="py-3 px-4">{stayDuration} jours</td>
-                            <td className="py-3 px-4">{admission.diagnosis}</td>
-                            <td className="py-3 px-4 text-right">
-                              <Button variant="ghost" size="sm">
-                                <FileText className="h-4 w-4 mr-1" />
-                                Résumé
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
+        <DataTable
+          columns={columns}
+          data={filteredAdmissions}
+          isLoading={isLoading}
+          noDataText="Aucune admission trouvée"
+          searchPlaceholder="Rechercher une admission..."
+        />
+      </Card>
     </div>
   );
 };

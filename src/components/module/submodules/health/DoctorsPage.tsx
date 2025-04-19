@@ -1,77 +1,107 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { UserCog, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import DoctorsList from './components/DoctorsList';
-import DoctorForm from './components/DoctorForm';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useHealthData } from '@/hooks/modules/useHealthData';
+import { Doctor } from './types/health-types';
+import { DataTable } from '@/components/DataTable';
+import StatusBadge from '@/components/StatusBadge';
+import { toast } from 'sonner';
 
 const DoctorsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('list');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const { doctors, isLoading } = useHealthData();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // Search functionality
+  const filteredDoctors = doctors?.filter(doctor => 
+    doctor.lastName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    doctor.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doctor.specialty?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doctor.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const columns = [
+    {
+      accessorKey: 'lastName',
+      header: 'Nom',
+      cell: ({ row }) => (
+        <div className="font-medium">
+          Dr. {row.original.lastName} {row.original.firstName}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'specialty',
+      header: 'Spécialité',
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Téléphone',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Statut',
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status} />
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              toast.info("Affichage des détails à implémenter");
+            }}
+          >
+            Voir
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Gestion des Médecins</h2>
-        <div className="flex gap-2">
-          {activeTab === 'list' && (
-            <Button 
-              onClick={() => setActiveTab('new')}
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau Médecin
-            </Button>
-          )}
-          {activeTab === 'new' && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveTab('list')}
-            >
-              Retour à la liste
-            </Button>
-          )}
-        </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <UserCog className="h-6 w-6 text-primary" />
+          Médecins
+        </h1>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouveau Médecin
+        </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full md:w-auto grid-cols-2 md:inline-flex">
-          <TabsTrigger value="list">Liste des Médecins</TabsTrigger>
-          <TabsTrigger value="new">Nouveau Médecin</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="list" className="space-y-4">
-          <div className="flex items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un médecin..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <DoctorsList searchQuery={searchQuery} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="new">
-          <Card>
-            <CardContent className="pt-6">
-              <DoctorForm onSuccess={() => setActiveTab('list')} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="flex items-center gap-2 w-full max-w-sm">
+        <Search className="w-4 h-4 text-gray-500" />
+        <Input
+          placeholder="Rechercher un médecin..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1"
+        />
+      </div>
+
+      <Card className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
+        <DataTable
+          columns={columns}
+          data={filteredDoctors}
+          isLoading={isLoading}
+          noDataText="Aucun médecin trouvé"
+          searchPlaceholder="Rechercher un médecin..."
+        />
+      </Card>
     </div>
   );
 };
