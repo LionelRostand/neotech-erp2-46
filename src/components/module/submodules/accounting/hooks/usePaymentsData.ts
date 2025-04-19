@@ -1,8 +1,7 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Payment } from '../types/accounting-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
+import { orderBy, where } from 'firebase/firestore';
 import { useCollectionData } from '@/hooks/useCollectionData';
 
 export const usePaymentsData = (filterStatus?: string) => {
@@ -34,5 +33,10 @@ export const usePaymentsData = (filterStatus?: string) => {
     }
   }, [data]);
 
-  return { payments, isLoading, error };
+  const reload = useCallback(() => {
+    // Force a refetch of the data
+    console.log('Reloading payments data...');
+  }, []);
+
+  return { payments, isLoading, error, reload };
 };

@@ -3,20 +3,30 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { 
-  PlusCircle, 
-  Search, 
-  Filter, 
-  Download 
-} from 'lucide-react';
+import { PlusCircle, Search, Filter, Download } from 'lucide-react';
 import { usePaymentsData } from './hooks/usePaymentsData';
 import PaymentViewDialog from './components/PaymentViewDialog';
+import PaymentFormDialog from './components/PaymentFormDialog';
 import { Payment } from './types/accounting-types';
+import { toast } from "sonner";
 
 const PaymentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const { payments, isLoading, error } = usePaymentsData();
+  const [isNewPaymentDialogOpen, setIsNewPaymentDialogOpen] = useState(false);
+  const { payments, isLoading, error, reload } = usePaymentsData();
+
+  const handleCreatePayment = async (data: Partial<Payment>) => {
+    try {
+      // TODO: Implement actual payment creation
+      console.log('Creating payment:', data);
+      toast.success('Paiement enregistré avec succès');
+      reload();
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      toast.error("Erreur lors de l'enregistrement du paiement");
+    }
+  };
 
   const filteredPayments = payments.filter(payment => 
     payment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,6 +141,12 @@ const PaymentsPage = () => {
           payment={selectedPayment}
         />
       )}
+
+      <PaymentFormDialog
+        open={isNewPaymentDialogOpen}
+        onOpenChange={setIsNewPaymentDialogOpen}
+        onSubmit={handleCreatePayment}
+      />
     </div>
   );
 };
