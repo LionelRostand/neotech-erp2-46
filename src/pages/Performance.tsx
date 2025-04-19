@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LineChart, BarChart, Users, TrendingUp } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -6,6 +7,8 @@ import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { Card } from '@/components/ui/card';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrency } from '@/lib/formatters';
+import AnalyticsTable from '@/components/analytics/AnalyticsTable';
 
 const Performance = () => {
   const { stats, monthlyData, loading } = useAnalyticsData();
@@ -29,7 +32,7 @@ const Performance = () => {
           <>
             <StatCard 
               title="Chiffre d'affaires" 
-              value={`€${stats.revenue.toLocaleString()}`}
+              value={formatCurrency(stats.revenue, 'EUR')}
               icon={<LineChart className="text-primary" size={20} />}
               description={`${stats.growth > 0 ? '+' : ''}${stats.growth}% ce mois`}
             />
@@ -67,7 +70,12 @@ const Performance = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value, name) => {
+                    if (name === "Chiffre d'affaires") {
+                      return [formatCurrency(value as number, 'EUR'), name];
+                    }
+                    return [value, name];
+                  }} />
                   <Line 
                     type="monotone" 
                     dataKey="revenue" 

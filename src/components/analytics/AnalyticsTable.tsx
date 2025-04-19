@@ -2,6 +2,7 @@
 import React from 'react';
 import { DataTable } from "@/components/ui/data-table";
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
+import { formatCurrency } from '@/lib/formatters';
 
 const AnalyticsTable = () => {
   const { monthlyData, loading } = useAnalyticsData();
@@ -18,7 +19,7 @@ const AnalyticsTable = () => {
       header: "Chiffre d'affaires",
       key: "revenue",
       cell: ({ row }) => (
-        <div>€{row.original.revenue.toLocaleString()}</div>
+        <div>{formatCurrency(row.original.revenue, 'EUR')}</div>
       )
     },
     {

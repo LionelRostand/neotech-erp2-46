@@ -4,12 +4,12 @@
  * @param value The number to format
  * @returns Formatted currency string
  */
-export const formatCurrency = (value: number): string => {
+export const formatCurrency = (value: number, currency: string = 'EUR'): string => {
   if (isNaN(value)) return '0 €';
   
   return new Intl.NumberFormat('fr-FR', { 
     style: 'currency', 
-    currency: 'EUR',
+    currency: currency,
     maximumFractionDigits: 0 
   }).format(value);
 };
