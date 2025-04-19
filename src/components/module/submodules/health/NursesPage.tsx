@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useHealthData } from '@/hooks/modules/useHealthData';
 import { Staff } from './types/health-types';
-import { DataTable } from '@/components/DataTable';
+import DataTable from '@/components/DataTable';
 import { toast } from 'sonner';
 import StatusBadge from '@/components/StatusBadge';
 
@@ -23,7 +23,7 @@ const NursesPage: React.FC = () => {
 
   const columns = [
     {
-      accessorKey: 'lastName',
+      key: 'lastName',
       header: 'Nom',
       cell: ({ row }) => (
         <div className="font-medium">
@@ -32,26 +32,27 @@ const NursesPage: React.FC = () => {
       ),
     },
     {
-      accessorKey: 'department',
+      key: 'department',
       header: 'Service',
     },
     {
-      accessorKey: 'email',
+      key: 'email',
       header: 'Email',
     },
     {
-      accessorKey: 'phone',
+      key: 'phone',
       header: 'Téléphone',
     },
     {
-      accessorKey: 'status',
+      key: 'status',
       header: 'Statut',
       cell: ({ row }) => (
-        <StatusBadge status={row.original.status} />
+        <StatusBadge status={row.original.status}>{row.original.status}</StatusBadge>
       ),
     },
     {
-      id: 'actions',
+      key: 'actions',
+      header: '',
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-2">
           <Button 
@@ -83,11 +84,10 @@ const NursesPage: React.FC = () => {
 
       <Card className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
         <DataTable
-          columns={columns}
+          title="Liste des infirmiers"
           data={nurses}
-          isLoading={isLoading}
-          noDataText="Aucun infirmier trouvé"
-          searchPlaceholder="Rechercher un infirmier..."
+          columns={columns}
+          className="w-full"
         />
       </Card>
     </div>
