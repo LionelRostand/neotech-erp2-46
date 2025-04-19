@@ -73,7 +73,7 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
       onClick={() => onSelect(document)}
     >
       <div className="flex justify-center">
-        <DocumentIcon format={document.format} />
+        <DocumentIcon format={document.format || ''} />
       </div>
       <h3 className="font-medium text-center truncate" title={document.name}>
         {document.name}
@@ -93,7 +93,7 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
       </div>
       <div className="flex justify-center pt-1">
         <Badge variant="outline" className="text-xs">
-          {document.format.toUpperCase()}
+          {document.format ? document.format.toUpperCase() : 'N/A'}
         </Badge>
       </div>
       <div className="flex justify-between items-center mt-2 pt-1 border-t">

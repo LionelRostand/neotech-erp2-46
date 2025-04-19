@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -99,7 +100,7 @@ const FreightDocuments: React.FC = () => {
     return {
       id: doc.id,
       name: doc.name,
-      format: doc.format,
+      format: doc.format || 'unknown',  // Ensure format is never undefined
       size: doc.format === 'pdf' ? 1024 * 1024 : 500 * 1024,
       createdAt: new Date(doc.date),
       updatedAt: new Date(doc.date),

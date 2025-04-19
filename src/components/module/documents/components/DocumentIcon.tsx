@@ -13,7 +13,7 @@ interface DocumentIconProps {
   className?: string;
 }
 
-export const DocumentIcon: React.FC<DocumentIconProps> = ({ format, className = "h-8 w-8" }) => {
+export const DocumentIcon: React.FC<DocumentIconProps> = ({ format = '', className = "h-8 w-8" }) => {
   const formatLower = format.toLowerCase();
   
   if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(formatLower)) {
