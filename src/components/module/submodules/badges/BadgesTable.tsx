@@ -1,6 +1,6 @@
 
 import React from 'react';
-import DataTable from '@/components/DataTable';
+import DataTable, { Transaction } from '@/components/DataTable';
 import { BadgeData } from './BadgeTypes';
 
 interface BadgesTableProps {
@@ -10,7 +10,7 @@ interface BadgesTableProps {
 
 const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick }) => {
   // Convert badges data to table format with a null check
-  const badgesData = Array.isArray(badgesList) 
+  const badgesData: Transaction[] = Array.isArray(badgesList) 
     ? badgesList.map(badge => ({
         id: badge.id,
         date: badge.date,
@@ -33,6 +33,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick
           { header: 'Niveau', accessorKey: 'amount' },
           { header: 'Statut', accessorKey: 'statusText' }
         ]}
+        className="cursor-pointer"
         onRowClick={(row) => onBadgeClick(row.id.replace('#', ''))}
       />
     </div>

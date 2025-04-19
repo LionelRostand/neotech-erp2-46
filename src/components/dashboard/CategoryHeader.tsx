@@ -31,18 +31,10 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, isExpanded, o
     }
   };
 
-  // Couleur spécifique pour la catégorie "business"
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'business': return 'bg-purple-50 text-purple-700';
-      default: return '';
-    }
-  };
-
   return (
     <div 
       className={`px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between cursor-pointer ${
-        isExpanded ? `${getCategoryColor(category)} rounded` : ''
+        isExpanded ? 'bg-neotech-primary/10 rounded' : ''
       }`}
       onClick={onToggle}
     >
