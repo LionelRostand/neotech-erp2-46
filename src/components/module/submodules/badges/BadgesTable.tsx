@@ -1,6 +1,6 @@
 
 import React from 'react';
-import DataTable from '@/components/DataTable';
+import DataTable, { Transaction } from '@/components/DataTable';
 import { BadgeData } from './BadgeTypes';
 
 interface BadgesTableProps {
@@ -8,9 +8,9 @@ interface BadgesTableProps {
   onBadgeClick: (badgeId: string) => void;
 }
 
-const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick }) => {
+const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick }) => {
   // Convert badges data to table format
-  const badgesData = badgesList.map(badge => ({
+  const badgesData: Transaction[] = badgesList.map(badge => ({
     id: badge.id,
     date: badge.date,
     client: badge.employeeName,
@@ -24,6 +24,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick
       <DataTable 
         title="Registre des Badges" 
         data={badgesData}
+        className="cursor-pointer"
         onRowClick={(row) => onBadgeClick(row.id.replace('#', ''))}
       />
     </div>
