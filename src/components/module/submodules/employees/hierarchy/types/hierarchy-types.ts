@@ -9,7 +9,7 @@ export interface HierarchyNode {
   department?: string;
   departmentColor?: string;
   imageUrl?: string;
-  employee: Employee;
+  employee?: Employee; // Make employee optional
   children: HierarchyNode[];
 }
 
@@ -21,7 +21,7 @@ export type ChartNode = {
   departmentColor?: string;
   imageUrl?: string;
   children: ChartNode[];
-  employee?: Employee; // Make employee optional in ChartNode
+  employee?: Employee; // Add employee field to ChartNode
 };
 
 export type { Employee };

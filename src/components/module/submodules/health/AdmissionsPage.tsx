@@ -51,7 +51,7 @@ const AdmissionsPage: React.FC = () => {
       key: 'admissionDate',
       accessorKey: 'admissionDate',
       header: 'Date d\'admission',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         try {
           return format(new Date(row.original.admissionDate), 'dd/MM/yyyy', { locale: fr });
         } catch (error) {
@@ -63,7 +63,7 @@ const AdmissionsPage: React.FC = () => {
       key: 'patientId',
       accessorKey: 'patientId',
       header: 'Patient',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <div>{getPatientName(row.original.patientId)}</div>
       ),
     },
@@ -71,7 +71,7 @@ const AdmissionsPage: React.FC = () => {
       key: 'doctorId',
       accessorKey: 'doctorId',
       header: 'Médecin',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <div>{getDoctorName(row.original.doctorId)}</div>
       ),
     },
@@ -89,14 +89,15 @@ const AdmissionsPage: React.FC = () => {
       key: 'status',
       accessorKey: 'status',
       header: 'Statut',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <StatusBadge status={row.original.status} />
       ),
     },
     {
       key: 'actions',
       id: 'actions',
-      cell: ({ row }) => (
+      header: 'Actions',
+      cell: ({ row }: { row: any }) => (
         <div className="flex items-center justify-end gap-2">
           <Button 
             variant="outline" 

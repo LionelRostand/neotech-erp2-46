@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar, Plus, Search, X, Check, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ const AppointmentsPage: React.FC = () => {
   const { appointments, patients, doctors, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { add } = useFirestore(COLLECTIONS.HEALTH.APPOINTMENTS);
+  const { add, update } = useFirestore(COLLECTIONS.HEALTH.APPOINTMENTS);
 
   const getPatientName = (patientId: string) => {
     const patient = patients?.find(p => p.id === patientId);
@@ -92,9 +93,10 @@ const AppointmentsPage: React.FC = () => {
 
   const columns = [
     {
+      key: 'date',
       accessorKey: 'date',
       header: 'Date',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         try {
           return format(new Date(row.original.date), 'dd/MM/yyyy', { locale: fr });
         } catch (error) {
@@ -103,37 +105,44 @@ const AppointmentsPage: React.FC = () => {
       }
     },
     {
+      key: 'time',
       accessorKey: 'time',
       header: 'Heure',
     },
     {
+      key: 'patientId',
       accessorKey: 'patientId',
       header: 'Patient',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <div>{getPatientName(row.original.patientId)}</div>
       ),
     },
     {
+      key: 'doctorId',
       accessorKey: 'doctorId',
       header: 'Médecin',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <div>{getDoctorName(row.original.doctorId)}</div>
       ),
     },
     {
+      key: 'reason',
       accessorKey: 'reason',
       header: 'Motif',
     },
     {
+      key: 'status',
       accessorKey: 'status',
       header: 'Statut',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <StatusBadge status={row.original.status} />
       ),
     },
     {
+      key: 'actions',
       id: 'actions',
-      cell: ({ row }) => {
+      header: 'Actions',
+      cell: ({ row }: { row: any }) => {
         const appointment = row.original;
         return (
           <div className="flex items-center justify-end gap-2">
