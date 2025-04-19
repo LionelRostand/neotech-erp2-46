@@ -2,7 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Contact } from '../../types/message-types';
-import DataTable, { Column } from '@/components/DataTable';
+import DataTable from '@/components/DataTable';
+import { Column } from '@/components/DataTable';
 import ContactsTableActions from './ContactsTableActions';
 
 interface ContactsTableProps {
@@ -65,8 +66,8 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
   return (
     <DataTable 
       title="Liste des contacts" 
-      data={contacts || []} 
       columns={columns} 
+      data={contacts} 
     />
   );
 };
