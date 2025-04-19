@@ -1,16 +1,11 @@
 
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Clipboard } from 'lucide-react';
 import ConsultationsList from './ConsultationsList';
 
 const ConsultationsPage: React.FC = () => {
   return (
     <div className="space-y-4">
-      <Helmet>
-        <title>Consultations | Santé | NEOTECH-ERP</title>
-      </Helmet>
-      
       <div className="flex flex-col">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Clipboard className="h-6 w-6 text-primary" />
