@@ -19,32 +19,40 @@ const GarageSuppliersDashboard = () => {
     setIsDialogOpen(false);
   };
 
+  // Update column definitions to match expected format in DataTable
   const columns = [
     {
-      accessorKey: "name",
       header: "Nom",
+      cell: ({ row }) => row.original.name
     },
     {
-      accessorKey: "category",
       header: "Catégorie",
+      cell: ({ row }) => {
+        const categoryMap: Record<string, string> = {
+          'parts': 'Pièces détachées',
+          'accessories': 'Accessoires',
+          'tools': 'Outils',
+          'other': 'Autre'
+        };
+        return categoryMap[row.original.category] || row.original.category;
+      }
     },
     {
-      accessorKey: "email",
       header: "Email",
+      cell: ({ row }) => row.original.email
     },
     {
-      accessorKey: "phone",
       header: "Téléphone",
+      cell: ({ row }) => row.original.phone
     },
     {
-      accessorKey: "status",
       header: "Statut",
       cell: ({ row }) => (
         <div className={`px-2 py-1 rounded-full text-xs inline-block 
           ${row.original.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {row.original.status === 'active' ? 'Actif' : 'Inactif'}
         </div>
-      ),
+      )
     },
   ];
 
