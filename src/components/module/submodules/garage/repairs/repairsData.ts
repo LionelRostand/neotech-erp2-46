@@ -1,114 +1,94 @@
 
-// Données pour les réparations
-export const repairs = [
+import { Repair } from '../types/garage-types';
+
+export const repairs: Repair[] = [
   {
-    id: "RP001",
-    vehicleId: "VH003",
-    vehicleName: "Citroen C3",
-    clientId: "CL002",
-    clientName: "Marie Lambert",
-    mechanicId: "MECH001",
-    mechanicName: "Thomas Dubois",
-    startDate: "2023-10-18",
-    estimatedEndDate: "2023-10-20",
-    status: "in_progress",
-    description: "Diagnostic système démarrage + réparation",
-    progress: 60,
-    estimatedCost: 320.45,
-    licensePlate: "IJ-789-KL",
-    notes: "Client a signalé des difficultés au démarrage par temps froid",
-    actualCost: null
+    id: 'REP001',
+    vehicleId: 'VH001',
+    vehicleName: 'Peugeot 208',
+    clientId: 'CL001',
+    clientName: 'Martin Dubois',
+    mechanicId: 'MEC001',
+    mechanicName: 'Thierry Bernard',
+    startDate: '2025-04-15',
+    estimatedEndDate: '2025-04-18',
+    status: 'in_progress',
+    description: 'Remplacement des plaquettes de frein et vidange',
+    progress: 50,
+    estimatedCost: 280,
+    licensePlate: 'AB-123-CD'
   },
   {
-    id: "RP002",
-    vehicleId: "VH007",
-    vehicleName: "Volkswagen Golf",
-    clientId: "CL004",
-    clientName: "Sophie Bernard",
-    mechanicId: "MECH002",
-    mechanicName: "Jean Martin",
-    startDate: "2023-10-15",
-    estimatedEndDate: "2023-10-17",
-    status: "awaiting_parts",
-    description: "Remplacement système d'embrayage",
-    progress: 25,
-    estimatedCost: 580.00,
-    licensePlate: "UV-678-WX",
-    notes: "En attente de la pièce de rechange principale",
-    actualCost: null
+    id: 'REP002',
+    vehicleId: 'VH002',
+    vehicleName: 'Renault Clio',
+    clientId: 'CL002',
+    clientName: 'Sophie Martin',
+    mechanicId: 'MEC002',
+    mechanicName: 'Lucas Petit',
+    startDate: '2025-04-16',
+    estimatedEndDate: '2025-04-17',
+    status: 'awaiting_parts',
+    description: 'Remplacement du radiateur',
+    progress: 30,
+    estimatedCost: 350,
+    licensePlate: 'XY-456-ZA'
   },
   {
-    id: "RP003",
-    vehicleId: "VH005",
-    vehicleName: "Mercedes Sprinter",
-    clientId: "CL003",
-    clientName: "Pierre Martin",
-    mechanicId: "MECH003",
-    mechanicName: "Thomas Dubois",
-    startDate: "2023-10-16",
-    estimatedEndDate: "2023-10-19",
-    status: "awaiting_approval",
-    description: "Remplacement injecteurs diesel",
+    id: 'REP003',
+    vehicleId: 'VH003',
+    vehicleName: 'Citroën C3',
+    clientId: 'CL003',
+    clientName: 'Philippe Leclerc',
+    mechanicId: 'MEC001',
+    mechanicName: 'Thierry Bernard',
+    startDate: '2025-04-14',
+    estimatedEndDate: '2025-04-19',
+    status: 'awaiting_approval',
+    description: 'Réparation de la boîte de vitesse',
     progress: 0,
-    estimatedCost: 950.75,
-    licensePlate: "QR-345-ST",
-    notes: "Devis envoyé au client, en attente de validation",
-    actualCost: null
+    estimatedCost: 950,
+    licensePlate: 'BC-789-DE'
   },
   {
-    id: "RP004",
-    vehicleId: "VH002",
-    vehicleName: "Peugeot 308",
-    clientId: "CL001",
-    clientName: "Jean Dupont",
-    mechanicId: "MECH001",
-    mechanicName: "Jean Martin",
-    startDate: "2023-10-10",
-    estimatedEndDate: "2023-10-11",
-    status: "completed",
-    description: "Vidange + contrôle niveaux",
+    id: 'REP004',
+    vehicleId: 'VH004',
+    vehicleName: 'Volkswagen Golf',
+    clientId: 'CL004',
+    clientName: 'Isabelle Dupont',
+    mechanicId: 'MEC002',
+    mechanicName: 'Lucas Petit',
+    startDate: '2025-04-10',
+    estimatedEndDate: '2025-04-14',
+    status: 'completed',
+    description: 'Changement de la courroie de distribution',
     progress: 100,
-    estimatedCost: 145.30,
-    licensePlate: "EF-456-GH",
-    notes: "Entretien standard effectué sans problème particulier",
-    actualCost: 145.30
-  },
-  {
-    id: "RP005",
-    vehicleId: "VH008",
-    vehicleName: "Toyota Yaris",
-    clientId: "CL005",
-    clientName: "Thomas Leclerc",
-    mechanicId: "MECH002",
-    mechanicName: "Thomas Dubois",
-    startDate: "2023-10-12",
-    estimatedEndDate: "2023-10-14",
-    status: "completed",
-    description: "Remplacement plaquettes et disques de frein",
-    progress: 100,
-    estimatedCost: 390.50,
-    licensePlate: "YZ-901-AB",
-    notes: "Usure importante des disques, remplacement complet effectué",
-    actualCost: 405.75
+    estimatedCost: 580,
+    actualCost: 550,
+    licensePlate: 'DE-012-FG'
   }
 ];
 
-// Ajoutons une interface pour les réparations
-export interface Repair {
-  id: string;
-  vehicleId: string;
-  vehicleName: string;
-  clientId: string;
-  clientName: string;
-  mechanicId: string;
-  mechanicName: string;
-  startDate: string;
-  estimatedEndDate: string;
-  status: "in_progress" | "awaiting_parts" | "awaiting_approval" | "completed" | "cancelled";
-  description: string;
-  progress: number;
-  estimatedCost: number;
-  licensePlate: string;
-  notes?: string; // Added as optional property
-  actualCost?: number | null; // Added as optional property
-}
+export const clientsMap = {
+  'CL001': 'Martin Dubois',
+  'CL002': 'Sophie Martin',
+  'CL003': 'Philippe Leclerc',
+  'CL004': 'Isabelle Dupont',
+  'CL005': 'Jean Moreau'
+};
+
+export const vehiclesMap = {
+  'VH001': 'Peugeot 208',
+  'VH002': 'Renault Clio',
+  'VH003': 'Citroën C3',
+  'VH004': 'Volkswagen Golf',
+  'VH007': 'Audi A3',
+  'VH008': 'BMW Série 1'
+};
+
+export const mechanicsMap = {
+  'MEC001': 'Thierry Bernard',
+  'MEC002': 'Lucas Petit',
+  'MEC003': 'Marie Leroy',
+  'MEC004': 'David Richard'
+};

@@ -1,20 +1,34 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Wrench } from "lucide-react";
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
-import { repairs } from '../repairs/repairsData';
+import { repairs, clientsMap, vehiclesMap, mechanicsMap } from './repairsData';
 import CreateRepairDialog from './CreateRepairDialog';
+import { Repair } from '../types/garage-types';
+import { toast } from 'sonner';
 
 const GarageRepairsDashboard = () => {
-  const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [repairsData, setRepairsData] = useState<Repair[]>(repairs);
   
   const stats = {
-    inProgress: repairs.filter(r => r.status === 'in_progress').length,
-    awaitingParts: repairs.filter(r => r.status === 'awaiting_parts').length,
-    completed: repairs.filter(r => r.status === 'completed').length,
-    total: repairs.length
+    inProgress: repairsData.filter(r => r.status === 'in_progress').length,
+    awaitingParts: repairsData.filter(r => r.status === 'awaiting_parts').length,
+    completed: repairsData.filter(r => r.status === 'completed').length,
+    total: repairsData.length
+  };
+
+  const handleSaveRepair = (repair: any) => {
+    const newRepair: Repair = {
+      ...repair,
+      id: `REP${Date.now().toString().substring(8)}`,
+      progress: 0,
+    };
+    
+    setRepairsData([...repairsData, newRepair]);
+    toast.success('Réparation créée avec succès');
   };
 
   return (
@@ -32,29 +46,37 @@ const GarageRepairsDashboard = () => {
           title="Total Réparations"
           value={stats.total.toString()}
           description="En cours et terminées"
+          icon={<Wrench className="h-4 w-4" />}
         />
         <StatCard
           title="En cours"
           value={stats.inProgress.toString()}
           description="Réparations actives"
+          icon={<Wrench className="h-4 w-4" />}
         />
         <StatCard
           title="En attente de pièces"
           value={stats.awaitingParts.toString()}
           description="Commandes en cours"
+          icon={<Wrench className="h-4 w-4" />}
         />
         <StatCard
           title="Terminées"
           value={stats.completed.toString()}
           description="Ce mois-ci"
+          icon={<Wrench className="h-4 w-4" />}
         />
       </div>
 
-      <RepairKanban />
+      <RepairKanban repairs={repairsData} setRepairs={setRepairsData} />
 
       <CreateRepairDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+        onSave={handleSaveRepair}
+        clientsMap={clientsMap}
+        vehiclesMap={vehiclesMap}
+        mechanicsMap={mechanicsMap}
       />
     </div>
   );
