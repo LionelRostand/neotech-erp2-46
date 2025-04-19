@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { Badge } from '@/components/ui/badge';
@@ -52,60 +51,17 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
   const getGroupColor = (group: string | null) => {
     switch (group) {
       case 'personnel':
-        return {
-          background: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
-          text: 'text-blue-800',
-          hover: 'hover:bg-blue-200'
-        };
+        return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 text-blue-800';
       case 'temps':
-        return {
-          background: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200',
-          text: 'text-green-800',
-          hover: 'hover:bg-green-200'
-        };
+        return 'bg-gradient-to-br from-green-50 to-green-100 border-green-200 text-green-800';
       case 'administratif':
-        return {
-          background: 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200',
-          text: 'text-orange-800',
-          hover: 'hover:bg-orange-200'
-        };
+        return 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 text-orange-800';
       case 'développement':
-        return {
-          background: 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200',
-          text: 'text-purple-800',
-          hover: 'hover:bg-purple-200'
-        };
+        return 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 text-purple-800';
       case 'rh':
-        return {
-          background: 'bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200',
-          text: 'text-pink-800',
-          hover: 'hover:bg-pink-200'
-        };
-      // Ajout de couleurs pour d'autres groupes
-      case 'patient':
-        return {
-          background: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
-          text: 'text-red-800',
-          hover: 'hover:bg-red-200'
-        };
-      case 'staff':
-        return {
-          background: 'bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200',
-          text: 'text-teal-800',
-          hover: 'hover:bg-teal-200'
-        };
-      case 'medical':
-        return {
-          background: 'bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200',
-          text: 'text-indigo-800',
-          hover: 'hover:bg-indigo-200'
-        };
+        return 'bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200 text-pink-800';
       default:
-        return {
-          background: 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200',
-          text: 'text-gray-800',
-          hover: 'hover:bg-gray-200'
-        };
+        return 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 text-gray-800';
     }
   };
 
