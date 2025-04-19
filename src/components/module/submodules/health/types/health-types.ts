@@ -70,8 +70,15 @@ export interface Consultation extends BaseEntity {
     heartRate?: number;
     respiratoryRate?: number;
     oxygenSaturation?: number;
+    height?: number;
+    weight?: number;
+    pain?: number;
   };
   followUp?: string;
+  physicalExam?: string;
+  assessment?: string;
+  plan?: string;
+  medicalHistory?: string;
 }
 
 export interface Appointment extends BaseEntity {
@@ -157,6 +164,16 @@ export interface Insurance extends BaseEntity {
   };
   coverageDetails?: string;
   status: 'active' | 'inactive';
+}
+
+export interface LabTest extends BaseEntity {
+  patientId: string;
+  doctorId: string;
+  date: string;
+  testType: string;
+  results?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  notes?: string;
 }
 
 export interface Laboratory extends BaseEntity {

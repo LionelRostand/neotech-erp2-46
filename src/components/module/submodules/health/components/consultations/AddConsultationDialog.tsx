@@ -1,13 +1,8 @@
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import ConsultationForm from '../../ConsultationForm';
-import type { Consultation, Patient, Doctor } from '../../types/health-types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ConsultationForm from './ConsultationForm';
+import { Consultation, Patient, Doctor } from '../../types/health-types';
 
 interface AddConsultationDialogProps {
   open: boolean;
@@ -17,9 +12,9 @@ interface AddConsultationDialogProps {
   doctors: Doctor[];
 }
 
-const AddConsultationDialog: React.FC<AddConsultationDialogProps> = ({
-  open,
-  onClose,
+const AddConsultationDialog: React.FC<AddConsultationDialogProps> = ({ 
+  open, 
+  onClose, 
   onConsultationAdded,
   patients,
   doctors
@@ -30,6 +25,7 @@ const AddConsultationDialog: React.FC<AddConsultationDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Nouvelle Consultation</DialogTitle>
         </DialogHeader>
+        
         <ConsultationForm 
           onSubmit={onConsultationAdded}
           onCancel={onClose}

@@ -2,16 +2,19 @@
 import React, { useState } from 'react';
 import { Clipboard, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ConsultationsList from './components/consultations/ConsultationList';
+import ConsultationList from './components/consultations/ConsultationList';
 import AddConsultationDialog from './components/consultations/AddConsultationDialog';
-import type { Consultation } from './types/health-types';
+import { Consultation } from './types/health-types';
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useHealthData } from '@/hooks/modules/useHealthData';
+import ConsultationDetailsDialog from './components/consultations/ConsultationDetailsDialog';
 
 const ConsultationsPage: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const { add } = useFirestore(COLLECTIONS.HEALTH.CONSULTATIONS);
   const { patients, doctors, isLoading } = useHealthData();
 
@@ -33,6 +36,11 @@ const ConsultationsPage: React.FC = () => {
     }
   };
 
+  const handleViewConsultation = (consultation: Consultation) => {
+    setSelectedConsultation(consultation);
+    setIsViewDialogOpen(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -47,7 +55,7 @@ const ConsultationsPage: React.FC = () => {
       </div>
       
       <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
-        <ConsultationsList />
+        <ConsultationList onViewConsultation={handleViewConsultation} />
       </div>
 
       <AddConsultationDialog
@@ -57,6 +65,14 @@ const ConsultationsPage: React.FC = () => {
         patients={patients || []}
         doctors={doctors || []}
       />
+
+      {selectedConsultation && (
+        <ConsultationDetailsDialog
+          open={isViewDialogOpen}
+          onClose={() => setIsViewDialogOpen(false)}
+          consultation={selectedConsultation}
+        />
+      )}
     </div>
   );
 };

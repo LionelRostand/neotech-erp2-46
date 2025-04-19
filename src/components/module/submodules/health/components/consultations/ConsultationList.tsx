@@ -1,185 +1,171 @@
 
-import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, FileEdit, Eye, Trash2 } from 'lucide-react';
-import { Skeleton } from "@/components/ui/skeleton";
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Input } from "@/components/ui/input";
-import { useCollectionData } from '@/hooks/useCollectionData';
+import React, { useState } from 'react';
+import { useHealthData } from '@/hooks/modules/useHealthData';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Edit, FileSearch, Trash } from 'lucide-react';
+import { Consultation } from '../../types/health-types';
+import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
-import { Consultation, Patient, Doctor } from '../../types/health-types';
+import { toast } from 'sonner';
 
-const ConsultationList: React.FC = () => {
+interface ConsultationListProps {
+  onViewConsultation?: (consultation: Consultation) => void;
+  onEditConsultation?: (consultation: Consultation) => void;
+}
+
+const ConsultationList: React.FC<ConsultationListProps> = ({
+  onViewConsultation,
+  onEditConsultation
+}) => {
+  const { consultations, patients, doctors, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Fetch consultations data
-  const { 
-    data: consultations,
-    isLoading: isConsultationsLoading
-  } = useCollectionData<Consultation>(
-    COLLECTIONS.HEALTH.CONSULTATIONS,
-    [orderBy('date', 'desc')]
-  );
-  
-  // Fetch patients data to display patient names
-  const { 
-    data: patients,
-    isLoading: isPatientsLoading
-  } = useCollectionData<Patient>(
-    COLLECTIONS.HEALTH.PATIENTS,
-    []
-  );
-  
-  // Fetch doctors data to display doctor names
-  const { 
-    data: doctors,
-    isLoading: isDoctorsLoading
-  } = useCollectionData<Doctor>(
-    COLLECTIONS.HEALTH.DOCTORS,
-    []
-  );
-  
-  const isLoading = isConsultationsLoading || isPatientsLoading || isDoctorsLoading;
-  
-  // Find patient and doctor names based on IDs
-  const getPatientName = (patientId: string) => {
-    const patient = patients?.find(p => p.id === patientId);
-    return patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
+  const { remove } = useFirestore(COLLECTIONS.HEALTH.CONSULTATIONS);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')) {
+      try {
+        await remove(id);
+        toast.success('Consultation supprimée avec succès');
+      } catch (error) {
+        console.error('Error deleting consultation:', error);
+        toast.error("Erreur lors de la suppression de la consultation");
+      }
+    }
   };
-  
-  const getDoctorName = (doctorId: string) => {
-    const doctor = doctors?.find(d => d.id === doctorId);
-    return doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Médecin inconnu';
-  };
-  
+
   // Filter consultations based on search term
   const filteredConsultations = consultations?.filter(consultation => {
     if (!searchTerm) return true;
     
-    const patientName = getPatientName(consultation.patientId).toLowerCase();
-    const doctorName = getDoctorName(consultation.doctorId).toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
+    const patient = patients?.find(p => p.id === consultation.patientId);
+    const doctor = doctors?.find(d => d.id === consultation.doctorId);
+    
+    const patientName = patient ? `${patient.firstName} ${patient.lastName}`.toLowerCase() : '';
+    const doctorName = doctor ? `${doctor.firstName} ${doctor.lastName}`.toLowerCase() : '';
     
     return (
-      patientName.includes(searchLower) ||
-      doctorName.includes(searchLower) ||
-      consultation.consultationType?.toLowerCase().includes(searchLower) ||
-      consultation.status?.toLowerCase().includes(searchLower)
+      patientName.includes(searchTerm.toLowerCase()) ||
+      doctorName.includes(searchTerm.toLowerCase()) ||
+      consultation.consultationType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consultation.date.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
-  
-  // Status badge colors
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'scheduled':
-        return <Badge className="bg-blue-500">Programmée</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-yellow-500">En cours</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500">Terminée</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Annulée</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-  
-  // Type badge colors
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'urgent':
-        return <Badge variant="outline" className="border-red-500 text-red-500">Urgence</Badge>;
-      case 'followup':
-        return <Badge variant="outline" className="border-green-500 text-green-500">Suivi</Badge>;
-      case 'specialist':
-        return <Badge variant="outline" className="border-purple-500 text-purple-500">Spécialiste</Badge>;
-      case 'standard':
-      default:
-        return <Badge variant="outline">Standard</Badge>;
-    }
-  };
-  
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center">
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Calendar className="h-4 w-4 text-gray-500" />
-          </div>
-          <Input
-            type="text"
-            placeholder="Rechercher une consultation..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      <div className="flex justify-between items-center">
+        <Input
+          placeholder="Rechercher..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
       </div>
-      
-      {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="w-full h-16" />
-          ))}
-        </div>
-      ) : filteredConsultations?.length === 0 ? (
-        <div className="text-center py-10">
-          <h3 className="mt-2 text-lg font-medium text-gray-900">Aucune consultation trouvée</h3>
-          <p className="mt-1 text-sm text-gray-500">Commencez par créer une nouvelle consultation.</p>
-        </div>
-      ) : (
-        <div className="rounded-md border">
+
+      {filteredConsultations && filteredConsultations.length > 0 ? (
+        <div className="border rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[180px]">Patient</TableHead>
-                <TableHead className="w-[180px]">Médecin</TableHead>
-                <TableHead className="w-[120px]">Date</TableHead>
-                <TableHead className="w-[100px]">Heure</TableHead>
-                <TableHead className="w-[120px]">Type</TableHead>
-                <TableHead className="w-[120px]">Statut</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Patient</TableHead>
+                <TableHead>Médecin</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredConsultations?.map((consultation) => (
-                <TableRow key={consultation.id}>
-                  <TableCell className="font-medium">{getPatientName(consultation.patientId)}</TableCell>
-                  <TableCell>{getDoctorName(consultation.doctorId)}</TableCell>
-                  <TableCell>
-                    {consultation.date ? format(new Date(consultation.date), 'dd/MM/yyyy', { locale: fr }) : ''}
-                  </TableCell>
-                  <TableCell>{consultation.time}</TableCell>
-                  <TableCell>{getTypeBadge(consultation.consultationType)}</TableCell>
-                  <TableCell>{getStatusBadge(consultation.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <FileEdit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredConsultations.map((consultation) => {
+                const patient = patients?.find(p => p.id === consultation.patientId);
+                const doctor = doctors?.find(d => d.id === consultation.doctorId);
+                
+                return (
+                  <TableRow key={consultation.id}>
+                    <TableCell>
+                      {new Date(consultation.date).toLocaleDateString()}
+                      <div className="text-xs text-gray-500">{consultation.time}</div>
+                    </TableCell>
+                    <TableCell>
+                      {patient ? `${patient.firstName} ${patient.lastName}` : 'Inconnu'}
+                    </TableCell>
+                    <TableCell>
+                      {doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Inconnu'}
+                    </TableCell>
+                    <TableCell>
+                      {consultation.consultationType === 'routine' && 'Routine'}
+                      {consultation.consultationType === 'followup' && 'Suivi'}
+                      {consultation.consultationType === 'emergency' && 'Urgence'}
+                      {consultation.consultationType === 'specialist' && 'Spécialiste'}
+                      {consultation.consultationType === 'checkup' && 'Bilan'}
+                      {!['routine', 'followup', 'emergency', 'specialist', 'checkup'].includes(consultation.consultationType) && consultation.consultationType}
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        consultation.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                        consultation.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
+                        consultation.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {consultation.status === 'scheduled' && 'Planifiée'}
+                        {consultation.status === 'in-progress' && 'En cours'}
+                        {consultation.status === 'completed' && 'Terminée'}
+                        {consultation.status === 'cancelled' && 'Annulée'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => onViewConsultation && onViewConsultation(consultation)}
+                        >
+                          <FileSearch className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => onEditConsultation && onEditConsultation(consultation)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => consultation.id && handleDelete(consultation.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
+        </div>
+      ) : (
+        <div className="text-center p-8 border rounded-md bg-gray-50">
+          <p className="text-gray-500">Aucune consultation trouvée</p>
         </div>
       )}
     </div>
