@@ -1,14 +1,21 @@
-
 import React, { useState } from 'react';
 import { TestTube, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useHealthData } from '@/hooks/modules/useHealthData';
 import { Laboratory } from './types/health-types';
+import FormDialog from './dialogs/FormDialog';
+import AddLaboratoryTestForm from './forms/AddLaboratoryTestForm';
 
 const LaboratoryPage: React.FC = () => {
   const { laboratoryTests, patients, doctors, isLoading } = useHealthData();
   const [selectedLabTest, setSelectedLabTest] = useState<Laboratory | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const handleAddTest = (data: Partial<Laboratory>) => {
+    console.log('New test:', data);
+    setIsAddDialogOpen(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -17,7 +24,7 @@ const LaboratoryPage: React.FC = () => {
           <TestTube className="h-6 w-6 text-primary" />
           Laboratoire
         </h1>
-        <Button disabled={isLoading}>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau Test
         </Button>
@@ -142,6 +149,18 @@ const LaboratoryPage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouveau test de laboratoire"
+        description="Enregistrer un nouveau test de laboratoire"
+      >
+        <AddLaboratoryTestForm
+          onSubmit={handleAddTest}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };

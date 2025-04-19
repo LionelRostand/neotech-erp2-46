@@ -10,6 +10,8 @@ import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import FormDialog from './dialogs/FormDialog';
+import AddPrescriptionForm from './forms/AddPrescriptionForm';
 
 const PrescriptionsPage: React.FC = () => {
   const { prescriptions, patients, doctors, isLoading } = useHealthData();
@@ -93,6 +95,12 @@ const PrescriptionsPage: React.FC = () => {
     },
   ];
 
+  const handleAddPrescription = (data: Partial<Prescription>) => {
+    console.log('New prescription:', data);
+    setIsAddDialogOpen(false);
+    toast.success("Ordonnance créée avec succès");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -125,6 +133,18 @@ const PrescriptionsPage: React.FC = () => {
           searchPlaceholder="Rechercher une ordonnance..."
         />
       </Card>
+
+      <FormDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Nouvelle ordonnance"
+        description="Enregistrer une nouvelle ordonnance"
+      >
+        <AddPrescriptionForm
+          onSubmit={handleAddPrescription}
+          onCancel={() => setIsAddDialogOpen(false)}
+        />
+      </FormDialog>
     </div>
   );
 };
