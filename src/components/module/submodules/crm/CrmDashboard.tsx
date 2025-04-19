@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { BarChart as BarChartIcon, PieChart as PieChartIcon, LineChart as LineChartIcon, Users, UserPlus, TrendingUp, Percent, Clock, Calendar, Mail, Phone } from "lucide-react";
+import { BarChart as BarChartIcon, PieChart as PieChartIcon, LineChart as LineChartIcon, Users, UserPlus, TrendingUp, Percent, Clock, Calendar, Mail, Phone, AlertCircle, RefreshCw } from "lucide-react";
 import { useCrmDashboard } from './hooks/useCrmDashboard';
 import StatCard from '@/components/StatCard';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -10,6 +10,8 @@ import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const CrmDashboard: React.FC = () => {
   const { 
@@ -19,12 +21,44 @@ const CrmDashboard: React.FC = () => {
     opportunitiesData, 
     recentActivities,
     isLoading,
+    error,
+    refreshData,
     COLORS
   } = useCrmDashboard();
 
+  // Gérer le rafraîchissement des données
+  const handleRefresh = () => {
+    refreshData();
+    toast.success('Actualisation des données en cours...');
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">Tableau de bord CRM</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Tableau de bord CRM</h2>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Actualiser
+        </Button>
+      </div>
+      
+      {/* Afficher les erreurs s'il y en a */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+          <div className="flex">
+            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Erreur lors du chargement des données</h3>
+              <p className="text-sm text-red-700 mt-1">{error.message || 'Une erreur est survenue'}</p>
+              {error.message?.includes('index') && (
+                <p className="text-sm text-red-700 mt-2">
+                  Cette erreur est liée à un index manquant dans Firestore. Veuillez suivre le lien dans le message d'erreur pour créer l'index requis.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -33,6 +67,7 @@ const CrmDashboard: React.FC = () => {
           value={stats.clients.toString()} 
           icon={<Users className="h-6 w-6 text-blue-600" />}
           description="Total des clients actifs" 
+          loading={isLoading}
         />
         
         <StatCard 
@@ -40,6 +75,7 @@ const CrmDashboard: React.FC = () => {
           value={stats.prospects.toString()} 
           icon={<UserPlus className="h-6 w-6 text-green-600" />}
           description="Prospects à qualifier" 
+          loading={isLoading}
         />
         
         <StatCard 
@@ -47,6 +83,7 @@ const CrmDashboard: React.FC = () => {
           value={stats.opportunities.toString()} 
           icon={<TrendingUp className="h-6 w-6 text-purple-600" />}
           description="Affaires en cours" 
+          loading={isLoading}
         />
         
         <StatCard 
@@ -54,6 +91,7 @@ const CrmDashboard: React.FC = () => {
           value={`${stats.conversionRate}%`} 
           icon={<Percent className="h-6 w-6 text-amber-600" />}
           description="Prospects → Clients" 
+          loading={isLoading}
         />
       </div>
 
@@ -156,28 +194,47 @@ const CrmDashboard: React.FC = () => {
       {/* Recent Activity */}
       <Card className="p-6">
         <h3 className="text-lg font-medium mb-4">Activité récente</h3>
-        <div className="space-y-4">
-          {recentActivities.map((activity, index) => (
-            <div key={index} className="p-3 border rounded-lg">
-              <div className="flex justify-between">
-                <div className="flex items-center">
-                  {activity.type === 'call' && <Phone className="h-4 w-4 mr-2 text-blue-600" />}
-                  {activity.type === 'email' && <Mail className="h-4 w-4 mr-2 text-purple-600" />}
-                  {activity.type === 'meeting' && <Calendar className="h-4 w-4 mr-2 text-green-600" />}
-                  <span className="font-medium">{activity.title}</span>
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-3 border rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {format(new Date(activity.date), "d MMMM à HH:mm", { locale: fr })}
-                </span>
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-20" />
               </div>
-              <p className="text-sm mt-1">{activity.description}</p>
-              <div className="mt-2 text-xs text-muted-foreground flex items-center">
-                <Clock className="h-3 w-3 mr-1" />
-                <span>{activity.timeAgo}</span>
+            ))}
+          </div>
+        ) : recentActivities.length > 0 ? (
+          <div className="space-y-4">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="p-3 border rounded-lg">
+                <div className="flex justify-between">
+                  <div className="flex items-center">
+                    {activity.type === 'call' && <Phone className="h-4 w-4 mr-2 text-blue-600" />}
+                    {activity.type === 'email' && <Mail className="h-4 w-4 mr-2 text-purple-600" />}
+                    {activity.type === 'meeting' && <Calendar className="h-4 w-4 mr-2 text-green-600" />}
+                    <span className="font-medium">{activity.title}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {format(new Date(activity.date), "d MMMM à HH:mm", { locale: fr })}
+                  </span>
+                </div>
+                <p className="text-sm mt-1">{activity.description}</p>
+                <div className="mt-2 text-xs text-muted-foreground flex items-center">
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>{activity.timeAgo}</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-6 text-gray-500">
+            <p>Aucune activité récente à afficher</p>
+          </div>
+        )}
       </Card>
     </div>
   );

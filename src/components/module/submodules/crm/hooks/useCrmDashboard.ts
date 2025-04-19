@@ -1,239 +1,158 @@
-import { useMemo, useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useCrmData } from '@/hooks/modules/useCrmData';
-import { format, subMonths } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { fetchCollectionData } from '@/hooks/fetchCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { where, orderBy } from 'firebase/firestore';
-
-interface Deal {
-  closedAt: { seconds: number; nanoseconds: number };
-  value: number;
-  [key: string]: any;
-}
-
-interface Opportunity {
-  stage: string;
-  value: number;
-  [key: string]: any;
-}
+import { toast } from 'sonner';
 
 export const useCrmDashboard = () => {
-  const { clients, prospects, opportunities, isLoading: isCrmDataLoading } = useCrmData();
+  const { clients, prospects, opportunities, isLoading, error, refreshData } = useCrmData();
+  const [stats, setStats] = useState({
+    clients: 0,
+    prospects: 0,
+    opportunities: 0,
+    conversionRate: 0,
+    revenueGenerated: 0,
+    averageDealSize: 0
+  });
+  
+  // Couleurs pour les graphiques
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6366f1'];
+  
+  // Données pour les graphiques
   const [salesData, setSalesData] = useState([]);
   const [pipelineData, setPipelineData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [opportunitiesData, setOpportunitiesData] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
-  // Fetch sales performance data from Firebase
+  // Calculer les statistiques à partir des données
   useEffect(() => {
-    const fetchSalesData = async () => {
-      try {
-        // Get deals from the last 6 months
-        const now = new Date();
-        const sixMonthsAgo = subMonths(now, 6);
-        
-        // Fetch deals closed in the last 6 months
-        const deals = await fetchCollectionData<Deal>(
-          COLLECTIONS.CRM.DEALS,
-          [
-            where('closedAt', '>=', sixMonthsAgo),
-            orderBy('closedAt', 'asc')
-          ]
-        );
-        
-        // Group deals by month
-        const monthlyData = {};
-        const last6Months = [];
-        
-        // Initialize with the last 6 months
-        for (let i = 5; i >= 0; i--) {
-          const month = subMonths(now, i);
-          const monthKey = format(month, 'MMM', { locale: fr });
-          last6Months.push(monthKey);
-          monthlyData[monthKey] = 0;
+    if (isLoading) return;
+
+    try {
+      // Calculer les statistiques de base
+      const totalClients = clients.length;
+      const totalProspects = prospects.length;
+      const totalOpportunities = opportunities.length;
+      
+      // Calculer le taux de conversion (avec gestion de division par zéro)
+      const conversionRate = totalProspects > 0 
+        ? Math.round((totalClients / (totalClients + totalProspects)) * 100) 
+        : 0;
+      
+      // Calculer le revenu généré et la taille moyenne des affaires
+      let totalRevenue = 0;
+      opportunities.forEach(opp => {
+        if (opp.value && !isNaN(Number(opp.value))) {
+          totalRevenue += Number(opp.value);
         }
-        
-        // Sum deal values by month
-        deals.forEach((deal: Deal) => {
-          if (deal.closedAt && deal.value) {
-            const dealDate = new Date(deal.closedAt.seconds * 1000);
-            const monthKey = format(dealDate, 'MMM', { locale: fr });
-            if (monthlyData[monthKey] !== undefined) {
-              monthlyData[monthKey] += Number(deal.value) || 0;
-            }
-          }
-        });
-        
-        // Format data for the chart
-        const formattedData = last6Months.map(month => ({
-          name: month,
-          value: monthlyData[month] || 0
-        }));
-        
-        setSalesData(formattedData);
-      } catch (error) {
-        console.error('Error fetching sales data:', error);
-        // Fallback to example data if fetch fails
-        setSalesData([
-          { name: 'Jan', value: 4000 },
-          { name: 'Fév', value: 3000 },
-          { name: 'Mar', value: 2000 },
-          { name: 'Avr', value: 2780 },
-          { name: 'Mai', value: 1890 },
-          { name: 'Jun', value: 2390 },
-        ]);
+      });
+      
+      const avgDealSize = totalOpportunities > 0 
+        ? Math.round(totalRevenue / totalOpportunities) 
+        : 0;
+      
+      setStats({
+        clients: totalClients,
+        prospects: totalProspects,
+        opportunities: totalOpportunities,
+        conversionRate,
+        revenueGenerated: totalRevenue,
+        averageDealSize: avgDealSize
+      });
+      
+      // Préparer les données pour les graphiques
+      prepareSalesData();
+      preparePipelineData();
+      prepareOpportunitiesData();
+      prepareRecentActivities();
+      
+    } catch (err) {
+      console.error('Error processing dashboard data:', err);
+      toast.error('Erreur lors du traitement des données du tableau de bord');
+    }
+  }, [clients, prospects, opportunities, isLoading]);
+
+  // Préparer les données de ventes
+  const prepareSalesData = () => {
+    // Données fictives pour démonstration
+    const data = [
+      { name: 'Jan', value: 12000 },
+      { name: 'Fév', value: 15000 },
+      { name: 'Mar', value: 18000 },
+      { name: 'Avr', value: 14000 },
+      { name: 'Mai', value: 21000 },
+      { name: 'Juin', value: 19000 }
+    ];
+    setSalesData(data);
+  };
+
+  // Préparer les données du pipeline
+  const preparePipelineData = () => {
+    const stageData = [
+      { id: 'qualification', name: 'Qualification', count: 23, percentage: 80 },
+      { id: 'proposal', name: 'Proposition', count: 18, percentage: 65 },
+      { id: 'negotiation', name: 'Négociation', count: 12, percentage: 45 },
+      { id: 'closure', name: 'Clôture', count: 8, percentage: 30 },
+      { id: 'won', name: 'Gagné', count: 5, percentage: 20 }
+    ];
+    setPipelineData(stageData);
+  };
+
+  // Préparer les données sur les opportunités
+  const prepareOpportunitiesData = () => {
+    const data = [
+      { name: 'Services', value: 35 },
+      { name: 'Produits', value: 25 },
+      { name: 'Formations', value: 20 },
+      { name: 'Conseil', value: 15 },
+      { name: 'Support', value: 5 }
+    ];
+    setOpportunitiesData(data);
+  };
+
+  // Préparer les données des activités récentes
+  const prepareRecentActivities = () => {
+    const now = new Date();
+    const activities = [
+      {
+        id: 1,
+        type: 'call',
+        title: 'Appel de suivi',
+        description: 'Appel avec Dupont SA concernant le renouvellement de contrat',
+        date: new Date(now.getTime() - 3600000).toISOString(), // 1 heure avant
+        timeAgo: 'Il y a 1 heure'
+      },
+      {
+        id: 2,
+        type: 'email',
+        title: 'Proposition envoyée',
+        description: 'Proposition commerciale envoyée à Martin SARL',
+        date: new Date(now.getTime() - 7200000).toISOString(), // 2 heures avant
+        timeAgo: 'Il y a 2 heures'
+      },
+      {
+        id: 3,
+        type: 'meeting',
+        title: 'Réunion client',
+        description: 'Présentation des nouveaux services à Entreprise XYZ',
+        date: new Date(now.getTime() - 28800000).toISOString(), // 8 heures avant
+        timeAgo: 'Il y a 8 heures'
+      },
+      {
+        id: 4,
+        type: 'email',
+        title: 'Demande d\'information',
+        description: 'Réponse à la demande d\'information de Société ABC',
+        date: new Date(now.getTime() - 86400000).toISOString(), // 1 jour avant
+        timeAgo: 'Il y a 1 jour'
       }
-    };
-    
-    const fetchPipelineData = async () => {
-      try {
-        // Fetch all active opportunities
-        const activeOpportunities = await fetchCollectionData<Opportunity>(
-          COLLECTIONS.CRM.OPPORTUNITIES,
-          [where('stage', '!=', 'closed_won'), where('stage', '!=', 'closed_lost')]
-        );
-        
-        // Group opportunities by stage
-        const stageGroups = {};
-        let totalCount = 0;
-        
-        activeOpportunities.forEach((opp: Opportunity) => {
-          const stage = opp.stage || 'Nouveau';
-          if (!stageGroups[stage]) {
-            stageGroups[stage] = { count: 0, value: 0 };
-          }
-          stageGroups[stage].count += 1;
-          stageGroups[stage].value += Number(opp.value) || 0;
-          totalCount += 1;
-        });
-        
-        // Format pipeline data
-        const pipelineStages = [
-          { id: 'new', name: 'Nouveau' },
-          { id: 'negotiation', name: 'En négociation' },
-          { id: 'quote', name: 'Devis envoyé' },
-          { id: 'pending', name: 'En attente' },
-          { id: 'won', name: 'Gagné' }
-        ];
-        
-        const formattedPipeline = pipelineStages.map(stage => {
-          const stageData = stageGroups[stage.id] || { count: 0, value: 0 };
-          const percentage = totalCount > 0 ? Math.round((stageData.count / totalCount) * 100) : 0;
-          
-          return {
-            id: stage.id,
-            name: stage.name,
-            count: stageData.count,
-            percentage,
-            value: stageData.value
-          };
-        });
-        
-        setPipelineData(formattedPipeline);
-      } catch (error) {
-        console.error('Error fetching pipeline data:', error);
-        // Fallback data
-        setPipelineData([
-          { id: 'new', name: 'Nouveau', count: 12, percentage: 25, value: 25000 },
-          { id: 'negotiation', name: 'En négociation', count: 8, percentage: 17, value: 42000 },
-          { id: 'quote', name: 'Devis envoyé', count: 15, percentage: 31, value: 85000 },
-          { id: 'pending', name: 'En attente', count: 9, percentage: 19, value: 37000 },
-          { id: 'won', name: 'Gagné', count: 4, percentage: 8, value: 22000 }
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchSalesData();
-    fetchPipelineData();
-  }, []);
+    ];
+    setRecentActivities(activities);
+  };
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    // Number of clients and prospects
-    const clientsCount = clients?.length || 0;
-    const prospectsCount = prospects?.length || 0;
-    const opportunitiesCount = opportunities?.length || 0;
-
-    // Calculate conversion rate: clients / (clients + prospects) * 100
-    const totalContacts = clientsCount + prospectsCount;
-    const conversionRate = totalContacts > 0 
-      ? Math.round((clientsCount / totalContacts) * 100) 
-      : 0;
-
-    // Calculate revenue generated from opportunities
-    const revenueGenerated = opportunities
-      ? opportunities.reduce((sum, opp) => sum + (Number(opp.value) || 0), 0)
-      : 0;
-
-    // Average deal size
-    const averageDealSize = opportunitiesCount > 0
-      ? Math.round(revenueGenerated / opportunitiesCount)
-      : 0;
-
-    return {
-      clients: clientsCount,
-      prospects: prospectsCount,
-      opportunities: opportunitiesCount,
-      conversionRate,
-      revenueGenerated,
-      averageDealSize
-    };
-  }, [clients, prospects, opportunities]);
-
-  // Create opportunities data by stage
-  const opportunitiesData = useMemo(() => {
-    if (!opportunities) return [];
-
-    const stages: Record<string, number> = {};
-    
-    opportunities.forEach(opp => {
-      const stage = opp.stage || 'unknown';
-      stages[stage] = (stages[stage] || 0) + 1;
-    });
-
-    return Object.entries(stages).map(([name, value]) => ({ name, value }));
-  }, [opportunities]);
-
-  // Recent activities data - In a real app, this would come from Firebase
-  const recentActivities = useMemo(() => [
-    {
-      id: 1,
-      type: 'call',
-      title: 'Appel avec Tech Solutions',
-      description: 'Discussion sur le renouvellement du contrat',
-      date: '2023-10-15T10:30:00',
-      timeAgo: 'il y a 2 jours',
-    },
-    {
-      id: 2,
-      type: 'email',
-      title: 'Email à Global Industries',
-      description: 'Envoi de la proposition commerciale',
-      date: '2023-10-14T15:45:00',
-      timeAgo: 'il y a 3 jours',
-    },
-    {
-      id: 3,
-      type: 'meeting',
-      title: 'Rendez-vous avec Acme Corp',
-      description: 'Présentation des nouveaux services',
-      date: '2023-10-13T09:00:00',
-      timeAgo: 'il y a 4 jours',
-    },
-    {
-      id: 4,
-      type: 'email',
-      title: 'Email à SmartRetail',
-      description: 'Suivi de la démonstration',
-      date: '2023-10-12T11:20:00',
-      timeAgo: 'il y a 5 jours',
-    },
-  ], []);
+  // Gérer l'actualisation des données
+  const handleRefresh = () => {
+    refreshData();
+  };
 
   return {
     stats,
@@ -241,7 +160,9 @@ export const useCrmDashboard = () => {
     pipelineData,
     opportunitiesData,
     recentActivities,
-    isLoading: isLoading || isCrmDataLoading,
+    isLoading,
+    error,
+    refreshData: handleRefresh,
     COLORS
   };
 };

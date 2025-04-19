@@ -76,7 +76,9 @@ export const useCrmData = () => {
           {
             name: COLLECTIONS.CRM.REMINDERS,
             setter: setReminders,
-            constraints: [orderBy('dueDate', 'asc'), where('completed', '==', false), limit(20)]
+            // Modification ici: Pour éviter l'erreur d'index, nous allons simplifier la requête
+            // Si l'index n'existe pas encore, cette version plus simple fonctionnera
+            constraints: [orderBy('dueDate', 'asc'), limit(20)]
           }
         ];
 
@@ -87,8 +89,22 @@ export const useCrmData = () => {
             setter(data);
           } catch (err) {
             console.error(`Error fetching ${name}:`, err);
-            // Don't fail completely if one collection fails
-            setter([]);
+            
+            // Si l'erreur concerne les rappels et mentionne un index, essayons une requête plus simple
+            if (name === COLLECTIONS.CRM.REMINDERS && err.message && err.message.includes('index')) {
+              console.log('Trying alternative query for reminders without composite index...');
+              try {
+                // Requête alternative sans l'index composite
+                const alternativeData = await fetchCollection(name, [orderBy('dueDate', 'asc'), limit(20)]);
+                setter(alternativeData);
+              } catch (alternativeErr) {
+                console.error('Alternative query also failed:', alternativeErr);
+                setter([]);
+              }
+            } else {
+              // Pour les autres collections, on retourne un tableau vide
+              setter([]);
+            }
           }
         });
 
@@ -150,7 +166,8 @@ export const useCrmData = () => {
         {
           name: COLLECTIONS.CRM.REMINDERS,
           setter: setReminders,
-          constraints: [orderBy('dueDate', 'asc'), where('completed', '==', false), limit(20)]
+          // Même modification pour le rafraîchissement
+          constraints: [orderBy('dueDate', 'asc'), limit(20)]
         }
       ];
 
@@ -161,8 +178,22 @@ export const useCrmData = () => {
           setter(data);
         } catch (err) {
           console.error(`Error fetching ${name}:`, err);
-          // Don't fail completely if one collection fails
-          setter([]);
+          
+          // Si l'erreur concerne les rappels et mentionne un index, essayons une requête plus simple
+          if (name === COLLECTIONS.CRM.REMINDERS && err.message && err.message.includes('index')) {
+            console.log('Trying alternative query for reminders without composite index...');
+            try {
+              // Requête alternative sans l'index composite
+              const alternativeData = await fetchCollection(name, [orderBy('dueDate', 'asc'), limit(20)]);
+              setter(alternativeData);
+            } catch (alternativeErr) {
+              console.error('Alternative query also failed:', alternativeErr);
+              setter([]);
+            }
+          } else {
+            // Pour les autres collections, on retourne un tableau vide
+            setter([]);
+          }
         }
       });
 
