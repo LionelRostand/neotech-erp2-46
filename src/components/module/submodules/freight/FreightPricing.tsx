@@ -1,126 +1,224 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, Search, Plus, Filter, Download, Route, TrendingUp } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  DollarSign, 
+  FileText, 
+  Plus, 
+  Search, 
+  RefreshCcw, 
+  Download,
+  CheckCircle,
+  XCircle,
+  Edit,
+  Trash2,
+  ShipIcon,
+  Package
+} from 'lucide-react';
 import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
+import { formatCurrency as formatCurrencyLib } from '@/lib/formatters';
 
-interface PricingRule {
+// Utility function to format currency with a default EUR currency code
+const formatCurrency = (amount: number, currency: string = 'EUR') => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+};
+
+// Date formatter
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+interface PriceItem {
   id: string;
   name: string;
   description?: string;
-  origin: string;
-  destination: string;
-  transportType: 'road' | 'sea' | 'air' | 'rail' | 'multimodal';
-  basePrice: number;
+  type: 'standard' | 'custom' | 'contract';
+  price: number;
+  unit: string;
+  minQty?: number;
+  maxQty?: number;
+  validFrom?: string;
+  validTo?: string;
+  discount?: number;
   currency: string;
-  pricePerKg?: number;
-  pricePerKm?: number;
-  pricePerCbm?: number;
-  minWeight?: number;
-  maxWeight?: number;
-  effectiveFrom: string;
-  effectiveTo?: string;
-  active: boolean;
+  category: string;
+  status: 'active' | 'inactive' | 'pending';
+}
+
+interface PriceCategory {
+  id: string;
+  name: string;
+  description?: string;
+  count: number;
 }
 
 const FreightPricing: React.FC = () => {
-  const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
-  const [filteredRules, setFilteredRules] = useState<PricingRule[]>([]);
+  const [priceItems, setPriceItems] = useState<PriceItem[]>([]);
+  const [filteredPriceItems, setFilteredPriceItems] = useState<PriceItem[]>([]);
+  const [priceCategories, setPriceCategories] = useState<PriceCategory[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [transportTypeFilter, setTransportTypeFilter] = useState('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedPriceItem, setSelectedPriceItem] = useState<PriceItem | null>(null);
   const { toast } = useToast();
 
-  // Fetch pricing data
+  const fetchPriceItems = async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchFreightCollectionData<PriceItem>('PRICING');
+      setPriceItems(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading price items:", error);
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les tarifs. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const fetchPriceCategories = async () => {
+    try {
+      const data = await fetchFreightCollectionData<PriceCategory>('PRICING_CATEGORIES');
+      setPriceCategories(data);
+    } catch (error) {
+      console.error("Error loading price categories:", error);
+    }
+  };
+
   useEffect(() => {
-    const loadPricingRules = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchFreightCollectionData<PricingRule>('PRICING');
-        setPricingRules(data);
-        setFilteredRules(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading pricing rules:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les règles de tarification. Veuillez réessayer.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-      }
-    };
-    
-    loadPricingRules();
+    fetchPriceItems();
+    fetchPriceCategories();
   }, [toast]);
 
-  // Filter pricing rules based on search term and transport type filter
   useEffect(() => {
-    if (!pricingRules) return;
-    
-    let filtered = [...pricingRules];
-    
-    // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(rule => 
-        rule.name.toLowerCase().includes(term) || 
-        rule.origin.toLowerCase().includes(term) ||
-        rule.destination.toLowerCase().includes(term) ||
-        (rule.description && rule.description.toLowerCase().includes(term))
+    let filtered = [...priceItems];
+
+    if (searchQuery) {
+      const term = searchQuery.toLowerCase();
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(term) ||
+        (item.description && item.description.toLowerCase().includes(term)) ||
+        item.type.toLowerCase().includes(term)
       );
     }
-    
-    // Apply transport type filter
-    if (transportTypeFilter !== 'all') {
-      filtered = filtered.filter(rule => rule.transportType === transportTypeFilter);
-    }
-    
-    setFilteredRules(filtered);
-  }, [pricingRules, searchTerm, transportTypeFilter]);
 
-  const handleAddPricingRule = () => {
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(item => item.category === categoryFilter);
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(item => item.status === statusFilter);
+    }
+
+    setFilteredPriceItems(filtered);
+  }, [priceItems, searchQuery, categoryFilter, statusFilter]);
+
+  const handleCreate = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleEdit = (item: PriceItem) => {
+    setSelectedPriceItem(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
     toast({
       title: "Fonction en développement",
-      description: "L'ajout de règles de tarification sera disponible prochainement.",
+      description: "La suppression des tarifs sera disponible prochainement.",
     });
   };
 
-  const handleExportData = () => {
+  const handleDuplicate = (item: PriceItem) => {
     toast({
-      title: "Export en cours",
-      description: "L'export des données sera disponible prochainement.",
+      title: "Fonction en développement",
+      description: "La duplication des tarifs sera disponible prochainement.",
     });
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
+  const handleDownload = () => {
+    toast({
+      title: "Téléchargement lancé",
+      description: "Le fichier sera téléchargé prochainement.",
+    });
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR');
+  const handleRefresh = () => {
+    fetchPriceItems();
+    toast({
+      title: "Tarifs mis à jour",
+      description: "Les tarifs ont été mis à jour avec succès.",
+    });
   };
 
-  const getTransportTypeIcon = (type: string) => {
-    switch (type) {
-      case 'road':
-        return <Route className="h-4 w-4 mr-2" />;
-      case 'sea':
-        return <TrendingUp className="h-4 w-4 mr-2" />;
-      case 'air':
-        return <TrendingUp className="h-4 w-4 mr-2" />;
-      case 'rail':
-        return <Route className="h-4 w-4 mr-2" />;
-      case 'multimodal':
-        return <Route className="h-4 w-4 mr-2" />;
-      default:
-        return <Route className="h-4 w-4 mr-2" />;
-    }
+  const handleStatusChange = (item: PriceItem, newStatus: 'active' | 'inactive' | 'pending') => {
+    toast({
+      title: "Fonction en développement",
+      description: `Le statut du tarif ${item.name} sera mis à jour prochainement.`,
+    });
   };
 
   if (isLoading) {
@@ -129,17 +227,21 @@ const FreightPricing: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
+      <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Gestion des Tarifs</h2>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportData}>
+            <Button variant="outline" onClick={handleDownload}>
               <Download className="mr-2 h-4 w-4" />
               Exporter
             </Button>
-            <Button onClick={handleAddPricingRule}>
+            <Button onClick={handleRefresh}>
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Rafraîchir
+            </Button>
+            <Button onClick={handleCreate}>
               <Plus className="mr-2 h-4 w-4" />
-              Nouvelle Règle
+              Nouveau Tarif
             </Button>
           </div>
         </div>
@@ -149,83 +251,129 @@ const FreightPricing: React.FC = () => {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
             <Input
               type="search"
-              placeholder="Rechercher une règle de tarification..."
+              placeholder="Rechercher un tarif..."
               className="pl-8 w-full lg:w-[350px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <Tabs 
-            value={transportTypeFilter} 
-            onValueChange={setTransportTypeFilter}
-            className="w-full lg:w-auto"
-          >
-            <TabsList>
-              <TabsTrigger value="all">Tous</TabsTrigger>
-              <TabsTrigger value="road">Route</TabsTrigger>
-              <TabsTrigger value="sea">Maritime</TabsTrigger>
-              <TabsTrigger value="air">Aérien</TabsTrigger>
-              <TabsTrigger value="rail">Ferroviaire</TabsTrigger>
-              <TabsTrigger value="multimodal">Multimodal</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center space-x-4">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
+                {priceCategories.map(category => (
+                  <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Origine</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Prix de base</TableHead>
-                <TableHead>Par Kg</TableHead>
-                <TableHead>Par Km</TableHead>
-                <TableHead>Par m³</TableHead>
-                <TableHead>Valide du</TableHead>
-                <TableHead>Au</TableHead>
-                <TableHead>Statut</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Catégorie</TableHead>
+              <TableHead>Prix</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredPriceItems.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.type}</TableCell>
+                <TableCell>{item.category}</TableCell>
+                <TableCell>{formatCurrency(item.price, item.currency)}</TableCell>
+                <TableCell>
+                  {item.status === 'active' && (
+                    <div className="flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
+                      Actif
+                    </div>
+                  )}
+                  {item.status === 'inactive' && (
+                    <div className="flex items-center">
+                      <XCircle className="w-4 h-4 mr-1 text-red-500" />
+                      Inactif
+                    </div>
+                  )}
+                  {item.status === 'pending' && (
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 mr-1 text-gray-500" />
+                      En attente
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRules.length > 0 ? (
-                filteredRules.map((rule) => (
-                  <TableRow key={rule.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell className="font-medium">{rule.name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {getTransportTypeIcon(rule.transportType)}
-                        {rule.transportType}
-                      </div>
-                    </TableCell>
-                    <TableCell>{rule.origin}</TableCell>
-                    <TableCell>{rule.destination}</TableCell>
-                    <TableCell>{formatCurrency(rule.basePrice, rule.currency)}</TableCell>
-                    <TableCell>{rule.pricePerKg ? formatCurrency(rule.pricePerKg, rule.currency) : '-'}</TableCell>
-                    <TableCell>{rule.pricePerKm ? formatCurrency(rule.pricePerKm, rule.currency) : '-'}</TableCell>
-                    <TableCell>{rule.pricePerCbm ? formatCurrency(rule.pricePerCbm, rule.currency) : '-'}</TableCell>
-                    <TableCell>{formatDate(rule.effectiveFrom)}</TableCell>
-                    <TableCell>{rule.effectiveTo ? formatDate(rule.effectiveTo) : 'Indéfini'}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${rule.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {rule.active ? 'Actif' : 'Inactif'}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={11} className="text-center h-24 text-muted-foreground">
-                    Aucune règle de tarification trouvée
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Create Price Item Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Nouveau Tarif</DialogTitle>
+            <DialogDescription>
+              Ajouter un nouveau tarif à la liste.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <p>Formulaire de création de tarif à venir...</p>
+          </div>
+          <DialogFooter>
+            <Button type="submit">Créer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Price Item Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Modifier le Tarif</DialogTitle>
+            <DialogDescription>
+              Modifier les informations du tarif sélectionné.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <p>Formulaire de modification de tarif à venir...</p>
+          </div>
+          <DialogFooter>
+            <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
