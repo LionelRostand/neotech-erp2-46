@@ -1,59 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, FileEdit, Trash2 } from 'lucide-react';
-
-// Temporary mock data
-const mockConsultations = [
-  {
-    id: 1,
-    date: '2023-06-15',
-    time: '09:30',
-    patientName: 'Martin Dupont',
-    patientId: 'PAT-20230001',
-    doctorName: 'Dr. Sophie Laurent',
-    type: 'Consultation générale',
-    status: 'completed',
-    diagnosis: 'Grippe saisonnière',
-  },
-  {
-    id: 2,
-    date: '2023-06-15',
-    time: '10:15',
-    patientName: 'Jeanne Moreau',
-    patientId: 'PAT-20230042',
-    doctorName: 'Dr. Sophie Laurent',
-    type: 'Suivi médical',
-    status: 'completed',
-    diagnosis: 'Hypertension stable',
-  },
-  {
-    id: 3,
-    date: '2023-06-15',
-    time: '14:00',
-    patientName: 'Thomas Petit',
-    patientId: 'PAT-20230105',
-    doctorName: 'Dr. Michel Bernard',
-    type: 'Consultation spécialiste',
-    status: 'in-progress',
-    diagnosis: '',
-  },
-  {
-    id: 4,
-    date: '2023-06-16',
-    time: '11:30',
-    patientName: 'Claire Dubois',
-    patientId: 'PAT-20230078',
-    doctorName: 'Dr. Michel Bernard',
-    type: 'Première consultation',
-    status: 'scheduled',
-    diagnosis: '',
-  },
-];
+import { Eye, FileEdit, Trash2, Plus, Filter, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useHealthData } from '@/hooks/modules/useHealthData';
 
 const ConsultationsList: React.FC = () => {
+  const { consultations, isLoading, error } = useHealthData();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -69,8 +27,38 @@ const ConsultationsList: React.FC = () => {
     }
   };
 
+  const filteredConsultations = consultations?.filter(consultation => 
+    (searchTerm === '' || 
+      consultation.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consultation.doctorName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (filterStatus === null || consultation.status === filterStatus)
+  );
+
+  if (isLoading) return <div>Chargement des consultations...</div>;
+  if (error) return <div>Erreur lors du chargement des consultations</div>;
+
   return (
-    <div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex space-x-2">
+          <div className="relative">
+            <Input 
+              placeholder="Rechercher..." 
+              className="pl-8 w-64"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          </div>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Filter className="w-4 h-4" /> Filtrer
+          </Button>
+        </div>
+        <Button className="flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Nouvelle Consultation
+        </Button>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -85,7 +73,7 @@ const ConsultationsList: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockConsultations.map((consultation) => (
+          {filteredConsultations?.map((consultation) => (
             <TableRow key={consultation.id}>
               <TableCell>{consultation.date}</TableCell>
               <TableCell>{consultation.time}</TableCell>
@@ -116,6 +104,12 @@ const ConsultationsList: React.FC = () => {
           ))}
         </TableBody>
       </Table>
+
+      {filteredConsultations?.length === 0 && (
+        <div className="text-center text-gray-500 py-4">
+          Aucune consultation trouvée
+        </div>
+      )}
     </div>
   );
 };
