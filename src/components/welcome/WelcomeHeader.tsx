@@ -69,7 +69,7 @@ const WelcomeHeader = () => {
           ))}
         </div>
         <p className="text-gray-600">
-          <span className="font-medium text-gray-900">+200</span> entreprises utilisent déjà notre plateforme
+          Un ERP nouvelle génération pour des entreprises en mouvement
         </p>
       </motion.div>
     </div>
