@@ -75,3 +75,19 @@ export interface InvoiceItem {
   total: number;
   type: 'part' | 'labor';
 }
+
+export interface Supplier {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  category: 'parts' | 'accessories' | 'tools' | 'other';
+  specialties: string[];
+  rating: number;
+  activeContracts: number;
+  status: 'active' | 'inactive';
+  lastOrderDate?: string;
+  paymentTerms?: string;
+  notes?: string;
+}
