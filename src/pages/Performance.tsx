@@ -3,18 +3,18 @@ import React from 'react';
 import { LineChart, BarChart, Users, TrendingUp } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatCard from '@/components/StatCard';
-import { usePerformanceData } from '@/hooks/usePerformanceData';
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { Card } from '@/components/ui/card';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Performance = () => {
-  const { stats, monthlyData, loading } = usePerformanceData();
+  const { stats, monthlyData, loading } = useAnalyticsData();
 
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Performance</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Analytics</h1>
         <p className="text-gray-500">Analyse détaillée des performances</p>
       </div>
 
@@ -45,6 +45,12 @@ const Performance = () => {
               value={`${stats.satisfaction}%`}
               icon={<TrendingUp className="text-primary" size={20} />}
               description="Score moyen"
+            />
+            <StatCard 
+              title="Taux de conversion" 
+              value="15.3%"
+              icon={<BarChart className="text-primary" size={20} />}
+              description="+2.4% ce mois"
             />
           </>
         )}
