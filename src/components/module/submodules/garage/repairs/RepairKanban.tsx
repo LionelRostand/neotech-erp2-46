@@ -11,7 +11,10 @@ import {
   DragStartEvent,
   DragEndEvent,
 } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { 
+  sortableKeyboardCoordinates,
+  arrayMove
+} from '@dnd-kit/sortable';
 import { repairs } from './repairsData';
 import { Repair } from '../types/garage-types';
 import { RepairColumn } from './RepairColumn';
