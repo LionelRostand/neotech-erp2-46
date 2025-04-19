@@ -32,8 +32,9 @@ export const useAnalyticsData = () => {
       try {
         setLoading(true);
         
-        // Récupérer les statistiques globales
-        const statsDoc = await getDocs(collection(db, 'analyticsStats'));
+        // Récupérer les statistiques globales pour le tableau
+        const statsQuery = query(collection(db, 'analyticsStats'), limit(1));
+        const statsDoc = await getDocs(statsQuery);
         if (!statsDoc.empty) {
           const data = statsDoc.docs[0].data() as AnalyticsStats;
           setStats({
@@ -61,7 +62,7 @@ export const useAnalyticsData = () => {
 
       } catch (error) {
         console.error('Erreur lors de la récupération des données analytics:', error);
-        toast.error('Erreur lors du chargement des données analytics');
+        toast.error('Erreur lors du chargement des données du tableau analytics');
       } finally {
         setLoading(false);
       }
@@ -72,3 +73,4 @@ export const useAnalyticsData = () => {
 
   return { stats, monthlyData, loading };
 };
+
