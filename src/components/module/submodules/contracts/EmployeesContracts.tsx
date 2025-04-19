@@ -1,207 +1,213 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useContractsData, Contract } from '@/hooks/useContractsData';
-import { PlusCircle, FileText, PenSquare, Users, Calendar, Briefcase, FileSignature } from 'lucide-react';
-import DataTable from '@/components/DataTable';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Plus, Filter, Download } from 'lucide-react';
+import DataTable, { Column } from '@/components/DataTable';
+import { toast } from 'sonner';
+import { Contract } from './types';
+import { Input } from '@/components/ui/input';
 import CreateContractDialog from './CreateContractDialog';
+import { useContractsData } from './hooks/useContractsData';
+import { format } from 'date-fns';
 import ContractDetailsDialog from './ContractDetailsDialog';
 import UpdateContractDialog from './UpdateContractDialog';
-import StatCard from '@/components/StatCard';
+import { fr } from 'date-fns/locale';
+import StatusBadge from '@/components/StatusBadge';
 
 const EmployeesContracts = () => {
-  const { contracts, stats, isLoading, error } = useContractsData();
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const { contracts, loading, refetchContracts, deleteContract } = useContractsData();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+
+  const filteredContracts = contracts?.filter(contract => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      contract.employeeName?.toLowerCase().includes(searchLower) ||
+      contract.type?.toLowerCase().includes(searchLower) ||
+      contract.reference?.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+
+  const handleContractCreated = (contract: Contract) => {
+    refetchContracts();
+    toast.success('Contrat créé avec succès');
+  };
+
+  const handleContractUpdated = () => {
+    refetchContracts();
+    setIsUpdateDialogOpen(false);
+    toast.success('Contrat mis à jour avec succès');
+  };
 
   const handleViewDetails = (contract: Contract) => {
     setSelectedContract(contract);
-    setDetailsDialogOpen(true);
+    setIsDetailsDialogOpen(true);
   };
 
   const handleUpdateContract = (contract: Contract) => {
     setSelectedContract(contract);
-    setUpdateDialogOpen(true);
+    setIsUpdateDialogOpen(true);
   };
 
-  const handleContractUpdated = () => {
+  const handleDeleteContract = async (contract: Contract) => {
+    if (!contract.id) {
+      toast.error("Impossible de supprimer ce contrat");
+      return;
+    }
+
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le contrat ${contract.reference} ?`)) {
+      try {
+        await deleteContract(contract.id);
+        refetchContracts();
+        toast.success('Contrat supprimé avec succès');
+      } catch (error) {
+        console.error("Erreur lors de la suppression du contrat:", error);
+        toast.error('Erreur lors de la suppression du contrat');
+      }
+    }
   };
 
-  const chartData = {
-    labels: ['Actifs', 'À venir', 'Expirés'],
-    datasets: [
-      {
-        data: [stats.active, stats.upcoming, stats.expired],
-        backgroundColor: ['#16a34a', '#2563eb', '#dc2626'],
-        borderColor: ['#15803d', '#1d4ed8', '#b91c1c'],
-        borderWidth: 1,
-      },
-    ],
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { text: 'Actif', status: 'success' };
+      case 'expired':
+        return { text: 'Expiré', status: 'danger' };
+      case 'pending':
+        return { text: 'En attente', status: 'warning' };
+      case 'terminated':
+        return { text: 'Résilié', status: 'danger' };
+      default:
+        return { text: status, status: 'danger' };
+    }
   };
 
-  const columns = [
-    {
-      key: 'employeeName',
-      header: 'Employé',
+  const columns: Column[] = [
+    { key: 'reference', header: 'Référence' },
+    { key: 'employeeName', header: 'Employé' },
+    { key: 'type', header: 'Type' },
+    { 
+      key: 'startDate', 
+      header: 'Date début',
       cell: ({ row }) => {
-        const contract = row.original;
-        return (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={contract.employeePhoto} alt={contract.employeeName} />
-              <AvatarFallback>{contract.employeeName?.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <span>{contract.employeeName}</span>
-          </div>
-        );
-      },
+        const date = row.original.startDate;
+        return date ? format(new Date(date), 'dd MMM yyyy', { locale: fr }) : '-';
+      }
     },
-    {
-      key: 'position',
-      header: 'Poste',
+    { 
+      key: 'endDate', 
+      header: 'Date fin',
+      cell: ({ row }) => {
+        const date = row.original.endDate;
+        return date ? format(new Date(date), 'dd MMM yyyy', { locale: fr }) : 'Indéterminé';
+      }
     },
-    {
-      key: 'type',
-      header: 'Type',
-    },
-    {
-      key: 'startDate',
-      header: 'Début',
-    },
-    {
-      key: 'endDate',
-      header: 'Fin',
-      cell: ({ row }) => row.original.endDate || '—',
-    },
-    {
-      key: 'status',
+    { 
+      key: 'status', 
       header: 'Statut',
       cell: ({ row }) => {
-        const status = row.original.status;
-        switch (status) {
-          case 'Actif':
-            return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
-          case 'À venir':
-            return <Badge className="bg-blue-500 hover:bg-blue-600">À venir</Badge>;
-          case 'Expiré':
-            return <Badge className="bg-red-500 hover:bg-red-600">Expiré</Badge>;
-          default:
-            return <Badge variant="outline">{status}</Badge>;
-        }
-      },
+        const statusInfo = getStatusDisplay(row.original.status);
+        return <StatusBadge status={statusInfo.status as any}>{statusInfo.text}</StatusBadge>;
+      }
     },
-    {
-      key: 'actions',
+    { 
+      key: 'actions', 
       header: 'Actions',
-      cell: ({ row }) => {
-        const contract = row.original;
-        return (
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleViewDetails(contract)}
-            >
-              <FileText className="h-4 w-4 mr-1" />
-              Détails
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleUpdateContract(contract)}
-            >
-              <PenSquare className="h-4 w-4 mr-1" />
-              Modifier
-            </Button>
-          </div>
-        );
-      },
-    },
+      cell: ({ row }) => (
+        <div className="flex space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleViewDetails(row.original)}
+          >
+            Voir
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleUpdateContract(row.original)}
+          >
+            Modifier
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-red-500 hover:text-red-700"
+            onClick={() => handleDeleteContract(row.original)}
+          >
+            Supprimer
+          </Button>
+        </div>
+      )
+    }
   ];
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestion des contrats</h2>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <PlusCircle className="h-4 w-4 mr-2" />
+        <h1 className="text-2xl font-bold">Gestion des contrats</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
           Nouveau contrat
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          title="Total des contrats" 
-          value={`${stats.total}`} 
-          icon={<FileSignature className="h-5 w-5 text-purple-600" />}
-          description="Nombre total de contrats" 
-          className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
-        />
-        <StatCard 
-          title="Contrats actifs" 
-          value={`${stats.active}`} 
-          icon={<Users className="h-5 w-5 text-green-600" />}
-          description="Employés actuellement sous contrat" 
-          className="bg-gradient-to-br from-green-50 to-green-100 border-green-200"
-        />
-        <StatCard 
-          title="Contrats à venir" 
-          value={`${stats.upcoming}`} 
-          icon={<Calendar className="h-5 w-5 text-blue-600" />}
-          description="Nouveaux contrats en attente de démarrage" 
-          className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
-        />
-        <StatCard 
-          title="Contrats expirés" 
-          value={`${stats.expired}`} 
-          icon={<Briefcase className="h-5 w-5 text-red-600" />}
-          description="Contrats arrivés à échéance" 
-          className="bg-gradient-to-br from-red-50 to-red-100 border-red-200"
-        />
-      </div>
-
       <Card>
-        <CardHeader>
-          <CardTitle>Liste des contrats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-4">Chargement des contrats...</div>
-          ) : error ? (
-            <div className="text-red-500 p-4">Erreur: Impossible de charger les contrats</div>
-          ) : (
-            <DataTable 
-              title="Liste des contrats"
-              columns={columns} 
-              data={contracts} 
-              onRowClick={(contract) => handleViewDetails(contract as Contract)}
-            />
-          )}
+        <CardContent className="pt-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="w-80 relative">
+              <Input
+                placeholder="Rechercher un contrat..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10"
+              />
+              <Filter className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+          </div>
+
+          <DataTable
+            title="Liste des contrats"
+            data={filteredContracts}
+            columns={columns}
+          />
         </CardContent>
       </Card>
 
-      <CreateContractDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen} 
-        onContractCreated={handleContractUpdated}
+      <CreateContractDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onContractCreated={handleContractCreated}
       />
 
-      <ContractDetailsDialog 
-        contract={selectedContract} 
-        open={detailsDialogOpen} 
-        onOpenChange={setDetailsDialogOpen}
-      />
+      {selectedContract && (
+        <>
+          <ContractDetailsDialog
+            open={isDetailsDialogOpen}
+            onOpenChange={setIsDetailsDialogOpen}
+            contract={selectedContract}
+            onEdit={() => {
+              setIsDetailsDialogOpen(false);
+              setIsUpdateDialogOpen(true);
+            }}
+          />
 
-      <UpdateContractDialog 
-        contract={selectedContract} 
-        open={updateDialogOpen} 
-        onOpenChange={setUpdateDialogOpen} 
-        onContractUpdated={handleContractUpdated}
-      />
+          <UpdateContractDialog
+            open={isUpdateDialogOpen}
+            onOpenChange={setIsUpdateDialogOpen}
+            contract={selectedContract}
+            onContractUpdated={handleContractUpdated}
+          />
+        </>
+      )}
     </div>
   );
 };
