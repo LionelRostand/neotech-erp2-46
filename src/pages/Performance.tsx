@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LineChart, BarChart, Users, TrendingUp } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -56,35 +55,41 @@ const Performance = () => {
         )}
       </div>
 
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Évolution mensuelle</h2>
-        {loading ? (
-          <Skeleton className="h-[400px] w-full" />
-        ) : (
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsLineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#2563eb" 
-                  name="Chiffre d'affaires"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="customers" 
-                  stroke="#16a34a" 
-                  name="Clients"
-                />
-              </RechartsLineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </Card>
+      <div className="space-y-8">
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Évolution mensuelle</h2>
+          {loading ? (
+            <Skeleton className="h-[400px] w-full" />
+          ) : (
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsLineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#2563eb" 
+                    name="Chiffre d'affaires"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="customers" 
+                    stroke="#16a34a" 
+                    name="Clients"
+                  />
+                </RechartsLineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <AnalyticsTable />
+        </Card>
+      </div>
     </DashboardLayout>
   );
 };
