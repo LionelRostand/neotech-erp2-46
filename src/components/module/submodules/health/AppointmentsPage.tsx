@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar, Plus, Search, X, Check, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
 import { Appointment, Patient, Doctor } from './types/health-types';
-import { DataTable } from '@/components/DataTable';
+import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';

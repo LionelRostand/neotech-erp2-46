@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import { DataTable } from '@/components/DataTable';
+import DataTable from '@/components/DataTable'; // Changed to default import
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';

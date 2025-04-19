@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import { Inventory } from './types/health-types';
-import { DataTable } from '@/components/DataTable';
+import { HealthInventory } from './types/health-types';
+import DataTable from '@/components/DataTable'; // Changed to default import
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 

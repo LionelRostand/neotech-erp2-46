@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import { Syringe, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import { Prescription, Patient, Doctor } from './types/health-types';
-import { DataTable } from '@/components/DataTable';
+import { Prescription } from './types/health-types';
+import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -17,7 +16,6 @@ const PrescriptionsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Get patient and doctor names for display
   const getPatientName = (patientId: string) => {
     const patient = patients?.find(p => p.id === patientId);
     return patient ? `${patient.lastName} ${patient.firstName}` : 'Patient inconnu';
@@ -28,7 +26,6 @@ const PrescriptionsPage: React.FC = () => {
     return doctor ? `Dr. ${doctor.lastName} ${doctor.firstName}` : 'Médecin inconnu';
   };
 
-  // Search functionality
   const filteredPrescriptions = prescriptions?.filter(prescription => {
     const patientName = getPatientName(prescription.patientId).toLowerCase();
     const doctorName = getDoctorName(prescription.doctorId).toLowerCase();
