@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useHealthData } from '@/hooks/modules/useHealthData';
-import { HealthBill } from './types/health-types';
-import DataTable from '@/components/DataTable'; // Changed to default import
+import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import AddBillDialog from './dialogs/AddBillDialog';
 
-const BillingPage: React.FC = () => {
+const BillingPage = () => {
   const { billing: invoices, patients, isLoading } = useHealthData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -132,6 +132,11 @@ const BillingPage: React.FC = () => {
           searchPlaceholder="Rechercher une facture..."
         />
       </Card>
+
+      <AddBillDialog 
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+      />
     </div>
   );
 };
