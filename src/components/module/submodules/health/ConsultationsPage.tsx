@@ -1,52 +1,34 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Clipboard, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ConsultationsList from './components/consultations/ConsultationList';
 import AddConsultationDialog from './components/consultations/AddConsultationDialog';
-import type { Consultation, Patient, Doctor } from './types/health-types';
+import type { Consultation } from './types/health-types';
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
-import { fetchCollectionData } from './utils/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useHealthData } from '@/hooks/modules/useHealthData';
 
 const ConsultationsPage: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState(true);
   const { add } = useFirestore(COLLECTIONS.HEALTH.CONSULTATIONS);
-
-  // Fetch patients and doctors data from Firestore
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch actual data from Firestore collections
-        const patientsData = await fetchCollectionData<Patient>(COLLECTIONS.HEALTH.PATIENTS);
-        const doctorsData = await fetchCollectionData<Doctor>(COLLECTIONS.HEALTH.DOCTORS);
-        
-        setPatients(patientsData);
-        setDoctors(doctorsData);
-        console.log('Loaded patients:', patientsData.length);
-        console.log('Loaded doctors:', doctorsData.length);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Erreur lors du chargement des données');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { patients, doctors, isLoading } = useHealthData();
 
   const handleAddConsultation = async (consultation: Consultation) => {
     try {
-      await add(consultation);
+      // Add createdAt and updatedAt timestamps
+      const consultationToAdd = {
+        ...consultation,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      await add(consultationToAdd);
       toast.success("Consultation ajoutée avec succès");
       setIsAddDialogOpen(false);
     } catch (error) {
+      console.error("Error adding consultation:", error);
       toast.error("Erreur lors de l'ajout de la consultation");
     }
   };
@@ -58,7 +40,7 @@ const ConsultationsPage: React.FC = () => {
           <Clipboard className="h-6 w-6 text-primary" />
           Consultations
         </h1>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
+        <Button onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle Consultation
         </Button>
@@ -72,8 +54,8 @@ const ConsultationsPage: React.FC = () => {
         open={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onConsultationAdded={handleAddConsultation}
-        patients={patients}
-        doctors={doctors}
+        patients={patients || []}
+        doctors={doctors || []}
       />
     </div>
   );

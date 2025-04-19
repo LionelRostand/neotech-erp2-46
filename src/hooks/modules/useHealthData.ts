@@ -2,6 +2,21 @@
 import { useCollectionData } from '../useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { orderBy } from 'firebase/firestore';
+import type { 
+  Patient, 
+  Doctor, 
+  Appointment, 
+  Consultation, 
+  Prescription,
+  MedicalRecord,
+  Staff,
+  Laboratory,
+  Insurance,
+  Invoice,
+  Inventory,
+  HealthSettings,
+  HealthPermission
+} from '@/components/module/submodules/health/types/health-types';
 
 /**
  * Hook to fetch data for the Health module
@@ -12,7 +27,7 @@ export const useHealthData = () => {
     data: patients, 
     isLoading: isPatientsLoading, 
     error: patientsError 
-  } = useCollectionData(
+  } = useCollectionData<Patient>(
     COLLECTIONS.HEALTH.PATIENTS,
     [orderBy('lastName')]
   );
@@ -22,7 +37,7 @@ export const useHealthData = () => {
     data: doctors, 
     isLoading: isDoctorsLoading, 
     error: doctorsError 
-  } = useCollectionData(
+  } = useCollectionData<Doctor>(
     COLLECTIONS.HEALTH.DOCTORS,
     [orderBy('lastName')]
   );
@@ -32,7 +47,7 @@ export const useHealthData = () => {
     data: appointments, 
     isLoading: isAppointmentsLoading, 
     error: appointmentsError 
-  } = useCollectionData(
+  } = useCollectionData<Appointment>(
     COLLECTIONS.HEALTH.APPOINTMENTS,
     [orderBy('date')]
   );
@@ -42,7 +57,7 @@ export const useHealthData = () => {
     data: consultations, 
     isLoading: isConsultationsLoading, 
     error: consultationsError 
-  } = useCollectionData(
+  } = useCollectionData<Consultation>(
     COLLECTIONS.HEALTH.CONSULTATIONS,
     [orderBy('date', 'desc')]
   );
@@ -52,7 +67,7 @@ export const useHealthData = () => {
     data: prescriptions,
     isLoading: isPrescriptionsLoading,
     error: prescriptionsError
-  } = useCollectionData(
+  } = useCollectionData<Prescription>(
     COLLECTIONS.HEALTH.PRESCRIPTIONS,
     [orderBy('date', 'desc')]
   );
@@ -62,7 +77,7 @@ export const useHealthData = () => {
     data: medicalRecords,
     isLoading: isMedicalRecordsLoading,
     error: medicalRecordsError
-  } = useCollectionData(
+  } = useCollectionData<MedicalRecord>(
     COLLECTIONS.HEALTH.MEDICAL_RECORDS,
     []
   );
@@ -72,7 +87,7 @@ export const useHealthData = () => {
     data: laboratoryTests,
     isLoading: isLaboratoryLoading,
     error: laboratoryError
-  } = useCollectionData(
+  } = useCollectionData<Laboratory>(
     COLLECTIONS.HEALTH.LABORATORY,
     [orderBy('date', 'desc')]
   );
@@ -82,7 +97,7 @@ export const useHealthData = () => {
     data: insurance, 
     isLoading: isInsuranceLoading, 
     error: insuranceError 
-  } = useCollectionData(
+  } = useCollectionData<Insurance>(
     COLLECTIONS.HEALTH.INSURANCE,
     []
   );
@@ -92,7 +107,7 @@ export const useHealthData = () => {
     data: staff, 
     isLoading: isStaffLoading, 
     error: staffError 
-  } = useCollectionData(
+  } = useCollectionData<Staff>(
     COLLECTIONS.HEALTH.STAFF,
     [orderBy('lastName')]
   );
@@ -102,7 +117,7 @@ export const useHealthData = () => {
     data: billing,
     isLoading: isBillingLoading,
     error: billingError
-  } = useCollectionData(
+  } = useCollectionData<Invoice>(
     COLLECTIONS.HEALTH.BILLING,
     [orderBy('date', 'desc')]
   );
@@ -112,7 +127,7 @@ export const useHealthData = () => {
     data: inventory,
     isLoading: isInventoryLoading,
     error: inventoryError
-  } = useCollectionData(
+  } = useCollectionData<Inventory>(
     COLLECTIONS.HEALTH.INVENTORY,
     []
   );
@@ -122,7 +137,7 @@ export const useHealthData = () => {
     data: settings,
     isLoading: isSettingsLoading,
     error: settingsError
-  } = useCollectionData(
+  } = useCollectionData<HealthSettings>(
     COLLECTIONS.HEALTH.SETTINGS,
     []
   );
@@ -132,7 +147,7 @@ export const useHealthData = () => {
     data: permissions,
     isLoading: isPermissionsLoading,
     error: permissionsError
-  } = useCollectionData(
+  } = useCollectionData<HealthPermission>(
     COLLECTIONS.HEALTH.PERMISSIONS,
     []
   );

@@ -62,6 +62,16 @@ export interface Consultation extends BaseEntity {
   treatment?: string;
   prescriptionIds?: string[];
   status: 'scheduled' | 'completed' | 'cancelled' | 'in-progress';
+  chiefComplaint?: string;
+  symptoms?: string[];
+  vitalSigns?: {
+    temperature?: number;
+    bloodPressure?: string;
+    heartRate?: number;
+    respiratoryRate?: number;
+    oxygenSaturation?: number;
+  };
+  followUp?: string;
 }
 
 export interface Appointment extends BaseEntity {
@@ -100,6 +110,7 @@ export interface MedicalRecord extends BaseEntity {
   prescriptions: string[]; // IDs of prescriptions
   documents: string[]; // IDs or paths to documents
   notes?: string;
+  medicalHistory?: string[];
 }
 
 export interface Staff extends BaseEntity {
