@@ -1,20 +1,33 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Pencil } from 'lucide-react';
 import { Employee } from '@/types/employee';
 
 export interface InformationsTabProps {
   employee: Employee;
   onEmployeeUpdated?: (updatedEmployee: Employee) => void;
+  onEdit?: () => void;
 }
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ 
   employee,
-  onEmployeeUpdated
+  onEmployeeUpdated,
+  onEdit
 }) => {
   return (
     <Card>
       <CardContent className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Informations personnelles</h3>
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Modifier
+            </Button>
+          )}
+        </div>
+        
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
