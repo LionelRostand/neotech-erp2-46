@@ -1,65 +1,73 @@
 
 import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Contact } from '../types/message-types';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Form } from '@/components/ui/form';
-import ContactAvatar from './dialog/ContactAvatar';
+import { useContactForm } from './dialog/useContactForm';
 import ContactFormFields from './dialog/ContactFormFields';
 import ContactFormActions from './dialog/ContactFormActions';
-import { useContactForm } from './dialog/useContactForm';
+import ContactAvatar from './dialog/ContactAvatar';
 
 interface ContactDialogProps {
+  contact?: Contact;
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  contact: Contact | null;
-  onSave: (contact: Contact, isNew: boolean) => void;
+  onClose: () => void;
+  onSave: (contact: Contact) => void;
 }
 
-const ContactDialog: React.FC<ContactDialogProps> = ({ 
-  isOpen, 
-  onOpenChange, 
-  contact, 
-  onSave 
+const ContactDialog: React.FC<ContactDialogProps> = ({
+  contact,
+  isOpen,
+  onClose,
+  onSave
 }) => {
-  const {
-    form,
-    isSubmitting,
-    onSubmit
-  } = useContactForm(contact, onSave);
-  
   const isNewContact = !contact?.id;
+  const dialogTitle = isNewContact ? 'Nouveau contact' : 'Modifier le contact';
+  
+  const { form, isSubmitting, onSubmit } = useContactForm({
+    contact,
+    onSave,
+    onClose
+  });
+  
+  const handleFormSubmit = (data: Contact) => {
+    onSubmit(data);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {isNewContact ? "Créer un nouveau contact" : "Modifier le contact"}
-          </DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <ContactAvatar 
-              firstName={form.watch('firstName')}
-              lastName={form.watch('lastName')}
-              avatar={contact?.avatar}
-            />
-
-            <ContactFormFields />
-
-            <ContactFormActions 
-              isSubmitting={isSubmitting}
-              isNewContact={isNewContact}
-              onCancel={() => onOpenChange(false)}
-            />
-          </form>
-        </Form>
+        
+        <Tabs defaultValue="details" className="mt-4">
+          <TabsList className="mb-4">
+            <TabsTrigger value="details">Détails</TabsTrigger>
+            <TabsTrigger value="avatar">Avatar</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)}>
+              <ContactFormFields form={form} />
+              <ContactFormActions 
+                isSubmitting={isSubmitting} 
+                onCancel={onClose} 
+                isNewContact={isNewContact}
+              />
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="avatar">
+            <ContactAvatar contact={contact} />
+            <div className="flex justify-end mt-4">
+              <Button variant="outline" onClick={onClose}>
+                Fermer
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

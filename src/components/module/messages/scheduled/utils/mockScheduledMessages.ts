@@ -29,7 +29,7 @@ export const generateMockScheduledMessages = (contactIds: string[]): Message[] =
       category: ['general', 'commercial', 'administrative'][i % 3] as any,
       tags: i % 3 === 0 ? ['automatique', 'important'] : i % 2 === 0 ? ['suivi'] : [],
       hasAttachments: i % 3 === 0,
-      isArchived: false, // Add the missing property
+      isArchived: false,
       isScheduled: true,
       scheduledAt: Timestamp.fromDate(scheduledDate),
       createdAt: Timestamp.fromDate(today),

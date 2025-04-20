@@ -1,3 +1,4 @@
+
 export const COLLECTIONS = {
   TRANSPORT: {
     LOCATIONS: 'locations',
@@ -18,7 +19,10 @@ export const COLLECTIONS = {
     EVALUATIONS: 'evaluations',
     TRAININGS: 'trainings',
     ABSENCE_REQUESTS: 'absence-requests',
-    MANAGERS: 'managers'
+    MANAGERS: 'managers',
+    RECRUITMENT: 'recruitment',
+    LEAVES: 'leaves',
+    ALERTS: 'hr-alerts'
   },
   DOCUMENT_COLLECTIONS: {
     DOCUMENTS: 'documents',
@@ -53,8 +57,16 @@ export const COLLECTIONS = {
     REPORTS: 'reports',
     TAXES: 'taxes',
     TRANSACTIONS: 'transactions',
-    SETTINGS: 'settings'
+    SETTINGS: 'settings',
+    PERMISSIONS: 'accounting-permissions'
   },
+  CRM: {
+    PROSPECTS: 'prospects',
+    CLIENTS: 'crm-clients',
+    OPPORTUNITIES: 'opportunities',
+    ACTIVITIES: 'activities'
+  },
+  COMPANIES: 'companies',
   USERS: 'users',
   SMTP_CONFIG: 'smtp-config'
 };

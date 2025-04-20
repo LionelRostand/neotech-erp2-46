@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useScheduledMessagesData } from './useScheduledMessagesData';
 import { useScheduledMessagesFilter } from './useScheduledMessagesFilter';
 import { useScheduledMessageOperations } from './useScheduledMessageOperations';
+import { Message } from '../../types/message-types';
 
 export const useScheduledMessages = () => {
   const { 
@@ -18,7 +19,7 @@ export const useScheduledMessages = () => {
   
   const {
     filteredMessages
-  } = useScheduledMessagesFilter(messages);
+  } = useScheduledMessagesFilter({ messages, searchTerm, filter });
   
   const {
     messageToCancel,
