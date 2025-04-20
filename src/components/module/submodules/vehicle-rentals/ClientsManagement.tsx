@@ -9,6 +9,7 @@ import CreateClientDialog from './dialogs/client/CreateClientDialog';
 import ClientsList from './components/client/ClientsList';
 import ClientsSearchBar from './components/client/ClientsSearchBar';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from "sonner";
 
 const ClientsManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,12 +21,14 @@ const ClientsManagement = () => {
   });
 
   const filteredClients = clients.filter(client => {
+    if (!searchTerm) return true;
+    
     const searchLower = searchTerm.toLowerCase();
     return (
-      client.firstName.toLowerCase().includes(searchLower) ||
-      client.lastName.toLowerCase().includes(searchLower) ||
-      client.email.toLowerCase().includes(searchLower) ||
-      client.phone.includes(searchTerm)
+      (client.firstName?.toLowerCase() || '').includes(searchLower) ||
+      (client.lastName?.toLowerCase() || '').includes(searchLower) ||
+      (client.email?.toLowerCase() || '').includes(searchLower) ||
+      (client.phone || '').includes(searchTerm)
     );
   });
 
