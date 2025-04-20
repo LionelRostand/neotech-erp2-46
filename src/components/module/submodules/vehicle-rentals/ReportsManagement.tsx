@@ -1,23 +1,17 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { FileDown, BarChart3, LineChart, PieChart } from "lucide-react";
+import { FileDown, BarChart3, LineChart } from "lucide-react";
 import DashboardTab from './reports/DashboardTab';
-import RentalStatisticsTab from './reports/RentalStatisticsTab';
-import RevenueAnalysisTab from './reports/RevenueAnalysisTab';
-import VehiclePerformanceTab from './reports/VehiclePerformanceTab';
-import TrendsAndForecastTab from './reports/TrendsAndForecastTab';
 
 const ReportsManagement = () => {
   const [timeRange, setTimeRange] = useState("month");
-  const [activeTab, setActiveTab] = useState("dashboard");
 
   const handleExport = (format: 'excel' | 'pdf') => {
     console.log(`Exporting data in ${format} format`);
-    // Export implementation would go here
   };
 
   return (
@@ -52,40 +46,16 @@ const ReportsManagement = () => {
         </div>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+      <Tabs defaultValue="dashboard">
+        <TabsList>
           <TabsTrigger value="dashboard" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Tableau de bord
-          </TabsTrigger>
-          <TabsTrigger value="statistics" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Statistiques de locations
-          </TabsTrigger>
-          <TabsTrigger value="revenue" className="gap-2">
-            <LineChart className="h-4 w-4" />
-            Analyse des revenus
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="gap-2">
-            <PieChart className="h-4 w-4" />
-            Performance des véhicules
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
           <DashboardTab />
-        </TabsContent>
-
-        <TabsContent value="statistics">
-          <RentalStatisticsTab timeRange={timeRange} />
-        </TabsContent>
-
-        <TabsContent value="revenue">
-          <RevenueAnalysisTab timeRange={timeRange} />
-        </TabsContent>
-
-        <TabsContent value="performance">
-          <VehiclePerformanceTab timeRange={timeRange} />
         </TabsContent>
       </Tabs>
     </div>
