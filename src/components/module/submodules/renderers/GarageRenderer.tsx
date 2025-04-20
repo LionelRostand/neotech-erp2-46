@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SubModule } from "@/data/types/modules";
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
@@ -8,6 +9,7 @@ import GarageAppointmentsDashboard from '../garage/appointments/GarageAppointmen
 import GarageRepairsDashboard from '../garage/repairs/GarageRepairsDashboard';
 import GarageInvoicesDashboard from '../garage/invoices/GarageInvoicesDashboard';
 import GarageSuppliersDashboard from '../garage/suppliers/GarageSuppliersDashboard';
+import GarageInventoryDashboard from '../garage/inventory/GarageInventoryDashboard';
 
 export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering garage submodule:', submoduleId);
@@ -27,6 +29,8 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageInvoicesDashboard />;
     case 'garage-suppliers':
       return <GarageSuppliersDashboard />;
+    case 'garage-inventory':
+      return <GarageInventoryDashboard />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
