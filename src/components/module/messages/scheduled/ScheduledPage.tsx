@@ -7,6 +7,7 @@ import ScheduledMessagesToolbar from './components/ScheduledMessagesToolbar';
 import ScheduledMessagesList from './components/ScheduledMessagesList';
 import CancelMessageDialog from './components/CancelMessageDialog';
 import { useToast } from '@/hooks/use-toast';
+import { Message } from '../types/message-types';
 
 const ScheduledPage: React.FC = () => {
   const [autoSchedulingEnabled, setAutoSchedulingEnabled] = useState(true);
@@ -14,7 +15,6 @@ const ScheduledPage: React.FC = () => {
   
   const {
     filteredMessages,
-    contacts,
     isLoading,
     searchTerm,
     setSearchTerm,
@@ -47,6 +47,15 @@ const ScheduledPage: React.FC = () => {
     }
   };
 
+  // Wrapper functions to pass the entire message object instead of just the ID
+  const handleEditMessageWrapper = (message: Message) => {
+    handleEditMessage(message.id);
+  };
+
+  const handleSendNowWrapper = (message: Message) => {
+    handleSendNow(message.id);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -63,10 +72,9 @@ const ScheduledPage: React.FC = () => {
         <CardContent>
           <ScheduledMessagesList
             messages={filteredMessages}
-            contacts={contacts}
             isLoading={isLoading}
-            onEditMessage={handleEditMessage}
-            onSendNow={handleSendNow}
+            onEditMessage={handleEditMessageWrapper}
+            onSendNow={handleSendNowWrapper}
             onCancelMessage={handleCancelMessage}
             onCreateNewMessage={handleCreateNewMessage}
           />

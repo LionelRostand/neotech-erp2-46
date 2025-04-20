@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Message } from '../types/message-types';
 import ArchivedMessageItem from './components/ArchivedMessageItem';
 import ArchivedMessageSkeleton from './components/ArchivedMessageSkeleton';
@@ -16,6 +16,20 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   isLoading,
   filter 
 }) => {
+  const [restoringIds, setRestoringIds] = useState<string[]>([]);
+  
+  const handleRestoreMessage = (messageId: string) => {
+    // Add the messageId to restoringIds to show loading state
+    setRestoringIds(prev => [...prev, messageId]);
+    
+    // Simulate restoration process
+    setTimeout(() => {
+      // Remove the messageId from restoringIds after completion
+      setRestoringIds(prev => prev.filter(id => id !== messageId));
+      console.log(`Message ${messageId} restored`);
+    }, 1000);
+  };
+  
   const filteredMessages = React.useMemo(() => {
     if (!messages) return [];
     
@@ -49,7 +63,13 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   return (
     <div className="space-y-4">
       {filteredMessages.map(message => (
-        <ArchivedMessageItem key={message.id} message={message} />
+        <ArchivedMessageItem 
+          key={message.id} 
+          message={message} 
+          contact={undefined}
+          onRestoreMessage={handleRestoreMessage}
+          isRestoring={restoringIds.includes(message.id)}
+        />
       ))}
     </div>
   );

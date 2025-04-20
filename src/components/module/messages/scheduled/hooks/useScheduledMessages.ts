@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useScheduledMessagesData } from './useScheduledMessagesData';
 import { useScheduledMessagesFilter } from './useScheduledMessagesFilter';
 import { useScheduledMessageOperations } from './useScheduledMessageOperations';
@@ -6,18 +7,18 @@ import { useScheduledMessageOperations } from './useScheduledMessageOperations';
 export const useScheduledMessages = () => {
   const { 
     messages, 
-    setMessages, 
-    contacts, 
-    isLoading 
-  } = useScheduledMessagesData();
-  
-  const {
-    filteredMessages,
+    isLoading, 
+    error,
+    refetch,
     searchTerm,
     setSearchTerm,
     filter,
     setFilter
-  } = useScheduledMessagesFilter(messages, contacts);
+  } = useScheduledMessagesData();
+  
+  const {
+    filteredMessages
+  } = useScheduledMessagesFilter(messages);
   
   const {
     messageToCancel,
@@ -26,7 +27,7 @@ export const useScheduledMessages = () => {
     handleCancelMessage,
     confirmCancelMessage,
     handleSendNow
-  } = useScheduledMessageOperations(messages, setMessages);
+  } = useScheduledMessageOperations();
 
   const handleEditMessage = (messageId: string) => {
     // Rediriger vers la page de composition avec les données pré-remplies
@@ -38,10 +39,10 @@ export const useScheduledMessages = () => {
   };
 
   return {
-    messages,
     filteredMessages, 
     isLoading,
-    contacts,
+    error,
+    refetch,
     searchTerm,
     setSearchTerm,
     filter,

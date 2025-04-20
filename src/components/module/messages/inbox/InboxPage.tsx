@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,7 +66,7 @@ const InboxPage: React.FC = () => {
               <TabsList className="mb-4">
                 <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="unread">Non lus</TabsTrigger>
-                <TabsTrigger value="important">Importants</TabsTrigger>
+                <TabsTrigger value="read">Lus</TabsTrigger>
               </TabsList>
               
               <TabsContent value="all">
@@ -76,8 +77,8 @@ const InboxPage: React.FC = () => {
                 <MessagesList messages={messages} isLoading={isLoading} filter="unread" searchTerm={searchTerm} />
               </TabsContent>
               
-              <TabsContent value="important">
-                <MessagesList messages={messages} isLoading={isLoading} filter="important" searchTerm={searchTerm} />
+              <TabsContent value="read">
+                <MessagesList messages={messages} isLoading={isLoading} filter="read" searchTerm={searchTerm} />
               </TabsContent>
             </Tabs>
           )}

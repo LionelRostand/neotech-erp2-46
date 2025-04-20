@@ -15,7 +15,7 @@ export interface Contact {
   updatedAt: Date;
 }
 
-export type MessagePriority = 'high' | 'normal' | 'low';
+export type MessagePriority = 'high' | 'normal' | 'low' | 'urgent';
 export type MessageCategory = 'business' | 'personal' | 'marketing' | 'support' | 'other';
 export type MessageStatus = 'draft' | 'sent' | 'received' | 'read' | 'scheduled' | 'archived';
 export type EmailStatus = 'pending' | 'sent' | 'failed';
@@ -46,6 +46,7 @@ export interface Message {
   isArchived: boolean;
   isRead?: boolean;
   isScheduled?: boolean;
+  isFavorite?: boolean;
   scheduledAt?: any; // Timestamp type from Firestore
   createdAt: any; // Timestamp type from Firestore
   updatedAt: any; // Timestamp type from Firestore

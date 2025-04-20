@@ -29,9 +29,10 @@ const ContactDialog: React.FC<ContactDialogProps> = ({
   const {
     form,
     isSubmitting,
-    isNewContact,
     onSubmit
-  } = useContactForm(contact, onSave, onOpenChange);
+  } = useContactForm(contact, onSave);
+  
+  const isNewContact = !contact?.id;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

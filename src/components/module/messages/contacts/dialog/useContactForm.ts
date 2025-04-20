@@ -8,7 +8,7 @@ import { contactFormSchema } from "./contactFormSchema";
 import { Contact } from "../../types/message-types";
 import { useToast } from "@/hooks/use-toast";
 
-export function useContactForm(initialData?: Contact, onSuccess?: () => void) {
+export function useContactForm(initialData: Contact | null, onSave?: (contact: Contact, isNew: boolean) => void) {
   const { add, update } = useFirestore(COLLECTIONS.MESSAGES.CONTACTS);
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +34,8 @@ export function useContactForm(initialData?: Contact, onSuccess?: () => void) {
         updatedAt: new Date()
       };
 
+      const isNew = !initialData?.id;
+
       if (initialData?.id) {
         await update(initialData.id, contactData);
         toast({
@@ -52,7 +54,14 @@ export function useContactForm(initialData?: Contact, onSuccess?: () => void) {
         });
       }
 
-      onSuccess?.();
+      if (onSave) {
+        onSave({
+          id: initialData?.id || 'new-id', // This will be replaced with the actual ID from Firebase
+          ...contactData,
+          createdAt: initialData?.createdAt || new Date(),
+          isActive: initialData?.isActive !== undefined ? initialData.isActive : true
+        }, isNew);
+      }
     } catch (error) {
       console.error("Erreur lors de l'enregistrement du contact :", error);
       toast({
