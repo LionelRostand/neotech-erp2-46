@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -110,6 +109,25 @@
 .text-neotech-primary {
   color: var(--neotech-primary);
 }
+
+/* Couleurs personnalisées pour les catégories de modules */
+:root {
+  --module-business: #2563EB;     /* Blue for GESTION D'ENTREPRISE */
+  --module-services: #EA384C;     /* Red for SERVICES SPÉCIALISÉS */
+  --module-digital: #10B981;      /* Green for PRÉSENCE NUMÉRIQUE */
+  --module-communication: #6366F1; /* Indigo for COMMUNICATION */
+}
+
+/* Classe pour les couleurs de modules */
+.bg-module-business { background-color: var(--module-business); }
+.bg-module-services { background-color: var(--module-services); }
+.bg-module-digital { background-color: var(--module-digital); }
+.bg-module-communication { background-color: var(--module-communication); }
+
+.text-module-business { color: var(--module-business); }
+.text-module-services { color: var(--module-services); }
+.text-module-digital { color: var(--module-digital); }
+.text-module-communication { color: var(--module-communication); }
 
 /* Effet verre */
 .glass-effect {
