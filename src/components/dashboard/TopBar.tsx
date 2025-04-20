@@ -2,7 +2,10 @@
 import React from 'react';
 import { Search, Bell, Mail, User, Key, Languages, Shield, LogOut } from 'lucide-react';
 import { useAlertsData } from '@/hooks/useAlertsData';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Button } from "@/components/ui/button";
+import { Message } from '@/components/module/messages/types/message-types';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +27,10 @@ const TopBar = () => {
   
   const navigate = useNavigate();
 
+  // Add this to fetch unread messages count
+  const { data: messages } = useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.INBOX);
+  const unreadMessagesCount = messages?.filter(message => !message.isRead)?.length || 0;
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -38,6 +45,7 @@ const TopBar = () => {
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
       <div className="px-6 py-4 flex items-center justify-between">
+        {/* Search section */}
         <div className="flex items-center w-72">
           <div className="relative w-full">
             <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -50,6 +58,7 @@ const TopBar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Alerts button */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -64,13 +73,22 @@ const TopBar = () => {
             )}
           </Button>
           
-          <Button variant="ghost" size="icon" className="relative">
+          {/* Messages button */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="relative"
+            onClick={() => navigate('/modules/messages/inbox')}
+          >
             <Mail size={20} />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
-              3
-            </span>
+            {unreadMessagesCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
+                {unreadMessagesCount}
+              </span>
+            )}
           </Button>
 
+          {/* User dropdown section */}
           <div className="flex items-center pl-4 border-l border-gray-200">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
