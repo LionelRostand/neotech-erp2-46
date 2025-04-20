@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FileText, Receipt } from "lucide-react";
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Invoice } from '../types/garage-types';
@@ -62,13 +63,13 @@ const GarageInvoicesDashboard = () => {
           title="Non payées"
           value={stats.unpaid.toString()}
           description="En attente de paiement"
-          icon={<FileText className="h-4 w-4" />}
+          icon={<Receipt className="h-4 w-4" />}
         />
         <StatCard
           title="Payées"
           value={stats.paid.toString()}
           description="Ce mois-ci"
-          icon={<FileText className="h-4 w-4" />}
+          icon={<Receipt className="h-4 w-4" />}
         />
       </div>
 
