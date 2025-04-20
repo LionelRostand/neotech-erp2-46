@@ -20,20 +20,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   const location = useLocation();
   const { expandedCategories, toggleCategory, expandedModules, toggleModuleSubmenus } = useSidebarContext();
   
-  const getCategoryStyle = (category: string) => {
-    if (category === 'services') {
-      return 'text-[#ea384c]';
-    }
-    return '';
-  };
-  
   return (
     <div>
       <CategoryHeader 
         category={category} 
         isExpanded={expandedCategories[category] || false} 
         onToggle={() => toggleCategory(category)}
-        className={getCategoryStyle(category)}
+        hasModules={modules.length > 0}
       />
       
       {expandedCategories[category] && (
@@ -51,4 +44,3 @@ const CategorySection: React.FC<CategorySectionProps> = ({
 };
 
 export default CategorySection;
-

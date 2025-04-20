@@ -7,13 +7,15 @@ interface CategoryHeaderProps {
   isExpanded: boolean;
   onToggle: () => void;
   className?: string;
+  hasModules?: boolean;
 }
 
 const CategoryHeader = ({ 
   category, 
   isExpanded, 
   onToggle,
-  className
+  className,
+  hasModules = false
 }: CategoryHeaderProps) => {
   const categoryLabels: { [key: string]: string } = {
     business: 'BUSINESS',
@@ -22,11 +24,29 @@ const CategoryHeader = ({
     communication: 'COMMUNICATION'
   };
 
+  const getCategoryColorClass = (category: string, hasModules: boolean) => {
+    if (!hasModules) return '';
+    
+    switch (category) {
+      case 'business':
+        return 'text-module-business';
+      case 'services':
+        return 'text-module-services';
+      case 'digital':
+        return 'text-module-digital';
+      case 'communication':
+        return 'text-module-communication';
+      default:
+        return '';
+    }
+  };
+
   return (
     <button
       onClick={onToggle}
       className={cn(
         'w-full flex items-center justify-between px-2 py-2 text-xs font-semibold cursor-pointer',
+        getCategoryColorClass(category, hasModules),
         className
       )}
       role="button"
