@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarCheck, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ReservationsList from './reservations/ReservationsList';
-import ReservationCalendar from './reservations/ReservationCalendar';
-import CreateReservationDialog from './reservations/CreateReservationDialog';
+import ReservationsList from './components/reservation/ReservationsList';
+import ReservationCalendar from './components/reservation/ReservationCalendar';
+import CreateReservationDialog from './components/reservation/CreateReservationDialog';
 
 const ReservationsManagement = () => {
   const [openCreateDialog, setOpenCreateDialog] = useState(false);

@@ -35,3 +35,16 @@ export interface Client {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Reservation {
+  id: string;
+  clientId: string;
+  clientName: string;
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+}
