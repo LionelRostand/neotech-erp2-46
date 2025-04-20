@@ -1,4 +1,3 @@
-
 export interface Client {
   id: string;
   firstName: string;
@@ -15,6 +14,28 @@ export interface Vehicle {
   status: 'available' | 'rented' | 'maintenance';
 }
 
+export interface Location {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+export interface Reservation {
+  id: string;
+  clientId: string;
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'cancelled';
+  pickupLocation?: string;
+  dropoffLocation?: string;
+}
+
 export interface Invoice {
   id: string;
   clientId: string;
@@ -29,4 +50,3 @@ export interface Invoice {
   createdAt: string;
   notes?: string;
 }
-

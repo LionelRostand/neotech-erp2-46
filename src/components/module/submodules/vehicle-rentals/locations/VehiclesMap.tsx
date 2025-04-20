@@ -3,9 +3,10 @@ import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import LeafletCssPatch from '../../transport/patches/leaflet-css-patch';
-import { Location } from '../types/rental-types';
+import { Vehicle, Reservation, Client, Location } from '../types/rental-types';
 import { MapPin } from 'lucide-react';
+import LeafletCssPatch from '../../transport/patches/leaflet-css-patch';
+import { getVehiclePopupContent } from '../../transport/utils/map-utils';
 
 interface VehiclesMapProps {
   locations: Location[];
@@ -14,6 +15,21 @@ interface VehiclesMapProps {
 const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
+  
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['rentals', 'vehicles'],
+    queryFn: () => fetchCollectionData<Vehicle>(COLLECTIONS.TRANSPORT.VEHICLES)
+  });
+
+  const { data: reservations = [] } = useQuery({
+    queryKey: ['rentals', 'reservations'],
+    queryFn: () => fetchCollectionData<Reservation>(COLLECTIONS.TRANSPORT.RESERVATIONS)
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ['rentals', 'clients'],
+    queryFn: () => fetchCollectionData<Client>(COLLECTIONS.TRANSPORT.CLIENTS)
+  });
   
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -36,15 +52,33 @@ const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
 
         mapInstanceRef.current = map;
 
-        // Add markers for each location
-        locations.forEach(location => {
-          if (location.coordinates) {
-            const marker = L.marker([location.coordinates.latitude, location.coordinates.longitude]).addTo(map);
-            marker.bindPopup(`
-              <strong>${location.name}</strong><br>
-              ${location.address}<br>
-              ${location.phone || ''}
-            `);
+        // Add markers for each vehicle with active reservation
+        vehicles.forEach(vehicle => {
+          const activeReservation = reservations.find(
+            res => res.vehicleId === vehicle.id && res.status === 'active'
+          );
+
+          if (activeReservation) {
+            const client = clients.find(c => c.id === activeReservation.clientId);
+            const location = locations.find(l => l.name === activeReservation.pickupLocation);
+
+            if (location && location.coordinates) {
+              const marker = L.marker([location.coordinates.latitude, location.coordinates.longitude]).addTo(map);
+              
+              // Create popup content
+              const popupContent = `
+                <div class="p-3">
+                  <h3 class="font-bold">${vehicle.name}</h3>
+                  <p>Plaque: ${vehicle.licensePlate}</p>
+                  <p>Status: ${vehicle.status}</p>
+                  ${client ? `<p>Client: ${client.firstName} ${client.lastName}</p>` : ''}
+                  <p>Du: ${activeReservation.startDate}</p>
+                  <p>Au: ${activeReservation.endDate}</p>
+                </div>
+              `;
+              
+              marker.bindPopup(popupContent);
+            }
           }
         });
       } catch (error) {
@@ -61,7 +95,7 @@ const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
         mapInstanceRef.current = null;
       }
     };
-  }, [locations]);
+  }, [vehicles, reservations, clients, locations]);
 
   return (
     <div className="space-y-4">
