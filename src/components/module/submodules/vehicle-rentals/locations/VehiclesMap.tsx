@@ -6,7 +6,6 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Vehicle, Reservation, Client, Location } from '../types/rental-types';
 import { MapPin } from 'lucide-react';
 import LeafletCssPatch from '../../transport/patches/leaflet-css-patch';
-import { getVehiclePopupContent } from '../../transport/utils/map-utils';
 
 interface VehiclesMapProps {
   locations: Location[];
@@ -40,10 +39,12 @@ const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
         const L = (window as any).L;
         if (!L) return;
 
-        // Initialize map
-        const map = L.map(mapRef.current).setView([48.852969, 2.349903], 11);
+        // Initialize map with Paris coordinates
+        const lat = 48.852969;
+        const lon = 2.349903;
+        const map = L.map(mapRef.current).setView([lat, lon], 11);
         
-        // Add tile layer
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
           attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
           minZoom: 1,
@@ -52,7 +53,7 @@ const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
 
         mapInstanceRef.current = map;
 
-        // Add markers for each vehicle with active reservation
+        // Add markers for vehicles with active reservations
         vehicles.forEach(vehicle => {
           const activeReservation = reservations.find(
             res => res.vehicleId === vehicle.id && res.status === 'active'
@@ -65,7 +66,7 @@ const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
             if (location && location.coordinates) {
               const marker = L.marker([location.coordinates.latitude, location.coordinates.longitude]).addTo(map);
               
-              // Create popup content
+              // Create popup content with vehicle and client information
               const popupContent = `
                 <div class="p-3">
                   <h3 class="font-bold">${vehicle.name}</h3>
@@ -86,7 +87,7 @@ const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
       }
     };
 
-    // Initialize map after a short delay to ensure Leaflet is loaded
+    // Wait for DOM to be ready before initializing map
     setTimeout(initMap, 100);
     
     return () => {
