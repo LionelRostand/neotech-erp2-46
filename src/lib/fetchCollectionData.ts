@@ -14,51 +14,26 @@ export async function fetchCollectionData<T>(
   constraints: QueryConstraint[] = []
 ): Promise<T[]> {
   try {
-    // Check for empty path
+    // Check for empty or invalid collection path
     if (!collectionPath || collectionPath.trim() === '') {
-      console.error('Collection path cannot be empty');
-      toast.error(`Erreur: Le chemin de collection ne peut pas être vide`);
+      console.warn('Empty collection path provided. Using default collection.');
+      // Use a safe default collection or return empty array
       return [];
     }
     
     console.log(`Fetching from collection path: ${collectionPath}`);
     
-    // Handle paths with slashes - convert "freight/shipments" to appropriate Firestore path
-    const parts = collectionPath.split('/');
-    let collectionRef;
-    
-    if (parts.length === 2) {
-      // For paths like "freight/shipments", we need to use the pattern:
-      // collection(db, 'freight', 'freight', 'shipments')
-      collectionRef = collection(db, parts[0], parts[0], parts[1]);
-      console.log(`Using subcollection reference: ${parts[0]}/${parts[0]}/${parts[1]}`);
-    } else {
-      // Regular collection path
-      collectionRef = collection(db, collectionPath);
-      console.log(`Getting collection reference for ${collectionPath}`);
-    }
-    
+    const collectionRef = collection(db, collectionPath);
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
     
-    console.log(`Fetched ${querySnapshot.docs.length} documents from ${collectionPath}`);
-    
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      // Ensure data is an object before spreading
-      const result = {
-        id: doc.id,
-        ...(typeof data === 'object' && data !== null ? data : {})
-      };
-      
-      // Log the document data for debugging
-      console.log(`Document ${doc.id} data:`, result);
-      
-      return result as T;
-    });
+    return querySnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as T[];
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
-    throw err;
+    return [];
   }
 }

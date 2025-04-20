@@ -24,95 +24,44 @@ export const useHrData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchEmployees = useCallback(async () => {
+  // Safely fetch a collection with default fallback
+  const safeFetchCollection = async <T>(
+    collectionPath: string, 
+    setDataFn: React.Dispatch<React.SetStateAction<T[]>>
+  ) => {
     try {
-      console.log('Fetching employees from Firestore...');
-      const data = await fetchCollectionData<Employee>(COLLECTIONS.HR.EMPLOYEES);
-      console.log(`Fetched ${data.length} employees from Firestore`);
-      setEmployees(data);
+      // Ensure collection path is not empty
+      const safePath = collectionPath || 'default_collection';
+      const data = await fetchCollectionData<T>(safePath);
+      setDataFn(data);
       return data;
     } catch (err) {
-      console.error('Error fetching employees:', err);
+      console.error(`Error fetching ${collectionPath}:`, err);
       setError(err as Error);
       return [];
     }
-  }, []);
-
-  // Fonction dédiée pour récupérer les départements
-  const fetchDepartments = useCallback(async () => {
-    try {
-      console.log('Fetching departments from Firestore...');
-      const data = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS);
-      console.log(`Fetched ${data.length} departments from Firestore`);
-      
-      // Déduplications des départements basée sur leur ID
-      const uniqueDepartments = new Map<string, Department>();
-      data.forEach(dept => {
-        if (dept && dept.id && !uniqueDepartments.has(dept.id)) {
-          uniqueDepartments.set(dept.id, dept);
-        }
-      });
-      
-      const uniqueData = Array.from(uniqueDepartments.values());
-      console.log(`Après déduplication: ${uniqueData.length} départements (avant: ${data.length})`);
-      
-      setDepartments(uniqueData);
-      return uniqueData;
-    } catch (err) {
-      console.error('Error fetching departments:', err);
-      setError(err as Error);
-      return [];
-    }
-  }, []);
+  };
 
   const fetchAllHrData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('Fetching all HR data...');
-      const [
-        employeesData,
-        payslipsData,
-        contractsData,
-        departmentsData,
-        leaveRequestsData,
-        attendanceData,
-        absenceRequestsData,
-        documentsData,
-        timeSheetsData,
-        evaluationsData,
-        trainingsData,
-        reportsData,
-        alertsData
-      ] = await Promise.all([
-        fetchEmployees(),
-        fetchCollectionData(COLLECTIONS.HR.PAYSLIPS),
-        fetchCollectionData(COLLECTIONS.HR.CONTRACTS),
-        fetchDepartments(), // Utiliser notre nouvelle fonction
-        fetchCollectionData(COLLECTIONS.HR.LEAVE_REQUESTS),
-        fetchCollectionData(COLLECTIONS.HR.ATTENDANCE),
-        fetchCollectionData(COLLECTIONS.HR.ABSENCE_REQUESTS),
-        fetchCollectionData(COLLECTIONS.HR.DOCUMENTS),
-        fetchCollectionData(COLLECTIONS.HR.TIMESHEET),
-        fetchCollectionData(COLLECTIONS.HR.EVALUATIONS),
-        fetchCollectionData(COLLECTIONS.HR.TRAININGS),
-        fetchCollectionData(COLLECTIONS.HR.REPORTS),
-        fetchCollectionData(COLLECTIONS.HR.ALERTS)
+      await Promise.all([
+        safeFetchCollection(COLLECTIONS.HR.EMPLOYEES, setEmployees),
+        safeFetchCollection(COLLECTIONS.HR.PAYSLIPS, setPayslips),
+        safeFetchCollection(COLLECTIONS.HR.CONTRACTS, setContracts),
+        safeFetchCollection(COLLECTIONS.HR.DEPARTMENTS, setDepartments),
+        safeFetchCollection(COLLECTIONS.HR.LEAVE_REQUESTS, setLeaveRequests),
+        safeFetchCollection(COLLECTIONS.HR.ATTENDANCE, setAttendance),
+        safeFetchCollection(COLLECTIONS.HR.ABSENCE_REQUESTS, setAbsenceRequests),
+        safeFetchCollection(COLLECTIONS.HR.DOCUMENTS, setHrDocuments),
+        safeFetchCollection(COLLECTIONS.HR.TIMESHEET, setTimeSheets),
+        safeFetchCollection(COLLECTIONS.HR.EVALUATIONS, setEvaluations),
+        safeFetchCollection(COLLECTIONS.HR.TRAININGS, setTrainings),
+        safeFetchCollection(COLLECTIONS.HR.REPORTS, setHrReports),
+        safeFetchCollection(COLLECTIONS.HR.ALERTS, setHrAlerts)
       ]);
-      
-      setPayslips(payslipsData);
-      setContracts(contractsData);
-      // Les départements sont déjà définis par fetchDepartments()
-      setLeaveRequests(leaveRequestsData);
-      setAttendance(attendanceData);
-      setAbsenceRequests(absenceRequestsData);
-      setHrDocuments(documentsData);
-      setTimeSheets(timeSheetsData);
-      setEvaluations(evaluationsData);
-      setTrainings(trainingsData);
-      setHrReports(reportsData);
-      setHrAlerts(alertsData);
       
       console.log('All HR data fetched successfully');
     } catch (err) {
@@ -121,44 +70,12 @@ export const useHrData = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchEmployees, fetchDepartments]);
+  }, []);
   
   // Initial data fetch
   useEffect(() => {
     fetchAllHrData();
   }, [fetchAllHrData]);
-  
-  const refetchEmployees = async () => {
-    console.log('Manually refetching employee data...');
-    setIsLoading(true);
-    try {
-      const refreshedEmployees = await fetchEmployees();
-      console.log(`Données employés actualisées: ${refreshedEmployees.length} employés`);
-      return refreshedEmployees;
-    } catch (err) {
-      console.error('Error refetching employees:', err);
-      toast.error('Erreur lors de l\'actualisation des données employés');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const refetchDepartments = async () => {
-    console.log('Manually refetching department data...');
-    setIsLoading(true);
-    try {
-      const refreshedDepartments = await fetchDepartments();
-      console.log(`Données départements actualisées: ${refreshedDepartments.length} départements`);
-      return refreshedDepartments;
-    } catch (err) {
-      console.error('Error refetching departments:', err);
-      toast.error('Erreur lors de l\'actualisation des données départements');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   return {
     employees,
@@ -176,8 +93,6 @@ export const useHrData = () => {
     hrAlerts,
     isLoading,
     error,
-    refetchEmployees,
-    refetchDepartments,
     fetchAllHrData
   };
 };
