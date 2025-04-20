@@ -1,82 +1,43 @@
 
-import React from 'react';
-import { Building2, Headphones, Globe, MessageSquare } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CategoryHeaderProps {
   category: string;
   isExpanded: boolean;
   onToggle: () => void;
+  className?: string;
 }
 
-const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, isExpanded, onToggle }) => {
-  // Function to get category title
-  const getCategoryTitle = (category: string): string => {
-    switch (category) {
-      case 'business': return 'GESTION D\'ENTREPRISE';
-      case 'services': return 'SERVICES SPÉCIALISÉS';
-      case 'digital': return 'PRÉSENCE NUMÉRIQUE';
-      case 'communication': return 'COMMUNICATION';
-      default: return '';
-    }
+const CategoryHeader = ({ 
+  category, 
+  isExpanded, 
+  onToggle,
+  className
+}: CategoryHeaderProps) => {
+  const categoryLabels: { [key: string]: string } = {
+    business: 'BUSINESS',
+    services: 'SERVICES SPÉCIALISÉS',
+    digital: 'DIGITAL',
+    communication: 'COMMUNICATION'
   };
-  
-  // Function to get category icon
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'business': return <Building2 size={14} />;
-      case 'services': return <Headphones size={14} />;
-      case 'digital': return <Globe size={14} />;
-      case 'communication': return <MessageSquare size={14} />;
-      default: return null;
-    }
-  };
-
-  // Function to get category-specific colors
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'business': return {
-        text: 'text-blue-600',
-        bg: 'bg-blue-50',
-        border: 'border-blue-200'
-      };
-      case 'services': return {
-        text: 'text-gray-600',
-        bg: 'bg-gray-50',
-        border: 'border-gray-200'
-      };
-      case 'digital': return {
-        text: 'text-green-600',
-        bg: 'bg-green-50',
-        border: 'border-green-200'
-      };
-      case 'communication': return {
-        text: 'text-sky-600',
-        bg: 'bg-sky-50',
-        border: 'border-sky-200'
-      };
-      default: return {
-        text: 'text-gray-600',
-        bg: 'bg-gray-50',
-        border: 'border-gray-200'
-      };
-    }
-  };
-
-  const categoryColors = getCategoryColor(category);
 
   return (
-    <div 
-      className={`px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between cursor-pointer 
-        ${isExpanded ? `${categoryColors.bg} ${categoryColors.border} rounded border-b` : ''}
-      `}
+    <button
       onClick={onToggle}
+      className={cn(
+        'w-full flex items-center justify-between px-2 py-2 text-xs font-semibold cursor-pointer',
+        className
+      )}
+      role="button"
+      aria-expanded={isExpanded}
     >
-      <div className={`flex items-center gap-2 ${categoryColors.text}`}>
-        {getCategoryIcon(category)}
-        <span>{getCategoryTitle(category)}</span>
-      </div>
-      <span>{isExpanded ? '−' : '+'}</span>
-    </div>
+      <span>{categoryLabels[category] || category.toUpperCase()}</span>
+      <ChevronRight
+        size={14}
+        className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+      />
+    </button>
   );
 };
 
