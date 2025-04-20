@@ -1,119 +1,91 @@
 
-import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { vehicleInventory } from './inventoryData';
-import AddVehicleDialog from './AddVehicleDialog';
+import { Package } from 'lucide-react';
+import StatCard from '@/components/StatCard';
 
 const GarageInventoryDashboard = () => {
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const { inventory, isLoading } = useGarageData();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
+  const lowStock = inventory.filter(item => item.quantity <= item.minQuantity);
+  const outOfStock = inventory.filter(item => item.quantity === 0);
 
   const columns = [
     {
-      accessorKey: "licensePlate",
-      header: "Immatriculation",
-      cell: ({ row }) => row.original.licensePlate
+      accessorKey: "name",
+      header: "Nom",
     },
     {
-      accessorKey: "brand",
-      header: "Marque",
-      cell: ({ row }) => row.original.brand
+      accessorKey: "category",
+      header: "Catégorie",
     },
     {
-      accessorKey: "model",
-      header: "Modèle",
-      cell: ({ row }) => row.original.model
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
-      cell: ({ row }) => row.original.type
-    },
-    {
-      accessorKey: "owner",
-      header: "Propriétaire",
-      cell: ({ row }) => row.original.owner || "Garage (À vendre)"
-    },
-    {
-      accessorKey: "condition",
-      header: "État",
-      cell: ({ row }) => (
-        <div className={`px-2 py-1 rounded-full text-xs inline-block 
-          ${row.original.condition === 'excellent' ? 'bg-green-100 text-green-800' : ''}
-          ${row.original.condition === 'good' ? 'bg-blue-100 text-blue-800' : ''}
-          ${row.original.condition === 'fair' ? 'bg-yellow-100 text-yellow-800' : ''}
-          ${row.original.condition === 'poor' ? 'bg-red-100 text-red-800' : ''}`}>
-          {row.original.condition === 'excellent' ? 'Excellent' : ''}
-          {row.original.condition === 'good' ? 'Bon' : ''}
-          {row.original.condition === 'fair' ? 'Moyen' : ''}
-          {row.original.condition === 'poor' ? 'Mauvais' : ''}
-        </div>
-      )
+      accessorKey: "quantity",
+      header: "Quantité",
     },
     {
       accessorKey: "price",
       header: "Prix",
-      cell: ({ row }) => row.original.price ? `${row.original.price.toLocaleString()} €` : 'N/A'
+      cell: ({ row }) => `${row.original.price.toLocaleString()} €`
+    },
+    {
+      accessorKey: "status",
+      header: "Statut",
+      cell: ({ row }) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium
+          ${row.original.status === 'in_stock' ? 'bg-green-100 text-green-800' :
+          row.original.status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-red-100 text-red-800'}`}>
+          {row.original.status === 'in_stock' ? 'En stock' :
+           row.original.status === 'low_stock' ? 'Stock bas' : 'Rupture'}
+        </span>
+      )
     }
   ];
-
-  const clientVehicles = vehicleInventory.filter(v => v.owner);
-  const forSaleVehicles = vehicleInventory.filter(v => !v.owner);
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Inventaire du Parc Auto</h2>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Ajouter un véhicule
-        </Button>
+        <h2 className="text-3xl font-bold">Inventaire</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Véhicules</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{vehicleInventory.length}</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Articles"
+          value={inventory.length.toString()}
+          icon={<Package className="h-4 w-4" />}
+          description="Tous les articles"
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Véhicules Clients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{clientVehicles.length}</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Stock Faible"
+          value={lowStock.length.toString()}
+          icon={<Package className="h-4 w-4" />}
+          description="Articles à réapprovisionner"
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Véhicules à Vendre</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{forSaleVehicles.length}</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Rupture de Stock"
+          value={outOfStock.length.toString()}
+          icon={<Package className="h-4 w-4" />}
+          description="Articles épuisés"
+        />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Véhicules</CardTitle>
+          <CardTitle>Liste des Articles</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable columns={columns} data={vehicleInventory} />
+          <DataTable columns={columns} data={inventory} />
         </CardContent>
       </Card>
-
-      <AddVehicleDialog 
-        open={showAddDialog} 
-        onOpenChange={setShowAddDialog}
-      />
     </div>
   );
 };
