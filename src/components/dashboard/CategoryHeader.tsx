@@ -40,9 +40,9 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, isExpanded, o
         border: 'border-blue-200'
       };
       case 'services': return {
-        text: 'text-purple-600',
-        bg: 'bg-purple-50',
-        border: 'border-purple-200'
+        text: 'text-gray-600',
+        bg: 'bg-gray-50',
+        border: 'border-gray-200'
       };
       case 'digital': return {
         text: 'text-green-600',
@@ -50,9 +50,9 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, isExpanded, o
         border: 'border-green-200'
       };
       case 'communication': return {
-        text: 'text-orange-600',
-        bg: 'bg-orange-50',
-        border: 'border-orange-200'
+        text: 'text-sky-600',
+        bg: 'bg-sky-50',
+        border: 'border-sky-200'
       };
       default: return {
         text: 'text-gray-600',
