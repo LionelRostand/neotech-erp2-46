@@ -1,30 +1,39 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { vehicleInventory } from './inventoryData';
+import AddVehicleDialog from './AddVehicleDialog';
 
 const GarageInventoryDashboard = () => {
+  const [showAddDialog, setShowAddDialog] = useState(false);
+
   const columns = [
     {
-      header: "Immatriculation",
-      cell: ({ row }) => row.original.licensePlate
+      accessorKey: "licensePlate",
+      header: "Immatriculation"
     },
     {
-      header: "Marque / Modèle",
-      cell: ({ row }) => `${row.original.brand} ${row.original.model}`
+      accessorKey: "brand",
+      header: "Marque"
     },
     {
-      header: "Type",
-      cell: ({ row }) => row.original.type
+      accessorKey: "model",
+      header: "Modèle"
     },
     {
+      accessorKey: "type",
+      header: "Type"
+    },
+    {
+      accessorKey: "owner",
       header: "Propriétaire",
       cell: ({ row }) => row.original.owner || "Garage (À vendre)"
     },
     {
+      accessorKey: "condition",
       header: "État",
       cell: ({ row }) => (
         <div className={`px-2 py-1 rounded-full text-xs inline-block 
@@ -40,6 +49,7 @@ const GarageInventoryDashboard = () => {
       )
     },
     {
+      accessorKey: "price",
       header: "Prix",
       cell: ({ row }) => row.original.price ? `${row.original.price.toLocaleString()} €` : 'N/A'
     }
@@ -52,7 +62,7 @@ const GarageInventoryDashboard = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Inventaire du Parc Auto</h2>
-        <Button>
+        <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Ajouter un véhicule
         </Button>
@@ -95,6 +105,11 @@ const GarageInventoryDashboard = () => {
           <DataTable columns={columns} data={vehicleInventory} />
         </CardContent>
       </Card>
+
+      <AddVehicleDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+      />
     </div>
   );
 };
