@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 
 const TodaysAppointments = () => {

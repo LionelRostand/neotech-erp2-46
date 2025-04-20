@@ -17,16 +17,31 @@ export interface Repair {
   licensePlate?: string;
 }
 
+export interface GarageClient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  vehicles?: string[];
+  loyaltyPoints?: number;
+  lastVisit?: string;
+  totalSpent?: number;
+  status: 'active' | 'inactive';
+}
+
 export interface Appointment {
   id: string;
   clientId: string;
   clientName: string;
   vehicleId: string;
-  vehicleName: string;
+  vehicleMake?: string;
+  vehicleModel?: string;
   date: string;
   time: string;
   duration: number;
-  serviceType: string;
+  service: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'in_progress';
   notes?: string;
   mechanicId?: string;
@@ -90,4 +105,46 @@ export interface Supplier {
   lastOrderDate?: string;
   paymentTerms?: string;
   notes?: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  minQuantity: number;
+  price: number;
+  supplier: string;
+  location: string;
+  lastRestocked?: string;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+}
+
+export interface LoyaltyProgram {
+  id: string;
+  name: string;
+  description: string;
+  pointsPerEuro: number;
+  minimumPoints: number;
+  rewards: {
+    points: number;
+    discount: number;
+    description: string;
+  }[];
+}
+
+export interface GarageSettings {
+  id: string;
+  notifications: {
+    email: boolean;
+    push: boolean;
+    frequency: 'immediate' | 'hourly' | 'daily';
+  };
+  workingHours: {
+    [key: string]: { start: string; end: string };
+  };
+  defaultSettings: {
+    autoNotifications: boolean;
+    requireConfirmation: boolean;
+  };
 }

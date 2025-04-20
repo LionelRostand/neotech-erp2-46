@@ -1,103 +1,81 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import StatCard from '@/components/StatCard';
-import { Car, Calendar, Wrench, Receipt } from "lucide-react";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import RevenueChart from './dashboard/RevenueChart';
-import VehicleStatusDonut from './dashboard/VehicleStatusDonut';
 import TodaysAppointments from './dashboard/TodaysAppointments';
 import UnpaidInvoices from './dashboard/UnpaidInvoices';
 import LowStockItems from './dashboard/LowStockItems';
+import { Car, CalendarCheck, Receipt, ShoppingCart } from 'lucide-react';
+import StatCard from '@/components/StatCard';
 
 const GarageDashboard = () => {
-  const { 
-    vehicles, 
-    appointments, 
-    repairs, 
-    clients,
-    isLoading 
-  } = useGarageData();
-
-  const activeRepairs = repairs.filter(r => r.status === 'in_progress').length;
-  const todayAppointments = appointments.filter(a => {
+  const { vehicles, appointments, repairs, invoices, inventory, isLoading } = useGarageData();
+  
+  const todaysAppointments = appointments.filter(a => {
     const today = new Date().toISOString().split('T')[0];
     return a.date === today;
-  }).length;
+  });
+
+  const unpaidInvoices = invoices.filter(invoice => invoice.status === 'unpaid');
+  const lowStockItems = inventory.filter(item => item.status === 'low_stock' || item.quantity <= item.minQuantity);
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Tableau de bord Garage</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Véhicules"
-          value={vehicles.length.toString()}
-          icon={<Car className="h-5 w-5 text-blue-500" />}
-          description="Total des véhicules"
+          title="Véhicules actifs"
+          value={vehicles.filter(v => v.status === 'active').length.toString()}
+          icon={<Car className="h-4 w-4" />}
+          description="En maintenance active"
         />
         <StatCard
           title="Rendez-vous aujourd'hui"
-          value={todayAppointments.toString()}
-          icon={<Calendar className="h-5 w-5 text-green-500" />}
-          description="Pour aujourd'hui"
+          value={todaysAppointments.length.toString()}
+          icon={<CalendarCheck className="h-4 w-4" />}
+          description="Planifiés pour aujourd'hui"
         />
         <StatCard
-          title="Réparations en cours"
-          value={activeRepairs.toString()}
-          icon={<Wrench className="h-5 w-5 text-amber-500" />}
-          description="En atelier"
+          title="Factures impayées"
+          value={unpaidInvoices.length.toString()}
+          icon={<Receipt className="h-4 w-4" />}
+          description="En attente de paiement"
         />
         <StatCard
-          title="Clients"
-          value={clients.length.toString()}
-          icon={<Receipt className="h-5 w-5 text-purple-500" />}
-          description="Total clients"
+          title="Articles en stock faible"
+          value={lowStockItems.length.toString()}
+          icon={<ShoppingCart className="h-4 w-4" />}
+          description="Nécessitent réapprovisionnement"
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-4">Chiffre d'affaires mensuel</h2>
-            <RevenueChart />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-4">État des véhicules</h2>
-            <div className="h-[300px]">
-              <VehicleStatusDonut 
-                ongoing={8} 
-                completed={15} 
-                totalVehicles={30}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lists Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-4">Rendez-vous du jour</h2>
+          <CardHeader>
+            <CardTitle>Rendez-vous du jour</CardTitle>
+          </CardHeader>
+          <CardContent>
             <TodaysAppointments />
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-4">Factures impayées</h2>
+          <CardHeader>
+            <CardTitle>Factures impayées</CardTitle>
+          </CardHeader>
+          <CardContent>
             <UnpaidInvoices />
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-4">Stock faible</h2>
+          <CardHeader>
+            <CardTitle>Stock faible</CardTitle>
+          </CardHeader>
+          <CardContent>
             <LowStockItems />
           </CardContent>
         </Card>

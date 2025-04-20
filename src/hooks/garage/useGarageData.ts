@@ -1,62 +1,6 @@
 
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
-import { Vehicle, Repair, Appointment, Invoice, Supplier } from '@/components/module/submodules/garage/types/garage-types';
-
-export interface GarageClient {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  vehicles?: string[];
-  loyaltyPoints?: number;
-  lastVisit?: string;
-  totalSpent?: number;
-  status: 'active' | 'inactive';
-}
-
-export interface InventoryItem {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  minQuantity: number;
-  price: number;
-  supplier: string;
-  location: string;
-  lastRestocked?: string;
-  status: 'in_stock' | 'low_stock' | 'out_of_stock';
-}
-
-export interface LoyaltyProgram {
-  id: string;
-  name: string;
-  description: string;
-  pointsPerEuro: number;
-  minimumPoints: number;
-  rewards: {
-    points: number;
-    discount: number;
-    description: string;
-  }[];
-}
-
-export interface GarageSettings {
-  id: string;
-  notifications: {
-    email: boolean;
-    push: boolean;
-    frequency: 'immediate' | 'hourly' | 'daily';
-  };
-  workingHours: {
-    [key: string]: { start: string; end: string };
-  };
-  defaultSettings: {
-    autoNotifications: boolean;
-    requireConfirmation: boolean;
-  };
-}
+import { Vehicle, Repair, Appointment, Invoice, Supplier, GarageClient, InventoryItem, LoyaltyProgram, GarageSettings } from '@/components/module/submodules/garage/types/garage-types';
 
 const COLLECTIONS = {
   VEHICLES: 'garage_vehicles',
