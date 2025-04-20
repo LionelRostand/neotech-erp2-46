@@ -24,7 +24,7 @@ const DashboardSubmenu: React.FC<DashboardSubmenuProps> = ({
         href="/"
         isActive={location.pathname === '/' || location.pathname === '/dashboard'}
         onClick={() => onNavigate('/')}
-        className="py-1 text-neotech-primary hover:bg-neotech-primary/10"
+        className="py-1 text-neotech-primary hover:bg-neotech-primary/10 rounded-md transition-colors duration-200 ease-in-out"
         showLabelWhenCollapsed={true}
       />
     </div>
