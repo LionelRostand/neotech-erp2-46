@@ -7,7 +7,7 @@ import { renderFreightSubmodule } from './renderers/FreightRenderer';
 import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
 import { renderHealthSubmodule } from './renderers/HealthRenderer';
 import { renderVehicleRentalsSubmodule } from './renderers/VehicleRentalsRenderer';
-import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
+import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 
 interface SubmoduleRenderProps {
   submoduleId: string;
