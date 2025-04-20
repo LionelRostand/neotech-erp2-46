@@ -1,109 +1,133 @@
 
 import React from 'react';
-import { Message, Contact } from '../../types/message-types';
+import { 
+  Clock, 
+  MoreVertical,
+  Flag, 
+  Paperclip,
+  Mail
+} from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { formatMessageDate } from '../../inbox/utils/messageUtils';
+import { Message, MessagePriority } from '../../types/message-types';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { truncateText, getInitials } from '../utils/messageUtils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Edit, Send, Ban } from 'lucide-react';
-import { formatScheduledDate, getRecipientsList } from '../utils/messageUtils';
 
 interface ScheduledMessageItemProps {
   message: Message;
-  contacts: Record<string, Contact>;
-  onEdit: (messageId: string) => void;
-  onSendNow: (messageId: string) => void;
-  onCancel: (message: Message) => void;
+  onViewDetails: (message: Message) => void;
+  onCancelSchedule: (message: Message) => void;
+  onEditMessage: (message: Message) => void;
 }
 
-const ScheduledMessageItem: React.FC<ScheduledMessageItemProps> = ({
-  message,
-  contacts,
-  onEdit,
-  onSendNow,
-  onCancel
+const ScheduledMessageItem: React.FC<ScheduledMessageItemProps> = ({ 
+  message, 
+  onViewDetails,
+  onCancelSchedule,
+  onEditMessage
 }) => {
+  const {
+    subject,
+    content,
+    sender,
+    recipients,
+    scheduledAt,
+    hasAttachments,
+    priority,
+  } = message;
+  
+  // Get sender initials
+  const senderInitials = getInitials(sender);
+  
+  // Format date
+  const formattedDate = formatMessageDate(scheduledAt);
+  
+  // Calculate scheduled time
+  const scheduledTime = scheduledAt?.toDate ? scheduledAt.toDate() : new Date(scheduledAt);
+  const now = new Date();
+  const isUpcoming = scheduledTime > now;
+  const timeDiff = Math.floor((scheduledTime.getTime() - now.getTime()) / (1000 * 60));
+  
+  // Format recipients
+  const recipientsText = recipients.length > 1 
+    ? `${recipients[0]} +${recipients.length - 1}` 
+    : recipients[0];
+  
   return (
-    <div className="p-4 hover:bg-gray-50">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-1">
-            <div className="bg-amber-100 text-amber-800 rounded-full h-10 w-10 flex items-center justify-center">
-              <Clock className="h-5 w-5" />
-            </div>
-          </div>
-          
-          <div className="flex-1">
-            <div className="font-medium text-base mb-1">
-              {message.subject}
-            </div>
-            
-            <div className="flex flex-wrap gap-y-1 gap-x-4 text-sm">
-              <div className="flex items-center text-muted-foreground">
-                <span className="font-medium mr-1">À:</span>
-                {getRecipientsList(message.recipients, contacts) || 'Aucun destinataire'}
-              </div>
-              
-              <div className="flex items-center text-blue-600">
-                <Calendar className="h-4 w-4 mr-1" />
-                {message.scheduledAt && formatScheduledDate(message.scheduledAt)}
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 mt-2">
-              {message.priority === 'high' && (
-                <Badge variant="destructive" className="px-1">
-                  Priorité haute
-                </Badge>
-              )}
-              
-              {message.priority === 'urgent' && (
-                <Badge variant="destructive" className="px-1">
-                  Urgent
-                </Badge>
-              )}
-              
-              {message.tags && message.tags.map(tag => (
-                <Badge key={tag} variant="outline">
-                  {tag}
-                </Badge>
-              ))}
-              
-              {message.hasAttachments && (
-                <Badge variant="secondary">
-                  Pièces jointes
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
+    <div className="p-4 rounded-md border border-gray-200 bg-white hover:border-primary/20 hover:shadow-sm transition-all duration-200">
+      <div className="flex items-start space-x-4">
+        <Avatar className="h-10 w-10">
+          <AvatarFallback className="bg-primary/10 text-primary text-sm">
+            {senderInitials}
+          </AvatarFallback>
+        </Avatar>
         
-        <div className="flex items-center gap-2 lg:justify-end">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onEdit(message.id)}
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Modifier
-          </Button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 max-w-[70%]">
+              <h3 className="text-sm font-medium truncate">
+                {subject}
+              </h3>
+              {priority === 'high' && (
+                <Flag className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+              )}
+              {hasAttachments && (
+                <Paperclip className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
+              )}
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Ouvrir le menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onViewDetails(message)}>
+                  Voir les détails
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEditMessage(message)}>
+                  Modifier
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onCancelSchedule(message)}
+                  className="text-red-500"
+                >
+                  Annuler l'envoi
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onSendNow(message.id)}
-          >
-            <Send className="h-4 w-4 mr-1" />
-            Envoyer maintenant
-          </Button>
+          <div className="flex items-center space-x-2 mt-1">
+            <Mail className="h-3.5 w-3.5 text-gray-400" />
+            <span className="text-xs text-gray-500 truncate">
+              À: {recipientsText}
+            </span>
+          </div>
           
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => onCancel(message)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <Ban className="h-4 w-4 mr-1" />
-            Annuler
-          </Button>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+            {truncateText(content.replace(/<[^>]*>/g, ''), 140)}
+          </p>
+          
+          <div className="flex items-center space-x-1 mt-2 text-xs">
+            <Clock className={`h-3.5 w-3.5 ${isUpcoming ? 'text-primary' : 'text-gray-400'}`} />
+            <span className={`${isUpcoming ? 'text-primary font-medium' : 'text-gray-500'}`}>
+              {isUpcoming 
+                ? timeDiff < 60 
+                  ? `Dans ${timeDiff} minutes` 
+                  : formattedDate
+                : `Programmé pour ${formattedDate}`
+              }
+            </span>
+          </div>
         </div>
       </div>
     </div>

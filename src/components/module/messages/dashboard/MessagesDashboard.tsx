@@ -23,14 +23,17 @@ const MessagesDashboard: React.FC = () => {
   const { data: archivedMessages, isLoading: loadingArchived, error: archivedError } = 
     useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVED);
   
+  const { data: contactsData, isLoading: loadingContacts, error: contactsError } = 
+    useFirebaseCollection(COLLECTIONS.CONTACTS.CONTACTS);
+  
   const { data: metricsData, isLoading: loadingMetrics, error: metricsError } = 
     useFirebaseCollection<MessageMetrics>(COLLECTIONS.MESSAGES.METRICS);
 
   // Handle loading state
-  const isLoading = loadingInbox || loadingSent || loadingScheduled || loadingArchived || loadingMetrics;
+  const isLoading = loadingInbox || loadingSent || loadingScheduled || loadingArchived || loadingMetrics || loadingContacts;
   
   // Handle error state
-  const error = inboxError || sentError || scheduledError || archivedError || metricsError;
+  const error = inboxError || sentError || scheduledError || archivedError || metricsError || contactsError;
   
   // Calculate metrics
   const metrics: MessageMetrics = metricsData?.[0] || {
@@ -43,7 +46,13 @@ const MessagesDashboard: React.FC = () => {
     messagesByCategory: {},
     messagesByPriority: {},
     dailyActivity: [],
-    topContacts: []
+    topContacts: [],
+    messagesSentToday: sentMessages?.filter(msg => {
+      const today = new Date();
+      const msgDate = msg.createdAt.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt);
+      return msgDate.toDateString() === today.toDateString();
+    })?.length || 0,
+    contactsCount: contactsData?.length || 0
   };
   
   // Si nous n'avons pas de données de métriques, créer des exemples de données pour le graphique d'activité
@@ -52,7 +61,7 @@ const MessagesDashboard: React.FC = () => {
     : generateMockActivityData();
   
   // Si nous n'avons pas de données de métriques, créer des exemples de données pour les contacts principaux
-  const contactsData = metricsData?.[0]?.topContacts?.length > 0 
+  const contactsData2 = metricsData?.[0]?.topContacts?.length > 0 
     ? metricsData[0].topContacts 
     : generateMockContactsData();
 
@@ -83,7 +92,7 @@ const MessagesDashboard: React.FC = () => {
                 <CardDescription>Les contacts avec qui vous interagissez le plus</CardDescription>
               </CardHeader>
               <CardContent>
-                <TopContacts data={contactsData} isLoading={isLoading} />
+                <TopContacts contacts={contactsData2} isLoading={isLoading} />
               </CardContent>
             </Card>
           </div>

@@ -1,90 +1,134 @@
 
-import { useState, useEffect } from 'react';
-import { Message, Contact } from '../../types/message-types';
+import { useState, useEffect, useMemo } from 'react';
+import { Message, MessagePriority } from '../../types/message-types';
 
-export const useScheduledMessagesFilter = (
-  messages: Message[],
-  contacts: Record<string, Contact>
-) => {
+type FilterField = 'priority' | 'hasAttachments' | 'category' | 'dateRange';
+
+interface FilterOptions {
+  priority: MessagePriority[] | null;
+  hasAttachments: boolean | null;
+  category: string[] | null;
+  dateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
+}
+
+export const useScheduledMessagesFilter = (messages: Message[] | undefined) => {
+  const [filters, setFilters] = useState<FilterOptions>({
+    priority: null,
+    hasAttachments: null,
+    category: null,
+    dateRange: {
+      start: null,
+      end: null
+    }
+  });
+  
   const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<string>('all');
-
-  // Filtrer les messages selon les critères
+  
+  const updateFilter = (field: FilterField, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  const resetFilters = () => {
+    setFilters({
+      priority: null,
+      hasAttachments: null,
+      category: null,
+      dateRange: {
+        start: null,
+        end: null
+      }
+    });
+  };
+  
+  // Appliquer les filtres
   useEffect(() => {
-    let filtered = [...messages];
+    if (!messages) {
+      setFilteredMessages([]);
+      return;
+    }
     
-    // Filtrage par recherche
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(message => 
-        message.subject.toLowerCase().includes(term) ||
-        message.recipients.some(recipientId => {
-          const contact = contacts[recipientId];
-          return (
-            contact?.firstName.toLowerCase().includes(term) ||
-            contact?.lastName.toLowerCase().includes(term) ||
-            contact?.email.toLowerCase().includes(term)
-          );
-        }) ||
-        message.content.toLowerCase().includes(term)
+    let result = [...messages];
+    
+    // Filtre par priorité
+    if (filters.priority && filters.priority.length > 0) {
+      result = result.filter(message => 
+        filters.priority!.includes(message.priority)
       );
     }
     
-    // Filtrage par date
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
-    tomorrow.setHours(23, 59, 59, 999);
-    
-    const nextWeek = new Date(now);
-    nextWeek.setDate(now.getDate() + 7);
-    nextWeek.setHours(23, 59, 59, 999);
-    
-    switch (filter) {
-      case 'today':
-        filtered = filtered.filter(message => {
-          const scheduledDate = message.scheduledAt?.toDate();
-          return scheduledDate && 
-                 scheduledDate.getDate() === now.getDate() &&
-                 scheduledDate.getMonth() === now.getMonth() && 
-                 scheduledDate.getFullYear() === now.getFullYear();
-        });
-        break;
-      case 'tomorrow':
-        filtered = filtered.filter(message => {
-          const scheduledDate = message.scheduledAt?.toDate();
-          const tomorrowDate = new Date(now);
-          tomorrowDate.setDate(now.getDate() + 1);
-          return scheduledDate && 
-                 scheduledDate.getDate() === tomorrowDate.getDate() &&
-                 scheduledDate.getMonth() === tomorrowDate.getMonth() && 
-                 scheduledDate.getFullYear() === tomorrowDate.getFullYear();
-        });
-        break;
-      case 'this-week':
-        filtered = filtered.filter(message => {
-          const scheduledDate = message.scheduledAt?.toDate();
-          return scheduledDate && scheduledDate <= nextWeek;
-        });
-        break;
-      case 'high-priority':
-        filtered = filtered.filter(message => message.priority === 'high' || message.priority === 'urgent');
-        break;
-      case 'all':
-      default:
-        // Aucun filtrage supplémentaire
-        break;
+    // Filtre par pièces jointes
+    if (filters.hasAttachments !== null) {
+      result = result.filter(message => 
+        message.hasAttachments === filters.hasAttachments
+      );
     }
     
-    setFilteredMessages(filtered);
-  }, [messages, searchTerm, filter, contacts]);
-
+    // Filtre par catégorie
+    if (filters.category && filters.category.length > 0) {
+      result = result.filter(message => 
+        message.category && filters.category!.includes(message.category)
+      );
+    }
+    
+    // Filtre par plage de dates
+    if (filters.dateRange.start || filters.dateRange.end) {
+      result = result.filter(message => {
+        if (!message.scheduledAt) return false;
+        
+        const scheduledDate = message.scheduledAt.toDate ? 
+          message.scheduledAt.toDate() : 
+          new Date(message.scheduledAt);
+        
+        // Vérifier la date de début
+        if (filters.dateRange.start && scheduledDate < filters.dateRange.start) {
+          return false;
+        }
+        
+        // Vérifier la date de fin
+        if (filters.dateRange.end) {
+          const endDate = new Date(filters.dateRange.end);
+          endDate.setHours(23, 59, 59, 999); // Fin de journée
+          
+          if (scheduledDate > endDate) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+    }
+    
+    setFilteredMessages(result);
+  }, [messages, filters]);
+  
+  // Stats pour l'interface utilisateur
+  const stats = useMemo(() => {
+    if (!messages || messages.length === 0) {
+      return {
+        totalMessages: 0,
+        highPriority: 0,
+        withAttachments: 0
+      };
+    }
+    
+    return {
+      totalMessages: messages.length,
+      highPriority: messages.filter(m => m.priority === 'high').length,
+      withAttachments: messages.filter(m => m.hasAttachments).length
+    };
+  }, [messages]);
+  
   return {
     filteredMessages,
-    searchTerm,
-    setSearchTerm,
-    filter,
-    setFilter
+    filters,
+    updateFilter,
+    resetFilters,
+    stats
   };
 };

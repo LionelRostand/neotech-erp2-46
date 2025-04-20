@@ -1,58 +1,52 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { User } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/utils';
 
-interface TopContactsProps {
-  contacts: {
-    contactId: string;
-    contactName: string;
-    messagesCount: number;
-  }[];
+interface TopContactProps {
+  contacts: Array<{id: string; name: string; count: number}>;
+  isLoading?: boolean;
 }
 
-const TopContacts: React.FC<TopContactsProps> = ({ contacts }) => {
-  if (!contacts || contacts.length === 0) {
+const TopContacts: React.FC<TopContactProps> = ({ contacts, isLoading }) => {
+  if (isLoading) {
     return (
-      <div className="text-center text-gray-400 py-8 flex flex-col items-center">
-        <User className="h-12 w-12 mb-2 text-gray-300" />
-        Aucun contact à afficher
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center space-x-4 animate-pulse">
+            <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-16"></div>
+            </div>
+            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+          </div>
+        ))}
       </div>
     );
   }
 
-  // Trouver le nombre maximum de messages pour normaliser la barre de progression
-  const maxMessages = Math.max(...contacts.map(c => c.messagesCount || 0));
-
-  // Fonction pour obtenir les initiales
-  const getInitials = (name: string) => {
-    if (!name) return '?';
-    
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
+  if (!contacts || contacts.length === 0) {
+    return <p className="text-muted-foreground text-center py-4">Aucun contact trouvé</p>;
+  }
 
   return (
     <div className="space-y-4">
-      {contacts.map(contact => (
-        <div key={contact.contactId} className="flex items-center space-x-3">
+      {contacts.map((contact) => (
+        <div key={contact.id} className="flex items-center space-x-4">
           <Avatar>
-            <AvatarImage src={`/api/avatars/${contact.contactId}`} />
-            <AvatarFallback>{getInitials(contact.contactName)}</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {getInitials(contact.name)}
+            </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-1">
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium">{contact.contactName || 'Contact inconnu'}</p>
-              <span className="text-xs text-muted-foreground">{contact.messagesCount || 0}</span>
-            </div>
-            <Progress 
-              value={maxMessages > 0 ? ((contact.messagesCount || 0) / maxMessages) * 100 : 0} 
-              className="h-2" 
-            />
+          <div className="flex-1">
+            <p className="text-sm font-medium">{contact.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {contact.count} message{contact.count > 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+            {contact.count}
           </div>
         </div>
       ))}

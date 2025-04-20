@@ -1,55 +1,56 @@
 
 import React from 'react';
-import { Message, Contact } from '../types/message-types';
+import { Message } from '../types/message-types';
 import ArchivedMessageItem from './components/ArchivedMessageItem';
 import ArchivedMessageSkeleton from './components/ArchivedMessageSkeleton';
 import ArchivedEmptyState from './components/ArchivedEmptyState';
 
 interface ArchivedMessagesListProps {
-  messages: Message[];
-  contacts: Record<string, Contact>;
-  onRestoreMessage: (messageId: string) => void;
+  messages: Message[] | undefined;
   isLoading: boolean;
-  isRestoring: Record<string, boolean>;
+  filter: 'all' | 'sent' | 'received';
 }
 
-const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
-  messages,
-  contacts,
-  onRestoreMessage,
+const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({ 
+  messages, 
   isLoading,
-  isRestoring
+  filter 
 }) => {
-  console.log("Rendering ArchivedMessagesList", { 
-    messagesCount: messages?.length, 
-    isLoading,
-    hasContacts: Object.keys(contacts).length > 0
-  });
+  const filteredMessages = React.useMemo(() => {
+    if (!messages) return [];
+    
+    if (filter === 'all') return messages;
+    
+    if (filter === 'sent') {
+      return messages.filter(msg => msg.status === 'sent');
+    }
+    
+    if (filter === 'received') {
+      return messages.filter(msg => msg.status === 'received' || msg.status === 'read');
+    }
+    
+    return messages;
+  }, [messages, filter]);
 
   if (isLoading) {
-    return <ArchivedMessageSkeleton count={7} />;
+    return (
+      <div className="space-y-4">
+        {[...Array(5)].map((_, index) => (
+          <ArchivedMessageSkeleton key={index} />
+        ))}
+      </div>
+    );
   }
 
-  if (!messages || messages.length === 0) {
+  if (!filteredMessages || filteredMessages.length === 0) {
     return <ArchivedEmptyState />;
   }
 
   return (
-    <div className="divide-y h-full overflow-y-auto">
-      {messages.map((message) => {
-        const contact = message.sender ? contacts[message.sender] : undefined;
-        const isRestoringMessage = message.id ? isRestoring[message.id] : false;
-        
-        return (
-          <ArchivedMessageItem
-            key={message.id || `message-${Math.random()}`}
-            message={message}
-            contact={contact}
-            onRestoreMessage={onRestoreMessage}
-            isRestoring={isRestoringMessage}
-          />
-        );
-      })}
+    <div className="space-y-4">
+      {filteredMessages.map(message => (
+        <ArchivedMessageItem key={message.id} message={message} />
+      ))}
     </div>
   );
 };

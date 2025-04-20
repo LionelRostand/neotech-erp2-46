@@ -1,139 +1,115 @@
 
 import React from 'react';
-import { Message, Contact } from '../../types/message-types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Star, Paperclip, Archive } from 'lucide-react';
+import { 
+  Archive, 
+  Clock, 
+  Flag, 
+  Star, 
+  Paperclip,
+  Circle,
+  File
+} from 'lucide-react';
+import { formatMessageDate } from '../utils/messageUtils';
+import { Message, MessageStatus, MessagePriority } from '../../types/message-types';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/utils';
 
 interface MessageItemProps {
   message: Message;
-  contact: Contact | undefined;
-  isSelected: boolean;
-  onSelectMessage: (message: Message) => void;
-  onToggleFavorite: (messageId: string) => void;
-  onArchiveMessage: (messageId: string) => void;
-  formatMessageDate: (timestamp: any) => string;
-  getInitials: (firstName: string, lastName: string) => string;
-  truncateText: (text: string, maxLength: number) => string;
-  extractTextFromHtml: (html: string) => string;
+  onClick?: () => void;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({
-  message,
-  contact,
-  isSelected,
-  onSelectMessage,
-  onToggleFavorite,
-  onArchiveMessage,
-  formatMessageDate,
-  getInitials,
-  truncateText,
-  extractTextFromHtml
-}) => {
-  const textContent = extractTextFromHtml(message.content);
+const MessageItem: React.FC<MessageItemProps> = ({ message, onClick }) => {
+  const {
+    subject,
+    sender,
+    content,
+    status,
+    createdAt,
+    hasAttachments,
+    priority,
+    isRead,
+  } = message;
+  
+  // Get initials from sender name
+  const senderInitials = getInitials(sender);
+  
+  // Format date
+  const formattedDate = formatMessageDate(createdAt);
+  
+  // Determine if message is unread
+  const unread = status === 'received' && !isRead;
   
   return (
     <div
-      key={message.id}
       className={`
-        flex items-start p-3 gap-3 cursor-pointer
-        ${isSelected ? 'bg-gray-100' : message.status === 'unread' ? 'bg-blue-50' : ''}
-        ${message.status === 'unread' ? 'font-medium' : ''}
-        hover:bg-gray-50
+        p-4 rounded-md border transition-all duration-200 cursor-pointer
+        ${unread ? 'bg-primary/5 border-primary/10' : 'bg-white border-gray-200'}
+        hover:border-primary/20 hover:shadow-sm
       `}
-      onClick={() => onSelectMessage(message)}
+      onClick={onClick}
     >
-      <div className="flex-shrink-0 mt-1">
-        {contact ? (
-          <Avatar>
-            <AvatarImage src={contact.avatar} />
-            <AvatarFallback>
-              {getInitials(contact.firstName, contact.lastName)}
-            </AvatarFallback>
-          </Avatar>
-        ) : (
-          <Avatar>
-            <AvatarFallback>?</AvatarFallback>
-          </Avatar>
-        )}
-      </div>
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-start mb-1">
-          <div className="font-medium truncate" style={{ maxWidth: 'calc(100% - 70px)' }}>
-            {contact 
-              ? `${contact.firstName} ${contact.lastName}` 
-              : 'Contact inconnu'
-            }
-          </div>
-          <div className="text-xs text-muted-foreground whitespace-nowrap">
-            {formatMessageDate(message.createdAt)}
-          </div>
-        </div>
+      <div className="flex items-start space-x-4">
+        <Avatar className="h-10 w-10">
+          <AvatarFallback className="bg-primary/10 text-primary text-sm">
+            {senderInitials}
+          </AvatarFallback>
+        </Avatar>
         
-        <div className="text-sm font-medium truncate mb-1">
-          {message.subject}
-        </div>
-        
-        <div className="text-xs text-muted-foreground truncate">
-          {truncateText(textContent, 80)}
-        </div>
-        
-        <div className="flex items-center mt-2 gap-2">
-          {message.priority === 'high' && (
-            <Badge variant="destructive" className="px-1 text-[10px]">
-              Priorité haute
-            </Badge>
-          )}
-          
-          {message.priority === 'urgent' && (
-            <Badge variant="destructive" className="px-1 text-[10px]">
-              Urgent
-            </Badge>
-          )}
-          
-          {message.tags && message.tags.length > 0 && (
-            <div className="flex gap-1">
-              {message.tags.slice(0, 2).map(tag => (
-                <Badge key={tag} variant="outline" className="px-1 text-[10px]">
-                  {tag}
-                </Badge>
-              ))}
-              {message.tags.length > 2 && (
-                <Badge variant="outline" className="px-1 text-[10px]">
-                  +{message.tags.length - 2}
-                </Badge>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 max-w-[70%]">
+              <h3 className={`text-sm font-medium ${unread ? 'font-semibold' : ''} truncate`}>
+                {sender}
+              </h3>
+              {unread && (
+                <Circle className="h-2 w-2 fill-primary text-primary flex-shrink-0" />
+              )}
+              {priority === 'high' && (
+                <Flag className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+              )}
+              {hasAttachments && (
+                <Paperclip className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
+              )}
+              {message.isFavorite && (
+                <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
               )}
             </div>
-          )}
+            
+            <span className="text-xs text-gray-500">{formattedDate}</span>
+          </div>
           
-          {message.hasAttachments && (
-            <Paperclip className="h-3 w-3 text-muted-foreground" />
-          )}
+          <h4 className={`text-sm mt-0.5 ${unread ? 'font-medium' : ''} truncate`}>
+            {subject}
+          </h4>
+          
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+            {content.replace(/<[^>]*>/g, '')}
+          </p>
+          
+          <div className="flex items-center space-x-3 mt-2">
+            {status === 'scheduled' && (
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <Clock className="h-3.5 w-3.5" />
+                <span>Programmé</span>
+              </div>
+            )}
+            
+            {hasAttachments && (
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <File className="h-3.5 w-3.5" />
+                <span>Pièce(s) jointe(s)</span>
+              </div>
+            )}
+            
+            {status === 'archived' && (
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <Archive className="h-3.5 w-3.5" />
+                <span>Archivé</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <div className="flex flex-col items-center gap-2 ml-1" onClick={e => e.stopPropagation()}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={() => onToggleFavorite(message.id)}
-        >
-          <Star 
-            className={`h-4 w-4 ${message.isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`} 
-          />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={() => onArchiveMessage(message.id)}
-        >
-          <Archive className="h-4 w-4 text-muted-foreground" />
-        </Button>
       </div>
     </div>
   );

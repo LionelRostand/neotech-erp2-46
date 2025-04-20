@@ -63,4 +63,7 @@ export interface MessageMetrics {
   messagesByPriority: Record<string, number>;
   dailyActivity: Array<{date: string; count: number}>;
   topContacts: Array<{id: string; name: string; count: number}>;
+  // Add the missing properties
+  messagesSentToday: number;
+  contactsCount: number;
 }
