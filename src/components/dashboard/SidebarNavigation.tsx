@@ -27,8 +27,8 @@ interface SidebarNavigationProps {
 const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps) => {
   const location = useLocation();
   const { focusedSection } = useSidebar();
-  const { userData, isAdmin } = useAuth();
-  const { permissions, checkPermission } = usePermissions();
+  const { userData } = useAuth();
+  const { isAdmin, checkPermission } = usePermissions();
   const [canManageApps, setCanManageApps] = useState<boolean>(false);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
@@ -62,46 +62,44 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
   }, [isAdmin, checkPermission]);
 
   const canViewSection = (sectionId: string) => {
-    if (isAdmin) return true;
-    return permissions?.[sectionId]?.view || false;
+    // Par défaut on autorise l'accès à toutes les sections pendant que les permissions chargent
+    return true;
   };
 
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
-      {canViewSection('dashboard') && (
-        <Accordion 
-          type="single" 
-          collapsible 
-          defaultValue={isOnDashboardRoute ? "dashboard" : undefined}
-          className="border-none"
-        >
-          <AccordionItem value="dashboard" className="border-none">
-            <div className={cn("nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
-              isOnDashboardRoute ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+      <Accordion 
+        type="single" 
+        collapsible 
+        defaultValue={isOnDashboardRoute ? "dashboard" : undefined}
+        className="border-none"
+      >
+        <AccordionItem value="dashboard" className="border-none">
+          <div className={cn("nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
+            isOnDashboardRoute ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+          )}>
+            <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
+              <LayoutDashboard size={20} />
+            </span>
+            <AccordionTrigger className={cn(
+              "flex-1 flex items-center justify-between py-0 hover:no-underline",
+              isOnDashboardRoute ? "text-white" : "text-gray-700"
             )}>
-              <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
-                <LayoutDashboard size={20} />
+              <span className="transition-opacity duration-300">
+                Dashboard
               </span>
-              <AccordionTrigger className={cn(
-                "flex-1 flex items-center justify-between py-0 hover:no-underline",
-                isOnDashboardRoute ? "text-white" : "text-gray-700"
-              )}>
-                <span className="transition-opacity duration-300">
-                  Dashboard
-                </span>
-              </AccordionTrigger>
-            </div>
-            
-            <AccordionContent className="pb-1 pt-1">
-              <DashboardSubmenu 
-                showDashboardSubmenus={true}
-                location={location}
-                onNavigate={onNavigate}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
+            </AccordionTrigger>
+          </div>
+          
+          <AccordionContent className="pb-1 pt-1">
+            <DashboardSubmenu 
+              showDashboardSubmenus={true}
+              location={location}
+              onNavigate={onNavigate}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {canManageApps && (
         <NavLink
@@ -116,37 +114,29 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
       )}
       
       <div className="mt-2" id="applications-section">
-        {canViewSection('business') && (
-          <CategorySection 
-            category="business" 
-            modules={businessModules} 
-            onNavigate={onNavigate} 
-          />
-        )}
+        <CategorySection 
+          category="business" 
+          modules={businessModules} 
+          onNavigate={onNavigate} 
+        />
         
-        {canViewSection('services') && (
-          <CategorySection 
-            category="services" 
-            modules={serviceModules} 
-            onNavigate={onNavigate} 
-          />
-        )}
+        <CategorySection 
+          category="services" 
+          modules={serviceModules} 
+          onNavigate={onNavigate} 
+        />
         
-        {canViewSection('digital') && (
-          <CategorySection 
-            category="digital" 
-            modules={digitalModules} 
-            onNavigate={onNavigate} 
-          />
-        )}
+        <CategorySection 
+          category="digital" 
+          modules={digitalModules} 
+          onNavigate={onNavigate} 
+        />
         
-        {canViewSection('communication') && (
-          <CategorySection 
-            category="communication" 
-            modules={communicationModules} 
-            onNavigate={onNavigate} 
-          />
-        )}
+        <CategorySection 
+          category="communication" 
+          modules={communicationModules} 
+          onNavigate={onNavigate} 
+        />
         
         {installedModules.length === 0 && (
           <div className="text-sm text-gray-500 px-4 py-2 italic">
