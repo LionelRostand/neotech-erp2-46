@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Package } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
@@ -27,8 +27,9 @@ interface SidebarNavigationProps {
 const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps) => {
   const location = useLocation();
   const { focusedSection } = useSidebar();
-  const { userData } = useAuth();
+  const { userData, isAdmin } = useAuth();
   const { permissions, checkPermission } = usePermissions();
+  const [canManageApps, setCanManageApps] = useState<boolean>(false);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
@@ -40,14 +41,29 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
     location.pathname === '/dashboard/performance' || 
     location.pathname === '/dashboard/analytics';
 
-  const canViewSection = (sectionId: string) => {
-    if (userData?.isAdmin) return true;
-    return permissions?.[sectionId]?.view || false;
-  };
+  // Utilisation d'un effet pour vérifier les permissions de manière asynchrone
+  useEffect(() => {
+    const checkApplicationsPermission = async () => {
+      if (isAdmin) {
+        setCanManageApps(true);
+        return;
+      }
+      
+      try {
+        const hasPermission = await checkPermission('applications', 'modify');
+        setCanManageApps(hasPermission);
+      } catch (error) {
+        console.error("Erreur lors de la vérification des permissions:", error);
+        setCanManageApps(false);
+      }
+    };
+    
+    checkApplicationsPermission();
+  }, [isAdmin, checkPermission]);
 
-  const canManageApplications = async () => {
-    if (userData?.isAdmin) return true;
-    return await checkPermission('applications', 'modify');
+  const canViewSection = (sectionId: string) => {
+    if (isAdmin) return true;
+    return permissions?.[sectionId]?.view || false;
   };
 
   return (
@@ -87,7 +103,7 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </Accordion>
       )}
 
-      {canManageApplications() && (
+      {canManageApps && (
         <NavLink
           icon={<Package size={18} />}
           label="Gérer les applications"
