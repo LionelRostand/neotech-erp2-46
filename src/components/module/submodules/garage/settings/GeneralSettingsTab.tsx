@@ -6,11 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "sonner";
+import { toast } from "sonner";
 
 const GeneralSettingsTab = () => {
-  const { toast } = useToast();
-
   const handleSave = () => {
     toast.success("Paramètres sauvegardés avec succès");
   };
