@@ -8,6 +8,7 @@ export const GarageRoutes = (
   <Route key="garage" path="/modules/garage" element={<ModuleLayout moduleId={11} />}>
     <Route index element={<SubmodulePage moduleId={11} submoduleId="garage-dashboard" />} />
     <Route path="dashboard" element={<SubmodulePage moduleId={11} submoduleId="garage-dashboard" />} />
+    <Route path="clients" element={<SubmodulePage moduleId={11} submoduleId="garage-clients" />} />
     <Route path="vehicles" element={<SubmodulePage moduleId={11} submoduleId="garage-vehicles" />} />
     <Route path="repairs" element={<SubmodulePage moduleId={11} submoduleId="garage-repairs" />} />
     <Route path="appointments" element={<SubmodulePage moduleId={11} submoduleId="garage-appointments" />} />
