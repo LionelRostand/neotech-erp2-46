@@ -13,9 +13,8 @@ import {
 } from '@dnd-kit/core';
 import { 
   sortableKeyboardCoordinates,
-  arrayMove
 } from '@dnd-kit/sortable';
-import { repairs } from './repairsData';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Repair } from '../types/garage-types';
 import { RepairColumn } from './RepairColumn';
 import { RepairCard } from './RepairCard';
@@ -28,7 +27,7 @@ const COLUMNS = [
 ];
 
 export const RepairKanban = () => {
-  const [items, setItems] = React.useState<Repair[]>(repairs);
+  const { repairs, isLoading } = useGarageData();
   const [activeId, setActiveId] = React.useState<string | null>(null);
 
   const sensors = useSensors(
@@ -46,18 +45,19 @@ export const RepairKanban = () => {
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
-      const activeRepair = items.find(item => item.id === active.id);
+      const activeRepair = repairs.find(item => item.id === active.id);
       if (activeRepair && over.id) {
         const newStatus = over.id as Repair['status'];
-        setItems(items.map(item => 
-          item.id === active.id 
-            ? { ...item, status: newStatus }
-            : item
-        ));
+        // Here you would update the repair status in Firestore
+        // This will trigger a real-time update through useGarageData
       }
     }
     setActiveId(null);
   };
+
+  if (isLoading) {
+    return <div className="text-center">Chargement du tableau...</div>;
+  }
 
   return (
     <div className="mt-6">
@@ -73,7 +73,7 @@ export const RepairKanban = () => {
               key={column.id}
               id={column.id}
               title={column.title}
-              items={items.filter(item => item.status === column.id)}
+              items={repairs.filter(item => item.status === column.id)}
             />
           ))}
         </div>
@@ -81,7 +81,7 @@ export const RepairKanban = () => {
         <DragOverlay>
           {activeId ? (
             <RepairCard 
-              repair={items.find(item => item.id === activeId)!}
+              repair={repairs.find(item => item.id === activeId)!}
             />
           ) : null}
         </DragOverlay>
