@@ -48,14 +48,8 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
   const navigate = useNavigate();
   const { clients, isLoading: isLoadingClients, refetchClients } = useFreightClients();
 
-  // Make sure shipmentData is properly initialized
-  const safeShipmentData = {
-    ...shipmentData,
-    customer: shipmentData?.customer || '',
-  };
-
   const handleSubmit = async () => {
-    if (!safeShipmentData.customer) {
+    if (!shipmentData.customer) {
       toast.error("Veuillez sélectionner un client");
       return;
     }
@@ -63,28 +57,27 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      console.log('Submitting shipment data:', safeShipmentData);
       await createShipment({
-        reference: safeShipmentData.reference,
-        origin: safeShipmentData.origin,
-        destination: safeShipmentData.destination,
-        customer: safeShipmentData.customer,
-        carrier: safeShipmentData.carrier,
-        carrierName: safeShipmentData.carrierName,
-        shipmentType: safeShipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
-        status: safeShipmentData.status as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
-        trackingNumber: safeShipmentData.trackingNumber,
-        scheduledDate: safeShipmentData.scheduledDate,
-        estimatedDeliveryDate: safeShipmentData.estimatedDeliveryDate,
-        lines: safeShipmentData.lines,
-        totalWeight: safeShipmentData.totalWeight,
-        notes: safeShipmentData.notes
+        reference: shipmentData.reference,
+        origin: shipmentData.origin,
+        destination: shipmentData.destination,
+        customer: shipmentData.customer,
+        carrier: shipmentData.carrier,
+        carrierName: shipmentData.carrierName,
+        shipmentType: shipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
+        status: shipmentData.status as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
+        trackingNumber: shipmentData.trackingNumber,
+        scheduledDate: shipmentData.scheduledDate,
+        estimatedDeliveryDate: shipmentData.estimatedDeliveryDate,
+        lines: shipmentData.lines,
+        totalWeight: shipmentData.totalWeight,
+        notes: shipmentData.notes
       });
       
       if (onSuccess) {
         onSuccess();
       } else {
-        toast.success(`Expédition ${safeShipmentData.reference} créée avec succès`);
+        toast.success(`Expédition ${shipmentData.reference} créée avec succès`);
         navigate('/modules/freight/shipments');
       }
     } catch (error) {
@@ -105,11 +98,9 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
       <div className="flex items-center space-x-4">
         <div className="flex-1">
           <Select 
-            value={safeShipmentData.customer} 
+            value={shipmentData.customer} 
             onValueChange={(value) => {
-              if (value) {
-                shipmentData.customer = value;
-              }
+              shipmentData.customer = value;
             }}
           >
             <SelectTrigger>
@@ -136,7 +127,7 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
 
       <Button 
         onClick={handleSubmit}
-        disabled={isSubmitting || !safeShipmentData.customer}
+        disabled={isSubmitting || !shipmentData.customer}
         className="w-full"
       >
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
