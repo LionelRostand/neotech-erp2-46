@@ -62,8 +62,7 @@ const ScheduledPage: React.FC = () => {
         </div>
       ) : filteredMessages.length === 0 ? (
         <ScheduledEmptyState 
-          searchTerm={searchTerm}
-          onCreateMessage={handleCreateNewMessage}
+          onCreateNewMessage={handleCreateNewMessage}
         />
       ) : (
         <ScheduledMessagesList
@@ -77,7 +76,7 @@ const ScheduledPage: React.FC = () => {
       {/* Boîte de dialogue de confirmation d'annulation */}
       {messageToCancel && (
         <CancelMessageDialog
-          isOpen={showCancelDialog}
+          open={showCancelDialog}
           message={messageToCancel}
           onClose={() => setShowCancelDialog(false)}
           onConfirm={confirmCancelMessage}

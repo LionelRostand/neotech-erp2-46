@@ -38,9 +38,9 @@ export const useScheduledMessages = () => {
     handleSendNow
   } = useScheduledMessageOperations();
 
-  const handleEditMessage = (messageId: string) => {
+  const handleEditMessage = (message: Message) => {
     // Rediriger vers la page de composition avec les données pré-remplies
-    window.location.href = `/modules/messages/compose?edit=${messageId}`;
+    window.location.href = `/modules/messages/compose?edit=${message.id}`;
   };
 
   const handleCreateNewMessage = () => {

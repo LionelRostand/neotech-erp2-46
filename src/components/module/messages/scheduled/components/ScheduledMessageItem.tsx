@@ -39,14 +39,14 @@ const ScheduledMessageItem: React.FC<ScheduledMessageItemProps> = ({
   onEditMessage
 }) => {
   const {
-    subject,
-    content,
-    sender,
-    recipients,
+    subject = '',
+    content = '',
+    sender = '',
+    recipients = [], // Add default empty array to prevent undefined
     scheduledAt,
-    hasAttachments,
-    priority,
-  } = message;
+    hasAttachments = false,
+    priority = 'normal',
+  } = message || {};
   
   // Get sender initials
   const senderInitials = getInitials(sender);
@@ -55,15 +55,23 @@ const ScheduledMessageItem: React.FC<ScheduledMessageItemProps> = ({
   const formattedDate = formatMessageDate(scheduledAt);
   
   // Calculate scheduled time
-  const scheduledTime = scheduledAt?.toDate ? scheduledAt.toDate() : new Date(scheduledAt);
+  const scheduledTime = scheduledAt?.toDate ? scheduledAt.toDate() : new Date(scheduledAt || Date.now());
   const now = new Date();
   const isUpcoming = scheduledTime > now;
   const timeDiff = Math.floor((scheduledTime.getTime() - now.getTime()) / (1000 * 60));
   
-  // Format recipients
-  const recipientsText = recipients.length > 1 
+  // Format recipients - safely handle the case when recipients is undefined
+  const recipientsText = recipients && recipients.length > 1 
     ? `${recipients[0]} +${recipients.length - 1}` 
-    : recipients[0];
+    : recipients && recipients.length === 1 ? recipients[0] : 'No recipients';
+  
+  // Safely handle content that might be undefined or null
+  const safeContent = content || '';
+  
+  // Extract plain text from HTML content, safely handling undefined
+  const plainTextContent = typeof safeContent === 'string' 
+    ? safeContent.replace(/<[^>]*>/g, '') 
+    : '';
   
   return (
     <div className="p-4 rounded-md border border-gray-200 bg-white hover:border-primary/20 hover:shadow-sm transition-all duration-200">
@@ -120,7 +128,7 @@ const ScheduledMessageItem: React.FC<ScheduledMessageItemProps> = ({
           </div>
           
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-            {truncateText(content?.replace(/<[^>]*>/g, '') || '', 140)}
+            {truncateText(plainTextContent, 140)}
           </p>
           
           <div className="flex items-center space-x-1 mt-2 text-xs">

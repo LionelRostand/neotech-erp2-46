@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
+import { Search, PlusCircle, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -10,78 +10,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Calendar, Plus } from 'lucide-react';
-import { Label } from '@/components/ui/label';
 
-export interface ScheduledMessagesToolbarProps {
+interface ScheduledMessagesToolbarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  filter: 'all' | 'upcoming';
   onFilterChange: (value: string) => void;
-  onCreateNewMessage: () => void;
-  autoSchedulingEnabled: boolean;
-  onAutoSchedulingChange: (enabled: boolean) => void;
+  onCreateMessage: () => void;
 }
 
 const ScheduledMessagesToolbar: React.FC<ScheduledMessagesToolbarProps> = ({
   searchTerm,
   onSearchChange,
+  filter,
   onFilterChange,
-  onCreateNewMessage,
-  autoSchedulingEnabled,
-  onAutoSchedulingChange
+  onCreateMessage,
 }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4 justify-between">
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Rechercher un message..."
-              className="pl-8 w-full"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </div>
-          
-          <Select 
-            defaultValue="all"
-            onValueChange={onFilterChange}
-          >
-            <SelectTrigger className="w-full sm:w-40">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filtrer par" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              <SelectItem value="today">Aujourd'hui</SelectItem>
-              <SelectItem value="tomorrow">Demain</SelectItem>
-              <SelectItem value="this-week">Cette semaine</SelectItem>
-              <SelectItem value="high-priority">Priorité haute</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4">
+      <div className="flex flex-1 items-center space-x-2 w-full sm:w-auto">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            type="search"
+            placeholder="Rechercher un message..."
+            className="pl-8 flex-1"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
         </div>
         
-        <Button 
-          onClick={onCreateNewMessage}
-          className="w-full sm:w-auto"
+        <Select
+          value={filter}
+          onValueChange={onFilterChange}
         >
-          <Plus className="mr-2 h-4 w-4" />
-          Nouveau message
-        </Button>
+          <SelectTrigger className="w-[180px]">
+            <div className="flex items-center">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Filtrer par" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous</SelectItem>
+            <SelectItem value="upcoming">Prochain envoi</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="auto-scheduling" 
-          checked={autoSchedulingEnabled} 
-          onCheckedChange={onAutoSchedulingChange} 
-        />
-        <Label htmlFor="auto-scheduling" className="cursor-pointer">
-          Programmation automatique des messages
-        </Label>
-      </div>
+      <Button onClick={onCreateMessage} className="w-full sm:w-auto">
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Nouveau message
+      </Button>
     </div>
   );
 };
