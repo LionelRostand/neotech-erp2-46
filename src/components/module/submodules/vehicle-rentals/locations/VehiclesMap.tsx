@@ -7,15 +7,14 @@ import LeafletCssPatch from '../../transport/patches/leaflet-css-patch';
 import { Location } from '../types/rental-types';
 import { MapPin } from 'lucide-react';
 
-const VehiclesMap = () => {
+interface VehiclesMapProps {
+  locations: Location[];
+}
+
+const VehiclesMap: React.FC<VehiclesMapProps> = ({ locations }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   
-  const { data: locations = [] } = useQuery({
-    queryKey: ['rentals', 'locations'],
-    queryFn: () => fetchCollectionData<Location>(COLLECTIONS.TRANSPORT.LOCATIONS)
-  });
-
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
     

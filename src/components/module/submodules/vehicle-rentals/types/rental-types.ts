@@ -4,25 +4,16 @@ export interface Location {
   name: string;
   address: string;
   phone?: string;
-  email?: string;
-  coordinates?: {
+  coordinates: {
     latitude: number;
     longitude: number;
   };
-  openingHours?: {
-    [key: string]: string;
-  };
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface Reservation {
+export interface Vehicle {
   id: string;
-  clientName: string;
-  vehicleId: string;
-  startDate: string;
-  endDate: string;
-  totalAmount: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  name: string;
+  licensePlate: string;
+  status: 'available' | 'rented' | 'maintenance';
+  location?: Location;
 }
