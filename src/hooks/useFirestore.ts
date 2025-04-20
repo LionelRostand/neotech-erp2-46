@@ -26,10 +26,19 @@ export const useFirestore = (collectionPath?: string) => {
     throw err;
   };
   
+  // Helper to ensure we have a valid collection path
+  const ensureValidPath = (path?: string): string => {
+    if (!path || path.trim() === '') {
+      console.warn('Collection path is empty, using fallback');
+      return 'default-collection';
+    }
+    return path;
+  };
+  
   const getAll = async (constraints?: any) => {
     setLoading(true);
     try {
-      const path = collectionPath || '';
+      const path = ensureValidPath(collectionPath);
       // Fix: only pass one argument
       const results = await getAllDocuments(path);
       return results;
@@ -53,7 +62,7 @@ export const useFirestore = (collectionPath?: string) => {
   const getById = async (id: string) => {
     setLoading(true);
     try {
-      const path = collectionPath || '';
+      const path = ensureValidPath(collectionPath);
       return await getDocumentById(path, id);
     } catch (err: any) {
       return handleFirestoreError(err, 'fetching document');
@@ -65,7 +74,7 @@ export const useFirestore = (collectionPath?: string) => {
   const add = async (data: any) => {
     setLoading(true);
     try {
-      const path = collectionPath || '';
+      const path = ensureValidPath(collectionPath);
       return await addDocument(path, data);
     } catch (err: any) {
       return handleFirestoreError(err, 'adding document');
@@ -77,7 +86,7 @@ export const useFirestore = (collectionPath?: string) => {
   const update = async (id: string, data: any) => {
     setLoading(true);
     try {
-      const path = collectionPath || '';
+      const path = ensureValidPath(collectionPath);
       return await updateDocument(path, id, data);
     } catch (err: any) {
       return handleFirestoreError(err, 'updating document');
@@ -89,7 +98,7 @@ export const useFirestore = (collectionPath?: string) => {
   const remove = async (id: string) => {
     setLoading(true);
     try {
-      const path = collectionPath || '';
+      const path = ensureValidPath(collectionPath);
       return await deleteDocument(path, id);
     } catch (err: any) {
       return handleFirestoreError(err, 'deleting document');
@@ -101,7 +110,7 @@ export const useFirestore = (collectionPath?: string) => {
   const set = async (id: string, data: any) => {
     setLoading(true);
     try {
-      const path = collectionPath || '';
+      const path = ensureValidPath(collectionPath);
       return await setDocument(path, id, data);
     } catch (err: any) {
       return handleFirestoreError(err, 'setting document');

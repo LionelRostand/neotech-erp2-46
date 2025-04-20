@@ -8,10 +8,10 @@ interface FilterParams {
   filter?: 'all' | 'upcoming';
 }
 
-export const useScheduledMessagesFilter = ({ messages, searchTerm = '', filter = 'all' }: FilterParams) => {
+export const useScheduledMessagesFilter = ({ messages = [], searchTerm = '', filter = 'all' }: FilterParams) => {
   // Filtrer les messages selon la recherche et les filtres actifs
   const filteredMessages = useMemo(() => {
-    if (!messages) return [];
+    if (!messages || messages.length === 0) return [];
     
     let result = [...messages];
     
@@ -19,8 +19,8 @@ export const useScheduledMessagesFilter = ({ messages, searchTerm = '', filter =
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       result = result.filter(message => 
-        message.subject?.toLowerCase().includes(search) || 
-        message.content?.toLowerCase().includes(search)
+        (message.subject?.toLowerCase().includes(search)) || 
+        (message.content?.toLowerCase().includes(search))
       );
     }
     

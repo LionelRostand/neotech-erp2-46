@@ -19,6 +19,14 @@ export const useFirebaseCollection = <T>(
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
+    // Check for empty collection path and set a default to prevent errors
+    if (!collectionPath || collectionPath.trim() === '') {
+      console.error('Collection path cannot be empty');
+      setError(new Error('Collection path cannot be empty'));
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       console.log(`Fetching data from collection: ${collectionPath}`);
       
@@ -66,5 +74,5 @@ export const useFirebaseCollection = <T>(
     setRefetchTrigger(prev => prev + 1);
   };
 
-  return { data, isLoading, error, refetch };
+  return { data: data || [], isLoading, error, refetch };
 };

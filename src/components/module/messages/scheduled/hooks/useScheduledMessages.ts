@@ -4,8 +4,12 @@ import { useScheduledMessagesData } from './useScheduledMessagesData';
 import { useScheduledMessagesFilter } from './useScheduledMessagesFilter';
 import { useScheduledMessageOperations } from './useScheduledMessageOperations';
 import { Message } from '../../types/message-types';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useScheduledMessages = () => {
+  // Ensure we have a valid collection path
+  const scheduledMessagesPath = COLLECTIONS.MESSAGES.SCHEDULED || 'messages-scheduled';
+  
   const { 
     messages, 
     isLoading, 
@@ -19,7 +23,11 @@ export const useScheduledMessages = () => {
   
   const {
     filteredMessages
-  } = useScheduledMessagesFilter({ messages, searchTerm, filter });
+  } = useScheduledMessagesFilter({ 
+    messages: messages || [], 
+    searchTerm, 
+    filter 
+  });
   
   const {
     messageToCancel,
