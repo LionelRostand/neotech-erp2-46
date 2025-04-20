@@ -43,8 +43,14 @@ export const formatScheduledDate = (timestamp: Timestamp | Date | any) => {
   return format(date, "EEEE d MMMM 'à' HH:mm", { locale: fr });
 };
 
-export const getInitials = (firstName: string, lastName: string) => {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+export const getInitials = (name: string): string => {
+  if (!name) return '';
+  
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
 };
 
 export const getRecipientsList = (recipientIds: string[], contacts: Record<string, Contact>) => {
@@ -52,4 +58,10 @@ export const getRecipientsList = (recipientIds: string[], contacts: Record<strin
                      .filter(Boolean)
                      .map(contact => `${contact.firstName} ${contact.lastName}`)
                      .join(', ');
+};
+
+// Add truncateText function for future reference
+export const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return '';
+  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 };

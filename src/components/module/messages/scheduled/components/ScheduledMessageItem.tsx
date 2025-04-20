@@ -16,8 +16,14 @@ import {
 import { formatMessageDate } from '../../inbox/utils/messageUtils';
 import { Message, MessagePriority } from '../../types/message-types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { truncateText, getInitials } from '../utils/messageUtils';
+import { getInitials } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
+// Add truncateText function implementation directly in this file
+const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return '';
+  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+};
 
 interface ScheduledMessageItemProps {
   message: Message;
@@ -114,7 +120,7 @@ const ScheduledMessageItem: React.FC<ScheduledMessageItemProps> = ({
           </div>
           
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-            {truncateText(content.replace(/<[^>]*>/g, ''), 140)}
+            {truncateText(content?.replace(/<[^>]*>/g, '') || '', 140)}
           </p>
           
           <div className="flex items-center space-x-1 mt-2 text-xs">
