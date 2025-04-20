@@ -1,3 +1,4 @@
+
 export const COLLECTIONS = {
   TRANSPORT: {
     LOCATIONS: 'locations',
@@ -14,7 +15,9 @@ export const COLLECTIONS = {
     ABSENCES: 'absences',
     LEAVE_REQUESTS: 'leave-requests',
     EVALUATIONS: 'evaluations',
-    TRAININGS: 'trainings'
+    TRAININGS: 'trainings',
+    ABSENCE_REQUESTS: 'absence-requests', // Added this missing collection
+    MANAGERS: 'managers' // Added this missing collection
   },
   DOCUMENT_COLLECTIONS: {
     DOCUMENTS: 'documents',
@@ -29,7 +32,8 @@ export const COLLECTIONS = {
     SENT: 'sent',
     DRAFTS: 'drafts',
     SCHEDULED: 'scheduled',
-    ARCHIVED: 'archived'
+    ARCHIVED: 'archived',
+    METRICS: 'metrics' // Added this missing collection
   },
   CONTACTS: {
     CONTACTS: 'contacts',
@@ -40,11 +44,13 @@ export const COLLECTIONS = {
     PAYMENTS: 'payments',
     EXPENSES: 'expenses',
     TAX_RATES: 'tax-rates',
-    TAX_DECLARATIONS: 'tax-declarations'
+    TAX_DECLARATIONS: 'tax-declarations',
+    CLIENTS: 'clients', // Adding missing collections for accounting
+    SUPPLIERS: 'suppliers',
+    REPORTS: 'reports',
+    TAXES: 'taxes',
+    TRANSACTIONS: 'transactions',
+    SETTINGS: 'settings'
   },
-  USERS: {
-    PROFILES: 'profiles',
-    SETTINGS: 'settings',
-    PERMISSIONS: 'permissions'
-  }
-} as const;
+  USERS: 'users' // Changed from object to string to fix the LoginForm error
+};

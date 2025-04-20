@@ -9,7 +9,6 @@ import { FirebaseErrorAlert } from './ui/FirebaseErrorAlert';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -30,7 +29,8 @@ const LoginForm = () => {
       
       try {
         // Récupérer les données utilisateur depuis Firestore
-        const userRef = doc(db, COLLECTIONS.USERS, uid);
+        // Fix: Using string directly instead of COLLECTIONS.USERS object
+        const userRef = doc(db, "users", uid);
         const userDoc = await getDoc(userRef);
         
         let userData;
