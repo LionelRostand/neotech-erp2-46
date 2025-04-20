@@ -1,15 +1,19 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, User, CarFront, Clock } from "lucide-react";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+import { useRentalStatistics } from '@/hooks/vehicle-rentals/useRentalStatistics';
+import { Calendar, DollarSign, Clock, Ban } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import StatCard from '@/components/StatCard';
 
@@ -17,61 +21,40 @@ interface RentalStatisticsTabProps {
   timeRange: string;
 }
 
-// Mock data for rental statistics
-const getMockRentalStatsByDay = () => [
-  { name: 'Lun', reservations: 4 },
-  { name: 'Mar', reservations: 6 },
-  { name: 'Mer', reservations: 8 },
-  { name: 'Jeu', reservations: 10 },
-  { name: 'Ven', reservations: 12 },
-  { name: 'Sam', reservations: 15 },
-  { name: 'Dim', reservations: 9 },
-];
+const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'];
 
-// Mock data for rental statistics by category
-const getMockRentalStatsByCategory = () => [
-  { name: 'Compactes', reservations: 24 },
-  { name: 'Berlines', reservations: 18 },
-  { name: 'SUV', reservations: 32 },
-  { name: 'Premium', reservations: 15 },
-  { name: 'Utilitaires', reservations: 12 },
-];
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
 
-const RentalStatisticsTab: React.FC<RentalStatisticsTabProps> = ({ timeRange }) => {
-  const dailyData = getMockRentalStatsByDay();
-  const categoryData = getMockRentalStatsByCategory();
-  
-  // Summary statistics for the cards
-  const totalReservations = dailyData.reduce((sum, item) => sum + item.reservations, 0);
-  const avgDurationDays = 4.5; // Mock average duration
-  const uniqueCustomers = 38; // Mock unique customers
-  const cancellationRate = "8%"; // Mock cancellation rate
+const RentalStatisticsTab: React.FC<RentalStatisticsTabProps> = () => {
+  const { statistics } = useRentalStatistics();
   
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Réservations"
-          value={`${totalReservations}`}
+          title="Total Réservations"
+          value={statistics.totalReservations.toString()}
           icon={<Calendar className="h-5 w-5 text-blue-500" />}
-          description="Réservations totales"
+          description="Toutes périodes"
         />
         <StatCard
-          title="Durée moyenne"
-          value={`${avgDurationDays} jours`}
+          title="Réservations Actives"
+          value={statistics.activeReservations.toString()}
           icon={<Clock className="h-5 w-5 text-green-500" />}
-          description="Par réservation"
+          description="En cours"
         />
         <StatCard
-          title="Clients uniques"
-          value={`${uniqueCustomers}`}
-          icon={<User className="h-5 w-5 text-purple-500" />}
-          description="Sur la période"
+          title="Revenus Totaux"
+          value={formatCurrency(statistics.totalRevenue)}
+          icon={<DollarSign className="h-5 w-5 text-emerald-500" />}
+          description="Toutes périodes"
         />
         <StatCard
           title="Taux d'annulation"
-          value={cancellationRate}
-          icon={<CarFront className="h-5 w-5 text-red-500" />}
+          value={`${Math.round((statistics.cancelledReservations / statistics.totalReservations) * 100)}%`}
+          icon={<Ban className="h-5 w-5 text-red-500" />}
           description="Des réservations"
         />
       </div>
@@ -79,21 +62,27 @@ const RentalStatisticsTab: React.FC<RentalStatisticsTabProps> = ({ timeRange }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Réservations par jour</CardTitle>
+            <CardTitle>Revenus mensuels</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyData}>
+                <LineChart data={statistics.revenueByMonth}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `${value / 1000}k€`} />
                   <Tooltip 
-                    formatter={(value) => [`${value} réservations`, 'Réservations']}
-                    labelFormatter={(label) => `Jour: ${label}`}
+                    formatter={(value) => [formatCurrency(value as number), 'Revenus']}
+                    labelFormatter={(label) => `Mois: ${label}`}
                   />
-                  <Bar dataKey="reservations" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#4f46e5" 
+                    strokeWidth={2}
+                    dot={{ strokeWidth: 2 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -101,21 +90,31 @@ const RentalStatisticsTab: React.FC<RentalStatisticsTabProps> = ({ timeRange }) 
 
         <Card>
           <CardHeader>
-            <CardTitle>Réservations par catégorie de véhicule</CardTitle>
+            <CardTitle>Répartition des réservations</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => [`${value} réservations`, 'Réservations']}
-                    labelFormatter={(label) => `Catégorie: ${label}`}
-                  />
-                  <Bar dataKey="reservations" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                <PieChart>
+                  <Pie
+                    data={statistics.reservationsByStatus}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="count"
+                    nameKey="status"
+                    label={({ status, percent }) => 
+                      `${status} (${(percent * 100).toFixed(0)}%)`
+                    }
+                  >
+                    {statistics.reservationsByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
