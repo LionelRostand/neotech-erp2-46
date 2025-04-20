@@ -16,7 +16,7 @@ const GarageDashboard = () => {
     return a.date === today;
   });
 
-  const unpaidInvoices = invoices.filter(invoice => invoice.status === 'unpaid');
+  const unpaidInvoices = invoices.filter(invoice => invoice.status === 'overdue' || invoice.status === 'sent');
   const lowStockItems = inventory.filter(item => item.status === 'low_stock' || item.quantity <= item.minQuantity);
   
   if (isLoading) {

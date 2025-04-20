@@ -42,6 +42,7 @@ export interface Appointment {
   time: string;
   duration: number;
   service: string;
+  reason?: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'in_progress';
   notes?: string;
   mechanicId?: string;
