@@ -1,13 +1,11 @@
 
-export interface Location {
+export interface Client {
   id: string;
-  name: string;
-  address: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   phone?: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
+  address?: string;
 }
 
 export interface Vehicle {
@@ -15,5 +13,18 @@ export interface Vehicle {
   name: string;
   licensePlate: string;
   status: 'available' | 'rented' | 'maintenance';
-  location?: Location;
+}
+
+export interface Invoice {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientEmail: string;
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  createdAt: string;
+  notes?: string;
 }

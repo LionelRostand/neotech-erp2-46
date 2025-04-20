@@ -6,14 +6,13 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { Vehicle } from '../types/rental-types';
+import { Client, Vehicle } from '../types/rental-types';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from "@/components/ui/button";
 
 interface CreateInvoiceFormData {
-  clientName: string;
-  clientEmail: string;
+  clientId: string;
   vehicleId: string;
   startDate: string;
   endDate: string;
@@ -32,6 +31,11 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
 }) => {
   const form = useForm<CreateInvoiceFormData>();
   
+  const { data: clients = [] } = useQuery({
+    queryKey: ['rentals', 'clients'],
+    queryFn: () => fetchCollectionData<Client>(COLLECTIONS.TRANSPORT.CLIENTS)
+  });
+  
   const { data: vehicles = [] } = useQuery({
     queryKey: ['rentals', 'vehicles'],
     queryFn: () => fetchCollectionData<Vehicle>(COLLECTIONS.TRANSPORT.VEHICLES)
@@ -39,18 +43,21 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
 
   const onSubmit = async (data: CreateInvoiceFormData) => {
     try {
-      // Add invoice to Firestore
+      const selectedClient = clients.find(c => c.id === data.clientId);
+      
       const invoice = {
         ...data,
         status: 'pending',
         createdAt: new Date().toISOString(),
+        clientName: selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : '',
+        clientEmail: selectedClient?.email || ''
       };
 
-      // Add to Firestore collection
       await addDoc(collection(db, COLLECTIONS.TRANSPORT.INVOICES), invoice);
       
       toast.success('Facture créée avec succès');
       onOpenChange(false);
+      form.reset();
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast.error('Erreur lors de la création de la facture');
@@ -66,18 +73,21 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="clientName">Nom du client</label>
-            <input {...form.register('clientName')} className="w-full border rounded p-2" />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="clientEmail">Email du client</label>
-            <input {...form.register('clientEmail')} type="email" className="w-full border rounded p-2" />
+            <label htmlFor="clientId">Client</label>
+            <select {...form.register('clientId')} className="w-full border rounded p-2">
+              <option value="">Sélectionner un client</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.firstName} {client.lastName} - {client.email}
+                </option>
+              ))}
+            </select>
           </div>
           
           <div className="space-y-2">
             <label htmlFor="vehicleId">Véhicule</label>
             <select {...form.register('vehicleId')} className="w-full border rounded p-2">
+              <option value="">Sélectionner un véhicule</option>
               {vehicles.map((vehicle) => (
                 <option key={vehicle.id} value={vehicle.id}>
                   {vehicle.name} - {vehicle.licensePlate}

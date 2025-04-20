@@ -1,9 +1,10 @@
-
 export const COLLECTIONS = {
   TRANSPORT: {
     LOCATIONS: 'locations',
     VEHICLES: 'vehicles',
-    RESERVATIONS: 'reservations'
+    RESERVATIONS: 'reservations',
+    CLIENTS: 'clients',
+    INVOICES: 'invoices'
   },
   HR: {
     TIMESHEET: 'timesheet',
