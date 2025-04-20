@@ -1,4 +1,3 @@
-
 import { 
   Truck, 
   LayoutDashboard, 
@@ -18,10 +17,11 @@ export const freightModule: AppModule = {
   description: "Gestion logistique, expéditions, suivi des conteneurs et transport de marchandises",
   href: "/modules/freight",
   icon: createIcon(Truck),
-  category: 'services', // Added the category property
+  category: 'services',
   submodules: [
     { id: "freight-dashboard", name: "Tableau de bord", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "freight-shipments", name: "Expéditions", href: "/modules/freight/shipments", icon: createIcon(Ship) },
+    { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(Container) },
     { id: "freight-carriers", name: "Transporteurs", href: "/modules/freight/carriers", icon: createIcon(Truck) },
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },

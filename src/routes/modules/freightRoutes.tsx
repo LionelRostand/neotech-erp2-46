@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 import CreateShipmentPage from "@/components/module/submodules/freight/CreateShipmentPage";
+import FreightClientsPage from "@/components/module/submodules/freight/clients/FreightClientsPage";
 
 export const FreightRoutes = (
   <Route key="freight" path="/modules/freight" element={<ModuleLayout moduleId={2} />}>
@@ -19,5 +19,6 @@ export const FreightRoutes = (
     <Route path="documents" element={<SubmodulePage moduleId={2} submoduleId="freight-documents" />} />
     <Route path="client-portal" element={<SubmodulePage moduleId={2} submoduleId="freight-client-portal" />} />
     <Route path="settings" element={<SubmodulePage moduleId={2} submoduleId="freight-settings" />} />
+    <Route path="clients" element={<FreightClientsPage />} />
   </Route>
 );
