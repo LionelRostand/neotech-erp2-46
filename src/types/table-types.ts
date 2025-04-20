@@ -2,9 +2,9 @@
 import { ReactNode } from 'react';
 
 export interface Column {
-  key: string;
+  accessorKey?: string;
   header: string;
-  cell: (props: { row: { original: any } }) => ReactNode;
+  cell?: (props: { row: { original: any } }) => ReactNode;
   enableSorting?: boolean;
   enableHiding?: boolean;
 }

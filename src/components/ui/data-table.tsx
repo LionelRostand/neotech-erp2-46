@@ -44,6 +44,17 @@ export function DataTable<T>({
     );
   }
 
+  // Function to render cell content, handling both cell functions and accessorKey
+  const renderCellContent = (column: Column, row: T) => {
+    if (typeof column.cell === 'function') {
+      return column.cell({ row: { original: row } });
+    } else if (column.accessorKey && typeof column.accessorKey === 'string') {
+      // If there's an accessorKey but no cell function, just display the raw value
+      return (row as any)[column.accessorKey];
+    }
+    return null;
+  };
+
   return (
     <div className="w-full overflow-hidden rounded-md border border-gray-200">
       <div className="overflow-x-auto">
@@ -66,7 +77,7 @@ export function DataTable<T>({
               <tr key={rowIndex}>
                 {columns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {column.cell({ row: { original: row } })}
+                    {renderCellContent(column, row)}
                   </td>
                 ))}
               </tr>

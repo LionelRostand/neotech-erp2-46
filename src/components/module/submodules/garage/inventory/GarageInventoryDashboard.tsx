@@ -13,19 +13,23 @@ const GarageInventoryDashboard = () => {
   const columns = [
     {
       accessorKey: "licensePlate",
-      header: "Immatriculation"
+      header: "Immatriculation",
+      cell: ({ row }) => row.original.licensePlate
     },
     {
       accessorKey: "brand",
-      header: "Marque"
+      header: "Marque",
+      cell: ({ row }) => row.original.brand
     },
     {
       accessorKey: "model",
-      header: "Modèle"
+      header: "Modèle",
+      cell: ({ row }) => row.original.model
     },
     {
       accessorKey: "type",
-      header: "Type"
+      header: "Type",
+      cell: ({ row }) => row.original.type
     },
     {
       accessorKey: "owner",
