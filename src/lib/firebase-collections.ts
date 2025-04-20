@@ -1,84 +1,44 @@
+
+/**
+ * Constantes pour les chemins des collections Firestore
+ * Utilisé pour centraliser les noms des collections et éviter les erreurs de typo
+ */
 export const COLLECTIONS = {
-  TRANSPORT: {
-    LOCATIONS: 'locations',
-    VEHICLES: 'vehicles',
-    RESERVATIONS: 'reservations',
-    CLIENTS: 'clients',
-    INVOICES: 'invoices',
-    SETTINGS: 'vehicle-rental-settings',
-    PERMISSIONS: 'rental-permissions'
-  },
+  USERS: 'users',
+  EMPLOYEES: 'employees',
+  USER_PERMISSIONS: 'user-permissions', // Ajout de la collection de permissions utilisateur
   HR: {
-    TIMESHEET: 'timesheet',
-    EMPLOYEES: 'employees',
-    DEPARTMENTS: 'departments',
-    CONTRACTS: 'contracts',
-    ABSENCES: 'absences',
-    LEAVE_REQUESTS: 'leave-requests',
-    EVALUATIONS: 'evaluations',
-    TRAININGS: 'trainings',
-    ABSENCE_REQUESTS: 'absence-requests',
-    MANAGERS: 'managers',
-    RECRUITMENT: 'recruitment',
-    LEAVES: 'leaves',
-    ALERTS: 'hr-alerts'
+    EMPLOYEES: 'hr-employees',
+    DEPARTMENTS: 'hr-departments',
+    CONTRACTS: 'hr-contracts',
+    ABSENCES: 'hr-absences',
+    LEAVE_REQUESTS: 'hr-leave-requests',
+    EVALUATIONS: 'hr-evaluations',
+    TRAININGS: 'hr-trainings',
+    ABSENCE_REQUESTS: 'hr-absence-requests',
+    MANAGERS: 'hr-managers',
+    RECRUITMENT: 'hr-recruitment',
+    LEAVES: 'hr-leaves',
+    ALERTS: 'hr-alerts',
+    TIMESHEET: 'hr-timesheet'
   },
-  DOCUMENT_COLLECTIONS: {
-    DOCUMENTS: 'documents',
-    FOLDERS: 'folders',
-    PERMISSIONS: 'permissions',
-    TEMPLATES: 'templates',
-    ARCHIVE: 'archive',
-    SETTINGS: 'settings'
+  COMPANIES: 'companies',
+  TRANSPORT: {
+    VEHICLES: 'transport-vehicles',
+    DRIVERS: 'transport-drivers',
+    ROUTES: 'transport-routes',
+    MAINTENANCE: 'transport-maintenance',
+    CLIENTS: 'transport-clients',
+    SHIPMENTS: 'transport-shipments'
   },
   MESSAGES: {
     INBOX: 'messages-inbox',
     SENT: 'messages-sent',
     DRAFTS: 'messages-drafts',
-    SCHEDULED: 'messages-scheduled',
-    ARCHIVED: 'messages-archived',
-    TEMPLATES: 'messages-templates',
-    METRICS: 'messages-metrics',
     CONTACTS: 'messages-contacts',
-    GROUPS: 'messages-groups',
-    SETTINGS: 'messages-settings',
-    ATTACHMENTS: 'messages-attachments',
-    NOTIFICATIONS: 'messages-notifications',
-    CATEGORIES: 'messages-categories',
-    TAGS: 'messages-tags'
-  },
-  CONTACTS: {
-    CONTACTS: 'contacts',
-    GROUPS: 'groups'
-  },
-  ACCOUNTING: {
-    INVOICES: 'invoices',
-    PAYMENTS: 'payments',
-    EXPENSES: 'expenses',
-    TAX_RATES: 'tax-rates',
-    TAX_DECLARATIONS: 'tax-declarations',
-    CLIENTS: 'clients',
-    SUPPLIERS: 'suppliers',
-    REPORTS: 'reports',
-    TAXES: 'taxes',
-    TRANSACTIONS: 'transactions',
-    SETTINGS: 'settings',
-    PERMISSIONS: 'accounting-permissions'
-  },
-  CRM: {
-    PROSPECTS: 'prospects',
-    CLIENTS: 'crm-clients',
-    OPPORTUNITIES: 'opportunities',
-    ACTIVITIES: 'activities',
-    SETTINGS: 'crm-settings',
-    CONTACTS: 'crm-contacts'
-  },
-  COMPANIES: 'companies',
-  USERS: {
-    MAIN: 'users',
-    PHOTOS: 'user-photos',
-    SETTINGS: 'user-settings',
-    PERMISSIONS: 'user-permissions'
-  },
-  SMTP_CONFIG: 'smtp-config'
+    ARCHIVE: 'messages-archive',
+    SCHEDULED: 'messages-scheduled',
+    TEMPLATES: 'messages-templates',
+    SETTINGS: 'messages-settings'
+  }
 };

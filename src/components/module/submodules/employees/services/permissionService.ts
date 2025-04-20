@@ -1,3 +1,4 @@
+
 import { getDocumentById } from '@/hooks/firestore/read-operations';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -35,6 +36,12 @@ export const getUserPermissions = async (userId: string): Promise<UserPermission
   try {
     console.log(`Récupération des permissions pour l'utilisateur ${userId} depuis Firestore...`);
     
+    // Vérifier que la collection existe
+    if (!COLLECTIONS.USER_PERMISSIONS) {
+      console.error('Collection USER_PERMISSIONS non définie dans COLLECTIONS');
+      return null;
+    }
+    
     const permissionsDoc = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.USER_PERMISSIONS, userId);
     });
@@ -64,6 +71,13 @@ export const getUserPermissions = async (userId: string): Promise<UserPermission
 export const updateUserPermissions = async (userId: string, permissions: Partial<UserPermissions>): Promise<boolean> => {
   try {
     console.log(`Mise à jour des permissions pour l'utilisateur ${userId} dans Firestore...`);
+    
+    // Vérifier que la collection existe
+    if (!COLLECTIONS.USER_PERMISSIONS) {
+      console.error('Collection USER_PERMISSIONS non définie dans COLLECTIONS');
+      toast.error("Erreur: Configuration de collection manquante");
+      return false;
+    }
     
     await executeWithNetworkRetry(async () => {
       // Vérifier si le document existe déjà
@@ -98,6 +112,12 @@ export const checkUserPermission = async (
   action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify'
 ): Promise<boolean> => {
   try {
+    // Vérifier que la collection existe
+    if (!COLLECTIONS.USER_PERMISSIONS) {
+      console.error('Collection USER_PERMISSIONS non définie dans COLLECTIONS');
+      return false;
+    }
+    
     const userPermissions = await getUserPermissions(userId);
     
     // Si l'utilisateur est administrateur, il a toutes les permissions
@@ -120,6 +140,13 @@ export const checkUserPermission = async (
 
 // Initialiser les permissions par défaut pour un nouvel utilisateur
 export const initializeDefaultPermissions = async (userId: string, isAdmin: boolean = false): Promise<boolean> => {
+  // Vérifier que la collection existe
+  if (!COLLECTIONS.USER_PERMISSIONS) {
+    console.error('Collection USER_PERMISSIONS non définie dans COLLECTIONS');
+    toast.error("Erreur: Configuration de collection manquante");
+    return false;
+  }
+  
   const defaultPermissions: UserPermissions = {
     userId,
     permissions: {

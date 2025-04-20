@@ -1,19 +1,14 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/components/module/submodules/employees/services/permissionService';
 import { useAuth } from './useAuth';
 
 export const usePermissions = (moduleId?: string) => {
-  const { currentUser, isOffline, isAdmin: authIsAdmin } = useAuth();
+  const { currentUser, isOffline } = useAuth();
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
   const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
-  const [isAdmin, setIsAdmin] = useState(authIsAdmin);
-
-  useEffect(() => {
-    // Update isAdmin when authIsAdmin changes
-    setIsAdmin(authIsAdmin);
-  }, [authIsAdmin]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -28,12 +23,10 @@ export const usePermissions = (moduleId?: string) => {
         
         if (userPermissions) {
           setPermissions(userPermissions.permissions);
-          // Use both the permissions isAdmin flag and the auth isAdmin flag
-          setIsAdmin(authIsAdmin || !!userPermissions.isAdmin);
+          setIsAdmin(!!userPermissions.isAdmin);
         } else {
           setPermissions(null);
-          // Still use the auth isAdmin flag if permissions couldn't be loaded
-          setIsAdmin(authIsAdmin);
+          setIsAdmin(false);
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des permissions:', error);
@@ -44,18 +37,15 @@ export const usePermissions = (moduleId?: string) => {
     };
 
     fetchPermissions();
-  }, [currentUser?.uid, authIsAdmin]);
+  }, [currentUser?.uid]);
 
-  const checkPermission = useCallback(async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
+  const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
     if (!currentUser?.uid) return false;
-    
-    if (isAdmin) {
-      return true; // Admin has all permissions
-    }
     
     if (isOffline) {
       console.log('Mode hors ligne: utilisation des permissions en cache');
       // En mode hors ligne, on utilise les permissions déjà chargées
+      if (isAdmin) return true;
       return !!permissions?.[module]?.[action];
     }
 
@@ -67,26 +57,25 @@ export const usePermissions = (moduleId?: string) => {
       console.error(`Erreur lors de la vérification de la permission ${module}.${action}:`, error);
       return false;
     }
-  }, [currentUser?.uid, isAdmin, isOffline, permissions]);
+  };
 
-  // Check if the user can access the current module
+  // Vérifier si l'utilisateur peut accéder au module actuel
   useEffect(() => {
     if (moduleId && !loading && currentUser?.uid) {
       checkPermission(moduleId, 'view').then(hasAccess => {
         if (!hasAccess && !isAdmin) {
           console.warn(`L'utilisateur n'a pas accès au module ${moduleId}`);
-          // We could redirect the user or display a message
+          // On pourrait rediriger l'utilisateur ou afficher un message
         }
       });
     }
-  }, [moduleId, loading, currentUser?.uid, isAdmin, checkPermission]);
+  }, [moduleId, loading, currentUser?.uid, isAdmin]);
 
   return {
     permissions,
     isAdmin,
     loading,
     checkPermission,
-    hasPermission,
-    isOffline
+    hasPermission
   };
 };

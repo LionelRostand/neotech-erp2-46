@@ -1,74 +1,63 @@
-import { 
-  getDocs, 
-  getDoc, 
-  query, 
-  where, 
-  collection,
-  doc,
-  DocumentData,
-  QueryConstraint
-} from 'firebase/firestore';
+
+import { doc, getDoc, collection, getDocs, query, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getCollectionRef, getDocRef } from './common-utils';
 
 /**
- * Get a document by ID from a collection
- * @param collectionName The collection to get from
- * @param documentId The document ID to get
+ * Récupère un document par son ID
+ * @param collectionPath Chemin de la collection
+ * @param docId ID du document
+ * @returns Le document ou null s'il n'existe pas
  */
-export const getDocumentById = async (collectionName: string, documentId: string) => {
+export const getDocumentById = async (collectionPath: string, docId: string) => {
   try {
-    const docRef = getDocRef(collectionName, documentId);
+    // Vérifier que les paramètres sont valides
+    if (!collectionPath || !docId) {
+      console.error('Collection path ou document ID manquant', { collectionPath, docId });
+      throw new Error('Collection path et document ID sont requis');
+    }
+    
+    const docRef = doc(db, collectionPath, docId);
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() as DocumentData };
+      return {
+        id: docSnap.id,
+        ...docSnap.data()
+      };
     } else {
-      console.log(`No document found with ID ${documentId} in collection ${collectionName}`);
+      console.log(`Aucun document trouvé avec l'ID ${docId} dans ${collectionPath}`);
       return null;
     }
   } catch (error) {
-    console.error(`Error getting document ${documentId} from ${collectionName}:`, error);
+    console.error(`Error getting document ${docId} from ${collectionPath}:`, error);
     throw error;
   }
 };
 
 /**
- * Get all documents from a collection
- * @param collectionName The collection to get from
+ * Récupère tous les documents d'une collection
+ * @param collectionPath Chemin de la collection
+ * @param constraints Contraintes de requête (optionnelles)
+ * @returns Liste des documents
  */
-export const getAllDocuments = async (collectionName: string) => {
+export const getAllDocuments = async (collectionPath: string, constraints: QueryConstraint[] = []) => {
   try {
-    const collectionRef = getCollectionRef(collectionName);
-    const querySnapshot = await getDocs(collectionRef);
+    // Vérifier que le chemin est valide
+    if (!collectionPath) {
+      console.error('Collection path manquant');
+      throw new Error('Collection path est requis');
+    }
     
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data() as DocumentData
-    }));
-  } catch (error) {
-    console.error(`Error getting all documents from ${collectionName}:`, error);
-    throw error;
-  }
-};
-
-/**
- * Get documents from a collection with query constraints
- * @param collectionName The collection to get from
- * @param constraints Array of query constraints
- */
-export const getDocumentsWithConstraints = async (collectionName: string, constraints: QueryConstraint[]) => {
-  try {
-    const collectionRef = getCollectionRef(collectionName);
-    const q = query(collectionRef, ...constraints);
+    const collectionRef = collection(db, collectionPath);
+    const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data() as DocumentData
+      ...doc.data()
     }));
   } catch (error) {
-    console.error(`Error getting documents from ${collectionName} with constraints:`, error);
+    console.error(`Error getting all documents from ${collectionPath}:`, error);
     throw error;
   }
 };
