@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Activity, BarChart } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import NavLink from './NavLink';
 
 interface DashboardSubmenuProps {
@@ -24,24 +24,6 @@ const DashboardSubmenu: React.FC<DashboardSubmenuProps> = ({
         href="/"
         isActive={location.pathname === '/' || location.pathname === '/dashboard'}
         onClick={() => onNavigate('/')}
-        className="py-1"
-        showLabelWhenCollapsed={true}
-      />
-      <NavLink
-        icon={<Activity size={16} />}
-        label="Performance"
-        href="/dashboard/performance"
-        isActive={location.pathname === '/dashboard/performance'}
-        onClick={() => onNavigate('/dashboard/performance')}
-        className="py-1"
-        showLabelWhenCollapsed={true}
-      />
-      <NavLink
-        icon={<BarChart size={16} />}
-        label="Analytiques"
-        href="/dashboard/analytics"
-        isActive={location.pathname === '/dashboard/analytics'}
-        onClick={() => onNavigate('/dashboard/analytics')}
         className="py-1"
         showLabelWhenCollapsed={true}
       />
