@@ -29,14 +29,14 @@ export const COLLECTIONS = {
     SETTINGS: 'settings'
   },
   MESSAGES: {
-    INBOX: 'inbox',
-    SENT: 'sent',
-    DRAFTS: 'drafts',
-    SCHEDULED: 'scheduled',
-    ARCHIVED: 'archived',
-    METRICS: 'metrics',
-    CONTACTS: 'contacts',
-    GROUPS: 'groups'
+    INBOX: 'messages-inbox',
+    SENT: 'messages-sent',
+    DRAFTS: 'messages-drafts',
+    SCHEDULED: 'messages-scheduled',
+    ARCHIVED: 'messages-archived',
+    METRICS: 'messages-metrics',
+    CONTACTS: 'messages-contacts',
+    GROUPS: 'messages-groups'
   },
   CONTACTS: {
     CONTACTS: 'contacts',

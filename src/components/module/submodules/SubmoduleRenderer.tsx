@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
@@ -7,6 +6,7 @@ import { renderFreightSubmodule } from './renderers/FreightRenderer';
 import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
 import { renderHealthSubmodule } from './renderers/HealthRenderer';
 import { renderVehicleRentalsSubmodule } from './renderers/VehicleRentalsRenderer';
+import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 
 interface SubmoduleRenderProps {
@@ -32,6 +32,8 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
       return renderHealthSubmodule(submoduleId, submodule);
     case 'rentals':
       return renderVehicleRentalsSubmodule(submoduleId, submodule);
+    case 'messages':
+      return renderMessagesSubmodule(submoduleId, submodule);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
