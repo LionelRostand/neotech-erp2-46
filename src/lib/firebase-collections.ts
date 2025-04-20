@@ -5,7 +5,8 @@ export const COLLECTIONS = {
     RESERVATIONS: 'reservations',
     CLIENTS: 'clients',
     INVOICES: 'invoices',
-    SETTINGS: 'vehicle-rental-settings' // Added settings collection
+    SETTINGS: 'vehicle-rental-settings',
+    PERMISSIONS: 'rental-permissions'
   },
   HR: {
     TIMESHEET: 'timesheet',

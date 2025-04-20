@@ -14,3 +14,18 @@ export interface RentalSettings {
     smsNotifications: boolean;
   };
 }
+
+export type RentalPermissionLevel = 'none' | 'read' | 'write' | 'admin';
+
+export interface RentalUserPermission {
+  userId: string;
+  userName: string;
+  email: string;
+  permissions: {
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+  };
+}
+
