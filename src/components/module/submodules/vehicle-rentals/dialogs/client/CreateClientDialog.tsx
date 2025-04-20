@@ -1,15 +1,9 @@
 
 import React from 'react';
-import { z } from 'zod';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -17,77 +11,42 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Client } from '../../types/rental-types';
-import { addDocument } from '@/hooks/firestore/create-operations';
+} from "@/components/ui/form";
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
-
-const clientSchema = z.object({
-  firstName: z.string().min(2, { message: 'Le prénom doit comporter au moins 2 caractères' }),
-  lastName: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères' }),
-  email: z.string().email({ message: 'Adresse e-mail invalide' }),
-  phone: z.string().min(10, { message: 'Numéro de téléphone invalide' }),
-  address: z.string().min(5, { message: 'Adresse invalide' }),
-  drivingLicenseNumber: z.string().min(5, { message: 'Numéro de permis invalide' }),
-  drivingLicenseExpiry: z.string().min(1, { message: 'Date d\'expiration requise' }),
-  idNumber: z.string().min(5, { message: 'Numéro d\'identité invalide' }),
-  birthDate: z.string().min(1, { message: 'Date de naissance requise' }),
-  nationality: z.string().min(2, { message: 'Nationalité requise' }),
-  notes: z.string().optional(),
-});
-
-type ClientFormValues = z.infer<typeof clientSchema>;
+import { Client } from '../../types/rental-types';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface CreateClientDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onClientCreated: (client: Client) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
 }
 
-const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
-  isOpen,
-  onClose,
-  onClientCreated,
-}) => {
-  const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      address: '',
-      drivingLicenseNumber: '',
-      drivingLicenseExpiry: '',
-      idNumber: '',
-      birthDate: '',
-      nationality: 'Française',
-      notes: '',
-    },
-  });
+type ClientFormData = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;
 
-  const onSubmit = async (values: ClientFormValues) => {
+const CreateClientDialog: React.FC<CreateClientDialogProps> = ({ 
+  open, 
+  onOpenChange,
+  onSuccess
+}) => {
+  const form = useForm<ClientFormData>();
+
+  const onSubmit = async (data: ClientFormData) => {
     try {
       const newClient = {
-        ...values,
+        ...data,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
+
+      await addDoc(collection(db, COLLECTIONS.TRANSPORT.CLIENTS), newClient);
       
-      // Dans un environnement de production, utilisez addDocument pour ajouter à Firestore
-      // const clientWithId = await addDocument('clients', newClient);
-      
-      // Pour la démonstration, nous simulons l'ajout d'un ID
-      const clientWithId = {
-        id: `c${Math.floor(Math.random() * 1000)}`,
-        ...newClient,
-      };
-      
-      onClientCreated(clientWithId as Client);
       toast.success('Client ajouté avec succès');
-      onClose();
+      onSuccess();
+      onOpenChange(false);
+      form.reset();
     } catch (error) {
       console.error('Erreur lors de la création du client:', error);
       toast.error('Erreur lors de la création du client');
@@ -95,174 +54,120 @@ const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau client</DialogTitle>
+          <DialogTitle>Nouveau Client</DialogTitle>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prénom</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Prénom" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nom</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nom" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Téléphone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Téléphone" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel>Adresse</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Adresse" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="drivingLicenseNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Numéro de permis</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Numéro de permis" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="drivingLicenseExpiry"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expiration du permis</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="idNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Numéro d'identité</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Numéro d'identité" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="birthDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de naissance</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="nationality"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nationalité</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nationalité" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Notes (optionnel)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prénom</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Téléphone</FormLabel>
+                  <FormControl>
+                    <Input type="tel" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adresse</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="drivingLicenseNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numéro de permis</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="drivingLicenseExpiry"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date d'expiration du permis</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">
+                Créer le client
+              </Button>
             </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-              <Button type="submit">Créer</Button>
-            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

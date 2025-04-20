@@ -2,7 +2,8 @@
 import React from 'react';
 import RentalsDashboard from '../vehicle-rentals/RentalsDashboard';
 import VehiclesManagement from '../vehicle-rentals/VehiclesManagement';
-import DefaultSubmoduleContent from '../DefaultSubmoduleContent'; // Corrected import path
+import ClientsManagement from '../vehicle-rentals/ClientsManagement';
+import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: any) => {
     switch(submoduleId){
@@ -10,6 +11,8 @@ export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: an
             return <RentalsDashboard />;
         case 'rentals-vehicles':
             return <VehiclesManagement />;
+        case 'rentals-clients':
+            return <ClientsManagement />;
         default:
             return <DefaultSubmoduleContent submodule={submodule} />;
     }

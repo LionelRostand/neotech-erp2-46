@@ -1,4 +1,3 @@
-
 export type VehicleStatus = 'available' | 'rented' | 'maintenance' | 'reserved';
 
 export interface Vehicle {
@@ -16,6 +15,23 @@ export interface Vehicle {
   nextMaintenanceDate: string;
   lastMaintenanceDate: string;
   notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Client {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  drivingLicenseNumber: string;
+  drivingLicenseExpiry: string;
+  idNumber?: string;
+  birthDate?: string;
+  nationality?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
