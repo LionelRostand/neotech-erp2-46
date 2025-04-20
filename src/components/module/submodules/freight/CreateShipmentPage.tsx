@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import CreateClientDialog from './clients/CreateClientDialog';
 
+// Define a proper interface for the shipment data
 interface ShipmentData {
   reference: string;
   customer: string;
@@ -34,22 +35,39 @@ interface ShipmentData {
   lines: ShipmentLine[];
 }
 
+// Create initial default values for the shipment data
+const defaultShipmentData: ShipmentData = {
+  reference: '',
+  customer: '',
+  shipmentType: 'export',
+  origin: '',
+  destination: '',
+  carrier: '',
+  carrierName: '',
+  scheduledDate: new Date().toISOString().split('T')[0],
+  estimatedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  status: 'draft',
+  totalWeight: 0,
+  lines: []
+};
+
 interface FirebaseShipmentFormProps {
-  shipmentData: ShipmentData;
+  shipmentData?: Partial<ShipmentData>;
   onSuccess?: () => void;
 }
 
 const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({ 
-  shipmentData, 
+  shipmentData = defaultShipmentData, 
   onSuccess 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(shipmentData.customer || '');
   const navigate = useNavigate();
   const { clients, isLoading: isLoadingClients, refetchClients } = useFreightClients();
 
   const handleSubmit = async () => {
-    if (!shipmentData.customer) {
+    if (!selectedCustomer) {
       toast.error("Veuillez sélectionner un client");
       return;
     }
@@ -57,27 +75,33 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Ensure we're using the selected customer value
+      const completeShipmentData = {
+        ...shipmentData,
+        customer: selectedCustomer
+      };
+
       await createShipment({
-        reference: shipmentData.reference,
-        origin: shipmentData.origin,
-        destination: shipmentData.destination,
-        customer: shipmentData.customer,
-        carrier: shipmentData.carrier,
-        carrierName: shipmentData.carrierName,
-        shipmentType: shipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
-        status: shipmentData.status as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
-        trackingNumber: shipmentData.trackingNumber,
-        scheduledDate: shipmentData.scheduledDate,
-        estimatedDeliveryDate: shipmentData.estimatedDeliveryDate,
-        lines: shipmentData.lines,
-        totalWeight: shipmentData.totalWeight,
-        notes: shipmentData.notes
+        reference: completeShipmentData.reference || `EXP-${Date.now().toString().slice(-6)}`,
+        origin: completeShipmentData.origin || '',
+        destination: completeShipmentData.destination || '',
+        customer: completeShipmentData.customer,
+        carrier: completeShipmentData.carrier || '',
+        carrierName: completeShipmentData.carrierName || '',
+        shipmentType: (completeShipmentData.shipmentType || 'export') as 'import' | 'export' | 'local' | 'international',
+        status: (completeShipmentData.status || 'draft') as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
+        trackingNumber: completeShipmentData.trackingNumber,
+        scheduledDate: completeShipmentData.scheduledDate || new Date().toISOString().split('T')[0],
+        estimatedDeliveryDate: completeShipmentData.estimatedDeliveryDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        lines: completeShipmentData.lines || [],
+        totalWeight: completeShipmentData.totalWeight || 0,
+        notes: completeShipmentData.notes
       });
       
       if (onSuccess) {
         onSuccess();
       } else {
-        toast.success(`Expédition ${shipmentData.reference} créée avec succès`);
+        toast.success(`Expédition créée avec succès`);
         navigate('/modules/freight/shipments');
       }
     } catch (error) {
@@ -98,10 +122,8 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
       <div className="flex items-center space-x-4">
         <div className="flex-1">
           <Select 
-            value={shipmentData.customer} 
-            onValueChange={(value) => {
-              shipmentData.customer = value;
-            }}
+            value={selectedCustomer} 
+            onValueChange={setSelectedCustomer}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un client" />
@@ -127,7 +149,7 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
 
       <Button 
         onClick={handleSubmit}
-        disabled={isSubmitting || !shipmentData.customer}
+        disabled={isSubmitting || !selectedCustomer}
         className="w-full"
       >
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -143,4 +165,40 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
   );
 };
 
-export default FirebaseShipmentForm;
+const CreateShipmentPage = () => {
+  // Initialize with default values
+  const initialData = {
+    ...defaultShipmentData,
+    reference: `EXP-${Date.now().toString().slice(-6)}`
+  };
+
+  return (
+    <div className="container mx-auto py-6">
+      <h1 className="text-2xl font-bold mb-6">Nouvelle Expédition</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          {/* Shipment form fields would go here */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium mb-4">Informations de base</h2>
+            <p className="text-gray-500 mb-6">Remplissez les informations de la nouvelle expédition.</p>
+            
+            {/* Form fields would be implemented here */}
+            <div className="text-center text-gray-500 py-10">
+              Implémentation du formulaire à venir
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium mb-4">Enregistrer</h2>
+            <FirebaseShipmentForm shipmentData={initialData} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateShipmentPage;
