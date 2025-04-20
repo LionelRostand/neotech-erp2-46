@@ -21,24 +21,30 @@ interface MessageItemProps {
 
 const MessageItem: React.FC<MessageItemProps> = ({ message, onClick }) => {
   const {
-    subject,
-    sender,
-    content,
-    status,
+    subject = '',
+    sender = '',
+    content = '',
+    status = 'received',
     createdAt,
-    hasAttachments,
-    priority,
-    isRead,
-  } = message;
+    hasAttachments = false,
+    priority = 'normal',
+    isRead = false,
+    isFavorite = false
+  } = message || {};
   
-  // Get initials from sender name
-  const senderInitials = getInitials(sender);
+  // Get initials from sender name, safely handling undefined values
+  const senderInitials = sender ? getInitials(sender) : '??';
   
-  // Format date
-  const formattedDate = formatMessageDate(createdAt);
+  // Format date, handling undefined values
+  const formattedDate = createdAt ? formatMessageDate(createdAt) : '';
   
   // Determine if message is unread
   const unread = status === 'received' && !isRead;
+  
+  // Safely handle content that might be undefined or null
+  const safeContent = content || '';
+  // Extract plain text from HTML content, safely handling undefined
+  const plainTextContent = safeContent.replace(/<[^>]*>/g, '');
   
   return (
     <div
@@ -71,7 +77,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, onClick }) => {
               {hasAttachments && (
                 <Paperclip className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
               )}
-              {message.isFavorite && (
+              {isFavorite && (
                 <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
               )}
             </div>
@@ -84,7 +90,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, onClick }) => {
           </h4>
           
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-            {content.replace(/<[^>]*>/g, '')}
+            {plainTextContent}
           </p>
           
           <div className="flex items-center space-x-3 mt-2">

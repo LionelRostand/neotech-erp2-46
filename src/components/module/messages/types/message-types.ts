@@ -1,4 +1,3 @@
-
 export interface Contact {
   id: string;
   firstName: string;
@@ -49,6 +48,7 @@ export interface Message {
   createdAt: any; // Timestamp type from Firestore
   updatedAt: any; // Timestamp type from Firestore
   emailStatus?: EmailStatus;
+  type?: 'sent' | 'received' | 'draft'; // Adding the type property for filtering
 }
 
 export interface MessageMetrics {

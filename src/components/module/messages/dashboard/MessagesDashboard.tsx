@@ -1,98 +1,147 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Message, MessageMetrics } from '../types/message-types';
-import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import MessageMetricsCards from './MessageMetricsCards';
 import ActivityChart from './ActivityChart';
 import TopContacts from './TopContacts';
+import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
 const MessagesDashboard: React.FC = () => {
-  const { data: inboxMessages, isLoading: loadingInbox, error: inboxError } = 
+  const [metrics, setMetrics] = useState<MessageMetrics | null>(null);
+  
+  const { data: inboxMessages, isLoading: isLoadingInbox, error: inboxError } = 
     useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.INBOX);
   
-  const { data: sentMessages, isLoading: loadingSent, error: sentError } = 
-    useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.SENT);
+  const { data: archivedMessages, isLoading: isLoadingArchived, error: archivedError } = 
+    useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVE);
   
-  const { data: scheduledMessages, isLoading: loadingScheduled, error: scheduledError } = 
+  // Récupération des contacts depuis Firestore
+  const { data: contacts, isLoading: isLoadingContacts, error: contactsError } = 
+    useFirebaseCollection(COLLECTIONS.MESSAGES.CONTACTS);
+  
+  const { data: scheduledMessages, isLoading: isLoadingScheduled, error: scheduledError } = 
     useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.SCHEDULED);
   
-  const { data: archivedMessages, isLoading: loadingArchived, error: archivedError } = 
-    useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVED);
+  const isLoading = isLoadingInbox || isLoadingArchived || isLoadingContacts || isLoadingScheduled;
+  const error = inboxError || archivedError || contactsError || scheduledError;
   
-  const { data: contactsData, isLoading: loadingContacts, error: contactsError } = 
-    useFirebaseCollection(COLLECTIONS.CONTACTS.CONTACTS);
-  
-  const { data: metricsData, isLoading: loadingMetrics, error: metricsError } = 
-    useFirebaseCollection<MessageMetrics>(COLLECTIONS.MESSAGES.METRICS);
+  // Calcul des métriques
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const totalMessages = inboxMessages.length + archivedMessages.length + scheduledMessages.length;
+    const unreadMessages = inboxMessages.filter(msg => !msg.isRead).length;
+    const archivedMessagesCount = archivedMessages.length;
+    const scheduledMessagesCount = scheduledMessages.length;
+    const sentMessagesCount = inboxMessages.filter(msg => msg.status === 'sent').length;
+    const receivedMessagesCount = inboxMessages.filter(msg => msg.status === 'received').length;
 
-  // Handle loading state
-  const isLoading = loadingInbox || loadingSent || loadingScheduled || loadingArchived || loadingMetrics || loadingContacts;
-  
-  // Handle error state
-  const error = inboxError || sentError || scheduledError || archivedError || metricsError || contactsError;
-  
-  // Calculate metrics
-  const metrics: MessageMetrics = metricsData?.[0] || {
-    totalMessages: (inboxMessages?.length || 0) + (sentMessages?.length || 0) + (archivedMessages?.length || 0),
-    unreadMessages: inboxMessages?.filter(msg => !msg.isRead)?.length || 0,
-    archivedMessages: archivedMessages?.length || 0,
-    scheduledMessages: scheduledMessages?.length || 0,
-    sentMessagesCount: sentMessages?.length || 0,
-    receivedMessagesCount: inboxMessages?.length || 0,
-    messagesByCategory: {},
-    messagesByPriority: {},
-    dailyActivity: [],
-    topContacts: [],
-    messagesSentToday: sentMessages?.filter(msg => {
+    // Group messages by category
+    const messagesByCategory: Record<string, number> = inboxMessages.reduce((acc: Record<string, number>, msg) => {
+      const category = msg.category || 'other';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Group messages by priority
+    const messagesByPriority: Record<string, number> = inboxMessages.reduce((acc: Record<string, number>, msg) => {
+      acc[msg.priority] = (acc[msg.priority] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Calculate daily activity (example: count messages created each day)
+    const dailyActivity = inboxMessages.reduce((acc: Array<{date: string; count: number}>, msg) => {
+      const date = msg.createdAt?.toDate().toLocaleDateString() || 'N/A';
+      const existingEntry = acc.find(entry => entry.date === date);
+
+      if (existingEntry) {
+        existingEntry.count += 1;
+      } else {
+        acc.push({ date, count: 1 });
+      }
+
+      return acc;
+    }, []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Find top contacts (example: most frequent recipients)
+    const topContacts = contacts.map(contact => ({
+        id: contact.id,
+        name: `${contact.firstName} ${contact.lastName}`,
+        count: inboxMessages.filter(msg => msg.recipients.includes(contact.id)).length
+    })).sort((a, b) => b.count - a.count).slice(0, 5);
+    
+    const messagesSentToday = inboxMessages.filter(msg => {
       const today = new Date();
-      const msgDate = msg.createdAt.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt);
-      return msgDate.toDateString() === today.toDateString();
-    })?.length || 0,
-    contactsCount: contactsData?.length || 0
-  };
-  
-  // Si nous n'avons pas de données de métriques, créer des exemples de données pour le graphique d'activité
-  const activityData = metricsData?.[0]?.dailyActivity?.length > 0 
-    ? metricsData[0].dailyActivity 
-    : generateMockActivityData();
-  
-  // Si nous n'avons pas de données de métriques, créer des exemples de données pour les contacts principaux
-  const contactsData2 = metricsData?.[0]?.topContacts?.length > 0 
-    ? metricsData[0].topContacts 
-    : generateMockContactsData();
+      const createdAt = msg.createdAt?.toDate();
+      return createdAt && createdAt.toDateString() === today.toDateString();
+    }).length;
+    
+    const contactsCount = contacts.length;
 
+    setMetrics({
+      totalMessages,
+      unreadMessages,
+      archivedMessages: archivedMessagesCount,
+      scheduledMessages: scheduledMessagesCount,
+      sentMessagesCount,
+      receivedMessagesCount,
+      messagesByCategory,
+      messagesByPriority,
+      dailyActivity,
+      topContacts,
+      messagesSentToday,
+      contactsCount
+    });
+  }, [inboxMessages, archivedMessages, scheduledMessages, contacts, isLoading]);
+  
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tableau de bord des messages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FirebaseErrorAlert error={error} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Tableau de bord des messages</h1>
+      <h2 className="text-3xl font-bold">Tableau de bord</h2>
       
-      {error ? (
-        <FirebaseErrorAlert error={error} />
+      {isLoading ? (
+        <div className="space-y-4">
+          <div>Chargement des métriques...</div>
+          <div>Chargement des messages en cours...</div>
+          <div>Chargement des contacts en cours...</div>
+          <div>Chargement des messages planifiés...</div>
+        </div>
       ) : (
         <>
-          <MessageMetricsCards metrics={metrics} isLoading={isLoading} />
+          {metrics && <MessageMetricsCards metrics={metrics} />}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Activité quotidienne</CardTitle>
-                <CardDescription>Nombre de messages envoyés et reçus par jour</CardDescription>
+                <CardTitle>Activité des messages</CardTitle>
               </CardHeader>
               <CardContent>
-                <ActivityChart data={activityData} isLoading={isLoading} />
+                {metrics?.dailyActivity && <ActivityChart data={metrics.dailyActivity} />}
               </CardContent>
             </Card>
             
             <Card>
               <CardHeader>
-                <CardTitle>Contacts principaux</CardTitle>
-                <CardDescription>Les contacts avec qui vous interagissez le plus</CardDescription>
+                <CardTitle>Contacts fréquents</CardTitle>
               </CardHeader>
               <CardContent>
-                <TopContacts contacts={contactsData2} isLoading={isLoading} />
+                {metrics?.topContacts && <TopContacts contacts={metrics.topContacts} />}
               </CardContent>
             </Card>
           </div>
@@ -101,34 +150,5 @@ const MessagesDashboard: React.FC = () => {
     </div>
   );
 };
-
-// Fonction utilitaire pour générer des données d'activité fictives
-function generateMockActivityData() {
-  const data = [];
-  const today = new Date();
-  
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      count: Math.floor(Math.random() * 10)
-    });
-  }
-  
-  return data;
-}
-
-// Fonction utilitaire pour générer des données de contacts fictives
-function generateMockContactsData() {
-  return [
-    { id: '1', name: 'Jean Dupont', count: 15 },
-    { id: '2', name: 'Marie Martin', count: 12 },
-    { id: '3', name: 'Pierre Durand', count: 10 },
-    { id: '4', name: 'Sophie Bernard', count: 8 },
-    { id: '5', name: 'Thomas Richard', count: 6 }
-  ];
-}
 
 export default MessagesDashboard;
