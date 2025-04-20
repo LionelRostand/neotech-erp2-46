@@ -11,11 +11,17 @@ import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from "@/components/ui/button";
 
-interface CreateInvoiceFormData {
+interface Reservation {
+  id: string;
   clientId: string;
   vehicleId: string;
   startDate: string;
   endDate: string;
+  status: string;
+}
+
+interface CreateInvoiceFormData {
+  reservationId: string;
   amount: number;
   notes?: string;
 }
@@ -31,6 +37,11 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
 }) => {
   const form = useForm<CreateInvoiceFormData>();
   
+  const { data: reservations = [] } = useQuery({
+    queryKey: ['rentals', 'reservations'],
+    queryFn: () => fetchCollectionData<Reservation>(COLLECTIONS.TRANSPORT.RESERVATIONS)
+  });
+
   const { data: clients = [] } = useQuery({
     queryKey: ['rentals', 'clients'],
     queryFn: () => fetchCollectionData<Client>(COLLECTIONS.TRANSPORT.CLIENTS)
@@ -43,14 +54,28 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
 
   const onSubmit = async (data: CreateInvoiceFormData) => {
     try {
-      const selectedClient = clients.find(c => c.id === data.clientId);
-      
+      const reservation = reservations.find(r => r.id === data.reservationId);
+      if (!reservation) {
+        toast.error('Réservation non trouvée');
+        return;
+      }
+
+      const client = clients.find(c => c.id === reservation.clientId);
+      if (!client) {
+        toast.error('Client non trouvé');
+        return;
+      }
+
       const invoice = {
         ...data,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        clientName: selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : '',
-        clientEmail: selectedClient?.email || ''
+        clientId: reservation.clientId,
+        clientName: `${client.firstName} ${client.lastName}`,
+        clientEmail: client.email,
+        vehicleId: reservation.vehicleId,
+        startDate: reservation.startDate,
+        endDate: reservation.endDate,
+        status: 'pending' as const,
+        createdAt: new Date().toISOString()
       };
 
       await addDoc(collection(db, COLLECTIONS.TRANSPORT.INVOICES), invoice);
@@ -64,6 +89,12 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
     }
   };
 
+  const getReservationLabel = (reservation: Reservation) => {
+    const client = clients.find(c => c.id === reservation.clientId);
+    const vehicle = vehicles.find(v => v.id === reservation.vehicleId);
+    return `${client?.firstName} ${client?.lastName} - ${vehicle?.name} (${reservation.startDate} au ${reservation.endDate})`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -73,39 +104,17 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="clientId">Client</label>
-            <select {...form.register('clientId')} className="w-full border rounded p-2">
-              <option value="">Sélectionner un client</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.firstName} {client.lastName} - {client.email}
-                </option>
+            <label htmlFor="reservationId">Réservation</label>
+            <select {...form.register('reservationId')} className="w-full border rounded p-2">
+              <option value="">Sélectionner une réservation</option>
+              {reservations
+                .filter(res => res.status !== 'cancelled')
+                .map((reservation) => (
+                  <option key={reservation.id} value={reservation.id}>
+                    {getReservationLabel(reservation)}
+                  </option>
               ))}
             </select>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="vehicleId">Véhicule</label>
-            <select {...form.register('vehicleId')} className="w-full border rounded p-2">
-              <option value="">Sélectionner un véhicule</option>
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.name} - {vehicle.licensePlate}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="startDate">Date de début</label>
-              <input {...form.register('startDate')} type="date" className="w-full border rounded p-2" />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="endDate">Date de fin</label>
-              <input {...form.register('endDate')} type="date" className="w-full border rounded p-2" />
-            </div>
           </div>
           
           <div className="space-y-2">

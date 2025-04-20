@@ -21,6 +21,7 @@ export interface Invoice {
   clientName: string;
   clientEmail: string;
   vehicleId: string;
+  reservationId: string;
   startDate: string;
   endDate: string;
   amount: number;
@@ -28,3 +29,4 @@ export interface Invoice {
   createdAt: string;
   notes?: string;
 }
+
