@@ -28,6 +28,11 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
     );
   }
 
+  // Si aucun message n'est trouvé
+  if (messages.length === 0) {
+    return <div className="text-center py-10 text-muted-foreground">Aucun message archivé trouvé</div>;
+  }
+
   // Fonction pour récupérer le contact par ID
   const getContactById = (contactId: string) => {
     return contacts[contactId] || { name: 'Contact inconnu', email: '' };
@@ -56,7 +61,7 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
           key={message.id}
           message={message}
           contact={getContactDisplayName(message)}
-          onRestoreMessage={onRestoreMessage}
+          onRestoreMessage={() => onRestoreMessage(message)}
           isRestoring={false}
         />
       ))}

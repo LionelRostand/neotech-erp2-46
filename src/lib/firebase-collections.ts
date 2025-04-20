@@ -41,6 +41,13 @@ export const COLLECTIONS = {
     TEMPLATES: 'document_templates'
   },
   
+  // Ajout de DOCUMENT_COLLECTIONS pour les services de documents
+  DOCUMENT_COLLECTIONS: {
+    DOCUMENTS: 'documents', 
+    SETTINGS: 'document_settings',
+    TEMPLATES: 'document_templates'
+  },
+  
   FREIGHT: {
     BILLING: 'freight_billing',
     CARRIERS: 'freight_carriers',
@@ -114,7 +121,12 @@ export const COLLECTIONS = {
     ARCHIVE: 'messages_archive',
     INBOX: 'messages_inbox',
     METRICS: 'messages_metrics',
-    SCHEDULED: 'messages_scheduled'
+    SCHEDULED: 'messages_scheduled',
+    // Ajout des collections manquantes pour messages
+    CONTACTS: 'messages_contacts',
+    DRAFTS: 'messages_drafts',
+    SENT: 'messages_sent',
+    TRASH: 'messages_trash'
   },
 
   // Autres collections

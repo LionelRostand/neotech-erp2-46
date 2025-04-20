@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
@@ -9,7 +9,14 @@ import { Message } from '../types/message-types';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
 const ArchivePage: React.FC = () => {
-  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVED);
+  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVE);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  // Fonction pour restaurer un message archivé
+  const handleRestoreMessage = (message: Message) => {
+    // Cette fonction serait implémentée pour restaurer un message archivé
+    console.log('Restaurer le message:', message);
+  };
 
   return (
     <div className="space-y-4">
@@ -21,7 +28,7 @@ const ArchivePage: React.FC = () => {
           {error ? (
             <FirebaseErrorAlert error={error} onRetry={refetch} />
           ) : (
-            <Tabs defaultValue="all">
+            <Tabs defaultValue="all" onValueChange={setSelectedFilter}>
               <TabsList className="mb-4">
                 <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="sent">Envoyés</TabsTrigger>
@@ -29,15 +36,27 @@ const ArchivePage: React.FC = () => {
               </TabsList>
               
               <TabsContent value="all">
-                <ArchivedMessagesList messages={messages} isLoading={isLoading} filter="all" />
+                <ArchivedMessagesList 
+                  messages={messages} 
+                  isLoading={isLoading} 
+                  onRestoreMessage={handleRestoreMessage}
+                />
               </TabsContent>
               
               <TabsContent value="sent">
-                <ArchivedMessagesList messages={messages} isLoading={isLoading} filter="sent" />
+                <ArchivedMessagesList 
+                  messages={messages.filter(m => m.type === 'sent')} 
+                  isLoading={isLoading} 
+                  onRestoreMessage={handleRestoreMessage}
+                />
               </TabsContent>
               
               <TabsContent value="received">
-                <ArchivedMessagesList messages={messages} isLoading={isLoading} filter="received" />
+                <ArchivedMessagesList 
+                  messages={messages.filter(m => m.type === 'received')} 
+                  isLoading={isLoading} 
+                  onRestoreMessage={handleRestoreMessage}
+                />
               </TabsContent>
             </Tabs>
           )}
