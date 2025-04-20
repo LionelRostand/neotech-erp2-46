@@ -1,4 +1,3 @@
-
 import { getDocumentById } from '@/hooks/firestore/read-operations';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -24,6 +23,7 @@ export interface UserPermissions {
     documents?: ModulePermissions;
     departments?: ModulePermissions;
     attendance?: ModulePermissions;
+    applications?: ModulePermissions;
     [key: string]: ModulePermissions | undefined;
   };
   roles?: string[];
@@ -123,7 +123,6 @@ export const initializeDefaultPermissions = async (userId: string, isAdmin: bool
   const defaultPermissions: UserPermissions = {
     userId,
     permissions: {
-      // Permissions par défaut pour les différents modules
       employees: {
         view: true,
         create: false,
@@ -152,6 +151,14 @@ export const initializeDefaultPermissions = async (userId: string, isAdmin: bool
         edit: false,
         delete: false,
         export: false
+      },
+      applications: {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false,
+        export: false,
+        modify: false
       }
     },
     isAdmin

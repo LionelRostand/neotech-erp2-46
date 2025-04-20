@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Package, Shield } from 'lucide-react';
+import { LayoutDashboard, Package } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
 import DashboardSubmenu from './DashboardSubmenu';
@@ -27,8 +27,8 @@ interface SidebarNavigationProps {
 const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps) => {
   const location = useLocation();
   const { focusedSection } = useSidebar();
-  const { userData, isAdmin } = useAuth();
-  const { permissions } = usePermissions();
+  const { userData } = useAuth();
+  const { permissions, checkPermission } = usePermissions();
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
@@ -41,8 +41,13 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
     location.pathname === '/dashboard/analytics';
 
   const canViewSection = (sectionId: string) => {
-    if (isAdmin) return true;
+    if (userData?.isAdmin) return true;
     return permissions?.[sectionId]?.view || false;
+  };
+
+  const canManageApplications = async () => {
+    if (userData?.isAdmin) return true;
+    return await checkPermission('applications', 'modify');
   };
 
   return (
@@ -82,7 +87,7 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </Accordion>
       )}
 
-      {isAdmin && (
+      {canManageApplications() && (
         <NavLink
           icon={<Package size={18} />}
           label="Gérer les applications"
@@ -148,4 +153,3 @@ const SidebarNavigation = (props: SidebarNavigationProps) => {
 };
 
 export default SidebarNavigation;
-
