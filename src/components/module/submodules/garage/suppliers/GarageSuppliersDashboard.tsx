@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { Truck } from 'lucide-react';
+import { Truck, Plus } from 'lucide-react';
 import StatCard from '@/components/StatCard';
+import { Button } from '@/components/ui/button';
+import NewSupplierDialog from './NewSupplierDialog';
 
 const GarageSuppliersDashboard = () => {
-  const { suppliers, isLoading } = useGarageData();
+  const { suppliers, isLoading, refetch } = useGarageData();
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -48,6 +51,10 @@ const GarageSuppliersDashboard = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Fournisseurs</h2>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau fournisseur
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -84,6 +91,12 @@ const GarageSuppliersDashboard = () => {
           <DataTable columns={columns} data={suppliers} />
         </CardContent>
       </Card>
+
+      <NewSupplierDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+        onSuccess={refetch}
+      />
     </div>
   );
 };
