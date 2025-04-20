@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Search, Bell, Mail, User, Key, Languages, Shield, LogOut } from 'lucide-react';
 import { useAlertsData } from '@/hooks/useAlertsData';
@@ -57,7 +58,7 @@ const TopBar = () => {
           >
             <Bell size={20} />
             {activeAlerts > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 bg-neotech-primary text-white rounded-full text-xs flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center animate-pulse">
                 {activeAlerts}
               </span>
             )}
@@ -65,7 +66,7 @@ const TopBar = () => {
           
           <Button variant="ghost" size="icon" className="relative">
             <Mail size={20} />
-            <span className="absolute top-0 right-0 w-4 h-4 bg-neotech-primary text-white rounded-full text-xs flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
               3
             </span>
           </Button>
