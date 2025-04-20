@@ -34,7 +34,7 @@ interface FormValues {
   email: string;
   phone: string;
   address: string;
-  notes?: string;
+  notes: string;
 }
 
 const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
@@ -42,16 +42,28 @@ const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
   onOpenChange,
   onSuccess
 }) => {
-  const form = useForm<FormValues>();
+  const form = useForm<FormValues>({
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      notes: ''
+    }
+  });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, COLLECTIONS.FREIGHT.CLIENTS), {
+      // Ensure all values are strings and not undefined
+      const clientData = {
         ...data,
+        notes: data.notes || '', // Convert undefined/null to empty string
         createdAt: new Date().toISOString()
-      });
+      };
+      
+      await addDoc(collection(db, COLLECTIONS.FREIGHT.CLIENTS), clientData);
       toast.success("Client créé avec succès");
       form.reset();
       onSuccess();
@@ -135,7 +147,7 @@ const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Notes additionnelles" {...field} />
+                    <Textarea placeholder="Notes additionnelles" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
