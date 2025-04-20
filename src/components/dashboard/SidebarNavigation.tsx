@@ -82,18 +82,6 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
         </Accordion>
       )}
 
-      {canViewSection('permissions') && (
-        <NavLink
-          icon={<Shield size={18} />}
-          label="Droits utilisateurs"
-          href="/settings/user-permissions"
-          isActive={location.pathname === '/settings/user-permissions' || location.pathname.startsWith('/settings')}
-          onClick={() => onNavigate('/settings/user-permissions')}
-          className={`mt-2 ${focusedSection === 'permissions' ? 'ring-2 ring-neotech-primary ring-opacity-50' : ''}`}
-          showLabelWhenCollapsed={true}
-        />
-      )}
-
       {isAdmin && (
         <NavLink
           icon={<Package size={18} />}
@@ -160,3 +148,4 @@ const SidebarNavigation = (props: SidebarNavigationProps) => {
 };
 
 export default SidebarNavigation;
+
