@@ -52,10 +52,16 @@ const CategoryHeader = ({
       role="button"
       aria-expanded={isExpanded}
     >
-      <span>{categoryLabels[category] || category.toUpperCase()}</span>
+      <span className="transition-opacity duration-300 sidebar-collapsed-hide">
+        {categoryLabels[category] || category.toUpperCase()}
+      </span>
       <ChevronRight
         size={14}
-        className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+        className={cn(
+          "transform transition-transform",
+          isExpanded ? "rotate-90" : "",
+          "min-w-[14px]"
+        )}
       />
     </button>
   );
