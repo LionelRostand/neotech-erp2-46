@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -9,6 +10,7 @@ import { useSmtpConfig } from '@/hooks/useSmtpConfig';
 
 export const useMessageForm = () => {
   const messageCollection = useFirestore(COLLECTIONS.MESSAGES.INBOX);
+  const sentCollection = useFirestore(COLLECTIONS.MESSAGES.SENT);
   const scheduledCollection = useFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -102,7 +104,7 @@ export const useMessageForm = () => {
         content,
         sender: 'current-user-id',
         recipients: selectedContacts.map(c => c.id),
-        status: isScheduled ? 'scheduled' as MessageStatus : 'unread' as MessageStatus,
+        status: isScheduled ? 'scheduled' as MessageStatus : 'sent' as MessageStatus,
         priority,
         category,
         tags,
@@ -115,7 +117,7 @@ export const useMessageForm = () => {
         emailStatus: 'pending'
       };
 
-      const collection = isScheduled ? scheduledCollection : messageCollection;
+      const collection = isScheduled ? scheduledCollection : sentCollection;
       
       if (smtpConfig) {
         try {
@@ -142,33 +144,48 @@ export const useMessageForm = () => {
           }
 
           messageData.emailStatus = 'sent';
+          
+          // Save to sent collection
+          await collection.add(messageData);
+
+          toast({
+            title: isScheduled ? "Message programmé" : "Message envoyé",
+            description: isScheduled 
+              ? `Le message sera envoyé le ${scheduledDate?.toLocaleDateString()}` 
+              : "Votre message a été envoyé avec succès."
+          });
+          
+          navigate('/modules/messages/sent');
+          
         } catch (error) {
           console.error("Email sending error:", error);
           messageData.emailStatus = 'failed';
+          
+          // Still save to sent collection even if email fails
+          await collection.add(messageData);
+          
           toast({
             variant: "destructive",
             title: "Erreur d'envoi d'email",
             description: "Le message a été enregistré mais l'email n'a pas pu être envoyé."
           });
+          
+          navigate('/modules/messages/sent');
         }
       } else {
         toast({
-          variant: "warning",
+          variant: "destructive",
           title: "Configuration SMTP manquante",
           description: "Veuillez configurer les paramètres SMTP pour envoyer des emails."
         });
+        
+        // Save as draft if no SMTP config
+        const draftsCollection = useFirestore(COLLECTIONS.MESSAGES.DRAFTS);
+        messageData.status = 'draft';
+        await draftsCollection.add(messageData);
+        
+        navigate('/modules/messages/settings');
       }
-
-      await collection.add(messageData);
-      
-      toast({
-        title: isScheduled ? "Message programmé" : "Message envoyé",
-        description: isScheduled 
-          ? `Le message sera envoyé le ${scheduledDate?.toLocaleDateString()}` 
-          : "Votre message a été envoyé avec succès."
-      });
-      
-      navigate(isScheduled ? '/modules/messages/scheduled' : '/modules/messages/inbox');
     } catch (error) {
       console.error("Erreur lors de l'envoi du message:", error);
       toast({

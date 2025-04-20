@@ -58,7 +58,6 @@ const ComposePage: React.FC = () => {
     getInitials
   } = useContactsData();
 
-  // Synchronize contacts between the two hooks
   React.useEffect(() => {
     updateSelectedContacts(selectedContacts);
   }, [selectedContacts, updateSelectedContacts]);
@@ -81,7 +80,6 @@ const ComposePage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Destinataires */}
             <RecipientSelector
               selectedContacts={selectedContacts}
               filteredContacts={filteredContacts}
@@ -94,7 +92,6 @@ const ComposePage: React.FC = () => {
               onRemoveContact={handleRemoveContact}
             />
 
-            {/* Objet */}
             <div className="space-y-2">
               <Label htmlFor="subject">Objet</Label>
               <Input 
@@ -105,13 +102,11 @@ const ComposePage: React.FC = () => {
               />
             </div>
 
-            {/* Éditeur de message */}
             <div className="space-y-2">
               <Label>Message</Label>
               <MessageEditor value={content} onChange={setContent} />
             </div>
 
-            {/* Tabs pour les métadonnées */}
             <Tabs defaultValue="attachments">
               <TabsList>
                 <TabsTrigger value="attachments">Pièces jointes</TabsTrigger>
@@ -119,7 +114,6 @@ const ComposePage: React.FC = () => {
                 <TabsTrigger value="schedule">Programmation</TabsTrigger>
               </TabsList>
               
-              {/* Pièces jointes */}
               <TabsContent value="attachments">
                 <AttachmentsTab
                   attachments={attachments}
@@ -128,7 +122,6 @@ const ComposePage: React.FC = () => {
                 />
               </TabsContent>
               
-              {/* Propriétés */}
               <TabsContent value="properties">
                 <PropertiesTab
                   priority={priority}
@@ -143,7 +136,6 @@ const ComposePage: React.FC = () => {
                 />
               </TabsContent>
               
-              {/* Programmation */}
               <TabsContent value="schedule">
                 <ScheduleTab
                   isScheduled={isScheduled}
