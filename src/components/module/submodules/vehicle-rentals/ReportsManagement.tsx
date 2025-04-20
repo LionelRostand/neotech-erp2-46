@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { FileDown, BarChart3, LineChart, PieChart } from "lucide-react";
+import DashboardTab from './reports/DashboardTab';
 import RentalStatisticsTab from './reports/RentalStatisticsTab';
 import RevenueAnalysisTab from './reports/RevenueAnalysisTab';
 import VehiclePerformanceTab from './reports/VehiclePerformanceTab';
@@ -12,7 +13,7 @@ import TrendsAndForecastTab from './reports/TrendsAndForecastTab';
 
 const ReportsManagement = () => {
   const [timeRange, setTimeRange] = useState("month");
-  const [activeTab, setActiveTab] = useState("statistics");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   const handleExport = (format: 'excel' | 'pdf') => {
     console.log(`Exporting data in ${format} format`);
@@ -53,6 +54,10 @@ const ReportsManagement = () => {
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
+          <TabsTrigger value="dashboard" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Tableau de bord
+          </TabsTrigger>
           <TabsTrigger value="statistics" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Statistiques de locations
@@ -65,11 +70,11 @@ const ReportsManagement = () => {
             <PieChart className="h-4 w-4" />
             Performance des véhicules
           </TabsTrigger>
-          <TabsTrigger value="trends" className="gap-2">
-            <LineChart className="h-4 w-4" />
-            Tendances & Prévisions
-          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard">
+          <DashboardTab />
+        </TabsContent>
 
         <TabsContent value="statistics">
           <RentalStatisticsTab timeRange={timeRange} />
@@ -81,10 +86,6 @@ const ReportsManagement = () => {
 
         <TabsContent value="performance">
           <VehiclePerformanceTab timeRange={timeRange} />
-        </TabsContent>
-
-        <TabsContent value="trends">
-          <TrendsAndForecastTab timeRange={timeRange} />
         </TabsContent>
       </Tabs>
     </div>
