@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Send, Settings } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import MessageEditor from './MessageEditor';
 import { useMessageForm } from './hooks/useMessageForm';
 import { useContactsData } from './hooks/useContactsData';
@@ -14,9 +13,11 @@ import RecipientSelector from './components/RecipientSelector';
 import AttachmentsTab from './components/AttachmentsTab';
 import PropertiesTab from './components/PropertiesTab';
 import ScheduleTab from './components/ScheduleTab';
+import { useSmtpConfig } from '@/hooks/useSmtpConfig';
 
 const ComposePage: React.FC = () => {
   const navigate = useNavigate();
+  const { config: smtpConfig } = useSmtpConfig();
   
   const {
     selectedContacts,
@@ -66,7 +67,17 @@ const ComposePage: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Nouveau message</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Nouveau message</CardTitle>
+            {!smtpConfig && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/modules/messages/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurer SMTP
+                </Link>
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

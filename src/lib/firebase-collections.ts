@@ -55,5 +55,6 @@ export const COLLECTIONS = {
     TRANSACTIONS: 'transactions',
     SETTINGS: 'settings'
   },
-  USERS: 'users'
+  USERS: 'users',
+  SMTP_CONFIG: 'smtp-config'
 };

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -6,12 +5,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Contact, MessageFormData, MessagePriority, MessageCategory, MessageStatus } from '../../types/message-types';
 import { Timestamp } from 'firebase/firestore';
+import { useSmtpConfig } from '@/hooks/useSmtpConfig';
 
 export const useMessageForm = () => {
   const messageCollection = useFirestore(COLLECTIONS.MESSAGES.INBOX);
   const scheduledCollection = useFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { config: smtpConfig } = useSmtpConfig();
 
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [subject, setSubject] = useState('');
@@ -56,7 +57,6 @@ export const useMessageForm = () => {
   };
 
   const handleSendMessage = async () => {
-    // Validation
     if (selectedContacts.length === 0) {
       toast({
         variant: "destructive",
@@ -100,7 +100,7 @@ export const useMessageForm = () => {
       const messageData = {
         subject,
         content,
-        sender: 'current-user-id', // ID de l'utilisateur connecté
+        sender: 'current-user-id',
         recipients: selectedContacts.map(c => c.id),
         status: isScheduled ? 'scheduled' as MessageStatus : 'unread' as MessageStatus,
         priority,
@@ -111,26 +111,64 @@ export const useMessageForm = () => {
         isScheduled,
         scheduledAt: isScheduled && scheduledDate ? Timestamp.fromDate(scheduledDate) : undefined,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        emailStatus: 'pending'
       };
 
-      // Collection en fonction du type de message
       const collection = isScheduled ? scheduledCollection : messageCollection;
       
-      // Simuler l'envoi
-      setTimeout(async () => {
-        await collection.add(messageData);
-        
+      if (smtpConfig) {
+        try {
+          const emailData = {
+            to: selectedContacts.map(c => c.email),
+            subject: subject,
+            html: content,
+            from: smtpConfig.username,
+          };
+
+          const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              smtpConfig,
+              emailData
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to send email');
+          }
+
+          messageData.emailStatus = 'sent';
+        } catch (error) {
+          console.error("Email sending error:", error);
+          messageData.emailStatus = 'failed';
+          toast({
+            variant: "destructive",
+            title: "Erreur d'envoi d'email",
+            description: "Le message a été enregistré mais l'email n'a pas pu être envoyé."
+          });
+        }
+      } else {
         toast({
-          title: isScheduled ? "Message programmé" : "Message envoyé",
-          description: isScheduled 
-            ? `Le message sera envoyé le ${scheduledDate?.toLocaleDateString()}` 
-            : "Votre message a été envoyé avec succès."
+          variant: "warning",
+          title: "Configuration SMTP manquante",
+          description: "Veuillez configurer les paramètres SMTP pour envoyer des emails."
         });
-        
-        navigate(isScheduled ? '/modules/messages/scheduled' : '/modules/messages/inbox');
-        setIsSending(false);
-      }, 1500);
+      }
+
+      await collection.add(messageData);
+      
+      toast({
+        title: isScheduled ? "Message programmé" : "Message envoyé",
+        description: isScheduled 
+          ? `Le message sera envoyé le ${scheduledDate?.toLocaleDateString()}` 
+          : "Votre message a été envoyé avec succès."
+      });
+      
+      navigate(isScheduled ? '/modules/messages/scheduled' : '/modules/messages/inbox');
     } catch (error) {
       console.error("Erreur lors de l'envoi du message:", error);
       toast({
@@ -138,6 +176,7 @@ export const useMessageForm = () => {
         title: "Erreur",
         description: "Impossible d'envoyer le message. Veuillez réessayer."
       });
+    } finally {
       setIsSending(false);
     }
   };
