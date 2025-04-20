@@ -35,23 +35,16 @@ const NavLink = ({
       onClick();
     }}
   >
-    <span className="transition-transform duration-300 group-hover:scale-110 min-w-[20px]">
+    <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
       {icon}
     </span>
     <span className={cn(
-      "ml-3 transition-opacity duration-300",
+      "transition-opacity duration-300",
       !showLabelWhenCollapsed && "sidebar-collapsed-hide"
     )}>
       {label}
     </span>
-    {extraContent && (
-      <span className={cn(
-        "transition-opacity duration-300",
-        !showLabelWhenCollapsed && "sidebar-collapsed-hide"
-      )}>
-        {extraContent}
-      </span>
-    )}
+    {extraContent}
   </a>
 );
 

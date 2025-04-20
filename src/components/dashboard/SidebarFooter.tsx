@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Settings, ChevronRight, Menu, Globe, Lock, Mail, Shield } from 'lucide-react';
@@ -132,11 +133,10 @@ const SidebarFooter = ({
       </div>
       
       <div className={cn(
-        "mt-3 text-center text-xs text-gray-500 font-medium transition-opacity duration-300 flex items-center justify-center gap-1",
+        "mt-3 text-center text-xs text-gray-500 font-medium transition-opacity duration-300",
         sidebarOpen ? "opacity-100" : "opacity-0 overflow-hidden h-0"
       )}>
-        NEOTECH-CONSULTING 2025 
-        <span className="text-[8px]">🇨🇲</span>
+        NEOTECH-CONSULTING 2025
       </div>
     </div>
   );

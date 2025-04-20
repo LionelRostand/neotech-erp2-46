@@ -26,7 +26,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         category={category} 
         isExpanded={expandedCategories[category] || false} 
         onToggle={() => toggleCategory(category)}
-        hasModules={modules.length > 0}
       />
       
       {expandedCategories[category] && (

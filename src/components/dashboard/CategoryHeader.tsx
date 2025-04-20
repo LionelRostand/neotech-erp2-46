@@ -1,69 +1,82 @@
 
-import { ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import { Building2, Headphones, Globe, MessageSquare } from 'lucide-react';
 
 interface CategoryHeaderProps {
   category: string;
   isExpanded: boolean;
   onToggle: () => void;
-  className?: string;
-  hasModules?: boolean;
 }
 
-const CategoryHeader = ({ 
-  category, 
-  isExpanded, 
-  onToggle,
-  className,
-  hasModules = false
-}: CategoryHeaderProps) => {
-  const categoryLabels: { [key: string]: string } = {
-    business: 'BUSINESS',
-    services: 'SERVICES SPÉCIALISÉS',
-    digital: 'DIGITAL',
-    communication: 'COMMUNICATION'
-  };
-
-  const getCategoryColorClass = (category: string, hasModules: boolean) => {
-    if (!hasModules) return 'text-black'; // Default color when no modules
-    
+const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, isExpanded, onToggle }) => {
+  // Function to get category title
+  const getCategoryTitle = (category: string): string => {
     switch (category) {
-      case 'business':
-        return 'text-module-business';
-      case 'services':
-        return 'text-module-services';
-      case 'digital':
-        return 'text-module-digital';
-      case 'communication':
-        return 'text-module-communication';
-      default:
-        return 'text-black';
+      case 'business': return 'GESTION D\'ENTREPRISE';
+      case 'services': return 'SERVICES SPÉCIALISÉS';
+      case 'digital': return 'PRÉSENCE NUMÉRIQUE';
+      case 'communication': return 'COMMUNICATION';
+      default: return '';
+    }
+  };
+  
+  // Function to get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'business': return <Building2 size={14} />;
+      case 'services': return <Headphones size={14} />;
+      case 'digital': return <Globe size={14} />;
+      case 'communication': return <MessageSquare size={14} />;
+      default: return null;
     }
   };
 
+  // Function to get category-specific colors
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'business': return {
+        text: 'text-blue-600',
+        bg: 'bg-blue-50',
+        border: 'border-blue-200'
+      };
+      case 'services': return {
+        text: 'text-gray-600',
+        bg: 'bg-gray-50',
+        border: 'border-gray-200'
+      };
+      case 'digital': return {
+        text: 'text-green-600',
+        bg: 'bg-green-50',
+        border: 'border-green-200'
+      };
+      case 'communication': return {
+        text: 'text-sky-600',
+        bg: 'bg-sky-50',
+        border: 'border-sky-200'
+      };
+      default: return {
+        text: 'text-gray-600',
+        bg: 'bg-gray-50',
+        border: 'border-gray-200'
+      };
+    }
+  };
+
+  const categoryColors = getCategoryColor(category);
+
   return (
-    <button
+    <div 
+      className={`px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between cursor-pointer 
+        ${isExpanded ? `${categoryColors.bg} ${categoryColors.border} rounded border-b` : ''}
+      `}
       onClick={onToggle}
-      className={cn(
-        'w-full flex items-center justify-between px-2 py-2 text-xs font-semibold cursor-pointer',
-        getCategoryColorClass(category, hasModules),
-        className
-      )}
-      role="button"
-      aria-expanded={isExpanded}
     >
-      <span className="transition-opacity duration-300 sidebar-collapsed-hide">
-        {categoryLabels[category] || category.toUpperCase()}
-      </span>
-      <ChevronRight
-        size={14}
-        className={cn(
-          "transform transition-transform",
-          isExpanded ? "rotate-90" : "",
-          "min-w-[14px]"
-        )}
-      />
-    </button>
+      <div className={`flex items-center gap-2 ${categoryColors.text}`}>
+        {getCategoryIcon(category)}
+        <span>{getCategoryTitle(category)}</span>
+      </div>
+      <span>{isExpanded ? '−' : '+'}</span>
+    </div>
   );
 };
 
