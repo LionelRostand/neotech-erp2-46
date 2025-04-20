@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Package } from 'lucide-react';
+import { LayoutDashboard, Package, Shield } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
 import DashboardSubmenu from './DashboardSubmenu';
