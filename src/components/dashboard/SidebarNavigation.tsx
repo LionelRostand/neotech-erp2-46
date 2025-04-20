@@ -27,8 +27,8 @@ interface SidebarNavigationProps {
 const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps) => {
   const location = useLocation();
   const { focusedSection } = useSidebar();
-  const { userData } = useAuth();
-  const { isAdmin, checkPermission } = usePermissions();
+  const { isAdmin } = useAuth();
+  const { checkPermission } = usePermissions();
   const [canManageApps, setCanManageApps] = useState<boolean>(false);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
@@ -60,11 +60,6 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
     
     checkApplicationsPermission();
   }, [isAdmin, checkPermission]);
-
-  const canViewSection = (sectionId: string) => {
-    // Par défaut on autorise l'accès à toutes les sections pendant que les permissions chargent
-    return true;
-  };
 
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
