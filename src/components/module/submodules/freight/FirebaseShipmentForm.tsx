@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ShipmentLine } from '@/types/freight';
 import { useNavigate } from 'react-router-dom';
 import { createShipment } from './services/shipmentService';
+import { toast } from 'sonner';
 
 interface ShipmentData {
   reference: string;
@@ -41,7 +40,9 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Utiliser notre nouveau service pour créer l'expédition
+      console.log('Submitting shipment data:', shipmentData);
+      
+      // Use the service to create the shipment
       await createShipment({
         reference: shipmentData.reference,
         origin: shipmentData.origin,
@@ -59,20 +60,17 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
         notes: shipmentData.notes
       });
       
-      // Si un callback de succès est fourni, l'appeler
+      // If a success callback is provided, call it
       if (onSuccess) {
         onSuccess();
       } else {
-        // Sinon, rediriger vers la liste des expéditions
+        // Otherwise, redirect to the shipments list
+        toast.success(`Expédition ${shipmentData.reference} créée avec succès`);
         navigate('/modules/freight/shipments');
       }
     } catch (err) {
-      console.error('Erreur lors de la création de l\'expédition:', err);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création de l'expédition.",
-        variant: "destructive",
-      });
+      console.error('Error creating shipment:', err);
+      toast.error("Une erreur est survenue lors de la création de l'expédition.");
     } finally {
       setIsSubmitting(false);
     }

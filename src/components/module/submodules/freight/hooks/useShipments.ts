@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, orderBy, Timestamp, doc } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Shipment } from '@/types/freight';
@@ -16,17 +16,15 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
     const fetchShipments = async () => {
       setIsLoading(true);
       try {
-        // Properly reference a subcollection in Firestore
-        // For 'freight/shipments', we use: collection(db, 'freight', 'freight', 'shipments')
-        const freightDocRef = doc(db, 'freight', 'freight');
-        const shipmentsRef = collection(freightDocRef, 'shipments');
+        // Use the freight_shipments collection directly from COLLECTIONS
+        const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
         const q = query(shipmentsRef, orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         
         const shipmentsData = querySnapshot.docs.map(doc => {
           const data = doc.data();
           
-          // Convertir Timestamp en string ISO si nécessaire
+          // Convert Timestamp to string ISO if necessary
           const createdAt = data.createdAt instanceof Timestamp 
             ? data.createdAt.toDate().toISOString() 
             : data.createdAt;
@@ -50,7 +48,7 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
             scheduledDate,
             estimatedDeliveryDate,
             actualDeliveryDate,
-            // Valeurs par défaut pour éviter les erreurs
+            // Default values to avoid errors
             reference: data.reference || `REF-${doc.id.substring(0, 6)}`,
             origin: data.origin || 'Non spécifié',
             destination: data.destination || 'Non spécifié',
@@ -64,7 +62,7 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
           } as Shipment;
         });
         
-        // Filtrer les expéditions selon le filtre sélectionné
+        // Filter shipments according to selected filter
         let filteredShipments = shipmentsData;
         if (filter === 'ongoing') {
           filteredShipments = shipmentsData.filter(s => 
@@ -76,13 +74,13 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
         }
         
         setShipments(filteredShipments);
-        console.log(`Chargement de ${filteredShipments.length} expéditions (filtre: ${filter})`);
+        console.log(`Loaded ${filteredShipments.length} shipments (filter: ${filter})`);
       } catch (err) {
-        console.error('Erreur lors du chargement des expéditions:', err);
-        setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+        console.error('Error loading shipments:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les expéditions",
+          title: "Error",
+          description: "Unable to load shipments",
           variant: "destructive"
         });
       } finally {
