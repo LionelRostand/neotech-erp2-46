@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Reservation } from '../../types/rental-types';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   Table,
@@ -41,6 +41,19 @@ const ReservationsList = () => {
     }
   };
 
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return isValid(date) 
+        ? format(date, 'PPP', { locale: fr })
+        : 'Date invalide';
+    } catch (error) {
+      console.error(`Error formatting date: ${dateString}`, error);
+      return 'Date invalide';
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -54,20 +67,28 @@ const ReservationsList = () => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {reservations.map((reservation) => (
-          <TableRow key={reservation.id}>
-            <TableCell>{reservation.clientName}</TableCell>
-            <TableCell>{reservation.vehicleId}</TableCell>
-            <TableCell>
-              {format(new Date(reservation.startDate), 'PPP', { locale: fr })}
+        {reservations.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+              Aucune réservation trouvée
             </TableCell>
-            <TableCell>
-              {format(new Date(reservation.endDate), 'PPP', { locale: fr })}
-            </TableCell>
-            <TableCell>{reservation.totalAmount} €</TableCell>
-            <TableCell>{getStatusBadge(reservation.status)}</TableCell>
           </TableRow>
-        ))}
+        ) : (
+          reservations.map((reservation) => (
+            <TableRow key={reservation.id}>
+              <TableCell>{reservation.clientName || 'Client inconnu'}</TableCell>
+              <TableCell>{reservation.vehicleId || 'Véhicule inconnu'}</TableCell>
+              <TableCell>
+                {safeFormatDate(reservation.startDate)}
+              </TableCell>
+              <TableCell>
+                {safeFormatDate(reservation.endDate)}
+              </TableCell>
+              <TableCell>{(reservation.totalAmount || 0).toLocaleString('fr-FR')} €</TableCell>
+              <TableCell>{getStatusBadge(reservation.status)}</TableCell>
+            </TableRow>
+          ))
+        )}
       </TableBody>
     </Table>
   );
