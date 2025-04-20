@@ -54,22 +54,25 @@ const GarageSuppliersDashboard = () => {
         <StatCard
           title="Total Fournisseurs"
           value={suppliers.length.toString()}
-          icon={<Truck className="h-4 w-4" />}
+          icon={<Truck className="h-4 w-4 text-primary-500" />}
           description="Tous les fournisseurs"
+          className="bg-soft-purple hover:bg-soft-purple-100"
         />
         
         <StatCard
           title="Fournisseurs Actifs"
           value={activeSuppliers.length.toString()}
-          icon={<Truck className="h-4 w-4" />}
+          icon={<Truck className="h-4 w-4 text-emerald-500" />}
           description="Fournisseurs actifs"
+          className="bg-emerald-50 hover:bg-emerald-100"
         />
         
         <StatCard
           title="Catégories"
           value={Array.from(new Set(suppliers.map(s => s.category))).length.toString()}
-          icon={<Truck className="h-4 w-4" />}
+          icon={<Truck className="h-4 w-4 text-amber-500" />}
           description="Types de fournisseurs"
+          className="bg-amber-50 hover:bg-amber-100"
         />
       </div>
 
