@@ -1,14 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, FileText } from "lucide-react";
+import { Plus } from "lucide-react";
 import StatCard from '@/components/StatCard';
-import { invoices } from './invoicesData';
-import { repairs } from '../repairs/repairsData';
-import { clientsMap, vehiclesMap } from '../repairs/repairsData';
-import CreateInvoiceDialog from './CreateInvoiceDialog';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Invoice } from '../types/garage-types';
-import { toast } from 'sonner';
+import CreateInvoiceDialog from './CreateInvoiceDialog';
 import {
   Table,
   TableBody,
@@ -17,27 +13,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from 'sonner';
 
 const GarageInvoicesDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [invoicesData, setInvoicesData] = useState<Invoice[]>(invoices);
-  
+  const { invoices, repairs, clients, vehicles, isLoading } = useGarageData();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
   const stats = {
-    total: invoicesData.length,
-    draft: invoicesData.filter(i => i.status === 'draft').length,
-    unpaid: invoicesData.filter(i => i.status === 'sent' || i.status === 'overdue').length,
-    paid: invoicesData.filter(i => i.status === 'paid').length,
+    total: invoices.length,
+    draft: invoices.filter(i => i.status === 'draft').length,
+    unpaid: invoices.filter(i => ['sent', 'overdue'].includes(i.status)).length,
+    paid: invoices.filter(i => i.status === 'paid').length,
   };
 
   const handleSaveInvoice = (invoice: Partial<Invoice>) => {
-    const newInvoice = {
-      ...invoice,
-      id: `INV${Date.now().toString().substring(8)}`,
-    } as Invoice;
-    
-    setInvoicesData([...invoicesData, newInvoice]);
-    setShowAddDialog(false);
     toast.success('Facture créée avec succès');
+    setShowAddDialog(false);
   };
 
   return (
@@ -90,7 +85,7 @@ const GarageInvoicesDashboard = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoicesData.map((invoice) => (
+            {invoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell>{invoice.id}</TableCell>
                 <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
@@ -119,8 +114,8 @@ const GarageInvoicesDashboard = () => {
         onOpenChange={setShowAddDialog}
         onSave={handleSaveInvoice}
         repairs={repairs}
-        clientsMap={clientsMap}
-        vehiclesMap={vehiclesMap}
+        clientsMap={Object.fromEntries(clients.map(c => [c.id, `${c.firstName} ${c.lastName}`]))}
+        vehiclesMap={Object.fromEntries(vehicles.map(v => [v.id, `${v.make} ${v.model}`]))}
       />
     </div>
   );
