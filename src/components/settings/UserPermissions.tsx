@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 import ApplicationPermissionsTab from './ApplicationPermissionsTab';
+import ModulePermissionsTab from './ModulePermissionsTab';
 import DashboardLayout from '@/components/DashboardLayout';
 
 const UserPermissions = () => {
@@ -36,9 +37,7 @@ const UserPermissions = () => {
               </TabsContent>
               
               <TabsContent value="modules">
-                <div className="p-4 text-center text-muted-foreground">
-                  Configuration des droits d'accès aux modules à venir
-                </div>
+                <ModulePermissionsTab />
               </TabsContent>
             </Tabs>
           </CardContent>
