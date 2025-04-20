@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import RentalsDashboard from '../vehicle-rentals/RentalsDashboard';
@@ -8,7 +9,6 @@ import LocationsDashboard from '../vehicle-rentals/locations/LocationsDashboard'
 import BillingManagement from '../vehicle-rentals/BillingManagement';
 import RentalSettingsTab from '../vehicle-rentals/settings/RentalSettingsTab';
 import ReportsManagement from '../vehicle-rentals/ReportsManagement';
-import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('VehicleRentalsRenderer - Rendering submodule:', submoduleId);

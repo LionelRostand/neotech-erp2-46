@@ -1,3 +1,4 @@
+
 export const COLLECTIONS = {
   TRANSPORT: {
     LOCATIONS: 'locations',

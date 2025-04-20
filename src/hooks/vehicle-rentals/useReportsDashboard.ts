@@ -19,19 +19,26 @@ interface Rental {
 }
 
 export const useReportsDashboard = () => {
+  // Make sure we're using the correct collection paths
+  const vehiclesPath = COLLECTIONS.TRANSPORT.VEHICLES;
+  const reservationsPath = COLLECTIONS.TRANSPORT.RESERVATIONS;
+  const invoicesPath = COLLECTIONS.TRANSPORT.INVOICES;
+  
+  console.log('Collection paths:', { vehiclesPath, reservationsPath, invoicesPath });
+
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['rentals', 'vehicles'],
-    queryFn: () => fetchCollectionData<Vehicle>(COLLECTIONS.TRANSPORT.VEHICLES)
+    queryFn: () => fetchCollectionData<Vehicle>(vehiclesPath)
   });
 
   const { data: rentals = [], isLoading: isLoadingRentals } = useQuery({
     queryKey: ['rentals', 'rentals'],
-    queryFn: () => fetchCollectionData<Rental>(COLLECTIONS.TRANSPORT.RESERVATIONS)
+    queryFn: () => fetchCollectionData<Rental>(reservationsPath)
   });
 
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
     queryKey: ['rentals', 'invoices'],
-    queryFn: () => fetchCollectionData<any>(COLLECTIONS.TRANSPORT.INVOICES)
+    queryFn: () => fetchCollectionData<any>(invoicesPath)
   });
 
   const calculateStatistics = () => {

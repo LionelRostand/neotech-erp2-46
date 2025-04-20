@@ -17,6 +17,8 @@ import {
 const DashboardTab = () => {
   const { statistics, chartData, isLoading } = useReportsDashboard();
 
+  console.log('DashboardTab - Received data:', { statistics, chartData, isLoading });
+
   if (isLoading) {
     return <div className="p-6 text-center">Chargement des données...</div>;
   }
