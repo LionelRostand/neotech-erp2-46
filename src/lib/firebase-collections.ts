@@ -38,9 +38,15 @@ export const COLLECTIONS = {
     DRAFTS: 'messages-drafts',
     SCHEDULED: 'messages-scheduled',
     ARCHIVED: 'messages-archived',
+    TEMPLATES: 'messages-templates',
     METRICS: 'messages-metrics',
     CONTACTS: 'messages-contacts',
-    GROUPS: 'messages-groups'
+    GROUPS: 'messages-groups',
+    SETTINGS: 'messages-settings',
+    ATTACHMENTS: 'messages-attachments',
+    NOTIFICATIONS: 'messages-notifications',
+    CATEGORIES: 'messages-categories',
+    TAGS: 'messages-tags'
   },
   CONTACTS: {
     CONTACTS: 'contacts',
@@ -64,7 +70,9 @@ export const COLLECTIONS = {
     PROSPECTS: 'prospects',
     CLIENTS: 'crm-clients',
     OPPORTUNITIES: 'opportunities',
-    ACTIVITIES: 'activities'
+    ACTIVITIES: 'activities',
+    SETTINGS: 'crm-settings',
+    CONTACTS: 'crm-contacts'
   },
   COMPANIES: 'companies',
   USERS: 'users',

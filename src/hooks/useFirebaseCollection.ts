@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { toast } from 'sonner';
 
 /**
  * Hook personnalisé pour récupérer des données d'une collection Firestore avec mises à jour en temps réel
@@ -24,7 +25,7 @@ export const useFirebaseCollection = <T>(
       console.error('Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));
       setIsLoading(false);
-      return;
+      return () => {}; // Return empty cleanup function
     }
     
     try {
@@ -53,6 +54,7 @@ export const useFirebaseCollection = <T>(
           console.error(`Error fetching from ${collectionPath}:`, err);
           setError(err);
           setIsLoading(false);
+          toast.error(`Erreur lors du chargement des données: ${err.message}`);
         }
       );
       
@@ -66,6 +68,8 @@ export const useFirebaseCollection = <T>(
       console.error(`Error setting up listener for ${collectionPath}:`, error);
       setError(error);
       setIsLoading(false);
+      toast.error(`Erreur lors du chargement des données: ${error.message}`);
+      return () => {}; // Return empty cleanup function
     }
   }, [collectionPath, JSON.stringify(queryConstraints), refetchTrigger]);
 

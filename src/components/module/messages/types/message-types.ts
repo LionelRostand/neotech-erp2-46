@@ -1,6 +1,4 @@
 
-// Suppose que ce fichier existe déjà, mais nous ajoutons le type 'draft' au MessageStatus
-
 export interface Contact {
   id: string;
   firstName: string;
@@ -11,8 +9,8 @@ export interface Contact {
   position?: string;
   avatar?: string;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: any; // Timestamp type from Firestore
+  updatedAt: any; // Timestamp type from Firestore
 }
 
 export type MessagePriority = 'high' | 'normal' | 'low' | 'urgent';
@@ -64,7 +62,74 @@ export interface MessageMetrics {
   messagesByPriority: Record<string, number>;
   dailyActivity: Array<{date: string; count: number}>;
   topContacts: Array<{id: string; name: string; count: number}>;
-  // Add the missing properties
   messagesSentToday: number;
   contactsCount: number;
+}
+
+// Message template interface
+export interface MessageTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
+  category?: MessageCategory;
+  tags: string[];
+  createdAt: any; // Timestamp type from Firestore
+  updatedAt: any; // Timestamp type from Firestore
+  createdBy: string;
+  isDefault: boolean;
+}
+
+// Message attachment interface
+export interface MessageAttachment {
+  id: string;
+  messageId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  url: string;
+  createdAt: any; // Timestamp type from Firestore
+}
+
+// Message group interface
+export interface MessageGroup {
+  id: string;
+  name: string;
+  description?: string;
+  members: string[]; // Array of contact IDs
+  createdAt: any; // Timestamp type from Firestore
+  updatedAt: any; // Timestamp type from Firestore
+  createdBy: string;
+}
+
+// Message tag interface
+export interface MessageTag {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: any; // Timestamp type from Firestore
+  updatedAt: any; // Timestamp type from Firestore
+}
+
+// Message category interface
+export interface MessageCategoryType {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  createdAt: any; // Timestamp type from Firestore
+  updatedAt: any; // Timestamp type from Firestore
+}
+
+// Message settings interface
+export interface MessageSettings {
+  id: string;
+  autoReply: boolean;
+  autoReplyMessage?: string;
+  signature?: string;
+  defaultPriority: MessagePriority;
+  defaultCategory?: MessageCategory;
+  notificationsEnabled: boolean;
+  emailNotificationsEnabled: boolean;
+  updatedAt: any; // Timestamp type from Firestore
 }
