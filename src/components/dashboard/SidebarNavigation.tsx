@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { LayoutDashboard, Package } from 'lucide-react';
+import { LayoutDashboard, Package, Shield } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
 import DashboardSubmenu from './DashboardSubmenu';
@@ -27,9 +26,6 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
   const location = useLocation();
   const { focusedSection } = useSidebar();
   const { userData, isAdmin } = useAuth();
-  
-  console.log('User Data in SidebarNavigation:', userData); 
-  console.log('Is Admin flag from useAuth:', isAdmin);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');
@@ -75,6 +71,16 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      <NavLink
+        icon={<Shield size={18} />}
+        label="Droits utilisateurs"
+        href="/settings/user-permissions"
+        isActive={location.pathname === '/settings/user-permissions'}
+        onClick={() => onNavigate('/settings/user-permissions')}
+        className={`mt-2 ${focusedSection === 'permissions' ? 'ring-2 ring-neotech-primary ring-opacity-50' : ''}`}
+        showLabelWhenCollapsed={true}
+      />
       
       {isAdmin && (
         <NavLink
