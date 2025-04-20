@@ -1,4 +1,3 @@
-
 /**
  * Constantes pour les chemins des collections Firestore
  * Utilisé pour centraliser les noms des collections et éviter les erreurs de typo

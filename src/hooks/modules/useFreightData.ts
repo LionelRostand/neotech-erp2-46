@@ -3,81 +3,61 @@ import { useState, useEffect } from 'react';
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
-// Ensure the FREIGHT collections are properly typed
 export const useFreightData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
-  // Check for empty or invalid collection paths to prevent Firebase errors
-  const validateCollectionPath = (path: string | undefined): string => {
-    if (!path) {
-      console.error('Invalid collection path detected');
-      return 'invalid_collection';
-    }
-    return path;
-  };
 
-  // Shipments data
-  const shipmentsPath = validateCollectionPath(COLLECTIONS.FREIGHT.SHIPMENTS);
-  const { 
-    data: shipments, 
-    isLoading: shipmentsLoading, 
-    error: shipmentsError 
-  } = useCollectionData(shipmentsPath);
+  // Use the collection paths directly from COLLECTIONS object
+  const { data: billing } = useCollectionData(COLLECTIONS.FREIGHT.BILLING);
+  const { data: carriers } = useCollectionData(COLLECTIONS.FREIGHT.CARRIERS);
+  const { data: clients } = useCollectionData(COLLECTIONS.FREIGHT.CLIENTS);
+  const { data: containers } = useCollectionData(COLLECTIONS.FREIGHT.CONTAINERS);
+  const { data: customers } = useCollectionData(COLLECTIONS.FREIGHT.CUSTOMERS);
+  const { data: documents } = useCollectionData(COLLECTIONS.FREIGHT.DOCUMENTS);
+  const { data: packageTypes } = useCollectionData(COLLECTIONS.FREIGHT.PACKAGE_TYPES);
+  const { data: packages } = useCollectionData(COLLECTIONS.FREIGHT.PACKAGES);
+  const { data: pricing } = useCollectionData(COLLECTIONS.FREIGHT.PRICING);
+  const { data: quotes } = useCollectionData(COLLECTIONS.FREIGHT.QUOTES);
+  const { data: routes } = useCollectionData(COLLECTIONS.FREIGHT.ROUTES);
+  const { data: settings } = useCollectionData(COLLECTIONS.FREIGHT.SETTINGS);
+  const { data: shipments } = useCollectionData(COLLECTIONS.FREIGHT.SHIPMENTS);
+  const { data: tracking } = useCollectionData(COLLECTIONS.FREIGHT.TRACKING);
+  const { data: trackingEvents } = useCollectionData(COLLECTIONS.FREIGHT.TRACKING_EVENTS);
+  const { data: users } = useCollectionData(COLLECTIONS.FREIGHT.USERS);
 
-  // Carriers data
-  const carriersPath = validateCollectionPath(COLLECTIONS.FREIGHT.CARRIERS);
-  const { 
-    data: carriers, 
-    isLoading: carriersLoading, 
-    error: carriersError 
-  } = useCollectionData(carriersPath);
-
-  // Customers data
-  const customersPath = validateCollectionPath(COLLECTIONS.FREIGHT.CUSTOMERS);
-  const { 
-    data: customers, 
-    isLoading: customersLoading, 
-    error: customersError 
-  } = useCollectionData(customersPath);
-
-  // Packages data 
-  const packagesPath = validateCollectionPath(COLLECTIONS.FREIGHT.PACKAGES);
-  const { 
-    data: packages, 
-    isLoading: packagesLoading, 
-    error: packagesError 
-  } = useCollectionData(packagesPath);
-
-  // Update the loading and error state based on all requests
+  // Update loading state based on all collection queries
   useEffect(() => {
-    const isLoading = shipmentsLoading || carriersLoading || customersLoading || packagesLoading;
-    setLoading(isLoading);
-
-    // Collect and process errors
-    const errors = [shipmentsError, carriersError, customersError, packagesError].filter(Boolean);
+    const collections = [
+      billing, carriers, clients, containers, customers, 
+      documents, packageTypes, packages, pricing, quotes,
+      routes, settings, shipments, tracking, trackingEvents, users
+    ];
     
-    if (errors.length > 0) {
-      // Combine error messages
-      const combinedError = new Error(
-        `Multiple errors: ${errors.map(err => err?.message).join('; ')}`
-      );
-      setError(combinedError);
-    } else {
-      setError(null);
-    }
+    const isLoading = collections.some(collection => !collection);
+    setLoading(isLoading);
   }, [
-    shipmentsLoading, shipmentsError,
-    carriersLoading, carriersError,
-    customersLoading, customersError,
-    packagesLoading, packagesError
+    billing, carriers, clients, containers, customers,
+    documents, packageTypes, packages, pricing, quotes,
+    routes, settings, shipments, tracking, trackingEvents, users
   ]);
 
   return {
-    shipments: shipments || [],
+    billing: billing || [],
     carriers: carriers || [],
+    clients: clients || [],
+    containers: containers || [],
     customers: customers || [],
+    documents: documents || [],
+    packageTypes: packageTypes || [],
     packages: packages || [],
+    pricing: pricing || [],
+    quotes: quotes || [],
+    routes: routes || [],
+    settings: settings || [],
+    shipments: shipments || [],
+    tracking: tracking || [],
+    trackingEvents: trackingEvents || [],
+    users: users || [],
     loading,
     error
   };
