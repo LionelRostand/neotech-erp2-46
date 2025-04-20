@@ -1,141 +1,39 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FilePenLine, Receipt, Wallet, CreditCard, Download, Eye, Plus, Search, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import InvoicesList from './billing/InvoicesList';
-import PaymentsList from './billing/PaymentsList';
+import React from 'react';
+import { Card } from "@/components/ui/card";
+import { useQuery } from '@tanstack/react-query';
+import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import CreateInvoiceDialog from './billing/CreateInvoiceDialog';
-import RecordPaymentDialog from './billing/RecordPaymentDialog';
+import BillingInvoicesList from './billing/BillingInvoicesList';
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const BillingManagement = () => {
-  const [activeTab, setActiveTab] = useState<string>("invoices");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState<boolean>(false);
-  const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState<boolean>(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
+  
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['rentals', 'invoices'],
+    queryFn: () => fetchCollectionData(COLLECTIONS.TRANSPORT.INVOICES)
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Gestion de la Facturation</h2>
-        <div className="flex gap-2">
-          {activeTab === "invoices" ? (
-            <Button onClick={() => setIsCreateInvoiceOpen(true)}>
-              <FilePenLine className="mr-2 h-4 w-4" /> Créer une facture
-            </Button>
-          ) : (
-            <Button onClick={() => setIsRecordPaymentOpen(true)}>
-              <CreditCard className="mr-2 h-4 w-4" /> Enregistrer un paiement
-            </Button>
-          )}
-        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle facture
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total facturé</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24 850,00 €</div>
-            <p className="text-xs text-muted-foreground mt-1">Ce mois-ci</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Payé</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">18 320,00 €</div>
-            <p className="text-xs text-muted-foreground mt-1">73% du total</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">En attente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">6 530,00 €</div>
-            <p className="text-xs text-muted-foreground mt-1">5 factures</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">En retard</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">2 150,00 €</div>
-            <p className="text-xs text-muted-foreground mt-1">2 factures</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex justify-between items-center p-4 border-b">
-            <TabsList>
-              <TabsTrigger value="invoices">Factures</TabsTrigger>
-              <TabsTrigger value="payments">Paiements</TabsTrigger>
-              <TabsTrigger value="quotes">Devis</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher..."
-                  className="pl-8 w-[250px]"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" /> Exporter
-              </Button>
-            </div>
-          </div>
-
-          <TabsContent value="invoices" className="m-0">
-            <InvoicesList searchTerm={searchTerm} />
-          </TabsContent>
-          
-          <TabsContent value="payments" className="m-0">
-            <PaymentsList searchTerm={searchTerm} />
-          </TabsContent>
-          
-          <TabsContent value="quotes" className="m-0">
-            <div className="p-6 text-center text-muted-foreground">
-              <Receipt className="mx-auto h-12 w-12 mb-2 text-muted-foreground/50" />
-              <h3 className="text-lg font-medium mb-1">Gestion de devis</h3>
-              <p className="max-w-md mx-auto mb-4">
-                La gestion des devis sera disponible dans une prochaine mise à jour.
-                Elle permettra de créer, envoyer et convertir des devis en factures.
-              </p>
-              <Button variant="outline" disabled>
-                <Eye className="mr-2 h-4 w-4" /> Aperçu de la fonctionnalité
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+      <Card className="p-6">
+        <BillingInvoicesList invoices={invoices} />
       </Card>
 
       <CreateInvoiceDialog 
-        open={isCreateInvoiceOpen} 
-        onOpenChange={setIsCreateInvoiceOpen} 
-      />
-
-      <RecordPaymentDialog 
-        open={isRecordPaymentOpen} 
-        onOpenChange={setIsRecordPaymentOpen} 
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
       />
     </div>
   );

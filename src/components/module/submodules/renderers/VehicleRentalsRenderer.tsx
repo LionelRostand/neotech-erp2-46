@@ -4,10 +4,12 @@ import RentalsDashboard from '../vehicle-rentals/RentalsDashboard';
 import VehiclesManagement from '../vehicle-rentals/VehiclesManagement';
 import ClientsManagement from '../vehicle-rentals/ClientsManagement';
 import ReservationsManagement from '../vehicle-rentals/ReservationsManagement';
+import LocationsDashboard from '../vehicle-rentals/locations/LocationsDashboard';
+import BillingManagement from '../vehicle-rentals/BillingManagement';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: any) => {
-    switch(submoduleId){
+    switch(submoduleId) {
         case 'rentals-dashboard':
             return <RentalsDashboard />;
         case 'rentals-vehicles':
@@ -16,6 +18,10 @@ export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: an
             return <ClientsManagement />;
         case 'rentals-reservations':
             return <ReservationsManagement />;
+        case 'rentals-locations':
+            return <LocationsDashboard />;
+        case 'rentals-billing':
+            return <BillingManagement />;
         default:
             return <DefaultSubmoduleContent submodule={submodule} />;
     }
