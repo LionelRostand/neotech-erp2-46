@@ -48,28 +48,32 @@ const GarageInvoicesDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Factures"
-          value={stats.total.toString()}
+          title="Total factures"
+          value={invoices.length.toString()}
+          icon={<FileText className="h-4 w-4 text-blue-500" />}
           description="Toutes les factures"
-          icon={<FileText className="h-4 w-4" />}
+          className="bg-blue-50 hover:bg-blue-100"
         />
         <StatCard
-          title="Brouillons"
-          value={stats.draft.toString()}
-          description="En attente d'envoi"
-          icon={<FileText className="h-4 w-4" />}
+          title="En attente"
+          value={invoices.filter(i => i.status === 'pending').length.toString()}
+          icon={<Receipt className="h-4 w-4 text-amber-500" />}
+          description="Factures non payées"
+          className="bg-amber-50 hover:bg-amber-100"
         />
         <StatCard
-          title="Non payées"
-          value={stats.unpaid.toString()}
-          description="En attente de paiement"
-          icon={<Receipt className="h-4 w-4" />}
+          title="En retard"
+          value={invoices.filter(i => i.status === 'overdue').length.toString()}
+          icon={<Receipt className="h-4 w-4 text-red-500" />}
+          description="Paiements en retard"
+          className="bg-red-50 hover:bg-red-100"
         />
         <StatCard
           title="Payées"
-          value={stats.paid.toString()}
-          description="Ce mois-ci"
-          icon={<Receipt className="h-4 w-4" />}
+          value={invoices.filter(i => i.status === 'paid').length.toString()}
+          icon={<Receipt className="h-4 w-4 text-emerald-500" />}
+          description="Factures réglées"
+          className="bg-emerald-50 hover:bg-emerald-100"
         />
       </div>
 
