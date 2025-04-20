@@ -1,4 +1,3 @@
-
 export const COLLECTIONS = {
   TRANSPORT: {
     LOCATIONS: 'locations',
@@ -75,6 +74,11 @@ export const COLLECTIONS = {
     CONTACTS: 'crm-contacts'
   },
   COMPANIES: 'companies',
-  USERS: 'users',
+  USERS: {
+    MAIN: 'users',
+    PHOTOS: 'user-photos',
+    SETTINGS: 'user-settings',
+    PERMISSIONS: 'user-permissions'
+  },
   SMTP_CONFIG: 'smtp-config'
 };

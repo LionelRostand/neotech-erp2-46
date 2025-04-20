@@ -1,208 +1,60 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import React from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ProfilePhotoUpload } from "./ProfilePhotoUpload";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "lucide-react";
-
-const personalInfoSchema = z.object({
-  firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères" }),
-  lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
-  email: z.string().email({ message: "Veuillez saisir une adresse email valide" }),
-  phone: z.string().optional(),
-  position: z.string().optional(),
-  bio: z.string().max(500, { message: "La biographie ne peut pas dépasser 500 caractères" }).optional(),
-  photo: z.any().optional(),
-});
-
-type PersonalInfoValues = z.infer<typeof personalInfoSchema>;
+import { useAuth } from "@/hooks/useAuth";
 
 const PersonalInfo = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string>("");
-
-  const defaultValues: PersonalInfoValues = {
-    firstName: "Admin",
-    lastName: "Neotech",
-    email: "admin@neotech-consulting.com",
-    phone: "+33 6 12 34 56 78",
-    position: "Administrateur",
-    bio: "Administrateur de la plateforme Neotech-ERP",
-    photo: "",
-  };
-
-  const form = useForm<PersonalInfoValues>({
-    resolver: zodResolver(personalInfoSchema),
-    defaultValues,
-  });
-
-  function onSubmit(data: PersonalInfoValues) {
-    setIsLoading(true);
-    
-    // Simuler une mise à jour des informations
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Profil mis à jour avec succès");
-      console.log("Personal info updated:", data);
-    }, 1000);
-  }
-
-  const handlePhotoChange = (file: File | null) => {
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setPhotoUrl(imageUrl);
-      form.setValue('photo', file);
-    }
-  };
+  const { userData } = useAuth();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Informations personnelles</CardTitle>
-        <CardDescription>
-          Mettez à jour vos informations personnelles. Ces informations seront visibles par les autres utilisateurs.
-        </CardDescription>
+        <h3 className="text-lg font-semibold">Informations personnelles</h3>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex flex-col items-center gap-4 mb-6">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={photoUrl} alt="Photo de profil" />
-                <AvatarFallback>
-                  <User className="h-12 w-12 text-gray-400" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex justify-center">
-                <FormField
-                  control={form.control}
-                  name="photo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="cursor-pointer inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">
-                        Changer la photo
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            handlePhotoChange(file);
-                            field.onChange(file);
-                          }}
-                        />
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prénom</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Prénom" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nom</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nom" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Email" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Téléphone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Téléphone" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="position"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Poste</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Poste" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="bio"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Biographie</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Parlez un peu de vous..."
-                      className="resize-none min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Maximum 500 caractères.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+      <CardContent className="space-y-6">
+        <ProfilePhotoUpload />
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">Prénom</Label>
+            <Input
+              id="firstName"
+              defaultValue={userData?.firstName}
+              readOnly
             />
-            
-            <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-              {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-            </Button>
-          </form>
-        </Form>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Nom</Label>
+            <Input
+              id="lastName"
+              defaultValue={userData?.lastName}
+              readOnly
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              defaultValue={userData?.email}
+              readOnly
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="role">Rôle</Label>
+            <Input
+              id="role"
+              defaultValue={userData?.role}
+              readOnly
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
