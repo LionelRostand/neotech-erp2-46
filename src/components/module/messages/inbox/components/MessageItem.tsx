@@ -43,8 +43,12 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, onClick }) => {
   
   // Safely handle content that might be undefined or null
   const safeContent = content || '';
+  
   // Extract plain text from HTML content, safely handling undefined
-  const plainTextContent = safeContent.replace(/<[^>]*>/g, '');
+  // This is where the error was happening - we need to ensure safeContent is a string
+  const plainTextContent = typeof safeContent === 'string' 
+    ? safeContent.replace(/<[^>]*>/g, '') 
+    : '';
   
   return (
     <div
