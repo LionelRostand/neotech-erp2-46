@@ -134,4 +134,15 @@ export const COLLECTIONS = {
     STATS: 'library_stats'
   },
   SMTP_CONFIG: 'smtp_config',
+  GARAGE: {
+    VEHICLES: 'garage_vehicles',
+    APPOINTMENTS: 'garage_appointments',
+    REPAIRS: 'garage_repairs',
+    INVOICES: 'garage_invoices',
+    SUPPLIERS: 'garage_suppliers',
+    CLIENTS: 'garage_clients',
+    INVENTORY: 'garage_inventory',
+    LOYALTY: 'garage_loyalty',
+    SETTINGS: 'garage_settings'
+  }
 };

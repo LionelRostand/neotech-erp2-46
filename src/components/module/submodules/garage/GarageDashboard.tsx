@@ -1,44 +1,52 @@
-
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { TodaysAppointments } from './dashboard/TodaysAppointments';
-import { UnpaidInvoices } from './dashboard/UnpaidInvoices';
-import { LowStockItems } from './dashboard/LowStockItems';
-import { RevenueChart } from './dashboard/RevenueChart';
-import { VehicleStatusDonut } from './dashboard/VehicleStatusDonut';
-import { Car, Wrench, SprayCan, Settings } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatCard from '@/components/StatCard';
+import { Car, Calendar, Wrench, Receipt } from "lucide-react";
+import { useGarageData } from '@/hooks/garage/useGarageData';
 
 const GarageDashboard = () => {
+  const { 
+    vehicles, 
+    appointments, 
+    repairs, 
+    clients,
+    isLoading 
+  } = useGarageData();
+
+  const activeRepairs = repairs.filter(r => r.status === 'in_progress').length;
+  const todayAppointments = appointments.filter(a => {
+    const today = new Date().toISOString().split('T')[0];
+    return a.date === today;
+  }).length;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold mb-6">Tableau de bord</h1>
-      
-      {/* Stats Overview */}
+      <h1 className="text-2xl font-bold">Tableau de bord Garage</h1>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Véhicules en réparation"
-          value="8"
+          title="Véhicules"
+          value={vehicles.length.toString()}
           icon={<Car className="h-5 w-5 text-blue-500" />}
-          description="3 en attente de pièces"
+          description="Total des véhicules"
         />
         <StatCard
           title="Rendez-vous aujourd'hui"
-          value="12"
-          icon={<Wrench className="h-5 w-5 text-green-500" />}
-          description="4 terminés"
+          value={todayAppointments.toString()}
+          icon={<Calendar className="h-5 w-5 text-green-500" />}
+          description="Pour aujourd'hui"
         />
         <StatCard
-          title="Stock à commander"
-          value="15"
-          icon={<SprayCan className="h-5 w-5 text-amber-500" />}
-          description="Pièces sous seuil minimal"
+          title="Réparations en cours"
+          value={activeRepairs.toString()}
+          icon={<Wrench className="h-5 w-5 text-amber-500" />}
+          description="En atelier"
         />
         <StatCard
-          title="Maintenance prévue"
-          value="3"
-          icon={<Settings className="h-5 w-5 text-purple-500" />}
-          description="Équipements à réviser"
+          title="Clients"
+          value={clients.length.toString()}
+          icon={<Receipt className="h-5 w-5 text-purple-500" />}
+          description="Total clients"
         />
       </div>
 
