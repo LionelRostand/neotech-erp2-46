@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { Package } from 'lucide-react';
+import { Package, Plus } from 'lucide-react';
 import StatCard from '@/components/StatCard';
+import { Button } from '@/components/ui/button';
+import NewInventoryDialog from './NewInventoryDialog';
 
 const GarageInventoryDashboard = () => {
-  const { inventory, isLoading } = useGarageData();
+  const { inventory, isLoading, refetch } = useGarageData();
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -53,28 +56,35 @@ const GarageInventoryDashboard = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Inventaire</h2>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvel article
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Total Articles"
           value={inventory.length.toString()}
-          icon={<Package className="h-4 w-4" />}
+          icon={<Package className="h-4 w-4 text-blue-500" />}
           description="Tous les articles"
+          className="bg-blue-50 hover:bg-blue-100"
         />
         
         <StatCard
           title="Stock Faible"
           value={lowStock.length.toString()}
-          icon={<Package className="h-4 w-4" />}
+          icon={<Package className="h-4 w-4 text-amber-500" />}
           description="Articles à réapprovisionner"
+          className="bg-amber-50 hover:bg-amber-100"
         />
         
         <StatCard
           title="Rupture de Stock"
           value={outOfStock.length.toString()}
-          icon={<Package className="h-4 w-4" />}
+          icon={<Package className="h-4 w-4 text-red-500" />}
           description="Articles épuisés"
+          className="bg-red-50 hover:bg-red-100"
         />
       </div>
 
@@ -86,6 +96,12 @@ const GarageInventoryDashboard = () => {
           <DataTable columns={columns} data={inventory} />
         </CardContent>
       </Card>
+
+      <NewInventoryDialog 
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onSuccess={refetch}
+      />
     </div>
   );
 };
