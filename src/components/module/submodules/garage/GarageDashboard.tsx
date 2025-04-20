@@ -1,8 +1,14 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatCard from '@/components/StatCard';
 import { Car, Calendar, Wrench, Receipt } from "lucide-react";
 import { useGarageData } from '@/hooks/garage/useGarageData';
+import RevenueChart from './dashboard/RevenueChart';
+import VehicleStatusDonut from './dashboard/VehicleStatusDonut';
+import TodaysAppointments from './dashboard/TodaysAppointments';
+import UnpaidInvoices from './dashboard/UnpaidInvoices';
+import LowStockItems from './dashboard/LowStockItems';
 
 const GarageDashboard = () => {
   const { 

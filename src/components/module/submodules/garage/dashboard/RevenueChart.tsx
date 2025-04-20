@@ -18,7 +18,7 @@ const data = [
   { month: 'Déc', revenue: 32450 },
 ];
 
-export const RevenueChart = () => {
+const RevenueChart = () => {
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -58,3 +58,5 @@ export const RevenueChart = () => {
     </div>
   );
 };
+
+export default RevenueChart;
