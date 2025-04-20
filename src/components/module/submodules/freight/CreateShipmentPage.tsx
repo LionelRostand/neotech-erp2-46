@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { ShipmentLine } from '@/types/freight';
 import { useNavigate } from 'react-router-dom';
 import { createShipment } from './services/shipmentService';
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CreateClientDialog from './clients/CreateClientDialog';
 
 interface ShipmentData {
   reference: string;
@@ -43,35 +44,47 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
   onSuccess 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
   const navigate = useNavigate();
-  const { clients, isLoading: isLoadingClients } = useFreightClients();
+  const { clients, isLoading: isLoadingClients, refetchClients } = useFreightClients();
+
+  // Make sure shipmentData is properly initialized
+  const safeShipmentData = {
+    ...shipmentData,
+    customer: shipmentData?.customer || '',
+  };
 
   const handleSubmit = async () => {
+    if (!safeShipmentData.customer) {
+      toast.error("Veuillez sélectionner un client");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      console.log('Submitting shipment data:', shipmentData);
+      console.log('Submitting shipment data:', safeShipmentData);
       await createShipment({
-        reference: shipmentData.reference,
-        origin: shipmentData.origin,
-        destination: shipmentData.destination,
-        customer: shipmentData.customer,
-        carrier: shipmentData.carrier,
-        carrierName: shipmentData.carrierName,
-        shipmentType: shipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
-        status: shipmentData.status as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
-        trackingNumber: shipmentData.trackingNumber,
-        scheduledDate: shipmentData.scheduledDate,
-        estimatedDeliveryDate: shipmentData.estimatedDeliveryDate,
-        lines: shipmentData.lines,
-        totalWeight: shipmentData.totalWeight,
-        notes: shipmentData.notes
+        reference: safeShipmentData.reference,
+        origin: safeShipmentData.origin,
+        destination: safeShipmentData.destination,
+        customer: safeShipmentData.customer,
+        carrier: safeShipmentData.carrier,
+        carrierName: safeShipmentData.carrierName,
+        shipmentType: safeShipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
+        status: safeShipmentData.status as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
+        trackingNumber: safeShipmentData.trackingNumber,
+        scheduledDate: safeShipmentData.scheduledDate,
+        estimatedDeliveryDate: safeShipmentData.estimatedDeliveryDate,
+        lines: safeShipmentData.lines,
+        totalWeight: safeShipmentData.totalWeight,
+        notes: safeShipmentData.notes
       });
       
       if (onSuccess) {
         onSuccess();
       } else {
-        toast.success(`Expédition ${shipmentData.reference} créée avec succès`);
+        toast.success(`Expédition ${safeShipmentData.reference} créée avec succès`);
         navigate('/modules/freight/shipments');
       }
     } catch (error) {
@@ -82,15 +95,19 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     }
   };
 
+  const handleClientCreated = () => {
+    setIsCreateClientDialogOpen(false);
+    refetchClients();
+  };
+
   return (
     <div className="grid gap-4">
       <div className="flex items-center space-x-4">
         <div className="flex-1">
           <Select 
-            value={shipmentData.customer} 
+            value={safeShipmentData.customer} 
             onValueChange={(value) => {
-              const selectedClient = clients.find(client => client.id === value);
-              if (selectedClient) {
+              if (value) {
                 shipmentData.customer = value;
               }
             }}
@@ -107,16 +124,30 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
             </SelectContent>
           </Select>
         </div>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => setIsCreateClientDialogOpen(true)} 
+          title="Ajouter un client"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
       <Button 
         onClick={handleSubmit}
-        disabled={isSubmitting || !shipmentData.customer}
+        disabled={isSubmitting || !safeShipmentData.customer}
         className="w-full"
       >
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Enregistrer sur Firebase
       </Button>
+
+      <CreateClientDialog 
+        open={isCreateClientDialogOpen}
+        onOpenChange={setIsCreateClientDialogOpen}
+        onSuccess={handleClientCreated}
+      />
     </div>
   );
 };
