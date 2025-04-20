@@ -25,18 +25,18 @@ interface CreateRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (repair: any) => void;
-  clientsMap: Record<string, string>;
-  vehiclesMap: Record<string, string>;
-  mechanicsMap: Record<string, string>;
+  clientsMap?: Record<string, string>;
+  vehiclesMap?: Record<string, string>;
+  mechanicsMap?: Record<string, string>;
 }
 
 const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
   open,
   onOpenChange,
   onSave,
-  clientsMap,
-  vehiclesMap,
-  mechanicsMap
+  clientsMap = {},
+  vehiclesMap = {},
+  mechanicsMap = {}
 }) => {
   const [clientId, setClientId] = useState<string>('');
   const [vehicleId, setVehicleId] = useState<string>('');
@@ -57,9 +57,9 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
       return;
     }
 
-    const vehicleName = vehiclesMap[vehicleId as keyof typeof vehiclesMap] || '';
-    const clientName = clientsMap[clientId as keyof typeof clientsMap] || '';
-    const mechanicName = mechanicsMap[mechanicId as keyof typeof mechanicsMap] || '';
+    const vehicleName = vehiclesMap[vehicleId] || '';
+    const clientName = clientsMap[clientId] || '';
+    const mechanicName = mechanicsMap[mechanicId] || '';
 
     const newRepair = {
       vehicleId,
@@ -78,7 +78,6 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
     };
 
     onSave(newRepair);
-    toast.success("Réparation créée avec succès");
     resetForm();
     onOpenChange(false);
   };
@@ -110,7 +109,7 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(clientsMap).map(([id, name]) => (
+                  {Object.entries(clientsMap || {}).map(([id, name]) => (
                     <SelectItem key={id} value={id}>{name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -124,7 +123,7 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un véhicule" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(vehiclesMap).map(([id, name]) => (
+                  {Object.entries(vehiclesMap || {}).map(([id, name]) => (
                     <SelectItem key={id} value={id}>{name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -148,7 +147,7 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un mécanicien" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(mechanicsMap).map(([id, name]) => (
+                  {Object.entries(mechanicsMap || {}).map(([id, name]) => (
                     <SelectItem key={id} value={id}>{name}</SelectItem>
                   ))}
                 </SelectContent>

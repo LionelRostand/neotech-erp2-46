@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { clientsMap, vehiclesMap, mechanicsMap } from './repairsData';
 
 const GarageRepairsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -51,6 +53,13 @@ const GarageRepairsDashboard = () => {
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
+  };
+
+  // Function to handle adding a new repair
+  const handleAddRepair = (newRepair: any) => {
+    // In a real app, you would save this to your database
+    console.log('New repair created:', newRepair);
+    toast.success("Réparation créée avec succès");
   };
 
   return (
@@ -146,6 +155,10 @@ const GarageRepairsDashboard = () => {
       <CreateRepairDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+        onSave={handleAddRepair}
+        clientsMap={clientsMap}
+        vehiclesMap={vehiclesMap}
+        mechanicsMap={mechanicsMap}
       />
     </div>
   );
