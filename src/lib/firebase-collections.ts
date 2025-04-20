@@ -1,4 +1,3 @@
-
 export const COLLECTIONS = {
   TRANSPORT: {
     LOCATIONS: 'locations',
@@ -35,7 +34,9 @@ export const COLLECTIONS = {
     DRAFTS: 'drafts',
     SCHEDULED: 'scheduled',
     ARCHIVED: 'archived',
-    METRICS: 'metrics'
+    METRICS: 'metrics',
+    CONTACTS: 'contacts',
+    GROUPS: 'groups'
   },
   CONTACTS: {
     CONTACTS: 'contacts',

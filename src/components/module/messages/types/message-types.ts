@@ -1,4 +1,3 @@
-
 import { Timestamp } from "firebase/firestore";
 
 export type MessageStatus = 'unread' | 'read' | 'archived' | 'scheduled';
@@ -57,7 +56,7 @@ export interface Contact {
 }
 
 export interface MessageMetrics {
-  id: string;
+  id?: string;
   totalMessages: number;
   unreadMessages: number;
   archivedMessages: number;
@@ -75,7 +74,7 @@ export interface MessageMetrics {
     sent: number;
     received: number;
   }[];
-  updateTimestamp: Timestamp;
+  updateTimestamp?: any;
 }
 
 export interface MessageFormData {
