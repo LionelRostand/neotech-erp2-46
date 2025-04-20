@@ -2,7 +2,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Vehicle, Rental } from '../components/module/submodules/vehicle-rentals/types/rental-types';
+
+interface Vehicle {
+  id: string;
+  status: string;
+  [key: string]: any;
+}
+
+interface Rental {
+  id: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  totalAmount?: number;
+  [key: string]: any;
+}
 
 export const useReportsDashboard = () => {
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({

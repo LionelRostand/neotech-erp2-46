@@ -3,6 +3,9 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardTab from './DashboardTab';
+import RentalStatisticsTab from './RentalStatisticsTab';
+import RevenueAnalysisTab from './RevenueAnalysisTab';
+import VehiclePerformanceTab from './VehiclePerformanceTab';
 import { BarChart3, LineChart, PieChart } from "lucide-react";
 
 const ReportsManagement = () => {
@@ -14,7 +17,7 @@ const ReportsManagement = () => {
       </div>
       
       <Card>
-        <Tabs defaultValue="dashboard">
+        <Tabs defaultValue="dashboard" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
