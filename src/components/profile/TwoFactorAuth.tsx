@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,9 @@ const TwoFactorAuth = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { currentUser } = useAuth();
+
+  // Dans un cas réel, cette clé serait générée côté serveur
+  const demoSecretKey = 'NEOTECH2FASECRET123456';
 
   // Charger l'état initial de la 2FA depuis Firestore
   useEffect(() => {
@@ -162,6 +166,22 @@ const TwoFactorAuth = () => {
           </DialogHeader>
 
           <div className="space-y-4">
+            {method === "app" && (
+              <div className="flex flex-col items-center space-y-4">
+                <div className="bg-white p-4 rounded-lg border">
+                  <QRCodeSVG 
+                    value={`otpauth://totp/NEOTECH:${currentUser?.email}?secret=${demoSecretKey}&issuer=NEOTECH`}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Code secret: <span className="font-mono">{demoSecretKey}</span>
+                </p>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label>Code de vérification</Label>
               <Input
