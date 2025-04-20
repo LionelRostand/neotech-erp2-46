@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Car, Clock, UserX } from "lucide-react";
+import { Plus, Users, UserX, Clock } from "lucide-react";
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import {
@@ -34,17 +34,6 @@ const GarageClientsDashboard = () => {
     }).length
   };
 
-  const getStatusColor = (status: 'active' | 'inactive') => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -60,25 +49,29 @@ const GarageClientsDashboard = () => {
           title="Total Clients"
           value={stats.total.toString()}
           description="Tous les clients"
-          icon={<Users className="h-4 w-4 text-blue-500" />}
+          icon={<Users className="h-4 w-4 text-purple-500" />}
+          className="bg-purple-50 hover:bg-purple-100"
         />
         <StatCard
           title="Clients Actifs"
           value={stats.active.toString()}
           description="En activité"
-          icon={<Users className="h-4 w-4 text-green-500" />}
+          icon={<Users className="h-4 w-4 text-emerald-500" />}
+          className="bg-emerald-50 hover:bg-emerald-100"
         />
         <StatCard
           title="Clients Inactifs"
           value={stats.inactive.toString()}
           description="Sans activité"
-          icon={<UserX className="h-4 w-4 text-gray-500" />}
+          icon={<UserX className="h-4 w-4 text-red-500" />}
+          className="bg-red-50 hover:bg-red-100"
         />
         <StatCard
           title="Nouveaux Clients"
           value={stats.newThisMonth.toString()}
           description="Ce mois-ci"
-          icon={<Clock className="h-4 w-4 text-purple-500" />}
+          icon={<Clock className="h-4 w-4 text-blue-500" />}
+          className="bg-blue-50 hover:bg-blue-100"
         />
       </div>
 
@@ -101,13 +94,21 @@ const GarageClientsDashboard = () => {
                 <TableCell>{client.email}</TableCell>
                 <TableCell>{client.phone}</TableCell>
                 <TableCell>
-                  {vehicles.filter(v => v.clientId === client.id).length}
+                  <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">
+                    {vehicles.filter(v => v.clientId === client.id).length}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   {client.lastVisit ? new Date(client.lastVisit).toLocaleDateString() : 'Jamais'}
                 </TableCell>
                 <TableCell>
-                  <Badge className={getStatusColor(client.status)}>
+                  <Badge 
+                    className={
+                      client.status === 'active' 
+                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }
+                  >
                     {client.status === 'active' ? 'Actif' : 'Inactif'}
                   </Badge>
                 </TableCell>
