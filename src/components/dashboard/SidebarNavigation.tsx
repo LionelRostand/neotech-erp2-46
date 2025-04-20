@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { LayoutDashboard, Package, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, Shield, Settings } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
 import DashboardSubmenu from './DashboardSubmenu';
@@ -71,6 +72,16 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      <NavLink
+        icon={<Settings size={18} />}
+        label="Paramètres généraux"
+        href="/settings"
+        isActive={location.pathname.startsWith('/settings') && !location.pathname.includes('/user-permissions')}
+        onClick={() => onNavigate('/settings')}
+        className={`mt-2 ${focusedSection === 'settings' ? 'ring-2 ring-neotech-primary ring-opacity-50' : ''}`}
+        showLabelWhenCollapsed={true}
+      />
 
       <NavLink
         icon={<Shield size={18} />}
