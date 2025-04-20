@@ -8,10 +8,10 @@ import ApplicationPermissionsTab from './ApplicationPermissionsTab';
 const UserPermissions = () => {
   return (
     <div className="container mx-auto p-6">
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+            <Shield className="h-5 w-5 text-primary" />
             <CardTitle>Droits utilisateurs</CardTitle>
           </div>
           <CardDescription>
@@ -20,7 +20,7 @@ const UserPermissions = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="applications" className="w-full">
-            <TabsList className="w-full">
+            <TabsList className="w-full mb-4">
               <TabsTrigger value="applications" className="flex-1">
                 Gestion des applications
               </TabsTrigger>

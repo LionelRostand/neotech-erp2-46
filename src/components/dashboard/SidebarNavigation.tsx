@@ -29,7 +29,7 @@ const SidebarContent = ({ installedModules, onNavigate }: SidebarNavigationProps
   const { focusedSection } = useSidebar();
   const { isAdmin } = useAuth();
   const { checkPermission } = usePermissions();
-  const [canManageApps, setCanManageApps] = useState<boolean>(false);
+  const [canManageApps, setCanManageApps] = useState<boolean>(isAdmin || false);
   
   const businessModules = CategoryService.getModulesByCategory(installedModules, 'business');
   const serviceModules = CategoryService.getModulesByCategory(installedModules, 'services');

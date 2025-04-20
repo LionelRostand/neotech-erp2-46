@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +21,8 @@ const ApplicationPermissionsTab = () => {
         create: value,
         edit: value,
         delete: value,
-        modify: value
+        modify: value,
+        export: value
       });
       toast.success('Permissions mises à jour avec succès');
     } catch (error) {
