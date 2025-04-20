@@ -1,38 +1,5 @@
-import { Timestamp } from "firebase/firestore";
 
-export type MessageStatus = 'unread' | 'read' | 'archived' | 'scheduled';
-export type MessagePriority = 'low' | 'normal' | 'high' | 'urgent';
-export type MessageCategory = 'general' | 'commercial' | 'support' | 'technical' | 'administrative' | 'other';
-
-export interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  url: string;
-  createdAt: Timestamp;
-}
-
-export interface Message {
-  id: string;
-  subject: string;
-  content: string;
-  sender: string; // ID du contact expéditeur
-  recipients: string[]; // IDs des contacts destinataires
-  status: MessageStatus;
-  priority: MessagePriority;
-  category?: MessageCategory;
-  tags?: string[];
-  hasAttachments: boolean;
-  attachments?: Attachment[];
-  isFavorite?: boolean;
-  isArchived?: boolean;
-  isScheduled?: boolean;
-  scheduledAt?: Timestamp;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  readAt?: Timestamp;
-}
+// Suppose que ce fichier existe déjà, mais nous ajoutons le type 'draft' au MessageStatus
 
 export interface Contact {
   id: string;
@@ -43,39 +10,15 @@ export interface Contact {
   company?: string;
   position?: string;
   avatar?: string;
-  notes?: string;
-  tags?: string[];
-  isSynchronized?: boolean;
-  syncSource?: 'odoo' | 'hubspot' | 'crm' | 'manual';
-  syncId?: string;
   isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  lastContactedAt?: Timestamp;
-  messagesCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface MessageMetrics {
-  id?: string;
-  totalMessages: number;
-  unreadMessages: number;
-  archivedMessages: number;
-  scheduledMessages: number;
-  messagesSentToday: number;
-  messagesReceivedToday: number;
-  contactsCount: number;
-  topContacts: {
-    contactId: string;
-    contactName: string;
-    messagesCount: number;
-  }[];
-  dailyActivity: {
-    date: string;
-    sent: number;
-    received: number;
-  }[];
-  updateTimestamp?: any;
-}
+export type MessagePriority = 'high' | 'normal' | 'low';
+export type MessageCategory = 'business' | 'personal' | 'marketing' | 'support' | 'other';
+export type MessageStatus = 'draft' | 'sent' | 'received' | 'read' | 'scheduled' | 'archived';
+export type EmailStatus = 'pending' | 'sent' | 'failed';
 
 export interface MessageFormData {
   subject: string;
@@ -83,21 +26,41 @@ export interface MessageFormData {
   recipients: string[];
   priority: MessagePriority;
   category?: MessageCategory;
-  tags?: string[];
-  attachments?: File[];
-  isScheduled?: boolean;
-  scheduledAt?: Date;
+  tags: string[];
+  attachments: File[];
+  isScheduled: boolean;
+  scheduledDate?: Date;
 }
 
-export interface ContactFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  avatar?: File;
-  notes?: string;
-  tags?: string[];
-  syncSource?: 'odoo' | 'hubspot' | 'crm' | 'manual';
+export interface Message {
+  id: string;
+  subject: string;
+  content: string;
+  sender: string;
+  recipients: string[];
+  status: MessageStatus;
+  priority: MessagePriority;
+  category?: MessageCategory;
+  tags: string[];
+  hasAttachments: boolean;
+  isArchived: boolean;
+  isRead?: boolean;
+  isScheduled?: boolean;
+  scheduledAt?: any; // Timestamp type from Firestore
+  createdAt: any; // Timestamp type from Firestore
+  updatedAt: any; // Timestamp type from Firestore
+  emailStatus?: EmailStatus;
+}
+
+export interface MessageMetrics {
+  totalMessages: number;
+  unreadMessages: number;
+  archivedMessages: number;
+  scheduledMessages: number;
+  sentMessagesCount: number;
+  receivedMessagesCount: number;
+  messagesByCategory: Record<string, number>;
+  messagesByPriority: Record<string, number>;
+  dailyActivity: Array<{date: string; count: number}>;
+  topContacts: Array<{id: string; name: string; count: number}>;
 }

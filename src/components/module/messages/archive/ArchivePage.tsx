@@ -1,38 +1,45 @@
 
 import React from 'react';
-import { useCollectionData } from '@/hooks/useCollectionData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { where } from 'firebase/firestore';
-import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ArchivedMessagesList from './ArchivedMessagesList';
+import { Message } from '../types/message-types';
+import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
-const ArchivePage = () => {
-  const { contactId } = useParams();
-  
-  const { data: messages, isLoading } = useCollectionData(
-    COLLECTIONS.MESSAGES.ARCHIVE,
-    [where('contactId', '==', contactId || '')]
-  );
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+const ArchivePage: React.FC = () => {
+  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVED);
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Archive</CardTitle>
+          <CardTitle>Messages archivés</CardTitle>
         </CardHeader>
         <CardContent>
-          {messages.length > 0 ? (
-            <ul>
-              {messages.map((message: any) => (
-                <li key={message.id}>{message.text}</li>
-              ))}
-            </ul>
+          {error ? (
+            <FirebaseErrorAlert error={error} onRetry={refetch} />
           ) : (
-            <div>No archived messages</div>
+            <Tabs defaultValue="all">
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">Tous</TabsTrigger>
+                <TabsTrigger value="sent">Envoyés</TabsTrigger>
+                <TabsTrigger value="received">Reçus</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all">
+                <ArchivedMessagesList messages={messages} isLoading={isLoading} filter="all" />
+              </TabsContent>
+              
+              <TabsContent value="sent">
+                <ArchivedMessagesList messages={messages} isLoading={isLoading} filter="sent" />
+              </TabsContent>
+              
+              <TabsContent value="received">
+                <ArchivedMessagesList messages={messages} isLoading={isLoading} filter="received" />
+              </TabsContent>
+            </Tabs>
           )}
         </CardContent>
       </Card>

@@ -1,72 +1,62 @@
 
 import { useState, useEffect } from 'react';
-import { useSafeFirestore } from '@/hooks/use-safe-firestore';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Message, Contact } from '../../types/message-types';
-import { useToast } from '@/hooks/use-toast';
-import { generateMockScheduledMessages } from '../utils/mockScheduledMessages';
+import { Message } from '../../types/message-types';
 
 export const useScheduledMessagesData = () => {
-  const scheduledCollection = useSafeFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
-  const contactsCollection = useSafeFirestore(COLLECTIONS.CONTACTS);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [contacts, setContacts] = useState<Record<string, Contact>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
-  // Récupérer les messages et les contacts
+  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(
+    COLLECTIONS.MESSAGES.SCHEDULED
+  );
+  
+  const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<'upcoming' | 'all'>('all');
+  
+  // Filtrer les messages selon le terme de recherche et les filtres
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Récupérer les contacts
-        const contactsData = await contactsCollection.getAll();
-        const contactsMap: Record<string, Contact> = {};
-        contactsData.forEach(contact => {
-          contactsMap[contact.id] = contact as Contact;
-        });
-        setContacts(contactsMap);
-        
-        // Récupérer les messages programmés
-        const messagesData = await scheduledCollection.getAll();
-        
-        if (messagesData.length === 0) {
-          // Créer des données fictives pour la démo
-          const mockMessages = generateMockScheduledMessages(Object.keys(contactsMap));
-          setMessages(mockMessages);
-        } else {
-          setMessages(messagesData as Message[]);
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les messages programmés."
-        });
-        
-        // En cas d'erreur, utiliser des données mock pour que l'utilisateur puisse quand même voir quelque chose
-        const mockMessages = generateMockScheduledMessages(Object.keys(contacts));
-        setMessages(mockMessages);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!messages) {
+      setFilteredMessages([]);
+      return;
+    }
 
-    fetchData();
+    let result = [...messages];
     
-    // Fonction de nettoyage qui reset l'état de chargement des données dans les hooks useSafeFirestore
-    return () => {
-      scheduledCollection.resetFetchState();
-      contactsCollection.resetFetchState();
-    };
-  }, [scheduledCollection, contactsCollection, toast]);
+    // Appliquer le filtre de recherche
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(message => 
+        message.subject.toLowerCase().includes(term) || 
+        message.content.toLowerCase().includes(term)
+      );
+    }
+    
+    // Appliquer le filtre temporel
+    if (filter === 'upcoming') {
+      const now = new Date();
+      result = result.filter(message => {
+        if (!message.scheduledAt) return false;
+        
+        // Convertir Timestamp en Date
+        const scheduledDate = message.scheduledAt.toDate ? 
+          message.scheduledAt.toDate() : 
+          new Date(message.scheduledAt);
+          
+        return scheduledDate > now && scheduledDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000; // 7 jours
+      });
+    }
+    
+    setFilteredMessages(result);
+  }, [messages, searchTerm, filter]);
 
   return {
-    messages,
-    setMessages,
-    contacts,
-    isLoading
+    messages: filteredMessages,
+    isLoading,
+    error,
+    refetch,
+    searchTerm,
+    setSearchTerm,
+    filter,
+    setFilter
   };
 };

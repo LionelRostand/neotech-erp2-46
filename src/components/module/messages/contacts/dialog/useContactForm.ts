@@ -1,113 +1,73 @@
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Contact } from '../../types/message-types';
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Timestamp } from 'firebase/firestore';
-import { contactFormSchema, ContactFormValues } from './contactFormSchema';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useFirestore } from "@/hooks/use-firestore";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { contactFormSchema } from "./contactFormSchema";
+import { Contact } from "../../types/message-types";
+import { useToast } from "@/hooks/use-toast";
 
-export const useContactForm = (
-  contact: Contact | null,
-  onSave: (contact: Contact, isNew: boolean) => void,
-  onOpenChange: (open: boolean) => void
-) => {
-  const { add, update } = useFirestore(COLLECTIONS.CONTACTS);
+export function useContactForm(initialData?: Contact, onSuccess?: () => void) {
+  const { add, update } = useFirestore(COLLECTIONS.MESSAGES.CONTACTS);
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isNewContact = !contact;
 
-  // Initialiser le formulaire avec react-hook-form et zod
-  const form = useForm<ContactFormValues>({
+  const form = useForm({
     resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      firstName: contact?.firstName || '',
-      lastName: contact?.lastName || '',
-      email: contact?.email || '',
-      phone: contact?.phone || '',
-      company: contact?.company || '',
-      position: contact?.position || '',
-      notes: contact?.notes || '',
-      tags: contact?.tags?.join(', ') || '',
-    },
+    defaultValues: initialData || {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      company: "",
+      position: "",
+      isActive: true
+    }
   });
 
-  // Mettre à jour les valeurs par défaut lorsque le contact change
-  useEffect(() => {
-    if (contact) {
-      form.reset({
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        email: contact.email,
-        phone: contact.phone || '',
-        company: contact.company || '',
-        position: contact.position || '',
-        notes: contact.notes || '',
-        tags: contact.tags?.join(', ') || '',
-      });
-    } else {
-      form.reset({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        company: '',
-        position: '',
-        notes: '',
-        tags: '',
-      });
-    }
-  }, [contact, form]);
-
-  const onSubmit = async (values: ContactFormValues) => {
+  async function onSubmit(data: any) {
     setIsSubmitting(true);
     try {
-      const now = Timestamp.now();
-      const contactData: Omit<Contact, 'id'> = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        phone: values.phone,
-        company: values.company,
-        position: values.position,
-        notes: values.notes,
-        tags: values.tags ? values.tags.split(',').map(tag => tag.trim()) : [],
-        isActive: true,
-        createdAt: contact?.createdAt || now,
-        updatedAt: now,
+      const contactData = {
+        ...data,
+        updatedAt: new Date()
       };
 
-      let savedContact: Contact;
-
-      if (isNewContact) {
-        // Créer un nouveau contact
-        const result = await add(contactData);
-        savedContact = { 
-          ...contactData, 
-          id: result.id 
-        };
+      if (initialData?.id) {
+        await update(initialData.id, contactData);
+        toast({
+          title: "Contact mis à jour",
+          description: `${data.firstName} ${data.lastName} a été mis à jour.`
+        });
       } else {
-        // Mettre à jour un contact existant
-        await update(contact.id, contactData);
-        savedContact = { 
-          ...contactData, 
-          id: contact.id 
+        const newContactData = {
+          ...contactData,
+          createdAt: new Date()
         };
+        await add(newContactData);
+        toast({
+          title: "Contact ajouté",
+          description: `${data.firstName} ${data.lastName} a été ajouté.`
+        });
       }
 
-      onSave(savedContact, isNewContact);
-      onOpenChange(false);
+      onSuccess?.();
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement du contact:", error);
+      console.error("Erreur lors de l'enregistrement du contact :", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible d'enregistrer le contact."
+      });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
   return {
     form,
     isSubmitting,
-    isNewContact,
-    onSubmit
+    onSubmit: form.handleSubmit(onSubmit)
   };
-};
+}

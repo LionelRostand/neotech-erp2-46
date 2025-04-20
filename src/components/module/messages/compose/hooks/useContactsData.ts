@@ -7,7 +7,7 @@ import { Contact } from '../../types/message-types';
 import { useSearchParams } from 'react-router-dom';
 
 export const useContactsData = () => {
-  const { getAll } = useFirestore(COLLECTIONS.CONTACTS);
+  const { getAll } = useFirestore(COLLECTIONS.MESSAGES.CONTACTS);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const preSelectedContactId = searchParams.get('to');

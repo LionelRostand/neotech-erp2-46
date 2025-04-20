@@ -12,6 +12,7 @@ export const useMessageForm = () => {
   const messageCollection = useFirestore(COLLECTIONS.MESSAGES.INBOX);
   const sentCollection = useFirestore(COLLECTIONS.MESSAGES.SENT);
   const scheduledCollection = useFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
+  const draftsCollection = useFirestore(COLLECTIONS.MESSAGES.DRAFTS);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { config: smtpConfig } = useSmtpConfig();
@@ -104,7 +105,7 @@ export const useMessageForm = () => {
         content,
         sender: 'current-user-id',
         recipients: selectedContacts.map(c => c.id),
-        status: isScheduled ? 'scheduled' as MessageStatus : 'sent' as MessageStatus,
+        status: isScheduled ? ('scheduled' as MessageStatus) : ('sent' as MessageStatus),
         priority,
         category,
         tags,
@@ -180,8 +181,7 @@ export const useMessageForm = () => {
         });
         
         // Save as draft if no SMTP config
-        const draftsCollection = useFirestore(COLLECTIONS.MESSAGES.DRAFTS);
-        messageData.status = 'draft';
+        messageData.status = 'draft' as MessageStatus;
         await draftsCollection.add(messageData);
         
         navigate('/modules/messages/settings');
