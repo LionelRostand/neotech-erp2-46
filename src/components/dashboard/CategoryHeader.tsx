@@ -25,7 +25,7 @@ const CategoryHeader = ({
   };
 
   const getCategoryColorClass = (category: string, hasModules: boolean) => {
-    if (!hasModules) return '';
+    if (!hasModules) return 'text-black'; // Default color when no modules
     
     switch (category) {
       case 'business':
@@ -37,7 +37,7 @@ const CategoryHeader = ({
       case 'communication':
         return 'text-module-communication';
       default:
-        return '';
+        return 'text-black';
     }
   };
 
