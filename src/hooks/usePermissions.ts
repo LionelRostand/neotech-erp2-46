@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/components/module/submodules/employees/services/permissionService';
 import { useAuth } from './useAuth';
 
@@ -46,7 +46,7 @@ export const usePermissions = (moduleId?: string) => {
     fetchPermissions();
   }, [currentUser?.uid, authIsAdmin]);
 
-  const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
+  const checkPermission = useCallback(async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
     if (!currentUser?.uid) return false;
     
     if (isAdmin) {
@@ -67,19 +67,19 @@ export const usePermissions = (moduleId?: string) => {
       console.error(`Erreur lors de la vérification de la permission ${module}.${action}:`, error);
       return false;
     }
-  };
+  }, [currentUser?.uid, isAdmin, isOffline, permissions]);
 
-  // Vérifier si l'utilisateur peut accéder au module actuel
+  // Check if the user can access the current module
   useEffect(() => {
     if (moduleId && !loading && currentUser?.uid) {
       checkPermission(moduleId, 'view').then(hasAccess => {
         if (!hasAccess && !isAdmin) {
           console.warn(`L'utilisateur n'a pas accès au module ${moduleId}`);
-          // On pourrait rediriger l'utilisateur ou afficher un message
+          // We could redirect the user or display a message
         }
       });
     }
-  }, [moduleId, loading, currentUser?.uid, isAdmin]);
+  }, [moduleId, loading, currentUser?.uid, isAdmin, checkPermission]);
 
   return {
     permissions,
@@ -87,6 +87,6 @@ export const usePermissions = (moduleId?: string) => {
     loading,
     checkPermission,
     hasPermission,
-    isOffline // Add isOffline to the return object
+    isOffline
   };
 };
