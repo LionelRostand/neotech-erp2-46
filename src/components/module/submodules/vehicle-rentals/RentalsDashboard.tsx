@@ -77,10 +77,9 @@ const RentalsDashboard: React.FC = () => {
               <TableBody>
                 {rentals.slice(0, 5).map(rental => {
                   const vehicle = vehicles.find(v => v.id === rental.vehicleId);
-                  const client = clients.find(c => c.id === rental.clientName);
                   return (
                     <TableRow key={rental.id}>
-                      <TableCell>{client?.name || 'N/A'}</TableCell>
+                      <TableCell>{rental.clientName}</TableCell>
                       <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'N/A'}</TableCell>
                       <TableCell>{new Date(rental.startDate).toLocaleDateString()}</TableCell>
                       <TableCell>{rental.status}</TableCell>
@@ -110,7 +109,7 @@ const RentalsDashboard: React.FC = () => {
                     <TableCell>{`${vehicle.make} ${vehicle.model}`}</TableCell>
                     <TableCell>
                       <span 
-                        className={`px-2 py-1 rounded-full text-xs ${
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           vehicle.status === 'available' 
                             ? 'bg-green-100 text-green-800' 
                             : vehicle.status === 'rented' 
