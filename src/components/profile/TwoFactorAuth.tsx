@@ -1,13 +1,18 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "sonner";
+import { Shield, Key } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/useAuth';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const TwoFactorAuth = () => {
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
@@ -15,149 +20,164 @@ const TwoFactorAuth = () => {
   const [method, setMethod] = useState("app");
   const [verificationCode, setVerificationCode] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { currentUser } = useAuth();
 
-  const handleToggle2FA = (checked: boolean) => {
+  // Charger l'état initial de la 2FA depuis Firestore
+  useEffect(() => {
+    const load2FAStatus = async () => {
+      if (!currentUser?.uid) return;
+      
+      try {
+        const twoFactorRef = doc(db, COLLECTIONS.USERS.MAIN, currentUser.uid);
+        const twoFactorDoc = await getDoc(twoFactorRef);
+        
+        if (twoFactorDoc.exists()) {
+          setIs2FAEnabled(twoFactorDoc.data()?.twoFactorEnabled || false);
+          setMethod(twoFactorDoc.data()?.twoFactorMethod || "app");
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du statut 2FA:", error);
+      }
+    };
+
+    load2FAStatus();
+  }, [currentUser]);
+
+  const handleToggle2FA = async (checked: boolean) => {
     if (checked) {
-      // When enabling 2FA, show the setup dialog
       setIsDialogOpen(true);
     } else {
-      // When disabling 2FA, just update the state
+      await updateTwoFactorStatus(false);
       setIs2FAEnabled(false);
-      toast({
-        title: "2FA désactivée",
-        description: "L'authentification à deux facteurs a été désactivée.",
-      });
+      toast.success("L'authentification à deux facteurs a été désactivée");
     }
   };
 
-  const handleMethodChange = (value: string) => {
-    setMethod(value);
+  const updateTwoFactorStatus = async (enabled: boolean) => {
+    if (!currentUser?.uid) return;
+    
+    try {
+      const userRef = doc(db, COLLECTIONS.USERS.MAIN, currentUser.uid);
+      await setDoc(userRef, {
+        twoFactorEnabled: enabled,
+        twoFactorMethod: method,
+        updatedAt: new Date()
+      }, { merge: true });
+      
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut 2FA:", error);
+      return false;
+    }
   };
 
-  const handleVerifyCode = () => {
+  const handleVerifyCode = async () => {
     setIsVerifying(true);
     
     // Simuler une vérification du code
-    setTimeout(() => {
-      setIsVerifying(false);
-      
+    setTimeout(async () => {
       if (verificationCode === "123456") {
-        setIsDialogOpen(false);
-        setIs2FAEnabled(true);
-        toast({
-          title: "2FA activée",
-          description: "L'authentification à deux facteurs a été activée avec succès.",
-        });
+        const updated = await updateTwoFactorStatus(true);
+        if (updated) {
+          setIsDialogOpen(false);
+          setIs2FAEnabled(true);
+          toast.success("L'authentification à deux facteurs a été activée");
+        } else {
+          toast.error("Erreur lors de l'activation de la 2FA");
+        }
       } else {
-        toast({
-          title: "Code incorrect",
-          description: "Le code de vérification est incorrect. Veuillez réessayer.",
-          variant: "destructive",
-        });
+        toast.error("Code de vérification incorrect");
       }
+      setIsVerifying(false);
     }, 1000);
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Authentification à deux facteurs (2FA)</CardTitle>
-          <CardDescription>
-            Renforcez la sécurité de votre compte en ajoutant une couche de protection supplémentaire.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h4 className="font-medium">Activer l'authentification à deux facteurs</h4>
-              <p className="text-sm text-muted-foreground">
-                Protégez votre compte en demandant une vérification supplémentaire lors de la connexion.
-              </p>
-            </div>
-            <Switch checked={is2FAEnabled} onCheckedChange={handleToggle2FA} />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          Authentification à deux facteurs (2FA)
+        </CardTitle>
+        <CardDescription>
+          Renforcez la sécurité de votre compte en ajoutant une couche de protection supplémentaire.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="2fa-toggle">Activer l'authentification à deux facteurs</Label>
+            <p className="text-sm text-muted-foreground">
+              Protégez votre compte en demandant une vérification supplémentaire lors de la connexion.
+            </p>
           </div>
+          <Switch 
+            id="2fa-toggle"
+            checked={is2FAEnabled}
+            onCheckedChange={handleToggle2FA}
+          />
+        </div>
 
-          {is2FAEnabled && (
-            <div className="pt-4 border-t">
-              <h4 className="font-medium mb-2">Méthode d'authentification</h4>
-              <RadioGroup value={method} onValueChange={handleMethodChange}>
-                <div className="flex flex-col space-y-3">
-                  <div className="flex items-center space-x-2 rounded-md border p-3">
-                    <RadioGroupItem value="app" id="method-app" />
-                    <Label htmlFor="method-app" className="flex-1 cursor-pointer">
-                      Application d'authentification (Google Authenticator, Authy)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 rounded-md border p-3">
-                    <RadioGroupItem value="sms" id="method-sms" />
-                    <Label htmlFor="method-sms" className="flex-1 cursor-pointer">
-                      SMS
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 rounded-md border p-3">
-                    <RadioGroupItem value="email" id="method-email" />
-                    <Label htmlFor="method-email" className="flex-1 cursor-pointer">
-                      Email
-                    </Label>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
-        </CardContent>
         {is2FAEnabled && (
-          <CardFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-              Modifier la configuration 2FA
-            </Button>
-          </CardFooter>
+          <div className="pt-4 border-t">
+            <h4 className="font-medium mb-2">Méthode d'authentification</h4>
+            <RadioGroup value={method} onValueChange={setMethod}>
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center space-x-2 rounded-md border p-3">
+                  <RadioGroupItem value="app" id="method-app" />
+                  <Label htmlFor="method-app" className="flex-1 cursor-pointer">
+                    Application d'authentification (Google Authenticator, Authy)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-md border p-3">
+                  <RadioGroupItem value="sms" id="method-sms" />
+                  <Label htmlFor="method-sms" className="flex-1 cursor-pointer">
+                    SMS
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-md border p-3">
+                  <RadioGroupItem value="email" id="method-email" />
+                  <Label htmlFor="method-email" className="flex-1 cursor-pointer">
+                    Email
+                  </Label>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
         )}
-      </Card>
+      </CardContent>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Configuration 2FA</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Configuration 2FA
+            </DialogTitle>
             <DialogDescription>
-              {method === "app" ? (
-                "Scannez le code QR avec votre application d'authentification ou saisissez la clé manuellement."
-              ) : method === "sms" ? (
-                "Un code de vérification sera envoyé à votre numéro de téléphone lors de la connexion."
-              ) : (
-                "Un code de vérification sera envoyé à votre adresse email lors de la connexion."
-              )}
+              {method === "app" && "Scannez le QR code avec votre application d'authentification"}
+              {method === "sms" && "Un code de vérification sera envoyé par SMS"}
+              {method === "email" && "Un code de vérification sera envoyé par email"}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {method === "app" && (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="bg-gray-200 w-48 h-48 flex items-center justify-center text-xs text-gray-500">
-                  [Code QR simulé]
-                </div>
-                <p className="text-sm font-mono bg-gray-100 p-2 rounded">
-                  ABCD-EFGH-IJKL-MNOP
-                </p>
-              </div>
-            )}
+
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="verification-code">
-                Entrez le code de vérification
-                {method === "app" ? " généré par l'application" : " reçu"}
-              </Label>
+              <Label>Code de vérification</Label>
               <Input
-                id="verification-code"
-                placeholder="123456"
+                type="text"
+                placeholder="Entrez le code à 6 chiffres"
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
-                className="text-center tracking-[0.5em] font-mono"
                 maxLength={6}
+                className="text-center tracking-widest font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                Pour cette démonstration, utilisez le code 123456.
+                Pour cette démonstration, utilisez le code 123456
               </p>
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Annuler
@@ -168,7 +188,7 @@ const TwoFactorAuth = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </Card>
   );
 };
 
