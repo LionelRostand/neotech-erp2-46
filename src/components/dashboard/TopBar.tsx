@@ -16,13 +16,15 @@ import {
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 const TopBar = () => {
   const { alerts } = useAlertsData();
+  const { userData } = useAuth();
   const activeAlerts = alerts?.filter(alert => alert.status === 'Active').length || 0;
   
   const navigate = useNavigate();
@@ -40,6 +42,14 @@ const TopBar = () => {
       console.error('Erreur lors de la déconnexion:', error);
       toast.error('Erreur lors de la déconnexion');
     }
+  };
+
+  // Get user's initials for the avatar fallback
+  const getInitials = () => {
+    if (userData?.firstName && userData?.lastName) {
+      return `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase();
+    }
+    return userData?.email?.[0]?.toUpperCase() || 'U';
   };
 
   return (
@@ -94,8 +104,9 @@ const TopBar = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={userData?.profileImageUrl} alt={userData?.firstName} />
                     <AvatarFallback className="bg-neotech-primary text-white">
-                      A
+                      {getInitials()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -103,9 +114,11 @@ const TopBar = () => {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Admin</p>
+                    <p className="text-sm font-medium leading-none">
+                      {userData?.firstName} {userData?.lastName}
+                    </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      admin@neotech-consulting.com
+                      {userData?.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -153,7 +166,9 @@ const TopBar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <span className="ml-2 font-medium text-sm">Admin</span>
+            <span className="ml-2 font-medium text-sm">
+              {userData?.firstName || 'Admin'}
+            </span>
           </div>
         </div>
       </div>
