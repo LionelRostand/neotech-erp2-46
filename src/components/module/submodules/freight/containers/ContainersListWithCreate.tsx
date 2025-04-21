@@ -14,13 +14,26 @@ const ContainersListWithCreate: React.FC = () => {
   const [editDialog, setEditDialog] = useState<{ open: boolean; container: any | null }>({ open: false, container: null });
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; container: any | null }>({ open: false, container: null });
 
-  // Pour simuler le coût, on refait le calcul avec ContainerCostTab logic :
+  // Pour simuler le coût, on refait le calcul avec ContainerCostTab logic :
   const computeCost = (container) => {
     const baseRates = { "20ft": 500, "40ft": 900 };
     const base = baseRates[container.type] || 0;
     const articles = Array.isArray(container.articles) ? container.articles : [];
     const totalWeight = articles.reduce((acc, art) => acc + (art?.weight ?? 0) * (art?.quantity ?? 1), 0);
     return base + totalWeight * 5;
+  };
+
+  // Gestionnaires pour les icônes d'action
+  const handleView = (container) => {
+    setViewDialog({ open: true, container });
+  };
+
+  const handleEdit = (container) => {
+    setEditDialog({ open: true, container });
+  };
+
+  const handleDelete = (container) => {
+    setDeleteDialog({ open: true, container });
   };
 
   return (
@@ -62,12 +75,12 @@ const ContainersListWithCreate: React.FC = () => {
                     <td className="p-2">{container.client}</td>
                     <td className="p-2">{container.status}</td>
                     <td className="p-2">{totalWeight} kg</td>
-                    <td className="p-2 text-green-700 font-bold">{cost.toLocaleString()} €</td>
-                    <td className="p-2">
+                    <td className="p-2 text-green-700 font-bold">{cost.toLocaleString()} €</td>
+                    <td className="p-2 flex space-x-1">
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => setViewDialog({ open: true, container })}
+                        onClick={() => handleView(container)}
                         title="Voir"
                       >
                         <Eye className="w-4 h-4" />
@@ -75,7 +88,7 @@ const ContainersListWithCreate: React.FC = () => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => setEditDialog({ open: true, container })}
+                        onClick={() => handleEdit(container)}
                         title="Modifier"
                       >
                         <Pencil className="w-4 h-4" />
@@ -83,7 +96,7 @@ const ContainersListWithCreate: React.FC = () => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => setDeleteDialog({ open: true, container })}
+                        onClick={() => handleDelete(container)}
                         title="Supprimer"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
