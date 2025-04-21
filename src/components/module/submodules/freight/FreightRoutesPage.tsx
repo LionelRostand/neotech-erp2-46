@@ -23,6 +23,7 @@ const FreightRoutesPage: React.FC = () => {
       try {
         setIsLoading(true);
         const routesData = await getAll();
+        console.log("Routes chargées:", routesData);
         setRoutes(routesData as FreightRoute[]);
       } catch (err: any) {
         console.error("Erreur lors du chargement des routes:", err);
