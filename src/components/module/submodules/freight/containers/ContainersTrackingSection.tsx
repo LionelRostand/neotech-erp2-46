@@ -26,12 +26,12 @@ const ContainersTrackingSection: React.FC = () => {
       )}
       
       {searchDone && foundItems.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-40 gap-2">
-          <div className="text-red-500 font-medium">
-            Aucun résultat trouvé pour cette référence.
+        <div className="bg-red-500 text-white p-4 rounded-md">
+          <div className="font-medium">
+            Aucun résultat
           </div>
-          <div className="text-sm text-gray-500">
-            Vérifiez que le numéro saisi est correct ou essayez une autre référence.
+          <div className="text-sm">
+            Aucun colis ou conteneur trouvé avec cette référence.
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@ import UnifiedTrackingSearch from "./UnifiedTrackingSearch";
 import UnifiedTrackingMap, { UnifiedTrackingItem } from "./UnifiedTrackingMap";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin } from "lucide-react";
+import { MapPin, Package, Container } from "lucide-react";
 import useFreightData from "@/hooks/modules/useFreightData";
 import { formatAddress } from "./utils/locationUtils";
 
@@ -92,16 +92,9 @@ const UnifiedTrackingPage: React.FC = () => {
         setFoundItems(all);
         setIsLoading(false);
         setSearchDone(true);
-        if (all.length === 0) {
-          toast({
-            title: "Aucun résultat",
-            description: "Aucun colis ou conteneur trouvé avec cette référence.",
-            variant: "destructive",
-          });
-        }
       }, 800);
     },
-    [containers, tracking, trackingEvents, toast]
+    [containers, tracking, trackingEvents]
   );
 
   return (
@@ -163,7 +156,14 @@ const UnifiedTrackingPage: React.FC = () => {
         </>
       )}
       {searchDone && foundItems.length === 0 && (
-        <div className="flex items-center justify-center h-40 text-red-500">Aucun résultat trouvé pour cette référence.</div>
+        <div className="bg-red-500 text-white p-4 rounded-md">
+          <div className="font-medium">
+            Aucun résultat
+          </div>
+          <div className="text-sm">
+            Aucun colis ou conteneur trouvé avec cette référence.
+          </div>
+        </div>
       )}
     </div>
   );
