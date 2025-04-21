@@ -1,156 +1,88 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { addDocument, setDocument } from "@/hooks/firestore/create-operations";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
-interface Option {
-  label: string;
-  value: string;
-  origin?: string;
-  destination?: string;
+/**
+ * Génère un numéro de conteneur unique du style "CONT-20240421-XXXX"
+ */
+function generateContainerNumber() {
+  const now = new Date();
+  const datePart = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("");
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `CONT-${datePart}-${random}`;
 }
 
-interface CreateEditContainerDialogProps {
-  open: boolean;
-  onClose: () => void;
-  container: any | null;
-  carrierOptions: Option[];
-  clientOptions: Option[];
-  routeOptions: Option[];
-}
+const initialForm = (container?: any) => ({
+  number: container?.number || "",
+  type: container?.type || "",
+  size: container?.size || "",
+  status: container?.status || "",
+  carrierName: container?.carrierName || "",
+  client: container?.client || "",
+  origin: container?.origin || "",
+  destination: container?.destination || "",
+  departureDate: container?.departureDate || "",
+  arrivalDate: container?.arrivalDate || "",
+  location: container?.location || "",
+});
 
-const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
+const CreateEditContainerDialog = ({
   open,
   onClose,
   container,
-  carrierOptions,
-  clientOptions,
-  routeOptions,
+  carrierOptions = [],
+  clientOptions = [],
+  routeOptions = []
+}: {
+  open: boolean;
+  onClose: () => void;
+  container?: any;
+  carrierOptions: { label: string; value: string }[];
+  clientOptions: { label: string; value: string }[];
+  routeOptions: { label: string; value: string }[];
 }) => {
-  const [formData, setFormData] = useState({
-    number: '',
-    type: 'dry',
-    size: '20ft',
-    status: 'in_transit',
-    carrierName: '',
-    carrierId: '',
-    client: '',
-    clientId: '',
-    origin: '',
-    destination: '',
-    departureDate: '',
-    arrivalDate: '',
-  });
+  const isEdit = !!container;
+  const [form, setForm] = useState(initialForm(container));
   const [loading, setLoading] = useState(false);
 
-  // Reset form when dialog opens/closes or container changes
+  // Générer le numéro de conteneur uniquement lors de la première ouverture EN CRÉATION
   useEffect(() => {
-    if (open && container) {
-      setFormData({
-        number: container.number || '',
-        type: container.type || 'dry',
-        size: container.size || '20ft',
-        status: container.status || 'in_transit',
-        carrierName: container.carrierName || '',
-        carrierId: container.carrierId || '',
-        client: container.client || '',
-        clientId: container.clientId || '',
-        origin: container.origin || '',
-        destination: container.destination || '',
-        departureDate: container.departureDate || '',
-        arrivalDate: container.arrivalDate || '',
-      });
-    } else if (open) {
-      // Clear form for new container
-      setFormData({
-        number: '',
-        type: 'dry',
-        size: '20ft',
-        status: 'in_transit',
-        carrierName: '',
-        carrierId: '',
-        client: '',
-        clientId: '',
-        origin: '',
-        destination: '',
-        departureDate: '',
-        arrivalDate: '',
-      });
+    if (open && !isEdit) {
+      setForm((f) => ({
+        ...initialForm(),
+        number: generateContainerNumber(),
+      }));
     }
-  }, [open, container]);
+    if (open && isEdit) {
+      setForm(initialForm(container));
+    }
+    // eslint-disable-next-line
+  }, [open, isEdit, container]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCarrierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const carrierId = e.target.value;
-    const carrier = carrierOptions.find(c => c.value === carrierId);
-    if (carrier) {
-      setFormData(prev => ({
-        ...prev,
-        carrierId,
-        carrierName: carrier.label
-      }));
-    }
-  };
-
-  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const clientId = e.target.value;
-    const client = clientOptions.find(c => c.value === clientId);
-    if (client) {
-      setFormData(prev => ({
-        ...prev,
-        clientId,
-        client: client.label
-      }));
-    }
-  };
-
-  const handleRouteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const routeId = e.target.value;
-    const route = routeOptions.find(r => r.value === routeId);
-    if (route) {
-      setFormData(prev => ({
-        ...prev,
-        routeId,
-        origin: route.origin || '',
-        destination: route.destination || ''
-      }));
-    }
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      if (container) {
-        // Update existing container
-        await updateDoc(doc(db, COLLECTIONS.FREIGHT.CONTAINERS, container.id), {
-          ...formData,
-          updatedAt: new Date().toISOString(),
-        });
-        toast.success('Conteneur mis à jour avec succès');
+      if (isEdit && container?.id) {
+        await setDocument(COLLECTIONS.FREIGHT.CONTAINERS, container.id, { ...form });
+        toast.success("Conteneur modifié !");
       } else {
-        // Create new container
-        await addDoc(collection(db, COLLECTIONS.FREIGHT.CONTAINERS), {
-          ...formData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-        toast.success('Conteneur créé avec succès');
+        await addDocument(COLLECTIONS.FREIGHT.CONTAINERS, { ...form });
+        toast.success("Conteneur créé !");
       }
       onClose();
-    } catch (error) {
-      console.error('Error saving container:', error);
-      toast.error('Erreur lors de l\'enregistrement du conteneur');
+    } catch (err) {
+      toast.error("Erreur lors de l'enregistrement");
     } finally {
       setLoading(false);
     }
@@ -158,160 +90,72 @@ const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{container ? 'Modifier le conteneur' : 'Nouveau conteneur'}</DialogTitle>
+          <DialogTitle>{isEdit ? "Modifier le conteneur" : "Créer un conteneur"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Numéro de conteneur</label>
-              <Input 
-                name="number" 
-                value={formData.number} 
-                onChange={handleInputChange} 
-                required 
-                placeholder="ex: MSCU1234567"
-              />
+          <div>
+            <label className="block text-xs font-medium mb-1">Numéro du conteneur</label>
+            <Input 
+              name="number" 
+              value={form.number} 
+              readOnly={!isEdit} 
+              required 
+              className="bg-gray-100 font-mono"
+            />
+            {!isEdit && <div className="text-xs text-muted-foreground">Numéro généré automatiquement</div>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Type</label>
+            <Input name="type" value={form.type} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Taille</label>
+            <Input name="size" value={form.size} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Statut</label>
+            <Input name="status" value={form.status} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Transporteur</label>
+            <Input name="carrierName" value={form.carrierName} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Client</label>
+            <Input name="client" value={form.client} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Origine</label>
+            <Input name="origin" value={form.origin} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Destination</label>
+            <Input name="destination" value={form.destination} onChange={handleChange} required />
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block text-xs font-medium mb-1">Date départ</label>
+              <Input type="date" name="departureDate" value={form.departureDate} onChange={handleChange} />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Type</label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="dry">Standard (Dry)</option>
-                <option value="reefer">Réfrigéré (Reefer)</option>
-                <option value="open_top">Toit ouvert (Open Top)</option>
-                <option value="flat_rack">Plateau (Flat Rack)</option>
-                <option value="tank">Citerne (Tank)</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Taille</label>
-              <select
-                name="size"
-                value={formData.size}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="20ft">20 pieds</option>
-                <option value="40ft">40 pieds</option>
-                <option value="40ft_hc">40 pieds HC</option>
-                <option value="45ft">45 pieds</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Statut</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="in_transit">En transit</option>
-                <option value="loading">En chargement</option>
-                <option value="delivered">Livré</option>
-                <option value="customs">En douane</option>
-                <option value="ready">Prêt</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Transporteur</label>
-              <select
-                value={formData.carrierId}
-                onChange={handleCarrierChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Sélectionner un transporteur</option>
-                {carrierOptions.map((carrier) => (
-                  <option key={carrier.value} value={carrier.value}>
-                    {carrier.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Client</label>
-              <select
-                value={formData.clientId}
-                onChange={handleClientChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Sélectionner un client</option>
-                {clientOptions.map((client) => (
-                  <option key={client.value} value={client.value}>
-                    {client.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Route</label>
-              <select
-                onChange={handleRouteChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Sélectionner une route</option>
-                {routeOptions.map((route) => (
-                  <option key={route.value} value={route.value}>
-                    {route.label}
-                  </option>
-                ))}
-              </select>
+            <div className="flex-1">
+              <label className="block text-xs font-medium mb-1">Date arrivée</label>
+              <Input type="date" name="arrivalDate" value={form.arrivalDate} onChange={handleChange} />
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Origine</label>
-              <Input 
-                name="origin" 
-                value={formData.origin} 
-                onChange={handleInputChange} 
-                placeholder="ex: Shanghai"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Destination</label>
-              <Input 
-                name="destination" 
-                value={formData.destination} 
-                onChange={handleInputChange} 
-                placeholder="ex: Le Havre"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de départ</label>
-              <Input 
-                type="date" 
-                name="departureDate" 
-                value={formData.departureDate} 
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date d'arrivée prévue</label>
-              <Input 
-                type="date" 
-                name="arrivalDate" 
-                value={formData.arrivalDate} 
-                onChange={handleInputChange}
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Localisation</label>
+            <Input name="location" value={form.location} onChange={handleChange} />
           </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" type="button" onClick={onClose}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Sauvegarde...' : container ? 'Mettre à jour' : 'Créer'}
+              {loading ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
