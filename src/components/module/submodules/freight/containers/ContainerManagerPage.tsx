@@ -5,10 +5,13 @@ import { Package, Plus } from "lucide-react";
 import { Container } from "@/types/freight";
 import ContainersListWithCreate from "./ContainersListWithCreate";
 import ContainerEditDialog from "./ContainerEditDialog";
+import ContainersKanban from "./ContainersKanban";
+import { useContainersData } from "@/hooks/modules/useContainersData";
 
 const ContainerManagerPage: React.FC = () => {
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { containers } = useContainersData();
 
   const handleEditContainer = (container: Container) => {
     console.log("Edit container called with:", container);
@@ -34,10 +37,15 @@ const ContainerManagerPage: React.FC = () => {
           Nouveau conteneur
         </Button>
       </div>
+      
       <div className="rounded-md bg-white p-4">
         <ContainersListWithCreate 
           onEditContainer={handleEditContainer} 
         />
+      </div>
+
+      <div className="rounded-md bg-white p-4">
+        <ContainersKanban containers={containers} />
       </div>
 
       {isEditDialogOpen && (
