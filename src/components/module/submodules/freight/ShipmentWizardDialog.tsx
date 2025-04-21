@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useFreightClients } from "../hooks/useFreightClients";
+import { useFreightClients } from "@/components/module/submodules/freight/hooks/useFreightClients";
 import { toast } from "sonner";
 import FirebaseShipmentForm from "./FirebaseShipmentForm";
 
