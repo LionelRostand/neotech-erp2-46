@@ -3,7 +3,6 @@ import {
   Truck, 
   LayoutDashboard, 
   Ship, 
-  Container, 
   MapPin, 
   DollarSign, 
   FileText, 
@@ -25,7 +24,8 @@ export const freightModule: AppModule = {
     { id: "freight-shipments", name: "Expéditions", href: "/modules/freight/shipments", icon: createIcon(Ship) },
     { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-routes", name: "Routes", href: "/modules/freight/routes", icon: createIcon(Navigation) },
-    { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(Container) },
+    // Suppression de la ligne du sous-module "Conteneurs"
+    //{ id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(Container) },
     { id: "freight-carriers", name: "Transporteurs", href: "/modules/freight/carriers", icon: createIcon(Truck) },
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
     { id: "freight-pricing", name: "Tarification", href: "/modules/freight/pricing", icon: createIcon(DollarSign) },
