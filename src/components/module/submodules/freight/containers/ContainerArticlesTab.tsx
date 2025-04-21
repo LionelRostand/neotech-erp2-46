@@ -2,150 +2,141 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Plus, Trash } from "lucide-react";
 
 interface Article {
-  name: string;
+  id: string;
+  description: string;
   quantity: number;
-  weight?: number;
+  weight: number;
 }
 
 interface Props {
-  articles?: Article[];
-  setArticles?: (articles: Article[]) => void;
+  articles: Article[];
+  onChange: (articles: Article[]) => void;
 }
 
-const ContainerArticlesTab: React.FC<Props> = ({ articles = [], setArticles }) => {
-  const [name, setName] = useState("");
+const ContainerArticlesTab: React.FC<Props> = ({ articles, onChange }) => {
+  const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [weight, setWeight] = useState<number | undefined>(undefined);
+  const [weight, setWeight] = useState(0);
 
-  const handleAdd = () => {
-    if (!setArticles) return; // Exit if setArticles is not provided
-    
-    if (name && quantity > 0) {
-      setArticles([...articles, { name, quantity, weight }]);
-      setName("");
-      setQuantity(1);
-      setWeight(undefined);
+  const addArticle = () => {
+    if (!description) {
+      return;
     }
+
+    const newArticle = {
+      id: Date.now().toString(),
+      description,
+      quantity,
+      weight,
+    };
+
+    onChange([...articles, newArticle]);
+    
+    // Reset form
+    setDescription("");
+    setQuantity(1);
+    setWeight(0);
   };
 
-  const handleDelete = (idx: number) => {
-    if (!setArticles) return; // Exit if setArticles is not provided
-    
-    setArticles(articles.filter((_, i) => i !== idx));
+  const removeArticle = (id: string) => {
+    onChange(articles.filter((article) => article.id !== id));
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 mb-4">
-        <div>
-          <Label htmlFor="articleName">Nom de l'article</Label>
+      <div className="grid grid-cols-12 gap-2 items-end">
+        <div className="col-span-6">
+          <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
           <Input
-            id="articleName"
-            placeholder="ex: Téléviseur 55 pouces"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            disabled={!setArticles}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description de l'article"
           />
         </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="quantity">Quantité</Label>
-            <Input
-              id="quantity"
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={e => setQuantity(Number(e.target.value))}
-              disabled={!setArticles}
-            />
-          </div>
-          <div>
-            <Label htmlFor="weight">Poids (kg)</Label>
-            <Input
-              id="weight"
-              type="number"
-              min={0}
-              placeholder="Optionnel"
-              value={weight ?? ""}
-              onChange={e => setWeight(e.target.value ? Number(e.target.value) : undefined)}
-              disabled={!setArticles}
-            />
-          </div>
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-gray-900 mb-1">Quantité</label>
+          <Input
+            type="number"
+            min={1}
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+          />
         </div>
-        
-        {setArticles && (
-          <Button 
-            type="button" 
-            onClick={handleAdd}
-            disabled={!name || quantity < 1}
-            className="self-end"
-          >
-            Ajouter l'article
+        <div className="col-span-3">
+          <label className="block text-sm font-medium text-gray-900 mb-1">Poids (kg)</label>
+          <Input
+            type="number"
+            min={0}
+            step={0.1}
+            value={weight}
+            onChange={(e) => setWeight(Number(e.target.value))}
+          />
+        </div>
+        <div className="col-span-1">
+          <Button type="button" onClick={addArticle} size="sm" className="w-full">
+            <Plus className="h-4 w-4" />
           </Button>
-        )}
+        </div>
       </div>
 
-      <div className="mt-6">
-        <h3 className="font-medium mb-2">Articles ({articles.length})</h3>
-        
-        {articles.length > 0 ? (
-          <div className="border rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Article
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantité
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Poids
-                  </th>
-                  {setArticles && (
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  )}
+      {articles.length > 0 ? (
+        <div className="border rounded-md overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Quantité
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Poids (kg)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {articles.map((article) => (
+                <tr key={article.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {article.description}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {article.quantity}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {article.weight}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Button
+                      variant="ghost"
+                      onClick={() => removeArticle(article.id)}
+                      size="sm"
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {articles.map((article, idx) => (
-                  <tr key={idx}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {article.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {article.quantity}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {article.weight ? `${article.weight} kg` : "-"}
-                    </td>
-                    {setArticles && (
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          onClick={() => handleDelete(idx)}
-                        >
-                          Supprimer
-                        </Button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center p-4 border rounded-md bg-gray-50 text-gray-500">
-            Aucun article ajouté
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-4 text-gray-500">
+          Aucun article ajouté
+        </div>
+      )}
+
+      <div className="mt-2 text-sm text-gray-500">
+        Total articles: {articles.length} | 
+        Poids total: {articles.reduce((acc, article) => acc + article.quantity * article.weight, 0).toFixed(2)} kg
       </div>
     </div>
   );

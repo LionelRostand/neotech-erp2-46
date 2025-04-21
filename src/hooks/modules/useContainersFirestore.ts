@@ -1,99 +1,82 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, orderBy, query, serverTimestamp, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { db } from "@/lib/firebase";
+import { 
+  collection, 
+  addDoc,
+  doc, 
+  updateDoc,
+  deleteDoc,
+  Timestamp
+} from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { Container } from "@/types/freight";
 
-const COLLECTION_PATH = 'freight_containers';
-
-export const useContainers = () => {
-  return useQuery({
-    queryKey: ['freight', 'containers'],
-    queryFn: async () => {
-      try {
-        const q = query(collection(db, COLLECTION_PATH), orderBy('createdAt', 'desc'));
-        const snap = await getDocs(q);
-        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (error) {
-        console.error("Error fetching containers:", error);
-        toast.error("Erreur lors du chargement des conteneurs");
-        return [];
-      }
-    }
-  });
-};
-
-export const useAddContainer = () => {
+// Hook for creating a new container
+export const useCreateContainer = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (data: any) => {
-      try {
-        const docRef = await addDoc(collection(db, COLLECTION_PATH), {
-          ...data,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-        return { id: docRef.id, ...data };
-      } catch (error) {
-        console.error("Error adding container:", error);
-        throw error;
+    mutationFn: async (containerData: Omit<Container, "id">) => {
+      // Add timestamp for createdAt if not provided
+      if (!containerData.createdAt) {
+        containerData.createdAt = new Date().toISOString();
       }
+
+      const docRef = await addDoc(
+        collection(db, COLLECTIONS.FREIGHT.CONTAINERS), 
+        containerData
+      );
+      
+      return { id: docRef.id, ...containerData };
     },
     onSuccess: () => {
+      // Invalidate the containers query to refresh data
       queryClient.invalidateQueries({ queryKey: ['freight', 'containers'] });
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast.error("Erreur lors de l'ajout du conteneur");
     }
   });
 };
 
+// Hook for updating an existing container
 export const useUpdateContainer = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      try {
-        const docRef = doc(db, COLLECTION_PATH, id);
-        await updateDoc(docRef, {
-          ...data,
-          updatedAt: serverTimestamp()
-        });
-        return { id, ...data };
-      } catch (error) {
-        console.error("Error updating container:", error);
-        throw error;
-      }
+    mutationFn: async ({
+      id,
+      data
+    }: {
+      id: string;
+      data: Partial<Container>;
+    }) => {
+      // Add updatedAt timestamp
+      data.updatedAt = new Date().toISOString();
+      
+      const docRef = doc(db, COLLECTIONS.FREIGHT.CONTAINERS, id);
+      await updateDoc(docRef, data);
+      
+      return { id, ...data };
     },
     onSuccess: () => {
+      // Invalidate the containers query to refresh data
       queryClient.invalidateQueries({ queryKey: ['freight', 'containers'] });
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast.error("Erreur lors de la mise à jour du conteneur");
     }
   });
 };
 
+// Hook for deleting a container
 export const useDeleteContainer = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (id: string) => {
-      try {
-        const docRef = doc(db, COLLECTION_PATH, id);
-        await deleteDoc(docRef);
-        return id;
-      } catch (error) {
-        console.error("Error deleting container:", error);
-        throw error;
-      }
+      const docRef = doc(db, COLLECTIONS.FREIGHT.CONTAINERS, id);
+      await deleteDoc(docRef);
+      return id;
     },
     onSuccess: () => {
+      // Invalidate the containers query to refresh data
       queryClient.invalidateQueries({ queryKey: ['freight', 'containers'] });
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-      toast.error("Erreur lors de la suppression du conteneur");
     }
   });
 };

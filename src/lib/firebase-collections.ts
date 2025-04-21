@@ -1,151 +1,95 @@
 
-/**
- * Constantes pour les chemins des collections Firestore
- * Utilisé pour centraliser les noms des collections et éviter les erreurs de typo
- */
+// Firebase collections paths for the application
+
 export const COLLECTIONS = {
-  USERS: 'users',
-  USER_PERMISSIONS: 'user_permissions',
-  COMPANIES: 'companies',
+  EMPLOYEES: "employees",
+  DEPARTMENTS: "departments",
+  COMPANIES: "companies",
+  PAYSLIPS: "payslips",
+  CONTRACTS: "contracts",
+  BADGES: "badges",
+  LEAVES: "leaves",
+  ALERTS: "alerts",
+  NOTIFICATIONS: "notifications",
+  DOCUMENTS: "documents",
+  USERS: "users",
+  TIME_SHEETS: "timeSheets",
+  EVALUATIONS: "evaluations",
+  TRAININGS: "trainings",
+  ATTENDANCE: "attendance",
+  SETTINGS: "settings",
   
-  ACCOUNTING: {
-    CLIENTS: 'accounting_clients',
-    EXPENSES: 'accounting_expenses',
-    INVOICES: 'accounting_invoices',
-    PAYMENTS: 'accounting_payments',
-    PERMISSIONS: 'accounting_permissions',
-    REPORTS: 'accounting_reports',
-    SETTINGS: 'accounting_settings',
-    SUPPLIERS: 'accounting_suppliers',
-    TAXES: 'accounting_taxes',
-    TRANSACTIONS: 'accounting_transactions'
-  },
-  
-  CRM: {
-    ACTIVITIES: 'crm_activities',
-    CAMPAIGNS: 'crm_campaigns',
-    CLIENTS: 'crm_clients',
-    CONTACTS: 'crm_contacts',
-    DEALS: 'crm_deals',
-    LEADS: 'crm_leads',
-    OPPORTUNITIES: 'crm_opportunities',
-    PROSPECTS: 'crm_prospects',
-    REMINDERS: 'crm_reminders',
-    SETTINGS: 'crm_settings',
-    TASKS: 'crm_tasks'
-  },
-  
-  DOCUMENTS: {
-    MAIN: 'documents',
-    SETTINGS: 'document_settings',
-    TEMPLATES: 'document_templates'
-  },
-  
-  // Ajout de DOCUMENT_COLLECTIONS pour les services de documents
-  DOCUMENT_COLLECTIONS: {
-    DOCUMENTS: 'documents', 
-    SETTINGS: 'document_settings',
-    TEMPLATES: 'document_templates'
-  },
-  
+  // Module-specific collections
   FREIGHT: {
-    BILLING: 'freight_billing',
-    CARRIERS: 'freight_carriers',
-    CLIENTS: 'freight_clients',
-    CONTAINERS: 'freight_containers',
-    CUSTOMERS: 'freight_customers',
-    DOCUMENTS: 'freight_documents',
-    PACKAGE_TYPES: 'freight_package_types',
-    PACKAGES: 'freight_packages',
-    PRICING: 'freight_pricing',
-    QUOTES: 'freight_quotes',
-    ROUTES: 'freight_routes',
-    SETTINGS: 'freight_settings',
-    SHIPMENTS: 'freight_shipments',
-    TRACKING: 'freight_tracking',
-    TRACKING_EVENTS: 'freight_tracking_events',
-    USERS: 'freight_users'
-  },
-  
-  HEALTH: {
-    APPOINTMENTS: 'health_appointments',
-    BILLING: 'health_billing',
-    CONSULTATIONS: 'health_consultations',
-    DOCTORS: 'health_doctors',
-    INSURANCE: 'health_insurance',
-    INVENTORY: 'health_inventory',
-    LABORATORY: 'health_laboratory',
-    MEDICAL_RECORDS: 'health_medical_records',
-    PATIENTS: 'health_patients',
-    PERMISSIONS: 'health_permissions',
-    PRESCRIPTIONS: 'health_prescriptions',
-    SETTINGS: 'health_settings',
-    STAFF: 'health_staff'
-  },
-  
-  HR: {
-    ABSENCE_REQUESTS: 'hr_absence_requests',
-    ALERTS: 'hr_alerts',
-    ATTENDANCE: 'hr_attendance',
-    BADGES: 'hr_badges',
-    CONTRACTS: 'hr_contracts',
-    DEPARTMENTS: 'hr_departments',
-    DOCUMENTS: 'hr_documents',
-    EMPLOYEES: 'hr_employees',
-    EVALUATIONS: 'hr_evaluations',
-    LEAVE_REQUESTS: 'hr_leave_requests',
-    LEAVES: 'hr_leaves',
-    MANAGERS: 'hr_managers',
-    PAYSLIPS: 'hr_payslips',
-    PERMISSIONS: 'hr_permissions',
-    RECRUITMENT: 'hr_recruitment',
-    SALARIES: 'hr_salaries',
-    SETTINGS: 'hr_settings',
-    TIMESHEET: 'hr_timesheet',
-    TRAININGS: 'hr_trainings'
-  },
-  
-  LIBRARY: {
-    AUTHORS: 'library_authors',
-    BOOKS: 'library_books',
-    CATEGORIES: 'library_categories',
-    LOANS: 'library_loans',
-    MEMBERS: 'library_members',
-    PUBLISHERS: 'library_publishers',
-    RETURNS: 'library_returns',
-    SETTINGS: 'library_settings',
-    STATS: 'library_stats'
+    SHIPMENTS: "freight_shipments",
+    ROUTES: "freight_routes",
+    CARRIERS: "freight_carriers",
+    CONTAINERS: "freight_containers",
+    PACKAGES: "freight_packages",
+    TRACKINGS: "freight_trackings",
+    CLIENTS: "freight_clients",
+    DOCUMENTS: "freight_documents",
+    SETTINGS: "freight_settings",
+    INVOICES: "freight_invoices",
+    QUOTES: "freight_quotes"
   },
   
   MESSAGES: {
-    ARCHIVE: 'messages_archive',
-    INBOX: 'messages_inbox',
-    METRICS: 'messages_metrics',
-    SCHEDULED: 'messages_scheduled',
-    // Ajout des collections manquantes pour messages
-    CONTACTS: 'messages_contacts',
-    DRAFTS: 'messages_drafts',
-    SENT: 'messages_sent',
-    TRASH: 'messages_trash'
+    MESSAGES: "messages",
+    CONTACTS: "contacts",
+    TEMPLATES: "message_templates",
+    SCHEDULED: "scheduled_messages",
+    SETTINGS: "message_settings"
   },
-
-  // Autres collections
-  ANALYTICS: 'analyticsStats',
-  MONTHLY_ANALYTICS: 'monthlyAnalytics',
-  MONTHLY_PERFORMANCE: 'monthlyPerformance',
-  PERFORMANCE_STATS: 'performanceStats',
-  PROJECT_NOTIFICATIONS: 'project_notifications',
-  PROJECTS: 'projects',
-  SMTP: 'smtp_config',
-  TASKS: 'tasks',
-  TEAMS: 'teams',
+  
+  GARAGE: {
+    VEHICLES: "garage_vehicles",
+    CLIENTS: "garage_clients",
+    APPOINTMENTS: "garage_appointments",
+    SERVICES: "garage_services",
+    PARTS: "garage_parts",
+    INVOICES: "garage_invoices"
+  },
+  
+  ACCOUNTING: {
+    INVOICES: "accounting_invoices",
+    CLIENTS: "accounting_clients",
+    PAYMENTS: "accounting_payments",
+    EXPENSES: "accounting_expenses",
+    TAX_RATES: "accounting_tax_rates",
+    TAX_DECLARATIONS: "accounting_tax_declarations"
+  },
+  
+  CRM: {
+    CLIENTS: "crm_clients",
+    PROSPECTS: "crm_prospects",
+    OPPORTUNITIES: "crm_opportunities",
+    ACTIVITIES: "crm_activities",
+    SETTINGS: "crm_settings"
+  },
+  
+  HR: {
+    EMPLOYEES: "hr_employees",
+    PAYSLIPS: "hr_payslips",
+    CONTRACTS: "hr_contracts",
+    DEPARTMENTS: "hr_departments",
+    LEAVES: "hr_leaves",
+    ATTENDANCE: "hr_attendance"
+  },
+  
+  PROJECTS: {
+    PROJECTS: "projects",
+    TASKS: "tasks",
+    MILESTONES: "project_milestones",
+    COMMENTS: "project_comments",
+    TIMETRACKING: "project_timetracking"
+  },
   
   TRANSPORT: {
-    CLIENTS: 'transport_clients',
-    DRIVERS: 'transport_drivers',
-    RESERVATIONS: 'transport_reservations',
-    ROUTES: 'transport_routes',
-    SETTINGS: 'transport_settings',
-    VEHICLES: 'transport_vehicles'
+    SERVICES: "transport_services",
+    BOOKINGS: "transport_bookings",
+    VEHICLES: "transport_vehicles",
+    DRIVERS: "transport_drivers",
+    ROUTES: "transport_routes"
   }
 };

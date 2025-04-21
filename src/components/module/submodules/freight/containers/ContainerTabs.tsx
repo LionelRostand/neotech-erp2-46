@@ -26,9 +26,16 @@ const ContainerTabs: React.FC<Props> = ({ tab, setTab, onNext, isLastTab }) => {
     }
   };
 
+  const handlePrevious = () => {
+    const currentIndex = tabs.findIndex(t => t.key === tab);
+    if (currentIndex > 0) {
+      setTab(tabs[currentIndex - 1].key);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex space-x-2">
+      <div className="flex space-x-2 border-b">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -46,17 +53,27 @@ const ContainerTabs: React.FC<Props> = ({ tab, setTab, onNext, isLastTab }) => {
         ))}
       </div>
 
-      {!isLastTab && (
-        <div className="flex justify-end mt-4">
+      <div className="flex justify-between mt-4">
+        {tab !== "info" && (
+          <button 
+            onClick={handlePrevious} 
+            type="button"
+            className="bg-gray-200 hover:bg-gray-300 px-4 py-2 text-gray-700 rounded-md transition-colors"
+          >
+            Précédent
+          </button>
+        )}
+        
+        {tab !== "pricing" && (
           <button 
             onClick={handleNext} 
             type="button"
-            className="bg-green-600 hover:bg-green-700 px-4 py-2 text-white rounded-md transition-colors"
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 text-white rounded-md transition-colors ml-auto"
           >
             Suivant
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
