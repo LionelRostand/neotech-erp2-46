@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Plus } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog } from "@/components/ui/dialog";
@@ -11,10 +11,10 @@ import { fetchCollectionData } from "@/lib/fetchCollectionData";
 import ModuleContainer from "@/components/module/ModuleContainer";
 
 const ContainersList: React.FC = () => {
-  // Etat d'ouverture du dialog
+  // État d'ouverture du dialog
   const [openDialog, setOpenDialog] = React.useState(false);
 
-  // Etat de la dernière création
+  // État de la dernière création
   const [lastCreated, setLastCreated] = React.useState<Container | null>(null);
 
   // Fetch des conteneurs depuis Firestore
@@ -22,6 +22,8 @@ const ContainersList: React.FC = () => {
     queryKey: ["freight-containers"],
     queryFn: () => fetchCollectionData<Container>("freight-containers"),
   });
+
+  console.log("Conteneurs chargés:", containers);
 
   // Au succès d'ajout, refetch + toast
   const onCreated = (container: Container) => {
@@ -46,53 +48,65 @@ const ContainersList: React.FC = () => {
             Nouveau Conteneur
           </Button>
         </div>
+        
         {/* Liste des conteneurs */}
         <div className="overflow-x-auto border rounded-md">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 font-semibold text-left">Numéro</th>
-                <th className="px-4 py-2">Type</th>
-                <th className="px-4 py-2">Taille</th>
-                <th className="px-4 py-2">Statut</th>
-                <th className="px-4 py-2">Transporteur</th>
-                <th className="px-4 py-2">Origine</th>
-                <th className="px-4 py-2">Destination</th>
-                <th className="px-4 py-2">Départ</th>
-                <th className="px-4 py-2">Arrivée</th>
+                <th className="px-4 py-2 text-left">Numéro</th>
+                <th className="px-4 py-2 text-left">Type</th>
+                <th className="px-4 py-2 text-left">Taille</th>
+                <th className="px-4 py-2 text-left">Statut</th>
+                <th className="px-4 py-2 text-left">Transporteur</th>
+                <th className="px-4 py-2 text-left">Origine</th>
+                <th className="px-4 py-2 text-left">Destination</th>
+                <th className="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="p-6 text-center">
+                  <td colSpan={8} className="p-6 text-center">
                     Chargement des conteneurs...
                   </td>
                 </tr>
               ) : containers.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-6 text-center text-gray-400">
+                  <td colSpan={8} className="p-6 text-center text-gray-400">
                     Aucun conteneur enregistré
                   </td>
                 </tr>
               ) : (
-                containers.map((c) => (
-                  <tr key={c.id}>
-                    <td className="px-4 py-2 font-semibold">{c.number}</td>
-                    <td className="px-4 py-2">{c.type}</td>
-                    <td className="px-4 py-2">{c.size}</td>
-                    <td className="px-4 py-2">{c.status}</td>
-                    <td className="px-4 py-2">{c.carrierName}</td>
-                    <td className="px-4 py-2">{c.origin}</td>
-                    <td className="px-4 py-2">{c.destination}</td>
-                    <td className="px-4 py-2">{c.departureDate}</td>
-                    <td className="px-4 py-2">{c.arrivalDate}</td>
+                containers.map((container) => (
+                  <tr key={container.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 font-semibold">{container.number}</td>
+                    <td className="px-4 py-2">{container.type}</td>
+                    <td className="px-4 py-2">{container.size}</td>
+                    <td className="px-4 py-2">{container.status}</td>
+                    <td className="px-4 py-2">{container.carrierName}</td>
+                    <td className="px-4 py-2">{container.origin}</td>
+                    <td className="px-4 py-2">{container.destination}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+        
         {/* Dialog de création */}
         <ContainerCreateDialog
           open={openDialog}
