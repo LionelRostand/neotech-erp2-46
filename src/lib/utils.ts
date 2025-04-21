@@ -1,4 +1,14 @@
 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+/**
+ * Utility function to merge Tailwind CSS classes conditionally
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
 /**
  * Format a date to a human-readable string
  * @param date Date to format
@@ -50,4 +60,11 @@ export function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'EUR'
   }).format(amount);
+}
+
+/**
+ * Get initials from a name
+ */
+export function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
