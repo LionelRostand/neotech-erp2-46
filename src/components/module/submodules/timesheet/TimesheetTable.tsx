@@ -10,210 +10,243 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MoreHorizontal, 
   Eye, 
   FileEdit, 
-  ThumbsUp, 
-  ThumbsDown,
-  SendHorizonal
+  MoreHorizontal,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Ban
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TimeReport, TimeReportStatus } from '@/types/timesheet';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import TimesheetDetailsDialog from './TimesheetDetailsDialog';
+import { formatDate } from '@/lib/utils';
+import { getInitials } from '@/lib/utils';
 
 interface TimesheetTableProps {
   data: TimeReport[];
-  onView?: (id: string) => void;
-  onEdit?: (id: string) => void;
-  onApprove?: (id: string) => void;
-  onReject?: (id: string) => void;
-  onSubmit?: (id: string) => void;
   isLoading?: boolean;
 }
 
 const TimesheetTable: React.FC<TimesheetTableProps> = ({ 
-  data, 
-  onView, 
-  onEdit, 
-  onApprove, 
-  onReject,
-  onSubmit,
-  isLoading
+  data,
+  isLoading = false
 }) => {
-  const [selectedTimesheet, setSelectedTimesheet] = useState<TimeReport | null>(null);
-  
-  const getStatusBadge = (status: TimeReportStatus) => {
+  const [sortColumn, setSortColumn] = useState<keyof TimeReport>('lastUpdated');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const getStatusIcon = (status: TimeReportStatus) => {
     switch (status) {
       case "En cours":
-        return <Badge className="bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 font-medium">En cours</Badge>;
+        return <Clock className="h-4 w-4 text-blue-500" />;
       case "Soumis":
-        return <Badge className="bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 font-medium">Soumis</Badge>;
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case "Validé":
-        return <Badge className="bg-green-100 text-green-800 border border-green-200 hover:bg-green-200 font-medium">Validé</Badge>;
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "Rejeté":
-        return <Badge className="bg-red-100 text-red-800 border border-red-200 hover:bg-red-200 font-medium">Rejeté</Badge>;
+        return <Ban className="h-4 w-4 text-red-500" />;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return null;
     }
   };
 
-  const getAvatarColors = (name: string) => {
+  const getStatusBadgeColor = (status: TimeReportStatus) => {
+    switch (status) {
+      case "En cours":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+      case "Soumis":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
+      case "Validé":
+        return "bg-green-100 text-green-800 hover:bg-green-100";
+      case "Rejeté":
+        return "bg-red-100 text-red-800 hover:bg-red-100";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    }
+  };
+
+  const handleSort = (column: keyof TimeReport) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    let valueA = a[sortColumn];
+    let valueB = b[sortColumn];
+
+    // Handle date strings
+    if (typeof valueA === 'string' && (
+      sortColumn === 'lastUpdated' || 
+      sortColumn === 'startDate' || 
+      sortColumn === 'endDate'
+    )) {
+      valueA = new Date(valueA).getTime();
+      valueB = new Date(valueB as string).getTime();
+    }
+
+    if (valueA === valueB) return 0;
+    
+    if (sortDirection === 'asc') {
+      return valueA > valueB ? 1 : -1;
+    } else {
+      return valueA < valueB ? 1 : -1;
+    }
+  });
+
+  // Function to get avatar colors based on employee name
+  const getAvatarColors = (name?: string): string => {
+    if (!name) return 'bg-gray-400'; // Default color for undefined names
+    
     const colors = [
-      "bg-blue-100 text-blue-800",
-      "bg-green-100 text-green-800",
-      "bg-amber-100 text-amber-800",
-      "bg-purple-100 text-purple-800",
-      "bg-pink-100 text-pink-800",
-      "bg-indigo-100 text-indigo-800",
+      'bg-red-500',
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-yellow-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-indigo-500',
+      'bg-teal-500',
     ];
     
-    // Simple hash function to get consistent color for the same name
-    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    // Simple hash function to get consistent color for names
+    const hash = name.split('').reduce((acc, char) => {
+      return acc + char.charCodeAt(0);
+    }, 0);
+    
     return colors[hash % colors.length];
-  };
-
-  const formatDateValue = (dateValue: any): string => {
-    if (!dateValue) return '';
-    
-    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
-      return new Date(dateValue.seconds * 1000).toLocaleDateString('fr');
-    }
-    
-    if (typeof dateValue === 'string') {
-      try {
-        return new Date(dateValue).toLocaleDateString('fr');
-      } catch (e) {
-        return dateValue;
-      }
-    }
-    
-    if (dateValue instanceof Date) {
-      return dateValue.toLocaleDateString('fr');
-    }
-    
-    return String(dateValue);
-  };
-
-  const handleView = (timesheet: TimeReport) => {
-    setSelectedTimesheet(timesheet);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="rounded-md border p-8">
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+        <p className="text-center mt-4 text-gray-500">Chargement des feuilles de temps...</p>
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="rounded-md border p-8">
+        <p className="text-center text-gray-500">Aucune feuille de temps disponible</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="border rounded-md overflow-hidden bg-white shadow-sm">
-        <Table>
-          <TableHeader className="bg-gray-50">
-            <TableRow>
-              <TableHead className="text-gray-600 font-medium">Employé</TableHead>
-              <TableHead className="text-gray-600 font-medium">Période</TableHead>
-              <TableHead className="hidden md:table-cell text-gray-600 font-medium">Titre</TableHead>
-              <TableHead className="text-center text-gray-600 font-medium">Heures</TableHead>
-              <TableHead className="text-center text-gray-600 font-medium">Statut</TableHead>
-              <TableHead className="hidden md:table-cell text-gray-600 font-medium">Mise à jour</TableHead>
-              <TableHead className="text-right text-gray-600 font-medium">Actions</TableHead>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[40px]"></TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('title')}
+            >
+              Titre {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('employeeName')}
+            >
+              Employé {sortColumn === 'employeeName' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('startDate')}
+            >
+              Période {sortColumn === 'startDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('totalHours')}
+            >
+              Heures {sortColumn === 'totalHours' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('status')}
+            >
+              Statut {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
+              onClick={() => handleSort('lastUpdated')}
+            >
+              Mise à jour {sortColumn === 'lastUpdated' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedData.map((report) => (
+            <TableRow key={report.id} className="hover:bg-gray-50">
+              <TableCell>
+                <Avatar className="h-8 w-8">
+                  {report.employeePhoto ? (
+                    <AvatarImage src={report.employeePhoto} alt={report.employeeName || 'Employé'} />
+                  ) : (
+                    <AvatarFallback className={getAvatarColors(report.employeeName)}>
+                      {getInitials(report.employeeName || '')}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </TableCell>
+              <TableCell className="font-medium">{report.title}</TableCell>
+              <TableCell>{report.employeeName || 'Employé inconnu'}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                {formatDate(new Date(report.startDate))} - {formatDate(new Date(report.endDate))}
+              </TableCell>
+              <TableCell>{report.totalHours}h</TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(report.status)}
+                  <Badge className={getStatusBadgeColor(report.status)}>
+                    {report.status}
+                  </Badge>
+                </div>
+              </TableCell>
+              <TableCell className="whitespace-nowrap">
+                {report.lastUpdateText || formatDate(new Date(report.lastUpdated))}
+              </TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Actions</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="flex items-center">
+                      <Eye className="mr-2 h-4 w-4" />
+                      <span>Visualiser</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center">
+                      <FileEdit className="mr-2 h-4 w-4" />
+                      <span>Modifier</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                  Aucune feuille de temps trouvée.
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((report) => (
-                <TableRow key={report.id} className="hover:bg-gray-50/80 transition-colors">
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8 border">
-                        <AvatarImage src={report.employeePhoto} alt={report.employeeName} />
-                        <AvatarFallback className={getAvatarColors(report.employeeName)}>
-                          {report.employeeName?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium text-gray-700">{report.employeeName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-gray-600">
-                    {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-gray-600">
-                    {report.title}
-                  </TableCell>
-                  <TableCell className="text-center font-medium text-gray-700">
-                    {report.totalHours}h
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {getStatusBadge(report.status)}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-gray-500">
-                    {report.lastUpdateText || formatDateValue(report.lastUpdated)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="hover:bg-gray-100">
-                          <MoreHorizontal className="h-4 w-4 text-gray-600" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[160px]">
-                        <DropdownMenuItem onClick={() => handleView(report)} className="cursor-pointer text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                          <Eye className="mr-2 h-4 w-4" /> Voir
-                        </DropdownMenuItem>
-                        {(onEdit && report.status !== "Validé") && (
-                          <DropdownMenuItem onClick={() => onEdit(report.id)} className="cursor-pointer hover:bg-gray-50">
-                            <FileEdit className="mr-2 h-4 w-4" /> Modifier
-                          </DropdownMenuItem>
-                        )}
-                        {(onSubmit && report.status === "En cours") && (
-                          <DropdownMenuItem onClick={() => onSubmit(report.id)} className="cursor-pointer text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                            <SendHorizonal className="mr-2 h-4 w-4" /> Soumettre
-                          </DropdownMenuItem>
-                        )}
-                        {(onApprove && report.status === "Soumis") && (
-                          <DropdownMenuItem onClick={() => onApprove(report.id)} className="cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50">
-                            <ThumbsUp className="mr-2 h-4 w-4" /> Valider
-                          </DropdownMenuItem>
-                        )}
-                        {(onReject && report.status === "Soumis") && (
-                          <DropdownMenuItem onClick={() => onReject(report.id)} className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
-                            <ThumbsDown className="mr-2 h-4 w-4" /> Rejeter
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <TimesheetDetailsDialog
-        timesheet={selectedTimesheet}
-        open={!!selectedTimesheet}
-        onClose={() => setSelectedTimesheet(null)}
-      />
-    </>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

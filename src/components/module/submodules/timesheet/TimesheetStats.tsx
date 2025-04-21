@@ -1,74 +1,77 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { TimeReport } from '@/types/timesheet';
+import { Card, CardContent } from '@/components/ui/card';
+import { Clock, CheckCircle2, AlertCircle, Ban } from 'lucide-react';
 
 interface TimesheetStatsProps {
   timesheetsList: TimeReport[];
 }
 
 const TimesheetStats: React.FC<TimesheetStatsProps> = ({ timesheetsList }) => {
-  const activeTimesheets = timesheetsList.filter(timesheet => timesheet.status === "En cours").length;
-  const submittedTimesheets = timesheetsList.filter(timesheet => timesheet.status === "Soumis").length;
-  const validatedTimesheets = timesheetsList.filter(timesheet => timesheet.status === "Validé").length;
-  const rejectedTimesheets = timesheetsList.filter(timesheet => timesheet.status === "Rejeté").length;
-  
-  const totalHours = timesheetsList.reduce((acc, timesheet) => acc + timesheet.totalHours, 0);
-  
+  const stats = {
+    enCours: timesheetsList.filter(ts => ts.status === 'En cours').length,
+    soumis: timesheetsList.filter(ts => ts.status === 'Soumis').length,
+    valide: timesheetsList.filter(ts => ts.status === 'Validé').length,
+    rejete: timesheetsList.filter(ts => ts.status === 'Rejeté').length,
+    total: timesheetsList.length
+  };
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-      <Card className="bg-blue-50 border-blue-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-blue-800">En cours</CardTitle>
-          <Clock className="h-5 w-5 text-blue-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-blue-900">{activeTimesheets}</div>
-          <p className="text-xs text-blue-700">
-            {activeTimesheets > 0 
-              ? `${((activeTimesheets / timesheetsList.length) * 100).toFixed(1)}% du total`
-              : "Aucune feuille en cours"}
-          </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">En cours</p>
+              <div className="text-2xl font-bold">{stats.enCours}</div>
+            </div>
+            <div className="p-2 bg-blue-100 rounded-full">
+              <Clock className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
         </CardContent>
       </Card>
       
-      <Card className="bg-amber-50 border-amber-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-amber-800">Soumises</CardTitle>
-          <AlertCircle className="h-5 w-5 text-amber-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-amber-900">{submittedTimesheets}</div>
-          <p className="text-xs text-amber-700">
-            {submittedTimesheets} feuille{submittedTimesheets > 1 ? 's' : ''} en attente
-          </p>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Soumis</p>
+              <div className="text-2xl font-bold">{stats.soumis}</div>
+            </div>
+            <div className="p-2 bg-yellow-100 rounded-full">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+            </div>
+          </div>
         </CardContent>
       </Card>
       
-      <Card className="bg-green-50 border-green-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-green-800">Validées</CardTitle>
-          <CheckCircle className="h-5 w-5 text-green-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-green-900">{validatedTimesheets}</div>
-          <p className="text-xs text-green-700">
-            {validatedTimesheets} feuille{validatedTimesheets > 1 ? 's' : ''} approuvée{validatedTimesheets > 1 ? 's' : ''}
-          </p>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Validés</p>
+              <div className="text-2xl font-bold">{stats.valide}</div>
+            </div>
+            <div className="p-2 bg-green-100 rounded-full">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
         </CardContent>
       </Card>
       
-      <Card className="bg-red-50 border-red-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-red-800">Rejetées</CardTitle>
-          <XCircle className="h-5 w-5 text-red-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-red-900">{rejectedTimesheets}</div>
-          <p className="text-xs text-red-700">
-            Total: {totalHours} heures
-          </p>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Rejetés</p>
+              <div className="text-2xl font-bold">{stats.rejete}</div>
+            </div>
+            <div className="p-2 bg-red-100 rounded-full">
+              <Ban className="h-5 w-5 text-red-600" />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
