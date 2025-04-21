@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
@@ -19,7 +19,7 @@ export const useCollectionData = <T>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Validate collection path
+    // Validate collection path first
     if (!collectionPath || collectionPath.trim() === '') {
       console.error('Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));
@@ -102,5 +102,5 @@ export const useCollectionData = <T>(
     return () => clearTimeout(timeoutId);
   }, [collectionPath, JSON.stringify(queryConstraints)]);
 
-  return { data: data || [], isLoading, error };
+  return { data, isLoading, error };
 };

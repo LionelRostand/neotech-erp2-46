@@ -6,7 +6,7 @@ import { Message } from '../../types/message-types';
 
 export const useScheduledMessagesData = () => {
   // Ensure we have a valid collection path
-  const scheduledMessagesPath = COLLECTIONS.MESSAGES.SCHEDULED || 'messages-scheduled';
+  const scheduledMessagesPath = COLLECTIONS.MESSAGES.SCHEDULED || 'scheduled_messages';
   
   const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(
     scheduledMessagesPath

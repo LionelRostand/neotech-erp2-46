@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
@@ -11,18 +12,24 @@ import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 const MessagesDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<MessageMetrics | null>(null);
   
+  // Ensure we use fallback collection paths
+  const inboxPath = COLLECTIONS.MESSAGES.MESSAGES || 'messages';
+  const archivePath = COLLECTIONS.MESSAGES.MESSAGES ? `${COLLECTIONS.MESSAGES.MESSAGES}_archive` : 'messages_archive';
+  const contactsPath = COLLECTIONS.MESSAGES.CONTACTS || 'contacts';
+  const scheduledPath = COLLECTIONS.MESSAGES.SCHEDULED || 'scheduled_messages';
+  
   const { data: inboxMessages, isLoading: isLoadingInbox, error: inboxError } = 
-    useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.INBOX);
+    useFirebaseCollection<Message>(inboxPath);
   
   const { data: archivedMessages, isLoading: isLoadingArchived, error: archivedError } = 
-    useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.ARCHIVE);
+    useFirebaseCollection<Message>(archivePath);
   
   // Récupération des contacts depuis Firestore
   const { data: contacts, isLoading: isLoadingContacts, error: contactsError } = 
-    useFirebaseCollection(COLLECTIONS.MESSAGES.CONTACTS);
+    useFirebaseCollection(contactsPath);
   
   const { data: scheduledMessages, isLoading: isLoadingScheduled, error: scheduledError } = 
-    useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.SCHEDULED);
+    useFirebaseCollection<Message>(scheduledPath);
   
   const isLoading = isLoadingInbox || isLoadingArchived || isLoadingContacts || isLoadingScheduled;
   const error = inboxError || archivedError || contactsError || scheduledError;
@@ -66,11 +73,20 @@ const MessagesDashboard: React.FC = () => {
     }, []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // Find top contacts (example: most frequent recipients)
-    const topContacts = contacts.map(contact => ({
-        id: contact.id,
-        name: `${contact.firstName} ${contact.lastName}`,
-        count: inboxMessages.filter(msg => msg.recipients.includes(contact.id)).length
-    })).sort((a, b) => b.count - a.count).slice(0, 5);
+    const topContacts = contacts
+      .filter(contact => contact && typeof contact === 'object')
+      .map(contact => ({
+        id: contact.id || '',
+        name: contact.firstName && contact.lastName ? 
+              `${contact.firstName} ${contact.lastName}` : 
+              'Unknown Contact',
+        count: inboxMessages.filter(msg => 
+          msg.recipients && Array.isArray(msg.recipients) && 
+          msg.recipients.includes(contact.id || '')
+        ).length
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
     
     const messagesSentToday = inboxMessages.filter(msg => {
       const today = new Date();
