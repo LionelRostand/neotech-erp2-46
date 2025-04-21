@@ -9,7 +9,7 @@ export interface Route {
   destination: string;
 }
 
-// Mock temporaire pour démo, à remplacer par Firestore si besoin
+// Mock data for routes
 export function useRoutes() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
