@@ -1,183 +1,100 @@
-
 import React, { useState } from "react";
+import NewContainerDialog from "./NewContainerDialog";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash } from "lucide-react";
-import { useContainers } from "@/hooks/modules/useContainersFirestore";
-import type { Container } from "@/types/freight";
-import ContainerViewDialog from "./ContainerViewDialog";
-import ContainerEditDialog from "./ContainerEditDialog";
-import DeleteContainerDialog from "./DeleteContainerDialog";
-import CreateContainerDialog from "./CreateContainerDialog";
+} from "@/components/ui/table"
 
-interface ContainersListWithCreateProps {
-  addDialogOpen?: boolean;
-  onCloseAddDialog?: () => void;
+interface Container {
+  id: string;
+  number: string;
+  type: string;
+  size: string;
+  status: string;
+  carrierName: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  arrivalDate: string;
 }
 
-const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
-  addDialogOpen = false,
-  onCloseAddDialog,
-}) => {
-  const { data: containers = [], isLoading } = useContainers();
-  const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+const data: Container[] = [
+  {
+    id: "1",
+    number: "CONTAINER123",
+    type: "Standard",
+    size: "20ft",
+    status: "In Transit",
+    carrierName: "TransFrance",
+    origin: "Paris",
+    destination: "Marseille",
+    departureDate: "2024-07-15",
+    arrivalDate: "2024-07-20",
+  },
+  {
+    id: "2",
+    number: "CONTAINER456",
+    type: "Refrigerated",
+    size: "40ft",
+    status: "At Port",
+    carrierName: "Express Europe",
+    origin: "Lyon",
+    destination: "Bordeaux",
+    departureDate: "2024-07-10",
+    arrivalDate: "2024-07-18",
+  },
+];
 
-  // Gérer ouverture via le parent
-  React.useEffect(() => {
-    if (addDialogOpen) setShowAddDialog(true);
-    else setShowAddDialog(false);
-  }, [addDialogOpen]);
-
-  const handleView = (container: Container) => {
-    setSelectedContainer(container);
-    setViewDialogOpen(true);
-  };
-
-  const handleEdit = (container: Container) => {
-    setSelectedContainer(container);
-    setEditDialogOpen(true);
-  };
-
-  const handleDelete = (container: Container) => {
-    setSelectedContainer(container);
-    setDeleteDialogOpen(true);
-  };
-
-  const closeViewDialog = () => {
-    setViewDialogOpen(false);
-    setSelectedContainer(null);
-  };
-
-  const closeEditDialog = () => {
-    setEditDialogOpen(false);
-    setSelectedContainer(null);
-  };
-
-  const closeDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setSelectedContainer(null);
-  };
-
-  // Ajout : fermeture du dialogue
-  const closeAddDialog = () => {
-    setShowAddDialog(false);
-    if (onCloseAddDialog) onCloseAddDialog();
-  };
-
-  if (isLoading) {
-    return <div className="text-center p-8">Chargement des conteneurs...</div>;
-  }
+const ContainersListWithCreate: React.FC = () => {
+  const [openDialog, setOpenDialog] = useState(false);
 
   return (
-    <div className="rounded-md border bg-white">
+    <div>
+      <div className="flex justify-end mb-4">
+        <button
+          className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded shadow"
+          onClick={() => setOpenDialog(true)}
+        >
+          Nouveau Conteneur
+        </button>
+      </div>
       <Table>
+        <TableCaption>A list of your recent containers.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Référence</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Transporteur</TableHead>
-            <TableHead>Origine</TableHead>
+            <TableHead className="w-[100px]">Number</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Size</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Carrier</TableHead>
+            <TableHead>Origin</TableHead>
             <TableHead>Destination</TableHead>
-            <TableHead>Coût</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>Departure Date</TableHead>
+            <TableHead>Arrival Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {containers.length > 0 ? (
-            containers.map((container) => (
-              <TableRow key={container.id}>
-                <TableCell className="font-medium">{container.number}</TableCell>
-                <TableCell>{container.client || "-"}</TableCell>
-                <TableCell>{container.carrier || "-"}</TableCell>
-                <TableCell>{container.origin || "-"}</TableCell>
-                <TableCell>{container.destination || "-"}</TableCell>
-                <TableCell>
-                  {container.cost != null && container.cost !== ""
-                    ? <span className="text-green-600 font-semibold">{container.cost} €</span>
-                    : "-"
-                  }
-                </TableCell>
-                <TableCell>{container.status || "-"}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Voir"
-                      onClick={() => handleView(container)}
-                      tabIndex={0}
-                      aria-label="Voir"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Modifier"
-                      onClick={() => handleEdit(container)}
-                      tabIndex={0}
-                      aria-label="Modifier"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Supprimer"
-                      onClick={() => handleDelete(container)}
-                      tabIndex={0}
-                      aria-label="Supprimer"
-                    >
-                      <Trash className="h-5 w-5 text-red-500" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-6 text-gray-500">
-                Aucun conteneur trouvé
-              </TableCell>
+          {data.map((container) => (
+            <TableRow key={container.id}>
+              <TableCell className="font-medium">{container.number}</TableCell>
+              <TableCell>{container.type}</TableCell>
+              <TableCell>{container.size}</TableCell>
+              <TableCell>{container.status}</TableCell>
+              <TableCell>{container.carrierName}</TableCell>
+              <TableCell>{container.origin}</TableCell>
+              <TableCell>{container.destination}</TableCell>
+              <TableCell>{container.departureDate}</TableCell>
+              <TableCell>{container.arrivalDate}</TableCell>
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
-
-      <ContainerViewDialog
-        open={viewDialogOpen}
-        onClose={closeViewDialog}
-        container={selectedContainer}
-      />
-
-      <ContainerEditDialog
-        open={editDialogOpen}
-        onClose={closeEditDialog}
-        container={selectedContainer}
-      />
-
-      <DeleteContainerDialog
-        open={deleteDialogOpen}
-        onClose={closeDeleteDialog}
-        container={selectedContainer}
-      />
-
-      <CreateContainerDialog
-        open={showAddDialog}
-        onOpenChange={closeAddDialog}
-      />
+      <NewContainerDialog open={openDialog} onOpenChange={setOpenDialog} />
     </div>
   );
 };
