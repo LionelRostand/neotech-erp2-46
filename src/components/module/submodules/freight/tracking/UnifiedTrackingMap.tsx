@@ -88,18 +88,10 @@ const UnifiedTrackingMap: React.FC<UnifiedTrackingMapProps> = ({ items }) => {
 
         const marker = L.marker([item.latitude, item.longitude], { icon: markerIcon }).addTo(map);
         
-        // Titre selon le type d'élément
-        let title = "";
-        switch(item.type) {
-          case "package": title = "Colis"; break;
-          case "container": title = "Conteneur"; break;
-          case "shipment": title = "Expédition"; break;
-        }
-
         marker.bindPopup(`
           <div class="p-2">
-            <div class="font-bold">${title} – ${item.refId}</div>
-            <div class="text-xs mb-1">${item.label}</div>
+            <div class="font-bold">${item.label}</div>
+            <div class="text-xs mb-1">${item.status}</div>
             <div class="text-sm">${item.locationText}</div>
             <div class="text-xs text-gray-500">${
               item.timestamp ? new Date(item.timestamp).toLocaleString("fr-FR") : "Date inconnue"
