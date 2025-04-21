@@ -1,98 +1,132 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/patched-select";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import ContainerArticlesForm, { ContainerArticle } from "./ContainerArticlesForm";
 import { COLLECTIONS } from "@/lib/firebase-collections";
+import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { addDoc, doc, setDoc, updateDoc } from "firebase/firestore";
-import type { Container } from "@/types/freight";
 
-interface CreateEditContainerDialogProps {
+const defaultForm = (carriers: any[], clients: any[], routes: any[]) => ({
+  number: "CTN" + String(Math.floor(10000000 + Math.random() * 90000000)),
+  type: "",
+  size: "",
+  status: "",
+  carrierId: carriers.length ? carriers[0].id : "",
+  carrierName: carriers.length ? carriers[0].name : "",
+  client: clients.length ? (clients[0].name || clients[0].clientName) : "",
+  routeId: routes.length ? routes[0].id : "",
+  origin: routes.length ? routes[0].origin : "",
+  destination: routes.length ? routes[0].destination : "",
+  departureDate: "",
+  arrivalDate: "",
+  articles: [],
+  costs: []
+});
+
+const sizeOptions = [
+  { value: "20ft", label: "20 pieds" },
+  { value: "40ft", label: "40 pieds" },
+  { value: "40ftHC", label: "40 pieds High Cube" }
+];
+
+const statusOptions = [
+  { value: "vide", label: "Vide" },
+  { value: "chargé", label: "Chargé" },
+  { value: "livré", label: "Livré" },
+  { value: "entretien", label: "En cours d'entretien" }
+];
+
+const typeOptions = [
+  { value: "dry", label: "Dry" },
+  { value: "reefer", label: "Reefer" },
+  { value: "open-top", label: "Open Top" },
+  { value: "tank", label: "Tank" },
+  { value: "autre", label: "Autre" }
+];
+
+const CreateEditContainerDialog = ({
+  open,
+  onClose,
+  container,
+  carrierOptions,
+  clientOptions,
+  routeOptions
+}: {
   open: boolean;
   onClose: () => void;
-  container: Container | null;
-  carrierOptions: { label: string, value: string }[];
-  clientOptions: { label: string, value: string }[];
-  routeOptions: { label: string, value: string; origin: string; destination: string }[];
-}
-
-const genContainerNumber = () => "CONT" + Math.floor(100000 + Math.random() * 900000);
-
-const initialForm = {
-  number: genContainerNumber(),
-  type: '',
-  size: '',
-  status: '',
-  carrierName: '',
-  carrierId: '',
-  client: '',
-  routeId: '',
-  origin: '',
-  destination: ''
-};
-
-const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
-  open, onClose, container, carrierOptions, clientOptions, routeOptions
+  container: any;
+  carrierOptions: {label: string; value: string;}[];
+  clientOptions: {label: string; value: string;}[];
+  routeOptions: {label: string; value: string; origin: string; destination: string;}[];
 }) => {
-  const [form, setForm] = useState<any>(initialForm);
+  const [tab, setTab] = useState<"general" | "articles">("general");
+
+  // Form state
+  const [form, setForm] = useState<any>(defaultForm(carrierOptions, clientOptions, routeOptions));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (container) {
-      setForm(container);
+      setForm({ ...defaultForm(carrierOptions, clientOptions, routeOptions), ...container });
     } else {
-      setForm({ ...initialForm, number: genContainerNumber() });
+      setForm(defaultForm(carrierOptions, clientOptions, routeOptions));
     }
-  }, [container, open]);
+    setTab("general");
+    // eslint-disable-next-line
+  }, [open, container, carrierOptions, clientOptions, routeOptions]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev: any) => ({ ...prev, [name]: value }));
+  const handleChange = (key: string, value: any) => {
+    if (key === "routeId") {
+      const route = routeOptions.find(r => r.value === value);
+      if (route) {
+        setForm(f => ({ ...f, routeId: value, origin: route.origin, destination: route.destination }));
+      } else {
+        setForm(f => ({ ...f, routeId: value }));
+      }
+    } else if (key === "carrierId") {
+      const carrier = carrierOptions.find(c => c.value === value);
+      setForm(f => ({
+        ...f,
+        carrierId: value,
+        carrierName: carrier?.label || ""
+      }));
+    } else if (key === "client") {
+      setForm(f => ({ ...f, client: value }));
+    } else {
+      setForm(f => ({ ...f, [key]: value }));
+    }
   };
 
-  const handleSelect = (name: string, value: string) => {
-    setForm((prev: any) => ({ ...prev, [name]: value }));
-    if (name === "routeId") {
-      // Trouver origine/destination depuis l'option route sélectionnée
-      const found = routeOptions.find((r) => r.value === value);
-      setForm((prev: any) => ({
-        ...prev,
-        origin: found?.origin || "",
-        destination: found?.destination || ""
-      }));
-    }
-    if (name === "carrierId") {
-      const foundCarrier = carrierOptions.find(c => c.value === value);
-      setForm((prev: any) => ({
-        ...prev,
-        carrierName: foundCarrier?.label || ""
-      }));
-    }
+  // Mise à jour des articles dans le form state
+  const handleArticlesChange = (articles: ContainerArticle[]) => {
+    setForm((f: any) => ({ ...f, articles }));
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Enregistrer (ajouter ou modifier) le conteneur
+  const handleSave = async () => {
     setSaving(true);
     try {
-      if (container && container.id) {
-        // MAJ
-        await updateDoc(doc(db, COLLECTIONS.FREIGHT.CONTAINERS, container.id), form);
+      if (container?.id) {
+        await updateDoc(doc(db, COLLECTIONS.FREIGHT.CONTAINERS, container.id), {
+          ...form,
+          updatedAt: new Date().toISOString()
+        });
         toast.success("Conteneur mis à jour !");
       } else {
-        // Création avec nouveau numéro
         await addDoc(collection(db, COLLECTIONS.FREIGHT.CONTAINERS), {
           ...form,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
         toast.success("Conteneur créé !");
       }
       onClose();
-    } catch (err: any) {
-      toast.error("Erreur lors de l'enregistrement");
+    } catch (e) {
+      toast.error("Erreur lors de la sauvegarde !");
     } finally {
       setSaving(false);
     }
@@ -100,88 +134,118 @@ const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{container ? "Modifier le Conteneur" : "Nouveau Conteneur"}</DialogTitle>
+          <DialogTitle>{container ? "Modifier" : "Nouveau"} Conteneur</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSave} className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1">Numéro</label>
-            <Input name="number" value={form.number} disabled className="bg-muted" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Type</label>
-            <Input name="type" value={form.type} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Taille</label>
-            <Input name="size" value={form.size} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Status</label>
-            <Input name="status" value={form.status} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Transporteur</label>
-            <Select value={form.carrierId} onValueChange={v => handleSelect("carrierId", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un transporteur" />
-              </SelectTrigger>
-              <SelectContent>
-                {carrierOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Client</label>
-            <Select value={form.client} onValueChange={v => handleSelect("client", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clientOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Route</label>
-            <Select value={form.routeId} onValueChange={v => handleSelect("routeId", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une route" />
-              </SelectTrigger>
-              <SelectContent>
-                {routeOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-2">
-            <div className="w-1/2">
-              <label className="block text-xs font-medium mb-1">Origine</label>
-              <Input name="origin" value={form.origin} disabled className="bg-muted" />
+        <Tabs value={tab} onValueChange={v => setTab(v as "general" | "articles")} className="mb-2">
+          <TabsList>
+            <TabsTrigger value="general">Général</TabsTrigger>
+            <TabsTrigger value="articles">Articles</TabsTrigger>
+          </TabsList>
+          <TabsContent value="general">
+            <div className="space-y-4 pt-3">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Numéro du conteneur</label>
+                  <Input value={form.number} disabled placeholder="Numéro automatique" readOnly />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Type</label>
+                  <select className="w-full border rounded p-2" value={form.type} onChange={e => handleChange("type", e.target.value)}>
+                    <option value="">Sélectionner</option>
+                    {typeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Taille</label>
+                  <select className="w-full border rounded p-2" value={form.size} onChange={e => handleChange("size", e.target.value)}>
+                    <option value="">Sélectionner</option>
+                    {sizeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Status</label>
+                  <select className="w-full border rounded p-2" value={form.status} onChange={e => handleChange("status", e.target.value)}>
+                    <option value="">Sélectionner</option>
+                    {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Transporteur</label>
+                  <select className="w-full border rounded p-2" value={form.carrierId} onChange={e => handleChange("carrierId", e.target.value)}>
+                    {carrierOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Client</label>
+                  <select className="w-full border rounded p-2" value={form.client} onChange={e => handleChange("client", e.target.value)}>
+                    {clientOptions.map(opt => <option key={opt.value} value={opt.label}>{opt.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Route</label>
+                  <select className="w-full border rounded p-2" value={form.routeId} onChange={e => handleChange("routeId", e.target.value)}>
+                    <option value="">Sélectionner la route</option>
+                    {routeOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Origine</label>
+                  <Input value={form.origin} readOnly />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Destination</label>
+                  <Input value={form.destination} readOnly />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Date de départ</label>
+                  <Input
+                    type="date"
+                    value={form.departureDate}
+                    onChange={e => handleChange("departureDate", e.target.value)}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium mb-1">Date d'arrivée</label>
+                  <Input
+                    type="date"
+                    value={form.arrivalDate}
+                    onChange={e => handleChange("arrivalDate", e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="w-1/2">
-              <label className="block text-xs font-medium mb-1">Destination</label>
-              <Input name="destination" value={form.destination} disabled className="bg-muted" />
-            </div>
-          </div>
-          <DialogFooter className="mt-4 flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              Annuler
-            </Button>
-            <Button type="submit" loading={saving.toString()} disabled={saving}>
-              {saving ? "Enregistrement..." : (container ? "Mettre à jour" : "Enregistrer")}
-            </Button>
-          </DialogFooter>
-        </form>
+          </TabsContent>
+          <TabsContent value="articles">
+            <ContainerArticlesForm
+              articles={form.articles || []}
+              onChange={handleArticlesChange}
+            />
+          </TabsContent>
+        </Tabs>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" type="button" onClick={onClose} disabled={saving}>
+            Annuler
+          </Button>
+          <Button type="button" onClick={handleSave} disabled={saving}>
+            {saving ? "Enregistrement..." : "Enregistrer"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default CreateEditContainerDialog;
+
