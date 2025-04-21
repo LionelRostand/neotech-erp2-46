@@ -3,7 +3,7 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import ContainerCreateDialog from "./ContainerCreateDialog";
 import { toast } from "sonner";
 import { Container } from "@/types/freight";
@@ -98,3 +98,4 @@ const ContainersList: React.FC = () => {
 };
 
 export default ContainersList;
+
