@@ -4,23 +4,47 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/patched-select";
 
-// Fonction locale pour générer un numéro de conteneur similaire à celle utilisée ailleurs
 const generateContainerNumber = () => {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
   return `CTR-${datePart}-${randomPart}`;
 };
 
+interface Option {
+  label: string;
+  value: string;
+}
+
+interface RouteOption extends Option {
+  origin: string;
+  destination: string;
+}
+
 interface CreateEditContainerDialogProps {
   open: boolean;
   onClose: () => void;
   container: any | null;
-  carrierOptions: { label: string; value: string }[];
-  clientOptions: { label: string; value: string }[];
-  routeOptions: { label: string; value: string, origin: string, destination: string }[];
-  defaultNumber?: string; // on peut laisser cette prop mais elle ne sera plus utilisée ici
+  carrierOptions: Option[];
+  clientOptions: Option[];
+  routeOptions: RouteOption[];
+  defaultNumber?: string;
 }
+
+const STATUS_OPTIONS = [
+  { label: "À quai", value: "quay" },
+  { label: "En transit", value: "transit" },
+  { label: "Livré", value: "delivered" },
+  { label: "Stocké", value: "stocked" },
+  { label: "Autre", value: "other" },
+];
 
 const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
   open,
@@ -29,31 +53,53 @@ const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
   carrierOptions,
   clientOptions,
   routeOptions,
-  defaultNumber, // pas utilisé, on génère ici systématiquement
+  defaultNumber,
 }) => {
   const isEditMode = Boolean(container);
 
-  const { register, setValue, reset, handleSubmit, watch } = useForm({
+  const { register, setValue, reset, handleSubmit, watch, formState } = useForm({
     defaultValues: {
-      number: isEditMode ? container?.number || "" : "", // vide initialement en création
+      number: isEditMode ? container?.number || "" : "",
       client: isEditMode ? container?.client || "" : "",
       carrier: isEditMode ? container?.carrier || "" : "",
       route: isEditMode ? container?.route || "" : "",
       status: isEditMode ? container?.status || "" : "",
-      // Ajoutez ici tous les champs nécessaires...
-    }
+    },
   });
 
-  // À chaque ouverture du popup en mode création, on génère et définit le numéro de conteneur
+  // Auto-générer le numéro lors de l'ouverture du popup en mode création
   useEffect(() => {
     if (open && !isEditMode) {
       const generatedNumber = generateContainerNumber();
       setValue("number", generatedNumber, { shouldDirty: true });
+      reset({
+        number: generatedNumber,
+        client: "",
+        carrier: "",
+        route: "",
+        status: "",
+      });
+    } else if (open && isEditMode) {
+      // Pour l'édition, reset avec les valeurs existantes
+      reset({
+        number: container?.number || "",
+        client: container?.client || "",
+        carrier: container?.carrier || "",
+        route: container?.route || "",
+        status: container?.status || "",
+      });
     }
-  }, [open, isEditMode, setValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, isEditMode]);
+
+  // Pour éviter un warning si select ne reçoit pas string
+  const selectedClient = watch("client") || "";
+  const selectedCarrier = watch("carrier") || "";
+  const selectedRoute = watch("route") || "";
+  const selectedStatus = watch("status") || "";
 
   const onSubmit = (data: any) => {
-    // Traitez l'enregistrement ou la modification ici...
+    // Enregistrement ou modification
     onClose();
   };
 
@@ -65,21 +111,99 @@ const CreateEditContainerDialog: React.FC<CreateEditContainerDialogProps> = ({
             {isEditMode ? "Modifier le conteneur" : "Nouveau conteneur"}
           </DialogTitle>
         </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+            {/* Numéro de conteneur */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Numéro de conteneur <span className="text-red-500">*</span>
+              </label>
+              <Input
+                {...register("number", { required: true })}
+                disabled
+                data-testid="container-number"
+                placeholder="ex: MSCU1234567"
+              />
+            </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Numéro de conteneur <span className="text-red-500">*</span>
-            </label>
-            <Input
-              {...register("number", { required: true })}
-              disabled={isEditMode}
-              data-testid="container-number"
-              placeholder="ex: MSCU1234567"
-            />
+            {/* Client */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Client <span className="text-red-500">*</span></label>
+              <Select
+                value={selectedClient}
+                onValueChange={val => setValue("client", val, { shouldDirty: true })}
+                disabled={isEditMode}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-white">
+                  {clientOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Transporteur */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Transporteur <span className="text-red-500">*</span></label>
+              <Select
+                value={selectedCarrier}
+                onValueChange={val => setValue("carrier", val, { shouldDirty: true })}
+                disabled={isEditMode}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un transporteur" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-white">
+                  {carrierOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Trajet / Route */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Trajet <span className="text-red-500">*</span></label>
+              <Select
+                value={selectedRoute}
+                onValueChange={val => setValue("route", val, { shouldDirty: true })}
+                disabled={isEditMode}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un trajet" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-white">
+                  {routeOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Statut */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Statut <span className="text-red-500">*</span></label>
+              <Select
+                value={selectedStatus}
+                onValueChange={val => setValue("status", val, { shouldDirty: true })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-white">
+                  {STATUS_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          {/* Ajoutez ici d'autres champs comme client, transporteur, route, etc. */}
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
