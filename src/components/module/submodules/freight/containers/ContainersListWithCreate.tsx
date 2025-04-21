@@ -15,8 +15,7 @@ import type { Container } from "@/types/freight";
 import ContainerViewDialog from "./ContainerViewDialog";
 import ContainerEditDialog from "./ContainerEditDialog";
 import DeleteContainerDialog from "./DeleteContainerDialog";
-// Ajout : importez un dialogue d'ajout si disponible, sinon placeholder simple
-// import CreateContainerDialog from "./CreateContainerDialog";
+import CreateContainerDialog from "./CreateContainerDialog";
 
 interface ContainersListWithCreateProps {
   addDialogOpen?: boolean;
@@ -29,16 +28,15 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
 }) => {
   const { data: containers = [], isLoading } = useContainers();
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
-
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
-  // Simuler un dialogue d’ajout si non disponible
-  const [showFakeAddDialog, setShowFakeAddDialog] = useState(false);
+  // Gérer ouverture via le parent
   React.useEffect(() => {
-    if (addDialogOpen) setShowFakeAddDialog(true);
-    else setShowFakeAddDialog(false);
+    if (addDialogOpen) setShowAddDialog(true);
+    else setShowAddDialog(false);
   }, [addDialogOpen]);
 
   const handleView = (container: Container) => {
@@ -71,9 +69,9 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
     setSelectedContainer(null);
   };
 
-  // Pour la démo only
-  const closeFakeAddDialog = () => {
-    setShowFakeAddDialog(false);
+  // Ajout : fermeture du dialogue
+  const closeAddDialog = () => {
+    setShowAddDialog(false);
     if (onCloseAddDialog) onCloseAddDialog();
   };
 
@@ -106,13 +104,10 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
                 <TableCell>{container.origin || "-"}</TableCell>
                 <TableCell>{container.destination || "-"}</TableCell>
                 <TableCell>
-                  {container.cost ? (
-                    <span className="text-green-600 font-semibold">
-                      {container.cost} €
-                    </span>
-                  ) : (
-                    "-"
-                  )}
+                  {container.cost != null && container.cost !== ""
+                    ? <span className="text-green-600 font-semibold">{container.cost} €</span>
+                    : "-"
+                  }
                 </TableCell>
                 <TableCell>{container.status || "-"}</TableCell>
                 <TableCell className="text-right">
@@ -122,6 +117,8 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
                       size="icon"
                       title="Voir"
                       onClick={() => handleView(container)}
+                      tabIndex={0}
+                      aria-label="Voir"
                     >
                       <Eye className="h-5 w-5" />
                     </Button>
@@ -130,6 +127,8 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
                       size="icon"
                       title="Modifier"
                       onClick={() => handleEdit(container)}
+                      tabIndex={0}
+                      aria-label="Modifier"
                     >
                       <Edit className="h-5 w-5" />
                     </Button>
@@ -138,6 +137,8 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
                       size="icon"
                       title="Supprimer"
                       onClick={() => handleDelete(container)}
+                      tabIndex={0}
+                      aria-label="Supprimer"
                     >
                       <Trash className="h-5 w-5 text-red-500" />
                     </Button>
@@ -173,22 +174,10 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
         container={selectedContainer}
       />
 
-      {/* Simulacre de dialogue pour l’ajout */}
-      {showFakeAddDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Ajout d’un nouveau conteneur</h2>
-            <p className="mb-4 text-muted-foreground">
-              Formulaire d’ajout à implémenter ici.
-            </p>
-            <div className="flex justify-end">
-              <Button variant="outline" onClick={closeFakeAddDialog}>
-                Fermer
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateContainerDialog
+        open={showAddDialog}
+        onOpenChange={closeAddDialog}
+      />
     </div>
   );
 };
