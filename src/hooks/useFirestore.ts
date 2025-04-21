@@ -30,7 +30,7 @@ export const useFirestore = (collectionPath?: string) => {
   const ensureValidPath = (path?: string): string => {
     if (!path || path.trim() === '') {
       console.warn('Collection path is empty, using fallback');
-      return 'default-collection';
+      return 'default-collection'; // Fallback to a valid collection name
     }
     return path;
   };

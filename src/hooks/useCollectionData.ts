@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
 
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates
@@ -18,6 +18,14 @@ export const useCollectionData = (
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Validate collection path
+    if (!collectionPath || collectionPath.trim() === '') {
+      console.error('Collection path cannot be empty');
+      setError(new Error('Collection path cannot be empty'));
+      setIsLoading(false);
+      return () => {}; // Return empty cleanup function
+    }
+    
     // For development/testing, you can use a timeout to simulate network latency
     const timeoutId = setTimeout(() => {
       try {

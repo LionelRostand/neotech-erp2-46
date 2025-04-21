@@ -31,4 +31,3 @@ export const fetchFreightCollection = async <T>(
 };
 
 export { fetchFreightCollection as fetchFreightCollectionData };
-
