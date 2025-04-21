@@ -24,6 +24,7 @@ export interface Invoice {
   containerCost?: number;
   shipmentReference?: string;
   shipmentStatus?: string;
+  paymentMethod?: 'card' | 'transfer' | 'paypal' | 'cash';
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -43,9 +44,8 @@ export interface Payment {
   clientName: string;
   amount: number;
   date: string;
-  paymentMethod: string;
+  paymentMethod: 'card' | 'transfer' | 'paypal' | 'cash';
   notes?: string;
   status: 'pending' | 'completed' | 'failed';
   currency?: string;
 }
-

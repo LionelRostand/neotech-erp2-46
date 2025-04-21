@@ -68,6 +68,7 @@ export const useInvoicesData = (filterStatus?: string) => {
           containerCost: containerInfo?.costs?.[0]?.amount || 0,
           shipmentReference: shipmentInfo?.reference || '',
           shipmentStatus: shipmentInfo?.status || '',
+          paymentMethod: doc.paymentMethod || '',
           createdAt: doc.createdAt || '',
           updatedAt: doc.updatedAt || '',
           createdBy: doc.createdBy || '',
