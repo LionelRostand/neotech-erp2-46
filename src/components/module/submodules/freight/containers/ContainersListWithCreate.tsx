@@ -1,181 +1,143 @@
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { COLLECTIONS } from "@/lib/firebase-collections";
-import { Container as ContainerType } from "@/types/freight";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import ContainerCreateDialog from "./ContainerCreateDialog";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { toast } from "sonner";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchFreightCollection } from '@/hooks/fetchFreightCollectionData';
+import { Container } from '@/types/freight';
+import { Button } from '@/components/ui/button';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import ContainerViewDialog from './ContainerViewDialog';
+import ContainerEditDialog from './ContainerEditDialog';
+import ContainerDeleteDialog from './ContainerDeleteDialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-interface Props {
-  onEditContainer: (container: ContainerType) => void;
+interface ContainersListWithCreateProps {
+  onEditContainer?: (container: Container) => void;
 }
 
-const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
-  const [isCreating, setIsCreating] = useState(false);
+const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = () => {
+  const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Fetch containers from Firestore
-  const { data: containers, isLoading, error } = useQuery({
-    queryKey: ["freight", "containers"],
-    queryFn: async () => {
-      try {
-        const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
-        
-        // Validate collection path to prevent the empty path error
-        if (!collectionPath || collectionPath.trim() === '') {
-          console.error('Invalid containers collection path');
-          toast.error('Erreur: Impossible d\'accéder à la collection des conteneurs');
-          return [];
-        }
-        
-        console.log(`Fetching containers from collection: ${collectionPath}`);
-        
-        const q = query(
-          collection(db, collectionPath),
-          orderBy("createdAt", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-        
-        return querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as ContainerType[];
-      } catch (err) {
-        console.error('Error fetching containers:', err);
-        toast.error(`Erreur: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
-        return [];
-      }
-    },
+  const { data: containers = [], isLoading, refetch } = useQuery({
+    queryKey: ['freight', 'containers'],
+    queryFn: () => fetchFreightCollection<Container>('CONTAINERS'),
   });
 
-  // Format dates for display
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "-";
-    try {
-      return format(new Date(dateString), "dd/MM/yyyy", { locale: fr });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Render status badge with color
-  const renderStatus = (status: string) => {
-    let bgColor = "bg-gray-100 text-gray-800";
-    
-    if (status === "vide") bgColor = "bg-yellow-100 text-yellow-800";
-    if (status === "chargement") bgColor = "bg-blue-100 text-blue-800";
-    if (status === "plein") bgColor = "bg-green-100 text-green-800";
-    if (status === "en transit") bgColor = "bg-purple-100 text-purple-800";
-    if (status === "livré") bgColor = "bg-gray-100 text-gray-800";
-    
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor}`}>
-        {status || "Non défini"}
-      </span>
-    );
-  };
-
   if (isLoading) {
-    return <div className="py-4 text-center">Chargement des conteneurs...</div>;
+    return <div className="p-8 text-center">Chargement des conteneurs...</div>;
   }
 
-  if (error) {
-    return (
-      <div className="py-4 text-center text-red-500">
-        Une erreur est survenue lors du chargement des conteneurs.
-      </div>
-    );
-  }
+  const handleViewContainer = (container: Container) => {
+    setSelectedContainer(container);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditContainer = (container: Container) => {
+    setSelectedContainer(container);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteContainer = (container: Container) => {
+    setSelectedContainer(container);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    setDeleteDialogOpen(false);
+    refetch();
+    toast.success('Conteneur supprimé avec succès');
+  };
 
   return (
-    <>
-      <div className="rounded-md border overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Référence
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Origine
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Destination
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Départ
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {containers?.length > 0 ? (
-              containers.map((container) => (
-                <tr key={container.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {container.number || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {container.type || "N/A"} ({container.size || "N/A"})
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {container.client || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {renderStatus(container.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {container.origin || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {container.destination || "N/A"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(container.departureDate)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onEditContainer(container)}
-                    >
-                      Modifier
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
-                  Aucun conteneur trouvé
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Numéro</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Destination</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {containers.map((container) => (
+            <TableRow key={container.id}>
+              <TableCell>{container.number}</TableCell>
+              <TableCell>{container.type}</TableCell>
+              <TableCell>{container.client}</TableCell>
+              <TableCell>{container.status}</TableCell>
+              <TableCell>{container.destination}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewContainer(container)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Voir
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditContainer(container)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => handleDeleteContainer(container)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Supprimer
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-      <ContainerCreateDialog 
-        open={isCreating} 
-        onOpenChange={setIsCreating} 
-      />
-    </>
+      {selectedContainer && (
+        <>
+          <ContainerViewDialog
+            isOpen={viewDialogOpen}
+            onClose={() => setViewDialogOpen(false)}
+            container={selectedContainer}
+          />
+          <ContainerEditDialog
+            open={editDialogOpen}
+            onClose={() => setEditDialogOpen(false)}
+            container={selectedContainer}
+            onSave={() => {
+              setEditDialogOpen(false);
+              refetch();
+            }}
+          />
+          <ContainerDeleteDialog
+            open={deleteDialogOpen} 
+            onClose={() => setDeleteDialogOpen(false)}
+            container={selectedContainer}
+            onDeleted={handleDeleteSuccess}
+          />
+        </>
+      )}
+    </div>
   );
 };
 
