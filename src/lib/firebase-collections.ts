@@ -22,7 +22,8 @@ export const COLLECTIONS = {
     CONTRACTS: 'hr-contracts',
     LEAVE_REQUESTS: 'hr-leave-requests',
     PAYSLIPS: 'hr-payslips',
-    DOCUMENTS: 'hr-documents'
+    DOCUMENTS: 'hr-documents',
+    ABSENCE_REQUESTS: 'hr-absence-requests'
   },
   MESSAGES: {
     CONTACTS: 'messages-contacts',
@@ -36,7 +37,8 @@ export const COLLECTIONS = {
     MAIN: 'documents',
     TEMPLATES: 'document-templates',
     SHARED: 'shared-documents',
-    ARCHIVED: 'archived-documents'
+    ARCHIVED: 'archived-documents',
+    DOCUMENTS: 'documents'  // Added for compatibility with existing code
   },
   FREIGHT: {
     SHIPMENTS: 'freight-shipments',

@@ -57,3 +57,6 @@ export const useFreightData = () => {
     error,
   };
 };
+
+// Add a default export to fix the import issue
+export default useFreightData;
