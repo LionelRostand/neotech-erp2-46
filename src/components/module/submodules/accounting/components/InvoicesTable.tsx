@@ -81,6 +81,7 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
         <TableRow>
           <TableHead>Facture #</TableHead>
           <TableHead>Conteneur</TableHead>
+          <TableHead>Coût Conteneur</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Statut</TableHead>
@@ -95,6 +96,13 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
             <TableCell>
               {invoice.containerReference ? (
                 <Badge variant="outline">{invoice.containerReference}</Badge>
+              ) : (
+                <span className="text-muted-foreground text-sm">-</span>
+              )}
+            </TableCell>
+            <TableCell>
+              {invoice.containerCost ? (
+                formatCurrency(invoice.containerCost, invoice.currency)
               ) : (
                 <span className="text-muted-foreground text-sm">-</span>
               )}

@@ -20,6 +20,7 @@ export interface Invoice {
   notes?: string;
   termsAndConditions?: string;
   containerReference?: string;  // Added for container tracking
+  containerCost?: number;      // Added container cost
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -44,3 +45,4 @@ export interface Payment {
   status: 'pending' | 'completed' | 'failed';
   currency?: string;
 }
+
