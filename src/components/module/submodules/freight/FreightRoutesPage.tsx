@@ -23,17 +23,19 @@ const FreightRoutesPage: React.FC = () => {
       console.log("Routes chargées:", routesData);
       
       if (Array.isArray(routesData) && routesData.length > 0) {
-        // Assurer que chaque route a les propriétés requises
-        const formattedRoutes = routesData.map(route => ({
-          id: route.id || String(Date.now()),
-          name: route.name || "",
-          origin: route.origin || "",
-          destination: route.destination || "",
-          distance: typeof route.distance === 'number' ? route.distance : 0,
-          estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
-          transportType: route.transportType || "road",
-          active: typeof route.active === 'boolean' ? route.active : true
-        }));
+        // Filtrer les routes pour ne garder que celles qui ont toutes les propriétés requises
+        const formattedRoutes = routesData
+          .filter(route => route.name && route.origin && route.destination)
+          .map(route => ({
+            id: route.id || String(Date.now()),
+            name: route.name || "",
+            origin: route.origin || "",
+            destination: route.destination || "",
+            distance: typeof route.distance === 'number' ? route.distance : 0,
+            estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
+            transportType: route.transportType || "road",
+            active: typeof route.active === 'boolean' ? route.active : true
+          }));
         
         setRoutes(formattedRoutes);
       } else {
