@@ -2,34 +2,30 @@
 import React from "react";
 import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { Dialog } from "@/components/ui/dialog";
-import ContainerCreateDialog from "./ContainerCreateDialog";
 import { toast } from "sonner";
 import { Container } from "@/types/freight";
-import { fetchCollectionData } from "@/lib/fetchCollectionData";
 import ModuleContainer from "@/components/module/ModuleContainer";
+import { useFirebaseCollection } from "@/hooks/useFirebaseCollection";
+import ContainerCreateDialog from "./ContainerCreateDialog";
+
+const CONTAINERS_COLLECTION = "freight_containers";
 
 const ContainersList: React.FC = () => {
   // État d'ouverture du dialog
   const [openDialog, setOpenDialog] = React.useState(false);
 
-  // État de la dernière création
-  const [lastCreated, setLastCreated] = React.useState<Container | null>(null);
+  // Récupération temps réel des conteneurs
+  const {
+    data: containers = [],
+    isLoading,
+    refetch,
+    error,
+  } = useFirebaseCollection<Container>(CONTAINERS_COLLECTION);
 
-  // Fetch des conteneurs depuis Firestore
-  const { data: containers = [], refetch, isLoading } = useQuery({
-    queryKey: ["freight-containers"],
-    queryFn: () => fetchCollectionData<Container>("freight-containers"),
-  });
-
-  console.log("Conteneurs chargés:", containers);
-
-  // Au succès d'ajout, refetch + toast
+  // Callback succès création
   const onCreated = (container: Container) => {
-    setLastCreated(container);
     setOpenDialog(false);
-    refetch();
+    refetch?.(); // Rafraîchir la liste en appelant refetch du hook temps réel
     toast.success("Conteneur ajouté avec succès !");
   };
 
