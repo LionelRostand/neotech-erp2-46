@@ -43,9 +43,14 @@ const ContainerManagerPage: React.FC = () => {
 
   // Ajout mutation
   const handleCreateContainer = async (containerData: any) => {
-    await addContainerMutation.mutateAsync(containerData);
-    toast.success("Conteneur ajouté avec succès !");
-    closeDialog();
+    try {
+      await addContainerMutation.mutateAsync(containerData);
+      toast.success("Conteneur ajouté avec succès !");
+      closeDialog();
+    } catch (error) {
+      console.error("Error creating container:", error);
+      toast.error("Erreur lors de l'ajout du conteneur");
+    }
   };
 
   return (
@@ -111,13 +116,19 @@ const ContainerManagerPage: React.FC = () => {
         </table>
       </div>
       <CreateEditContainerDialog
-        open={openDialog === "create"}
+        open={openDialog === "create" || openDialog === "edit"}
         onClose={closeDialog}
-        container={null}
+        container={openDialog === "edit" ? currentContainer : null}
         onSave={handleCreateContainer}
         defaultNumber={generateContainerNumber()}
       />
-      {/* Les dialogs d'édition et de suppression sont à adapter de façon similaire */}
+      {currentContainer && (
+        <DeleteContainerDialog
+          open={openDialog === "delete"}
+          onClose={closeDialog}
+          container={currentContainer}
+        />
+      )}
     </div>
   );
 };

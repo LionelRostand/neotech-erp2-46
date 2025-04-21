@@ -1,44 +1,65 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { COLLECTIONS } from "@/lib/firebase-collections";
-import { doc, deleteDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useDeleteContainer } from "@/hooks/modules/useContainersFirestore";
 import { toast } from "sonner";
 
-const DeleteContainerDialog = ({ open, onClose, container }: { open: boolean, onClose: () => void, container: any }) => {
-  const [deleting, setDeleting] = React.useState(false);
+interface DeleteContainerDialogProps {
+  open: boolean;
+  onClose: () => void;
+  container: {
+    id: string;
+    number: string;
+  };
+}
+
+const DeleteContainerDialog: React.FC<DeleteContainerDialogProps> = ({
+  open,
+  onClose,
+  container,
+}) => {
+  const deleteContainerMutation = useDeleteContainer();
 
   const handleDelete = async () => {
-    if (!container?.id) return;
-    setDeleting(true);
     try {
-      await deleteDoc(doc(db, COLLECTIONS.FREIGHT.CONTAINERS, container.id));
-      toast.success("Conteneur supprimé !");
+      await deleteContainerMutation.mutateAsync(container.id);
+      toast.success("Conteneur supprimé avec succès!");
       onClose();
-    } catch (err: any) {
-      toast.error("Erreur lors de la suppression");
-    } finally {
-      setDeleting(false);
+    } catch (error) {
+      console.error("Error deleting container:", error);
+      toast.error("Erreur lors de la suppression du conteneur");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Supprimer le Conteneur</DialogTitle>
+          <DialogTitle>Confirmer la suppression</DialogTitle>
+          <DialogDescription>
+            Êtes-vous sûr de vouloir supprimer le conteneur{" "}
+            <span className="font-semibold">{container?.number}</span>? Cette
+            action est irréversible.
+          </DialogDescription>
         </DialogHeader>
-        <div>
-          Êtes-vous sûr de vouloir supprimer le conteneur <strong>{container?.number}</strong> ?
-        </div>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" type="button" onClick={onClose} disabled={deleting}>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-            {deleting ? "Suppression..." : "Supprimer"}
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleteContainerMutation.isPending}
+          >
+            {deleteContainerMutation.isPending ? "Suppression..." : "Supprimer"}
           </Button>
         </DialogFooter>
       </DialogContent>
