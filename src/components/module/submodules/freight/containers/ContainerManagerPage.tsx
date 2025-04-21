@@ -20,6 +20,7 @@ interface Container {
   origin?: string;
   destination?: string;
   status?: string;
+  carrier?: string;
   [key: string]: any;
 }
 
@@ -38,7 +39,7 @@ const generateContainerNumber = () => {
 const ContainerManagerPage: React.FC = () => {
   const { data: containers = [], isLoading } = useContainers();
   const addContainerMutation = useAddContainer();
-  const { routes = [], clients = [] } = useFreightData();
+  const { routes = [], clients = [], carriers = [] } = useFreightData();
   const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
   const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
 
@@ -75,8 +76,14 @@ const ContainerManagerPage: React.FC = () => {
 
   const getClientName = (clientId: string | undefined) => {
     if (!clientId) return "-";
-    const client = clients.find((c: FreightClient) => c.id === clientId);
+    const client = clients.find((c: any) => c.id === clientId);
     return client ? client.name || '-' : '-';
+  };
+
+  const getCarrierName = (carrierId: string | undefined) => {
+    if (!carrierId) return "-";
+    const carrier = carriers.find((c: any) => c.id === carrierId);
+    return carrier ? carrier.name || '-' : '-';
   };
 
   return (
@@ -97,6 +104,7 @@ const ContainerManagerPage: React.FC = () => {
             <tr>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Référence</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Client</th>
+              <th className="px-5 py-3 text-left font-semibold text-gray-700">Transporteur</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Origine</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Destination</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Statut</th>
@@ -106,7 +114,7 @@ const ContainerManagerPage: React.FC = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                <td colSpan={7} className="text-center p-8 text-muted-foreground">
                   Chargement...
                 </td>
               </tr>
@@ -115,6 +123,7 @@ const ContainerManagerPage: React.FC = () => {
                 <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
                   <td className="px-5 py-4">{container.number || "-"}</td>
                   <td className="px-5 py-4">{getClientName(container.client)}</td>
+                  <td className="px-5 py-4">{getCarrierName(container.carrier)}</td>
                   <td className="px-5 py-4">{container.origin || "-"}</td>
                   <td className="px-5 py-4">{container.destination || "-"}</td>
                   <td className="px-5 py-4">{container.status || "-"}</td>
@@ -133,7 +142,7 @@ const ContainerManagerPage: React.FC = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                <td colSpan={7} className="text-center p-8 text-muted-foreground">
                   Aucun conteneur enregistré pour le moment.
                 </td>
               </tr>
@@ -148,9 +157,13 @@ const ContainerManagerPage: React.FC = () => {
           onSave={handleCreateContainer}
           defaultNumber={generateContainerNumber()}
           routes={routes as Route[]}
-          clients={clients.map((client: FreightClient) => ({
+          clients={clients.map((client: any) => ({
             id: client.id,
             name: client.name
+          }))}
+          carriers={carriers.map((carrier: any) => ({
+            id: carrier.id,
+            name: carrier.name
           }))}
         />
       )}
