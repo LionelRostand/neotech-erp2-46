@@ -6,7 +6,6 @@ import SubmodulePage from "@/components/module/SubmodulePage";
 import CreateShipmentPage from "@/components/module/submodules/freight/CreateShipmentPage";
 import FreightClientsPage from "@/components/module/submodules/freight/clients/FreightClientsPage";
 import FreightRoutesPage from "@/components/module/submodules/freight/FreightRoutesPage";
-import ContainersListWithCreate from "@/components/module/submodules/freight/containers/ContainersListWithCreate";
 import ContainerManagerPage from "@/components/module/submodules/freight/containers/ContainerManagerPage";
 
 export const FreightRoutes = (

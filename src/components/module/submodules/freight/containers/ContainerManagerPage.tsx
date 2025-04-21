@@ -1,189 +1,29 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash } from "lucide-react";
-import { useContainers, useAddContainer } from "@/hooks/modules/useContainersFirestore";
-import { toast } from "sonner";
-import { useFreightData } from "@/hooks/modules/useFreightData";
-import ContainerDialogTabs from "./ContainerDialogTabs";
-import DeleteContainerDialog from "./DeleteContainerDialog";
-
-interface FreightClient {
-  id: string;
-  name: string;
-  [key: string]: any;
-}
-
-interface Container {
-  id: string;
-  number: string;
-  client?: string;
-  origin?: string;
-  destination?: string;
-  status?: string;
-  carrier?: string;
-  [key: string]: any;
-}
-
-interface Route {
-  id: string;
-  name: string;
-  [key: string]: any;
-}
-
-const generateContainerNumber = () => {
-  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
-  return `CTR-${datePart}-${randomPart}`;
-};
+import { Package, Plus } from "lucide-react";
+import ContainersListWithCreate from "./ContainersListWithCreate";
 
 const ContainerManagerPage: React.FC = () => {
-  const { data: containers = [], isLoading } = useContainers();
-  const addContainerMutation = useAddContainer();
-  const { routes = [], clients = [], carriers = [] } = useFreightData();
-  const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
-  const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
-
-  const handleNew = () => {
-    setCurrentContainer(null);
-    setOpenDialog("create");
-  };
-
-  const handleEdit = (container: Container) => {
-    setCurrentContainer(container);
-    setOpenDialog("edit");
-  };
-
-  const handleDelete = (container: Container) => {
-    setCurrentContainer(container);
-    setOpenDialog("delete");
-  };
-
-  const closeDialog = () => {
-    setOpenDialog(null);
-    setCurrentContainer(null);
-  };
-
-  const handleCreateContainer = async (containerData: any) => {
-    try {
-      await addContainerMutation.mutateAsync(containerData);
-      toast.success("Conteneur ajouté avec succès !");
-      closeDialog();
-    } catch (error) {
-      console.error("Error creating container:", error);
-      toast.error("Erreur lors de l'ajout du conteneur");
-    }
-  };
-
-  const getClientName = (clientId: string | undefined) => {
-    if (!clientId) return "-";
-    const client = clients.find((c: any) => c.id === clientId);
-    return client ? client.name || '-' : '-';
-  };
-
-  const getCarrierName = (carrierId: string | undefined) => {
-    if (!carrierId) return "-";
-    const carrier = carriers.find((c: any) => c.id === carrierId);
-    return carrier ? carrier.name || '-' : '-';
-  };
-
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Gestion des Conteneurs</h2>
-        <Button
-          onClick={handleNew}
-          className="flex items-center px-4 py-2 rounded-md"
-        >
-          <span className="mr-2 text-lg font-bold">+</span>
-          Nouveau Conteneur
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Package className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Gestion des Conteneurs</h1>
+        </div>
+        
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Ajouter un conteneur
         </Button>
       </div>
-      <div className="bg-white rounded-md shadow border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Référence</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Client</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Transporteur</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Origine</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Destination</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Coût</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Statut</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={8} className="text-center p-8 text-muted-foreground">
-                  Chargement...
-                </td>
-              </tr>
-            ) : (containers && containers.length > 0 ? (
-              containers.map((container: Container) => (
-                <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
-                  <td className="px-5 py-4">{container.number || "-"}</td>
-                  <td className="px-5 py-4">{getClientName(container.client)}</td>
-                  <td className="px-5 py-4">{getCarrierName(container.carrier)}</td>
-                  <td className="px-5 py-4">{container.origin || "-"}</td>
-                  <td className="px-5 py-4">{container.destination || "-"}</td>
-                  <td className="px-5 py-4">
-                    {typeof container.cost === "number" 
-                      ? <span className="text-green-700 font-medium">{container.cost.toLocaleString()} €</span> 
-                      : "-"}
-                  </td>
-                  <td className="px-5 py-4">{container.status || "-"}</td>
-                  <td className="px-5 py-4 space-x-2 flex items-center">
-                    <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Voir">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleEdit(container)} className="hover:bg-gray-100" title="Modifier">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(container)} className="hover:bg-gray-100" title="Supprimer">
-                      <Trash className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={8} className="text-center p-8 text-muted-foreground">
-                  Aucun conteneur enregistré pour le moment.
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="rounded-md bg-white p-4">
+        <ContainersListWithCreate />
       </div>
-      {openDialog && openDialog === "create" && (
-        <ContainerDialogTabs
-          open={true}
-          onClose={closeDialog}
-          onSave={handleCreateContainer}
-          defaultNumber={generateContainerNumber()}
-          routes={routes as Route[]}
-          clients={clients.map((client: any) => ({
-            id: client.id,
-            name: client.name
-          }))}
-          carriers={carriers.map((carrier: any) => ({
-            id: carrier.id,
-            name: carrier.name
-          }))}
-        />
-      )}
-      {openDialog && openDialog !== "create" && currentContainer && (
-        <DeleteContainerDialog
-          open={openDialog === "delete"}
-          onClose={closeDialog}
-          container={currentContainer}
-        />
-      )}
     </div>
   );
 };
 
 export default ContainerManagerPage;
-
