@@ -23,20 +23,25 @@ const FreightRoutesPage: React.FC = () => {
       console.log("Routes chargées:", routesData);
       
       if (Array.isArray(routesData) && routesData.length > 0) {
-        // Filtrer les routes pour ne garder que celles qui ont toutes les propriétés requises
+        // Traiter chaque route pour s'assurer qu'elle a les propriétés nécessaires
         const formattedRoutes = routesData
-          .filter(route => route.name && route.origin && route.destination)
-          .map(route => ({
-            id: route.id || String(Date.now()),
-            name: route.name || "",
-            origin: route.origin || "",
-            destination: route.destination || "",
-            distance: typeof route.distance === 'number' ? route.distance : 0,
-            estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
-            transportType: route.transportType || "road",
-            active: typeof route.active === 'boolean' ? route.active : true
-          }));
+          .map(route => {
+            // S'assurer que toutes les propriétés nécessaires existent
+            return {
+              id: route.id || String(Date.now()),
+              name: route.name || "",
+              origin: route.origin || "",
+              destination: route.destination || "",
+              distance: typeof route.distance === 'number' ? route.distance : 0,
+              estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
+              transportType: route.transportType || "road",
+              active: typeof route.active === 'boolean' ? route.active : true
+            };
+          })
+          // Ne garder que les routes qui ont au moins un nom
+          .filter(route => route.name.trim() !== "");
         
+        console.log("Routes formatées:", formattedRoutes);
         setRoutes(formattedRoutes);
       } else {
         setRoutes([]);
@@ -65,12 +70,13 @@ const FreightRoutesPage: React.FC = () => {
 
     // Sauvegarder en Firestore
     try {
-      const res = await add({ ...route, createdAt: new Date().toISOString() });
+      await add({ ...route, createdAt: new Date().toISOString() });
       toast.success("Route enregistrée avec succès dans la base de données.");
       
       // Recharger les routes pour obtenir les données à jour de Firestore
-      loadRoutes();
+      await loadRoutes();
     } catch (err: any) {
+      console.error("Erreur d'enregistrement:", err);
       toast.error("Erreur lors de l'enregistrement dans la base de données.");
     }
   };
