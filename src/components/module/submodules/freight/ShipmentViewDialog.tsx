@@ -22,6 +22,23 @@ interface ShipmentViewDialogProps {
 }
 
 const ShipmentViewDialog: React.FC<ShipmentViewDialogProps> = ({ isOpen, onClose, shipment }) => {
+  // Helper function to safely format dates, returning a fallback message for invalid dates
+  const formatDateSafely = (dateString: string | undefined, formatStr: string = 'dd MMMM yyyy', fallback: string = 'Non défini') => {
+    if (!dateString) return fallback;
+    
+    try {
+      const date = new Date(dateString);
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return fallback;
+      }
+      return format(date, formatStr, { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return fallback;
+    }
+  };
+
   // Fonction pour rendre le statut avec le bon style
   const renderStatus = (status: string) => {
     let color = "";
@@ -66,7 +83,7 @@ const ShipmentViewDialog: React.FC<ShipmentViewDialogProps> = ({ isOpen, onClose
         <DialogHeader>
           <DialogTitle>Expédition {shipment.reference}</DialogTitle>
           <DialogDescription>
-            Créée le {format(new Date(shipment.createdAt), 'dd MMMM yyyy', { locale: fr })}
+            Créée le {formatDateSafely(shipment.createdAt)}
           </DialogDescription>
         </DialogHeader>
         
@@ -103,18 +120,18 @@ const ShipmentViewDialog: React.FC<ShipmentViewDialogProps> = ({ isOpen, onClose
           
           <div>
             <h3 className="text-sm font-medium text-gray-500">Date prévue</h3>
-            <p className="mt-1">{format(new Date(shipment.scheduledDate), 'dd MMM yyyy', { locale: fr })}</p>
+            <p className="mt-1">{formatDateSafely(shipment.scheduledDate, 'dd MMM yyyy')}</p>
           </div>
           
           <div>
             <h3 className="text-sm font-medium text-gray-500">Livraison estimée</h3>
-            <p className="mt-1">{format(new Date(shipment.estimatedDeliveryDate), 'dd MMM yyyy', { locale: fr })}</p>
+            <p className="mt-1">{formatDateSafely(shipment.estimatedDeliveryDate, 'dd MMM yyyy')}</p>
           </div>
           
           {shipment.actualDeliveryDate && (
             <div>
               <h3 className="text-sm font-medium text-gray-500">Livraison effectuée</h3>
-              <p className="mt-1">{format(new Date(shipment.actualDeliveryDate), 'dd MMM yyyy', { locale: fr })}</p>
+              <p className="mt-1">{formatDateSafely(shipment.actualDeliveryDate, 'dd MMM yyyy')}</p>
             </div>
           )}
           
@@ -127,27 +144,31 @@ const ShipmentViewDialog: React.FC<ShipmentViewDialogProps> = ({ isOpen, onClose
         </div>
         
         <div className="mt-4">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Articles ({shipment.lines.length})</h3>
-          <div className="border rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Article</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qté</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {shipment.lines.map((line) => (
-                  <tr key={line.id}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{line.productName}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{line.quantity}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{line.weight} kg</td>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Articles ({shipment.lines?.length || 0})</h3>
+          {shipment.lines && shipment.lines.length > 0 ? (
+            <div className="border rounded-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Article</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qté</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {shipment.lines.map((line) => (
+                    <tr key={line.id}>
+                      <td className="px-4 py-2 text-sm text-gray-900">{line.productName}</td>
+                      <td className="px-4 py-2 text-sm text-gray-500">{line.quantity}</td>
+                      <td className="px-4 py-2 text-sm text-gray-500">{line.weight} kg</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Aucun article dans cette expédition</p>
+          )}
         </div>
         
         {shipment.notes && (

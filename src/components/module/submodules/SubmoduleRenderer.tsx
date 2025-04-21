@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
 import { renderAccountingSubmodule } from './renderers/AccountingRenderer';
-import { renderFreightSubmodule } from './renderers/FreightRenderer';
+import { FreightRenderer } from './renderers/FreightRenderer';
 import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
 import { renderHealthSubmodule } from './renderers/HealthRenderer';
 import { renderVehicleRentalsSubmodule } from './renderers/VehicleRentalsRenderer';
@@ -25,7 +26,7 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
     case 'accounting':
       return renderAccountingSubmodule(submoduleId, submodule);
     case 'freight':
-      return renderFreightSubmodule(submoduleId, submodule);
+      return <FreightRenderer submoduleId={submoduleId} />;
     case 'projects':
       return renderProjectsSubmodule(submoduleId, submodule);
     case 'health':
