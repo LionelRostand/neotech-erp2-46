@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import ContainerCreateDialog from "./ContainerCreateDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface Props {
   onEditContainer: (container: ContainerType) => void;
@@ -19,18 +20,33 @@ const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
   const [isCreating, setIsCreating] = useState(false);
 
   // Fetch containers from Firestore
-  const { data: containers, isLoading } = useQuery({
+  const { data: containers, isLoading, error } = useQuery({
     queryKey: ["freight", "containers"],
     queryFn: async () => {
-      const q = query(
-        collection(db, COLLECTIONS.FREIGHT.CONTAINERS),
-        orderBy("createdAt", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as ContainerType[];
+      try {
+        const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
+        
+        // Validate collection path
+        if (!collectionPath || collectionPath.trim() === '') {
+          console.error('Invalid containers collection path');
+          toast.error('Erreur: Impossible d\'accéder à la collection des conteneurs');
+          return [];
+        }
+        
+        const q = query(
+          collection(db, collectionPath),
+          orderBy("createdAt", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        })) as ContainerType[];
+      } catch (err) {
+        console.error('Error fetching containers:', err);
+        toast.error(`Erreur: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+        return [];
+      }
     },
   });
 
@@ -63,6 +79,14 @@ const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
 
   if (isLoading) {
     return <div className="py-4 text-center">Chargement des conteneurs...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="py-4 text-center text-red-500">
+        Une erreur est survenue lors du chargement des conteneurs.
+      </div>
+    );
   }
 
   return (

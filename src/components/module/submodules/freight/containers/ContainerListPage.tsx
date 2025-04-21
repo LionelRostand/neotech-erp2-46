@@ -1,12 +1,28 @@
 
 import React, { useState } from "react";
-import SubmoduleHeader from "../../SubmoduleHeader";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import ContainersListWithCreate from "./ContainersListWithCreate";
 import ContainerCreateDialog from "./ContainerCreateDialog";
-import { Button } from "@/components/ui/button";
-import { Plus, Container } from "lucide-react";
 import ContainerEditDialog from "./ContainerEditDialog";
 import { Container as ContainerType } from "@/types/freight";
+
+// Import SubmoduleHeader directly instead of relying on module structure
+const SubmoduleHeader: React.FC<{
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}> = ({ title, description, action }) => {
+  return (
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <p className="text-muted-foreground">{description}</p>
+      </div>
+      {action && <div>{action}</div>}
+    </div>
+  );
+};
 
 const ContainerListPage: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -36,11 +52,13 @@ const ContainerListPage: React.FC = () => {
         onOpenChange={setCreateDialogOpen} 
       />
 
-      <ContainerEditDialog 
-        open={!!editingContainer} 
-        onClose={() => setEditingContainer(null)} 
-        container={editingContainer}
-      />
+      {editingContainer && (
+        <ContainerEditDialog 
+          open={!!editingContainer} 
+          onClose={() => setEditingContainer(null)} 
+          container={editingContainer}
+        />
+      )}
     </div>
   );
 };

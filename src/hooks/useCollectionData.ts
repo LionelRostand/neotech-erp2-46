@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
+import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { toast } from 'sonner';
 
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates
