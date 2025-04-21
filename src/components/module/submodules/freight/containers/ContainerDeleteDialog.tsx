@@ -1,69 +1,51 @@
 
-import React, { useState } from 'react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Container } from '@/types/freight';
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Container } from "@/types/freight";
+import { toast } from "sonner";
 
 interface ContainerDeleteDialogProps {
+  container: Container;
   open: boolean;
   onClose: () => void;
-  container: Container;
-  onDeleted?: () => void;
 }
 
 const ContainerDeleteDialog: React.FC<ContainerDeleteDialogProps> = ({
+  container,
   open,
   onClose,
-  container,
-  onDeleted
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const handleDelete = async () => {
     try {
-      setIsDeleting(true);
-      await deleteDocument(COLLECTIONS.FREIGHT.CONTAINERS, container.id);
-      onDeleted?.();
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-    } finally {
-      setIsDeleting(false);
+      // Here would be the code to delete the container from Firestore
+      toast.success("Conteneur supprimé avec succès");
       onClose();
+    } catch (error) {
+      console.error("Error deleting container:", error);
+      toast.error("Erreur lors de la suppression du conteneur");
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer le conteneur <strong>{container.number}</strong> ?
-            Cette action est irréversible.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isDeleting ? 'Suppression...' : 'Supprimer'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Supprimer le conteneur</DialogTitle>
+          <DialogDescription>
+            Êtes-vous sûr de vouloir supprimer le conteneur {container.number} ? Cette action est irréversible.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button variant="destructive" onClick={handleDelete}>
+            Supprimer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

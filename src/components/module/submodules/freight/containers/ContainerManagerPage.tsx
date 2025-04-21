@@ -1,13 +1,19 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Package, Plus } from "lucide-react";
+import { Container } from "@/types/freight";
 import ContainersListWithCreate from "./ContainersListWithCreate";
+import ContainerEditDialog from "./ContainerEditDialog";
 
 const ContainerManagerPage: React.FC = () => {
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const handleOpenAddDialog = () => setAddDialogOpen(true);
-  const handleCloseAddDialog = () => setAddDialogOpen(false);
+  const handleEditContainer = (container: Container) => {
+    setSelectedContainer(container);
+    setIsEditDialogOpen(true);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -17,8 +23,10 @@ const ContainerManagerPage: React.FC = () => {
           <h1 className="text-2xl font-bold">Gestion des Conteneurs</h1>
         </div>
         <Button
-          data-testid="add-container-btn"
-          onClick={handleOpenAddDialog}
+          onClick={() => {
+            setSelectedContainer(null);
+            setIsEditDialogOpen(true);
+          }}
           className="bg-primary text-white flex items-center gap-2"
         >
           <Plus className="mr-1 h-4 w-4" />
@@ -26,11 +34,16 @@ const ContainerManagerPage: React.FC = () => {
         </Button>
       </div>
       <div className="rounded-md bg-white p-4">
-        <ContainersListWithCreate
-          addDialogOpen={addDialogOpen}
-          onCloseAddDialog={handleCloseAddDialog}
-        />
+        <ContainersListWithCreate onEditContainer={handleEditContainer} />
       </div>
+
+      {isEditDialogOpen && (
+        <ContainerEditDialog
+          container={selectedContainer}
+          open={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+        />
+      )}
     </div>
   );
 };

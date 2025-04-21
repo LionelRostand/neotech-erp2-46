@@ -1,45 +1,61 @@
 
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Container } from "@/types/freight";
+import { Container } from "@/types/freight";
 
 interface ContainerViewDialogProps {
+  container: Container;
   open: boolean;
   onClose: () => void;
-  container: Container | null;
 }
 
-const ContainerViewDialog: React.FC<ContainerViewDialogProps> = ({ open, onClose, container }) => {
-  if (!container) return null;
-  
+const ContainerViewDialog: React.FC<ContainerViewDialogProps> = ({
+  container,
+  open,
+  onClose,
+}) => {
+  const calculateTotalCost = (costs: any[] = []) => {
+    return costs.reduce((total, cost) => total + Number(cost.amount), 0);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Détails du conteneur</DialogTitle>
-          <DialogDescription>
-            Informations du conteneur <span className="font-semibold">{container.number}</span>
-          </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-2 py-2 text-sm">
-          <div><span className="font-medium">Numéro :</span> {container.number}</div>
-          <div><span className="font-medium">Type :</span> {container.type}</div>
-          <div><span className="font-medium">Taille :</span> {container.size}</div>
-          <div><span className="font-medium">Client :</span> {container.client}</div>
-          <div><span className="font-medium">Statut :</span> {container.status}</div>
-          <div><span className="font-medium">Origine :</span> {container.origin}</div>
-          <div><span className="font-medium">Destination :</span> {container.destination}</div>
-          <div><span className="font-medium">Date départ :</span> {container.departureDate}</div>
-          <div><span className="font-medium">Date arrivée :</span> {container.arrivalDate}</div>
-          <div><span className="font-medium">Localisation :</span> {container.location}</div>
+        <div className="py-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-medium text-sm">Numéro</h3>
+              <p>{container.number}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">Type</h3>
+              <p>{container.type}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">Client</h3>
+              <p>{container.client}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">Status</h3>
+              <p>{container.status}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">Destination</h3>
+              <p>{container.destination}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">Coût Total</h3>
+              <p>
+                {container.costs && container.costs.length > 0
+                  ? `${calculateTotalCost(container.costs).toLocaleString('fr-FR')} €`
+                  : '0 €'}
+              </p>
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={onClose}>Fermer</Button>
