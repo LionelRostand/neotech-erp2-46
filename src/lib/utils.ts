@@ -64,7 +64,28 @@ export function formatCurrency(amount: number): string {
 
 /**
  * Get initials from a name
+ * Can handle both single name string or separate first and last names
  */
-export function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+export function getInitials(firstName: string, lastName?: string): string {
+  // If only one parameter is provided, it might be a full name that needs to be split
+  if (firstName && !lastName) {
+    const nameParts = firstName.trim().split(' ');
+    
+    if (nameParts.length >= 2) {
+      // If the name contains a space, use the first letter of the first and last part
+      return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase();
+    } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+      // If there's only one name part, use the first and (if available) second letter
+      return nameParts[0].length > 1 
+        ? `${nameParts[0].charAt(0)}${nameParts[0].charAt(1)}`.toUpperCase()
+        : `${nameParts[0].charAt(0)}`.toUpperCase();
+    }
+  }
+  
+  // Handle case where firstName or lastName might be undefined or empty
+  const first = firstName && firstName.length > 0 ? firstName.charAt(0) : '';
+  const last = lastName && lastName.length > 0 ? lastName.charAt(0) : '';
+  
+  return `${first}${last}`.toUpperCase();
 }
+
