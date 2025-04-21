@@ -15,6 +15,7 @@ const ContainerViewDialog: React.FC<ContainerViewDialogProps> = ({
   open,
   onClose,
 }) => {
+  // Fonction pour calculer le coût total
   const calculateTotalCost = (costs: any[] = []) => {
     return costs.reduce((total, cost) => total + Number(cost.amount), 0);
   };
@@ -23,42 +24,68 @@ const ContainerViewDialog: React.FC<ContainerViewDialogProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Détails du conteneur</DialogTitle>
+          <DialogTitle>Détails du conteneur {container.number}</DialogTitle>
         </DialogHeader>
-        <div className="py-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-medium text-sm">Numéro</h3>
-              <p>{container.number}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Type</h3>
-              <p>{container.type}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Client</h3>
-              <p>{container.client}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Status</h3>
-              <p>{container.status}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Destination</h3>
-              <p>{container.destination}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Coût Total</h3>
-              <p>
-                {container.costs && container.costs.length > 0
-                  ? `${calculateTotalCost(container.costs).toLocaleString('fr-FR')} €`
-                  : '0 €'}
-              </p>
-            </div>
+        
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">Numéro</p>
+            <p>{container.number}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">Type</p>
+            <p>{container.type}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">Client</p>
+            <p>{container.client}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">Statut</p>
+            <p>{container.status}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">Destination</p>
+            <p>{container.destination}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">Coût Total</p>
+            <p className="font-semibold">
+              {container.costs && container.costs.length > 0 
+                ? `${calculateTotalCost(container.costs).toLocaleString('fr-FR')} €` 
+                : '0 €'}
+            </p>
           </div>
         </div>
+
+        {container.costs && container.costs.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-md font-medium mb-2">Détail des coûts</h3>
+            <div className="bg-gray-50 p-3 rounded border">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left">
+                    <th className="pb-2 text-xs font-medium text-gray-500">Description</th>
+                    <th className="pb-2 text-xs font-medium text-gray-500">Montant</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {container.costs.map((cost, index) => (
+                    <tr key={index}>
+                      <td className="py-1">{cost.description}</td>
+                      <td className="py-1">{Number(cost.amount).toLocaleString('fr-FR')} €</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        
         <DialogFooter>
-          <Button onClick={onClose}>Fermer</Button>
+          <Button variant="outline" onClick={onClose}>
+            Fermer
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

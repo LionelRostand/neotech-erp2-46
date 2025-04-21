@@ -11,6 +11,7 @@ const ContainerManagerPage: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleEditContainer = (container: Container) => {
+    console.log("Edit container called with:", container);
     setSelectedContainer(container);
     setIsEditDialogOpen(true);
   };
@@ -34,7 +35,9 @@ const ContainerManagerPage: React.FC = () => {
         </Button>
       </div>
       <div className="rounded-md bg-white p-4">
-        <ContainersListWithCreate onEditContainer={handleEditContainer} />
+        <ContainersListWithCreate 
+          onEditContainer={handleEditContainer} 
+        />
       </div>
 
       {isEditDialogOpen && (

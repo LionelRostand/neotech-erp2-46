@@ -7,7 +7,6 @@ import { Container } from "@/types/freight";
 import { useContainersData } from "@/hooks/modules/useContainersData";
 import ContainerDeleteDialog from "./ContainerDeleteDialog";
 import ContainerViewDialog from "./ContainerViewDialog";
-import ContainerEditDialog from "./ContainerEditDialog";
 
 interface Props {
   onEditContainer: (container: Container) => void;
@@ -81,6 +80,7 @@ const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
                     variant="ghost" 
                     size="icon" 
                     onClick={() => {
+                      console.log("Opening delete dialog for container:", container);
                       setSelectedContainer(container);
                       setIsDeleteDialogOpen(true);
                     }}
