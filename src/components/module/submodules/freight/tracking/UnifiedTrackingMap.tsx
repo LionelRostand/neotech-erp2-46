@@ -28,24 +28,30 @@ const UnifiedTrackingMap: React.FC<UnifiedTrackingMapProps> = ({ items }) => {
     if (!mapRef.current) return;
     const initMap = async () => {
       const L = (await import("leaflet")).default;
+
       // Clean up previous instance
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
       }
 
-      let center = [48.8566, 2.3522];
+      // Default paris coordinates
+      let center: [number, number] = [48.852969, 2.349903];
+      let zoom = 11;
+
       if (items.length > 0) {
         center[0] = items[0].latitude;
         center[1] = items[0].longitude;
+        zoom = 5.5;
       }
 
-      const map = L.map(mapRef.current).setView(center, 5.5);
+      const map = L.map(mapRef.current).setView(center, zoom);
       mapInstanceRef.current = map;
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
+          'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
+        minZoom: 1,
+        maxZoom: 20,
       }).addTo(map);
 
       const markers: any[] = [];
@@ -98,8 +104,14 @@ const UnifiedTrackingMap: React.FC<UnifiedTrackingMapProps> = ({ items }) => {
     };
   }, [items]);
 
+  // style classique avec min-h- pour mobile, hauteur forcée sinon 400px
   return (
-    <div className="w-full min-h-[400px] rounded-md overflow-hidden relative" ref={mapRef} />
+    <div
+      className="w-full min-h-[400px] h-[400px] rounded-md overflow-hidden relative"
+      ref={mapRef}
+      id="map"
+      style={{ height: "400px" }}
+    />
   );
 };
 
