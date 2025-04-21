@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -26,14 +27,17 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
 
   try {
     const normalizedQuery = normalizeReference(searchQuery);
+    console.log("Recherche normalisée:", normalizedQuery);
 
     // If the search query matches a shipment reference format (EXPxxxxx)
     if (isShipmentReference(normalizedQuery)) {
+      console.log("Recherche d'expédition:", normalizedQuery);
       const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
       const shipmentsSnapshot = await getDocs(
         query(shipmentsRef, where('reference', '==', normalizedQuery))
       );
 
+      console.log("Résultats d'expédition trouvés:", shipmentsSnapshot.size);
       shipmentsSnapshot.forEach((doc) => {
         const shipment = doc.data() as Shipment;
         if (shipment.trackingNumber && shipment.origin && shipment.destination) {
@@ -54,11 +58,13 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
 
     // If the search query matches a container reference format (CT-2025-3179)
     if (isContainerReference(normalizedQuery)) {
+      console.log("Recherche de conteneur:", normalizedQuery);
       const containersRef = collection(db, COLLECTIONS.FREIGHT.CONTAINERS);
       const containersSnapshot = await getDocs(
         query(containersRef, where('number', '==', normalizedQuery))
       );
 
+      console.log("Résultats de conteneur trouvés:", containersSnapshot.size);
       containersSnapshot.forEach((doc) => {
         const container = doc.data() as Container;
         items.push({
@@ -75,6 +81,7 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
       });
     }
 
+    console.log("Total des éléments trouvés:", items.length);
     return items;
 
   } catch (error) {

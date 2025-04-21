@@ -25,8 +25,8 @@ const ContainersTrackingSection: React.FC = () => {
         <UnifiedTrackingMap items={foundItems} />
       )}
       
-      {searchDone && foundItems.length === 0 && (
-        <div className="bg-red-500 text-white p-4 rounded-md">
+      {searchDone && !isLoading && foundItems.length === 0 && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
           <div className="font-medium">
             Aucun résultat
           </div>

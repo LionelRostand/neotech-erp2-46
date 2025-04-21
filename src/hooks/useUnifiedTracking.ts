@@ -12,7 +12,7 @@ export const useUnifiedTracking = () => {
     error 
   } = useUnifiedTrackingData(searchQuery);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
     setSearchDone(true);
   };
