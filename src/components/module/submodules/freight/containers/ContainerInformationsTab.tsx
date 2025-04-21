@@ -32,7 +32,7 @@ const ContainerInformationsTab: React.FC<Props> = ({
       onChange("reference", generateReference());
     }
     // eslint-disable-next-line
-  }, []);
+  }, []); // Only on mount
 
   return (
     <div className="grid grid-cols-2 gap-4">
