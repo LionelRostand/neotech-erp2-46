@@ -60,7 +60,7 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
         <ArchivedMessageItem
           key={message.id}
           message={message}
-          contact={getContactDisplayName(message)}
+          contactName={getContactDisplayName(message)} // Changé de contact à contactName
           onRestoreMessage={() => onRestoreMessage(message)}
           isRestoring={false}
         />

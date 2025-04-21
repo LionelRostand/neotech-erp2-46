@@ -51,12 +51,14 @@ const ContainerCreateDialog: React.FC<Props> = ({ open, onOpenChange, onCreated 
     e.preventDefault();
     setSubmitting(true);
     try {
-      const created = await addDocument("freight-containers", form);
+      // Corrigé : Utiliser le nom de collection correct qui concorde avec ContainersList.tsx
+      const created = await addDocument("freight_containers", form);
       toast.success("Conteneur enregistré !");
       onCreated?.(created as Container);
       onOpenChange(false);
     } catch (error) {
       toast.error("Erreur lors de l'enregistrement.");
+      console.error("Erreur lors de la création du conteneur:", error);
     } finally {
       setSubmitting(false);
     }
@@ -98,4 +100,3 @@ const ContainerCreateDialog: React.FC<Props> = ({ open, onOpenChange, onCreated 
 };
 
 export default ContainerCreateDialog;
-

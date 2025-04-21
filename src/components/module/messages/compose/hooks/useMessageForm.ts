@@ -126,7 +126,7 @@ export const useMessageForm = () => {
             to: selectedContacts.map(c => c.email),
             subject: subject,
             html: content,
-            from: smtpConfig.username,
+            from: smtpConfig.email || 'no-reply@example.com', // Changé de username à email
           };
 
           const response = await fetch('/api/send-email', {
