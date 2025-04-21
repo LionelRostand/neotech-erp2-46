@@ -1,10 +1,8 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Search, Info } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search, Loader2, Info } from 'lucide-react';
 
 interface UnifiedTrackingSearchProps {
   onResult: (ref: string) => void;
@@ -19,23 +17,12 @@ const UnifiedTrackingSearch: React.FC<UnifiedTrackingSearchProps> = ({
 }) => {
   const [reference, setReference] = useState("");
   const [showHint, setShowHint] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const refTrimmed = reference.trim();
-    
-    if (refTrimmed.length < 3) {
-      toast({
-        title: "Référence trop courte",
-        description: "Veuillez saisir au moins 3 caractères.",
-        variant: "destructive",
-      });
-      return;
+    if (reference.trim()) {
+      onResult(reference.trim());
     }
-    
-    onResult(refTrimmed);
   };
 
   return (
@@ -60,7 +47,7 @@ const UnifiedTrackingSearch: React.FC<UnifiedTrackingSearchProps> = ({
       
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">
-          Entrez un numéro de référence pour suivre un colis, conteneur ou expédition
+          Types de référence acceptés : CT-XXXX-XXXX (conteneur) ou EXPXXXXX (expédition)
         </div>
         <Button 
           variant="ghost" 
@@ -74,18 +61,16 @@ const UnifiedTrackingSearch: React.FC<UnifiedTrackingSearchProps> = ({
       </div>
       
       {showHint && (
-        <Card className="bg-slate-50">
-          <CardContent className="p-3 text-xs">
-            <h4 className="font-medium mb-1">Types de référence acceptés:</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Numéro de colis (ex: TRK123456)</li>
-              <li>Numéro de conteneur (ex: CONT789012)</li>
-              <li>Référence d'expédition (ex: SHP456789)</li>
-              <li>ID interne (inclus dans la recherche)</li>
-            </ul>
-            <p className="mt-2 italic">La recherche est insensible à la casse et aux espaces.</p>
-          </CardContent>
-        </Card>
+        <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-2">
+          <h4 className="font-medium">Formats de référence acceptés :</h4>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Numéro de conteneur (ex: CT-2025-3179)</li>
+            <li>Référence d'expédition (ex: EXP31854)</li>
+          </ul>
+          <p className="text-xs text-muted-foreground italic">
+            La recherche est insensible à la casse et aux espaces
+          </p>
+        </div>
       )}
     </div>
   );

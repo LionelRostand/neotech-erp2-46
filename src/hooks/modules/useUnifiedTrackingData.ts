@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -6,12 +5,18 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Container, Shipment } from '@/types/freight';
 import { UnifiedTrackingItem } from '@/components/module/submodules/freight/tracking/UnifiedTrackingMap';
 
+const normalizeReference = (ref: string): string => {
+  return ref.toUpperCase().replace(/\s+/g, '');
+};
+
 const isShipmentReference = (ref: string): boolean => {
-  return /^EXP\d{5}$/.test(ref);
+  const normalized = normalizeReference(ref);
+  return /^EXP\d{5}$/.test(normalized);
 };
 
 const isContainerReference = (ref: string): boolean => {
-  return /^CT-\d{4}-\d{4}$/.test(ref);
+  const normalized = normalizeReference(ref);
+  return /^CT-\d{4}-\d{4}$/.test(normalized);
 };
 
 const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTrackingItem[]> => {
@@ -20,11 +25,13 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
   if (!searchQuery) return items;
 
   try {
+    const normalizedQuery = normalizeReference(searchQuery);
+
     // If the search query matches a shipment reference format (EXPxxxxx)
-    if (isShipmentReference(searchQuery)) {
+    if (isShipmentReference(normalizedQuery)) {
       const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
       const shipmentsSnapshot = await getDocs(
-        query(shipmentsRef, where('reference', '==', searchQuery))
+        query(shipmentsRef, where('reference', '==', normalizedQuery))
       );
 
       shipmentsSnapshot.forEach((doc) => {
@@ -46,10 +53,10 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
     }
 
     // If the search query matches a container reference format (CT-2025-3179)
-    if (isContainerReference(searchQuery)) {
+    if (isContainerReference(normalizedQuery)) {
       const containersRef = collection(db, COLLECTIONS.FREIGHT.CONTAINERS);
       const containersSnapshot = await getDocs(
-        query(containersRef, where('number', '==', searchQuery))
+        query(containersRef, where('number', '==', normalizedQuery))
       );
 
       containersSnapshot.forEach((doc) => {
