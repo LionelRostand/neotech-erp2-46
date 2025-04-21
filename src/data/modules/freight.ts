@@ -30,7 +30,7 @@ export const freightModule: AppModule = {
     { id: "freight-accounting", name: "Comptabilité", href: "/modules/freight/accounting", icon: createIcon(DollarSign) },
     { id: "freight-documents", name: "Documents", href: "/modules/freight/documents", icon: createIcon(FileText) },
     { id: "freight-client-portal", name: "Portail client", href: "/modules/freight/client-portal", icon: createIcon(Users) },
-    { id: "freight-routes-main", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },  // Nouveau sous-menu principal "Routes"
+    { id: "freight-routes-main", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
     { id: "freight-settings", name: "Paramètres", href: "/modules/freight/settings", icon: createIcon(Settings) }
   ]
 };

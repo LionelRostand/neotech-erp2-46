@@ -1,21 +1,20 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useFreightData } from "@/hooks/modules/useFreightData";
+import FreightAccountingSummaryDialog from "./FreightAccountingSummaryDialog";
 
-// Table simple (adaptable selon le besoin)
 const FreightAccountingPage: React.FC = () => {
   const { shipments = [], containers = [], clients = [], loading } = useFreightData();
-
-  // Helper pour trouver le client et le conteneur liés à une expédition
-  const getClient = (clientId: string) =>
-    clients.find((c: any) => c.id === clientId) || { name: "-", id: clientId };
-  const getContainer = (containerId: string) =>
-    containers.find((c: any) => c.id === containerId) || { number: "-", id: containerId };
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-bold mb-2">Comptabilité des Expéditions</h2>
+      <Button variant="default" onClick={() => setSummaryOpen(true)} className="mb-4">
+        Voir le récapitulatif des coûts
+      </Button>
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -41,11 +40,12 @@ const FreightAccountingPage: React.FC = () => {
                   shipments.map((shipment: any) => (
                     <tr key={shipment.id || shipment.reference} className="border-t last:border-b-0 hover:bg-gray-50">
                       <td className="px-5 py-4">{shipment.reference}</td>
-                      <td className="px-5 py-4">{getClient(shipment.customer)?.name || "-"}</td>
-                      <td className="px-5 py-4">{getContainer(shipment.containerId)?.number || "-"}</td>
+                      <td className="px-5 py-4">{clients.find((c) => c.id === shipment.customer)?.name || "-"}</td>
+                      <td className="px-5 py-4">{containers.find((c) => c.id === shipment.containerId)?.number || "-"}</td>
                       <td className="px-5 py-4">
-                        {shipment.totalPrice ? 
-                          shipment.totalPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }) : "-"}
+                        {shipment.totalPrice ?
+                          shipment.totalPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }) :
+                          "-"}
                       </td>
                       <td className="px-5 py-4">{shipment.status || "-"}</td>
                       <td className="px-5 py-4">{shipment.scheduledDate ? new Date(shipment.scheduledDate).toLocaleDateString() : "-"}</td>
@@ -63,8 +63,16 @@ const FreightAccountingPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      <FreightAccountingSummaryDialog
+        open={summaryOpen}
+        onOpenChange={setSummaryOpen}
+        shipments={shipments}
+        clients={clients}
+        containers={containers}
+      />
       <p className="text-xs text-muted-foreground">
-        Les coûts sont issus des expéditions, avec les clients et les conteneurs liés.
+        Les coûts sont issus des expéditions, avec les clients et les conteneurs liés.<br />
+        Le bouton ci-dessus affiche le récapitulatif dans un popup.
       </p>
     </div>
   );
