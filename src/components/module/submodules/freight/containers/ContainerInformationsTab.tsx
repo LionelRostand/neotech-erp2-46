@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -11,11 +10,21 @@ interface Props {
   types: { type: string; size: string }[];
 }
 
-function generateReference() {
-  // Référence format : CONT-{AAAA}-{4 chiffres aléatoires}
+// Liste des statuts classiques pour un conteneur
+const STATUTS = [
+  { value: "", label: "Sélectionner" },
+  { value: "vide", label: "Vide" },
+  { value: "chargement", label: "En chargement" },
+  { value: "plein", label: "Plein" },
+  { value: "en transit", label: "En transit" },
+  { value: "livré", label: "Livré" },
+];
+
+function generateReferenceCT() {
+  // Format : CT-{AAAA}-{4 chiffres aléatoires}
   const year = new Date().getFullYear();
   const rnd = Math.floor(1000 + Math.random() * 9000);
-  return `CONT-${year}-${rnd}`;
+  return `CT-${year}-${rnd}`;
 }
 
 const ContainerInformationsTab: React.FC<Props> = ({
@@ -26,10 +35,10 @@ const ContainerInformationsTab: React.FC<Props> = ({
   routes,
   types,
 }) => {
-  // Génère le champ référence à la première ouverture du formulaire (si vide uniquement)
+  // Génère la référence au montage si elle est vide et commence par "CT"
   useEffect(() => {
     if (!values.reference) {
-      onChange("reference", generateReference());
+      onChange("reference", generateReferenceCT());
     }
     // eslint-disable-next-line
   }, []); // Only on mount
@@ -67,7 +76,15 @@ const ContainerInformationsTab: React.FC<Props> = ({
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-900 mb-1">Statut</label>
-        <Input value={values.status || ""} onChange={e => onChange("status", e.target.value)} />
+        <select
+          className="w-full border rounded px-2 py-2 text-sm"
+          value={values.status || ""}
+          onChange={e => onChange("status", e.target.value)}
+        >
+          {STATUTS.map(status => (
+            <option key={status.value} value={status.value}>{status.label}</option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-900 mb-1">Transporteur</label>
@@ -148,4 +165,3 @@ const ContainerInformationsTab: React.FC<Props> = ({
 };
 
 export default ContainerInformationsTab;
-
