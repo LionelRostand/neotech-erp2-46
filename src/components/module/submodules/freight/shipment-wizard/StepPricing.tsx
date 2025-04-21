@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Printer } from "lucide-react";
+import { Printer, FileText } from "lucide-react";
 
 const StepPricing = ({
   form,
@@ -100,19 +100,6 @@ const StepPricing = ({
           </div>
         </div>
 
-        {/* Section Documents */}
-        <div>
-          <h4 className="font-semibold mb-2 text-base">Documents</h4>
-          <div className="flex gap-3 mb-2">
-            <Button type="button" variant="outline" className="gap-2">
-              <FileText className="w-4 h-4" /> Générer la facture
-            </Button>
-            <Button type="button" variant="outline" className="gap-2">
-              <Printer className="w-4 h-4" /> Générer le bon de livraison
-            </Button>
-          </div>
-        </div>
-
         {/* Pied de formulaire : navigation */}
         <div className="flex gap-2 items-center pt-2">
           <Button variant="outline" type="button" onClick={prev}>
@@ -164,3 +151,4 @@ const StepPricing = ({
 };
 
 export default StepPricing;
+
