@@ -13,12 +13,15 @@ const tabs = [
 ];
 
 const ContainerTabs: React.FC<Props> = ({ tab, setTab }) => (
-  <div className="flex space-x-2 mb-5">
+  <div className="flex space-x-2 mb-5 border-b">
     {tabs.map((t) => (
       <button
         key={t.key}
-        className={`px-4 py-1 rounded-md text-sm font-medium ${tab === t.key ? "bg-muted text-primary" : "text-muted-foreground hover:bg-accent"}`}
-        style={{ transition: "background 0.2s" }}
+        className={`px-4 py-1 rounded-t-md text-sm font-medium transition-colors border-b-2 ${
+          tab === t.key
+            ? "bg-background text-primary border-primary"
+            : "text-muted-foreground border-transparent hover:bg-accent"
+        }`}
         onClick={() => setTab(t.key)}
         type="button"
       >
