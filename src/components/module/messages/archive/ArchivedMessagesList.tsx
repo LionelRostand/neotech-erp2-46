@@ -1,70 +1,67 @@
 
 import React from 'react';
 import { Message } from '../types/message-types';
-import ArchivedMessageItem from './components/ArchivedMessageItem';
-import ArchivedMessageSkeleton from './components/ArchivedMessageSkeleton';
+import ArchivedMessageItem from './ArchivedMessageItem';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface ArchivedMessagesListProps {
   messages: Message[];
-  isLoading?: boolean;
+  isLoading: boolean;
   onRestoreMessage: (message: Message) => void;
-  contacts?: Record<string, { name: string; email: string }>;
 }
 
-const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
-  messages,
-  isLoading = false,
-  onRestoreMessage,
-  contacts = {}
+const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({ 
+  messages, 
+  isLoading, 
+  onRestoreMessage 
 }) => {
-  // Afficher des skeletons pendant le chargement
+  // State for message being restored
+  const [restoringMessageId, setRestoringMessageId] = React.useState<string | null>(null);
+
+  const handleRestore = (message: Message) => {
+    setRestoringMessageId(message.id);
+    
+    // Simulate restoration process
+    setTimeout(() => {
+      onRestoreMessage(message);
+      setRestoringMessageId(null);
+    }, 1000);
+  };
+
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <ArchivedMessageSkeleton key={index} />
-        ))}
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des messages archivés...</span>
       </div>
     );
   }
 
-  // Si aucun message n'est trouvé
   if (messages.length === 0) {
-    return <div className="text-center py-10 text-muted-foreground">Aucun message archivé trouvé</div>;
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-500">Aucun message archivé trouvé.</p>
+      </div>
+    );
   }
 
-  // Fonction pour récupérer le contact par ID
-  const getContactById = (contactId: string) => {
-    return contacts[contactId] || { name: 'Contact inconnu', email: '' };
-  };
-
-  // Fonction pour obtenir le nom de contact pour l'affichage
-  const getContactDisplayName = (message: Message) => {
-    if (!message.recipients || message.recipients.length === 0) {
-      return 'Aucun destinataire';
-    }
-
-    const recipientId = message.recipients[0];
-    const contact = getContactById(recipientId);
-    
-    if (message.recipients.length > 1) {
-      return `${contact.name} et ${message.recipients.length - 1} autre(s)`;
-    }
-    
-    return contact.name;
-  };
-
   return (
-    <div className="space-y-2">
-      {messages.map(message => (
-        <ArchivedMessageItem
-          key={message.id}
-          message={message}
-          contactName={getContactDisplayName(message)} // Changé de contact à contactName
-          onRestoreMessage={() => onRestoreMessage(message)}
-          isRestoring={false}
-        />
-      ))}
+    <div className="space-y-4">
+      {messages.map(message => {
+        // Get display name for the contact
+        const contactName = message.senderName || 'Contact inconnu';
+        const isRestoring = restoringMessageId === message.id;
+        
+        return (
+          <ArchivedMessageItem 
+            key={message.id} 
+            message={message} 
+            onRestoreMessage={() => handleRestore(message)}
+            isRestoring={isRestoring}
+          />
+        );
+      })}
     </div>
   );
 };

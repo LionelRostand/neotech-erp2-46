@@ -36,6 +36,10 @@ export const COLLECTIONS = {
   
   MESSAGES: {
     MESSAGES: "messages",
+    INBOX: "messages_inbox",
+    SENT: "messages_sent",
+    DRAFTS: "messages_drafts",
+    ARCHIVE: "messages_archive",
     CONTACTS: "contacts",
     TEMPLATES: "message_templates",
     SCHEDULED: "scheduled_messages",
@@ -74,7 +78,9 @@ export const COLLECTIONS = {
     CONTRACTS: "hr_contracts",
     DEPARTMENTS: "hr_departments",
     LEAVES: "hr_leaves",
-    ATTENDANCE: "hr_attendance"
+    ABSENCE_REQUESTS: "hr_absences",
+    ATTENDANCE: "hr_attendance",
+    TIMESHEET: "hr_timesheet"
   },
   
   PROJECTS: {
@@ -82,7 +88,8 @@ export const COLLECTIONS = {
     TASKS: "tasks",
     MILESTONES: "project_milestones",
     COMMENTS: "project_comments",
-    TIMETRACKING: "project_timetracking"
+    TIMETRACKING: "project_timetracking",
+    TEAMS: "project_teams"
   },
   
   TRANSPORT: {
@@ -90,6 +97,27 @@ export const COLLECTIONS = {
     BOOKINGS: "transport_bookings",
     VEHICLES: "transport_vehicles",
     DRIVERS: "transport_drivers",
-    ROUTES: "transport_routes"
+    ROUTES: "transport_routes",
+    CLIENTS: "transport_clients",
+    RESERVATIONS: "transport_reservations",
+    INVOICES: "transport_invoices"
+  },
+  
+  LIBRARY: {
+    BOOKS: "library_books",
+    MEMBERS: "library_members",
+    LOANS: "library_loans",
+    RETURNS: "library_returns",
+    CATEGORIES: "library_categories",
+    STATS: "library_stats"
+  },
+  
+  DOCUMENT_COLLECTIONS: {
+    DOCUMENTS: "documents",
+    TEMPLATES: "document_templates",
+    CATEGORIES: "document_categories",
+    ARCHIVES: "document_archives",
+    PERMISSIONS: "document_permissions",
+    SETTINGS: "document_settings"
   }
 };

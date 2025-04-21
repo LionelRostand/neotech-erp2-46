@@ -14,7 +14,10 @@ import { Link } from 'react-router-dom';
 
 const InboxPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(COLLECTIONS.MESSAGES.INBOX);
+  // Ensure we use a valid collection path
+  const inboxPath = COLLECTIONS.MESSAGES.INBOX || 'messages_inbox';
+  
+  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(inboxPath);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

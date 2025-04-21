@@ -14,7 +14,7 @@ const MessagesDashboard: React.FC = () => {
   
   // Ensure we use fallback collection paths
   const inboxPath = COLLECTIONS.MESSAGES.MESSAGES || 'messages';
-  const archivePath = COLLECTIONS.MESSAGES.MESSAGES ? `${COLLECTIONS.MESSAGES.MESSAGES}_archive` : 'messages_archive';
+  const archivePath = COLLECTIONS.MESSAGES.ARCHIVE || 'messages_archive';
   const contactsPath = COLLECTIONS.MESSAGES.CONTACTS || 'contacts';
   const scheduledPath = COLLECTIONS.MESSAGES.SCHEDULED || 'scheduled_messages';
   
@@ -75,16 +75,22 @@ const MessagesDashboard: React.FC = () => {
     // Find top contacts (example: most frequent recipients)
     const topContacts = contacts
       .filter(contact => contact && typeof contact === 'object')
-      .map(contact => ({
-        id: contact.id || '',
-        name: contact.firstName && contact.lastName ? 
-              `${contact.firstName} ${contact.lastName}` : 
-              'Unknown Contact',
-        count: inboxMessages.filter(msg => 
-          msg.recipients && Array.isArray(msg.recipients) && 
-          msg.recipients.includes(contact.id || '')
-        ).length
-      }))
+      .map(contact => {
+        // Safely access contact properties
+        const contactId = contact?.id || '';
+        const firstName = contact?.firstName || '';
+        const lastName = contact?.lastName || '';
+        const contactName = firstName && lastName ? `${firstName} ${lastName}` : 'Unknown Contact';
+        
+        return {
+          id: contactId,
+          name: contactName,
+          count: inboxMessages.filter(msg => 
+            msg.recipients && Array.isArray(msg.recipients) && 
+            msg.recipients.includes(contactId)
+          ).length
+        };
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
     

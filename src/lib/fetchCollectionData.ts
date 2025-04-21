@@ -16,8 +16,9 @@ export async function fetchCollectionData<T>(
   try {
     // Check for empty or invalid collection path
     if (!collectionPath || collectionPath.trim() === '') {
-      console.warn('Empty collection path provided. Using default collection.');
-      // Use a safe default collection or return empty array
+      const errorMessage = 'Empty collection path provided';
+      console.error(errorMessage);
+      toast.error(`Erreur: ${errorMessage}`);
       return [];
     }
     

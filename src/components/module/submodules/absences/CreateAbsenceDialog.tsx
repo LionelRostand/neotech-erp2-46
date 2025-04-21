@@ -36,8 +36,11 @@ const CreateAbsenceDialog: React.FC<CreateAbsenceDialogProps> = ({
         ) + 1 // +1 car inclusif
       };
 
+      // Use HR.ABSENCE_REQUESTS which we added to the COLLECTIONS object
+      const collectionPath = COLLECTIONS.HR.ABSENCE_REQUESTS || 'hr_absences';
+      
       // Enregistrer dans Firestore
-      await addDocument(COLLECTIONS.HR.ABSENCE_REQUESTS, absenceData);
+      await addDocument(collectionPath, absenceData);
       
       toast.success("Demande d'absence créée avec succès");
       onOpenChange(false);
