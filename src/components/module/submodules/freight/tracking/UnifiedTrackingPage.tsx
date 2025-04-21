@@ -4,7 +4,7 @@ import UnifiedTrackingSearch from "./UnifiedTrackingSearch";
 import UnifiedTrackingMap, { UnifiedTrackingItem } from "./UnifiedTrackingMap";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Package, Container } from "lucide-react";
+import { MapPin, Package, Container, Truck } from "lucide-react";
 import useFreightData from "@/hooks/modules/useFreightData";
 import { formatAddress } from "./utils/locationUtils";
 
@@ -15,21 +15,20 @@ const UnifiedTrackingPage: React.FC = () => {
   const [searchDone, setSearchDone] = useState(false);
   const { toast } = useToast();
 
-  // Combine events and containers/latest-locations logic
   const handleSearch = useCallback(
     (reference: string) => {
       setIsLoading(true);
       setSearchDone(false);
       setFoundItems([]);
 
-      // Find packages with matching reference (case-insensitive)
+      // Recherche colis (par numéro de tracking ou référence)
       const matchingPackages = tracking
         .filter((p: any) =>
           (p.trackingNumber ?? "").toLowerCase().includes(reference.toLowerCase()) ||
           (p.reference ?? "").toLowerCase().includes(reference.toLowerCase())
         );
 
-      // For each package, get its latest event with location
+      // Construction des points colis
       let packageItems: UnifiedTrackingItem[] = [];
       matchingPackages.forEach((p: any) => {
         const events = trackingEvents
@@ -51,18 +50,15 @@ const UnifiedTrackingPage: React.FC = () => {
         }
       });
 
-      // Find containers with matching number or id (case-insensitive)
+      // Recherche conteneurs (par numéro/id)
       const matchingContainers = containers
         .filter((c: any) =>
           (c.number ?? "").toLowerCase().includes(reference.toLowerCase()) ||
           (c.id ?? "").toLowerCase().includes(reference.toLowerCase())
         );
-      // For demo: place container marker at arrival city if available
       let containerItems: UnifiedTrackingItem[] = [];
       matchingContainers.forEach((c: any) => {
-        // Try use arrival for geocoding: we only check if arrival is a string like "Paris" for demo
-        // In a real app, you'd use a geo API for coordinates from city names!
-        // We will locate it in Paris for demo if "arrival" includes "paris"
+        // On tente de placer le conteneur à sa ville d'arrivée
         let lat = 48.8566, lon = 2.3522;
         let locText = c.arrival || c.destination || c.location || c.origin;
         if (locText && typeof locText === "string" && locText.toLowerCase().includes("london")) {
@@ -86,15 +82,53 @@ const UnifiedTrackingPage: React.FC = () => {
           locationText: locText || "",
         });
       });
-      // Combine
-      const all = [...packageItems, ...containerItems];
+
+      // Recherche expéditions (shipments) par référence OU trackingNumber
+      const matchingShipments = shipments.filter((s: any) =>
+        (s.reference ?? "").toLowerCase().includes(reference.toLowerCase()) ||
+        (s.trackingNumber ?? "").toLowerCase().includes(reference.toLowerCase())
+      );
+      let shipmentItems: UnifiedTrackingItem[] = [];
+      matchingShipments.forEach((s: any) => {
+        // City to Lat/Lon (demo : code simple)
+        const getCoords = (loc: string) => {
+          if (!loc) return [48.8566, 2.3522];
+          const lower = loc.toLowerCase();
+          if (lower.includes("london")) return [51.5074, -0.1278];
+          if (lower.includes("berlin")) return [52.52, 13.40];
+          if (lower.includes("tokyo")) return [35.6762, 139.6503];
+          if (lower.includes("paris")) return [48.8566, 2.3522];
+          return [48.8566, 2.3522]; // fallback Paris
+        };
+        // On place l’expédition sur la ville de destination
+        const [lat, lon] = getCoords(s.destination || s.origin);
+        shipmentItems.push({
+          id: s.id,
+          refId: s.reference || s.trackingNumber,
+          type: "shipment",
+          label: s.status || "Statut inconnu",
+          status: s.status,
+          latitude: lat,
+          longitude: lon,
+          timestamp: s.estimatedDeliveryDate || s.scheduledDate || s.createdAt || "",
+          locationText: s.destination || s.origin || "",
+        });
+      });
+
+      // On fusionne tous les résultats
+      const all: UnifiedTrackingItem[] = [
+        ...packageItems,
+        ...containerItems,
+        ...shipmentItems
+      ];
+
       setTimeout(() => {
         setFoundItems(all);
         setIsLoading(false);
         setSearchDone(true);
       }, 800);
     },
-    [containers, tracking, trackingEvents]
+    [shipments, containers, tracking, trackingEvents]
   );
 
   return (
@@ -136,17 +170,28 @@ const UnifiedTrackingPage: React.FC = () => {
                     <span>
                       {item.type === "package" ? (
                         <Package className="h-5 w-5 text-blue-500" />
-                      ) : (
+                      ) : item.type === "container" ? (
                         <Container className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Truck className="h-5 w-5 text-purple-500" />
                       )}
                     </span>
                     <div>
                       <div className="font-bold">
-                        {item.type === "package" ? "Colis" : "Conteneur"} – {item.refId}
+                        {item.type === "package"
+                          ? "Colis"
+                          : item.type === "container"
+                          ? "Conteneur"
+                          : "Expédition"}{" "}
+                        – {item.refId}
                       </div>
                       <div className="text-xs mb-1">{item.label}</div>
                       <div className="text-sm text-muted-foreground">{item.locationText}</div>
-                      <div className="text-xs text-gray-500">{new Date(item.timestamp).toLocaleString("fr-FR")}</div>
+                      <div className="text-xs text-gray-500">
+                        {item.timestamp
+                          ? new Date(item.timestamp).toLocaleString("fr-FR")
+                          : ""}
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -170,3 +215,4 @@ const UnifiedTrackingPage: React.FC = () => {
 };
 
 export default UnifiedTrackingPage;
+
