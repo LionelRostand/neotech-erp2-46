@@ -52,6 +52,13 @@ const ContainerManagerPage: React.FC = () => {
     }
   };
 
+  // Helper function to safely get client name
+  const getClientName = (clientId: string | undefined) => {
+    if (!clientId) return "-";
+    const client = clients.find((c: any) => c.id === clientId);
+    return client && typeof client === 'object' ? client.name || '-' : '-';
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-4">
       <div className="flex items-center justify-between mb-4">
@@ -87,7 +94,7 @@ const ContainerManagerPage: React.FC = () => {
               containers.map((container: any) => (
                 <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
                   <td className="px-5 py-4">{container.number}</td>
-                  <td className="px-5 py-4">{container.client || "-"}</td>
+                  <td className="px-5 py-4">{getClientName(container.client)}</td>
                   <td className="px-5 py-4">{container.origin || "-"}</td>
                   <td className="px-5 py-4">{container.destination || "-"}</td>
                   <td className="px-5 py-4">{container.status || "-"}</td>

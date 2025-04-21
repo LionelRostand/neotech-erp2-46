@@ -15,8 +15,15 @@ const FreightAccountingSummaryDialog: React.FC<FreightAccountingSummaryDialogPro
   open, onOpenChange, shipments, clients, containers
 }) => {
   // Helpers
-  const findClient = (clientId: string) => clients.find((c) => c.id === clientId) || { name: "-", id: clientId };
-  const findContainer = (containerId: string) => containers.find((c) => c.id === containerId) || { number: "-", id: containerId };
+  const findClient = (clientId: string) => {
+    const client = clients.find((c) => c.id === clientId);
+    return client && typeof client === 'object' ? client : { name: "-", id: clientId };
+  };
+  
+  const findContainer = (containerId: string) => {
+    const container = containers.find((c) => c.id === containerId);
+    return container && typeof container === 'object' ? container : { number: "-", id: containerId };
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,20 +53,25 @@ const FreightAccountingSummaryDialog: React.FC<FreightAccountingSummaryDialogPro
                     Pas d'expéditions à afficher
                   </TableCell>
                 </TableRow>
-              ) : (shipments.map((shipment: any) => (
-                <TableRow key={shipment.id || shipment.reference}>
-                  <TableCell>{shipment.reference}</TableCell>
-                  <TableCell>{findClient(shipment.customer)?.name || "-"}</TableCell>
-                  <TableCell>{findContainer(shipment.containerId)?.number || "-"}</TableCell>
-                  <TableCell>
-                    {shipment.totalPrice ?
-                      shipment.totalPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }) :
-                      "-"}
-                  </TableCell>
-                  <TableCell>{shipment.status || "-"}</TableCell>
-                  <TableCell>{shipment.scheduledDate ? new Date(shipment.scheduledDate).toLocaleDateString() : "-"}</TableCell>
-                </TableRow>
-              )))}
+              ) : (shipments.map((shipment: any) => {
+                const client = findClient(shipment.customer);
+                const container = findContainer(shipment.containerId);
+                
+                return (
+                  <TableRow key={shipment.id || shipment.reference}>
+                    <TableCell>{shipment.reference}</TableCell>
+                    <TableCell>{client.name || "-"}</TableCell>
+                    <TableCell>{container.number || "-"}</TableCell>
+                    <TableCell>
+                      {shipment.totalPrice ?
+                        shipment.totalPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }) :
+                        "-"}
+                    </TableCell>
+                    <TableCell>{shipment.status || "-"}</TableCell>
+                    <TableCell>{shipment.scheduledDate ? new Date(shipment.scheduledDate).toLocaleDateString() : "-"}</TableCell>
+                  </TableRow>
+                );
+              }))}
             </TableBody>
           </Table>
         </div>
