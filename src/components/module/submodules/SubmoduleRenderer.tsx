@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
@@ -11,6 +10,7 @@ import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 import FreightCarriersList from "./freight/carriers/FreightCarriersList";
 import ContainersListWithCreate from "./freight/containers/ContainersListWithCreate";
+import ContainerManagerPage from "./freight/containers/ContainerManagerPage";
 
 interface SubmoduleRenderProps {
   submoduleId: string;
@@ -26,8 +26,8 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
     return <FreightCarriersList />;
   }
   
-  if (submoduleId === "freight-containers") {
-    return <ContainersListWithCreate />;
+  if (submoduleId === "freight-containers-management") {
+    return <ContainerManagerPage />;
   }
 
   switch (modulePrefix) {
