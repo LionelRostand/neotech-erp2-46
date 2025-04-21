@@ -7,8 +7,6 @@ import ContainersListWithCreate from "./ContainersListWithCreate";
 
 const ContainerListPage: React.FC = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const handleOpenAddDialog = () => setAddDialogOpen(true);
-  const handleCloseAddDialog = () => setAddDialogOpen(false);
 
   return (
     <div className="p-6 space-y-6">
@@ -19,19 +17,15 @@ const ContainerListPage: React.FC = () => {
         </div>
         <Button
           data-testid="add-container-btn"
-          onClick={handleOpenAddDialog}
-          className="bg-primary text-white flex items-center gap-2"
+          onClick={() => setAddDialogOpen(true)}
+          className="flex items-center gap-2"
         >
           <Plus className="mr-1 h-4 w-4" />
           Nouveau Conteneur
         </Button>
       </div>
       <div className="rounded-md bg-white p-4">
-        <ContainersListWithCreate
-          addDialogOpen={addDialogOpen}
-          onCloseAddDialog={handleCloseAddDialog}
-          useCreateDialog={false}
-        />
+        <ContainersListWithCreate />
       </div>
       <NewContainerDialogWithTabs open={addDialogOpen} onOpenChange={setAddDialogOpen} />
     </div>

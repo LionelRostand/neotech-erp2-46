@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
+// Mise à jour du sous-menu en retirant "Gestion des Conteneurs" (si présent)
 export const freightModule: AppModule = {
   id: 2,
   name: "Freight Management",
@@ -28,7 +29,6 @@ export const freightModule: AppModule = {
     { id: "freight-dashboard", name: "Tableau de bord", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "freight-shipments", name: "Expéditions", href: "/modules/freight/shipments", icon: createIcon(Ship) },
     { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
-    // NO MORE "Gestion des Conteneurs"
     { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(LucideContainerIcon) },
     { id: "freight-carriers", name: "Transporteurs", href: "/modules/freight/carriers", icon: createIcon(Truck) },
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
