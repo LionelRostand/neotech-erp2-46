@@ -17,19 +17,29 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
   onRestoreMessage,
   isRestoring
 }) => {
+  // Ensure message has all required properties with defaults
+  const safeMessage = {
+    id: message?.id || 'unknown',
+    senderName: message?.senderName || 'Contact inconnu',
+    createdAt: message?.createdAt || new Date(),
+    subject: message?.subject || 'Sans objet',
+    content: message?.content || 'Aucun contenu',
+    ...message
+  };
+
   return (
     <Card className="hover:bg-muted/30 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{message.senderName || 'Contact inconnu'}</span>
+              <span className="font-semibold">{safeMessage.senderName}</span>
               <span className="text-xs text-muted-foreground">
-                {formatDate(message.createdAt?.toDate?.() || new Date())}
+                {formatDate(safeMessage.createdAt?.toDate?.() || new Date())}
               </span>
             </div>
-            <div className="text-sm font-medium">{message.subject}</div>
-            <div className="text-sm text-muted-foreground line-clamp-2">{message.content}</div>
+            <div className="text-sm font-medium">{safeMessage.subject}</div>
+            <div className="text-sm text-muted-foreground line-clamp-2">{safeMessage.content}</div>
           </div>
           
           <Button 

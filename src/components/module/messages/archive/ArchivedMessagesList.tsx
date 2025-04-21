@@ -16,6 +16,9 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   isLoading, 
   onRestoreMessage 
 }) => {
+  // Ensure messages is always an array
+  const safeMessages = Array.isArray(messages) ? messages : [];
+  
   // State for message being restored
   const [restoringMessageId, setRestoringMessageId] = React.useState<string | null>(null);
 
@@ -38,7 +41,7 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
     );
   }
 
-  if (messages.length === 0) {
+  if (safeMessages.length === 0) {
     return (
       <div className="text-center p-8">
         <p className="text-gray-500">Aucun message archivé trouvé.</p>
@@ -48,7 +51,7 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
 
   return (
     <div className="space-y-4">
-      {messages.map(message => {
+      {safeMessages.map(message => {
         // Get display name for the contact
         const contactName = message.senderName || 'Contact inconnu';
         const isRestoring = restoringMessageId === message.id;
