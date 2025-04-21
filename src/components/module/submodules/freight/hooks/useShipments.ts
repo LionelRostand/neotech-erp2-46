@@ -1,26 +1,36 @@
 
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, orderBy, Timestamp, where } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, Timestamp, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Shipment } from '@/types/freight';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed') => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchShipments = async () => {
-      setIsLoading(true);
-      try {
-        // Use the freight_shipments collection directly from COLLECTIONS
-        const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
-        const q = query(shipmentsRef, orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        
+    // Reference to the shipments collection
+    const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
+    
+    // Create query based on filter
+    let q = query(shipmentsRef, orderBy('createdAt', 'desc'));
+    
+    if (filter === 'ongoing') {
+      q = query(shipmentsRef, where('status', 'in', ['confirmed', 'in_transit']), orderBy('createdAt', 'desc'));
+    } else if (filter === 'delivered') {
+      q = query(shipmentsRef, where('status', '==', 'delivered'), orderBy('createdAt', 'desc'));
+    } else if (filter === 'delayed') {
+      q = query(shipmentsRef, where('status', '==', 'delayed'), orderBy('createdAt', 'desc'));
+    }
+    
+    setIsLoading(true);
+    
+    // Setup real-time listener
+    const unsubscribe = onSnapshot(q, 
+      (querySnapshot) => {
         const shipmentsData = querySnapshot.docs.map(doc => {
           const data = doc.data();
           
@@ -62,34 +72,21 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
           } as Shipment;
         });
         
-        // Filter shipments according to selected filter
-        let filteredShipments = shipmentsData;
-        if (filter === 'ongoing') {
-          filteredShipments = shipmentsData.filter(s => 
-            ['confirmed', 'in_transit'].includes(s.status));
-        } else if (filter === 'delivered') {
-          filteredShipments = shipmentsData.filter(s => s.status === 'delivered');
-        } else if (filter === 'delayed') {
-          filteredShipments = shipmentsData.filter(s => s.status === 'delayed');
-        }
-        
-        setShipments(filteredShipments);
-        console.log(`Loaded ${filteredShipments.length} shipments (filter: ${filter})`);
-      } catch (err) {
-        console.error('Error loading shipments:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error'));
-        toast({
-          title: "Error",
-          description: "Unable to load shipments",
-          variant: "destructive"
-        });
-      } finally {
+        setShipments(shipmentsData);
         setIsLoading(false);
+        console.log(`Loaded ${shipmentsData.length} shipments (filter: ${filter})`);
+      },
+      (error) => {
+        console.error('Error loading shipments:', error);
+        setError(error as Error);
+        setIsLoading(false);
+        toast.error("Erreur lors du chargement des expéditions");
       }
-    };
+    );
 
-    fetchShipments();
-  }, [filter, toast]);
+    // Cleanup function to unsubscribe when component unmounts
+    return () => unsubscribe();
+  }, [filter]);
 
   return { shipments, isLoading, error };
 };

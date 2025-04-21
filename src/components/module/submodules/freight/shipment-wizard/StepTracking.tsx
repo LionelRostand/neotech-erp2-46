@@ -96,7 +96,7 @@ const StepTracking = ({
         <div>
           <label className="font-medium mb-1 block">Statut</label>
           <select
-            value={form.status}
+            value={tracking.status || form.status}
             onChange={e => updateTracking({ ...tracking, status: e.target.value })}
             className="rounded-md border px-3 py-2 bg-white w-full"
           >
@@ -186,4 +186,3 @@ const StepTracking = ({
   );
 };
 export default StepTracking;
-

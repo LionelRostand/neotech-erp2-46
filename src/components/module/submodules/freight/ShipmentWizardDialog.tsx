@@ -6,6 +6,9 @@ import StepGeneral from "./shipment-wizard/StepGeneral";
 import StepArticles from "./shipment-wizard/StepArticles";
 import StepPricing from "./shipment-wizard/StepPricing";
 import StepTracking from "./shipment-wizard/StepTracking";
+import { createShipment } from "./services/shipmentService";
+import { toast } from "sonner";
+import { Timestamp } from "firebase/firestore";
 
 const defaultForm = {
   reference: "",
@@ -13,7 +16,7 @@ const defaultForm = {
   origin: "",
   destination: "",
   totalWeight: 0,
-  scheduledDate: "",
+  scheduledDate: new Date().toISOString(),
   shipmentType: "import",
   status: "draft",
   lines: [
@@ -32,6 +35,7 @@ const defaultForm = {
     transportType: "road",
     estimatedTime: 24,
     distance: 100,
+    status: "draft"
   }
 };
 
@@ -64,15 +68,43 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
   const updatePricing = (pricing: any) => setForm((f) => ({ ...f, pricing }));
   const updateTracking = (tracking: any) => setForm((f) => ({ ...f, tracking }));
 
-  // Fake submit
-  const handleCreate = () => {
+  // Actual shipment creation with Firebase
+  const handleCreate = async () => {
     setSubmitting(true);
-    setTimeout(() => {
-      onOpenChange(false);
+    try {
+      // Prepare the data for Firebase
+      const shipmentData = {
+        reference: form.reference,
+        customer: form.customer,
+        origin: form.origin,
+        destination: form.destination,
+        totalWeight: form.totalWeight,
+        shipmentType: form.shipmentType as 'import' | 'export' | 'local' | 'international',
+        status: form.tracking.status || "draft" as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
+        lines: form.lines,
+        trackingNumber: form.tracking.trackingNumber,
+        createdAt: new Date().toISOString(),
+        scheduledDate: form.scheduledDate,
+        estimatedDeliveryDate: new Date(Date.now() + (form.tracking.estimatedTime * 60 * 60 * 1000)).toISOString(),
+        carrier: "default",
+        carrierName: "Transport Standard",
+        notes: "Créé via l'assistant d'expédition"
+      };
+      
+      // Save to Firebase
+      await createShipment(shipmentData);
+      
+      // Show success message
+      toast.success(`Expédition ${form.reference} créée avec succès!`);
+      
+      // Close dialog and reset form
+      handleClose();
+    } catch (error) {
+      console.error("Erreur lors de la création de l'expédition:", error);
+      toast.error("Une erreur est survenue lors de la création de l'expédition");
+    } finally {
       setSubmitting(false);
-      setForm({ ...defaultForm });
-      setCurrentStep("general");
-    }, 800);
+    }
   };
 
   return (

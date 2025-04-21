@@ -1,50 +1,46 @@
 
-import { collection, addDoc, doc, Timestamp, updateDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Shipment } from '@/types/freight';
-import { toast } from 'sonner';
+import { Shipment, ShipmentLine } from '@/types/freight';
+
+// Type definition for shipment creation
+export interface CreateShipmentData {
+  reference: string;
+  customer: string;
+  origin: string;
+  destination: string;
+  totalWeight: number;
+  shipmentType: 'import' | 'export' | 'local' | 'international';
+  status: 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed';
+  lines: ShipmentLine[];
+  trackingNumber?: string;
+  createdAt: string;
+  scheduledDate: string;
+  estimatedDeliveryDate: string;
+  carrier: string;
+  carrierName: string;
+  notes?: string;
+}
 
 /**
  * Create a new shipment in Firestore
  */
-export const createShipment = async (shipmentData: Omit<Shipment, 'id' | 'createdAt' | 'actualDeliveryDate'>): Promise<Shipment> => {
+export const createShipment = async (shipmentData: CreateShipmentData): Promise<string> => {
   try {
-    console.log('Creating shipment with data:', shipmentData);
+    // Reference to the shipments collection
+    const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
     
-    // Use the freight_shipments collection path from COLLECTIONS
-    const shipmentsCollectionRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
-    
-    // Prepare the data with timestamps
-    const now = Timestamp.now();
-    const scheduledDate = new Date(shipmentData.scheduledDate);
-    const estimatedDeliveryDate = new Date(shipmentData.estimatedDeliveryDate);
-    
-    const newShipmentData = {
+    // Add document with server timestamp
+    const docRef = await addDoc(shipmentsRef, {
       ...shipmentData,
-      createdAt: now,
-      scheduledDate: Timestamp.fromDate(scheduledDate),
-      estimatedDeliveryDate: Timestamp.fromDate(estimatedDeliveryDate),
-      status: shipmentData.status || 'draft',
-    };
+      createdAt: serverTimestamp(),
+    });
     
-    // Add the document to Firestore
-    const docRef = await addDoc(shipmentsCollectionRef, newShipmentData);
-    
-    // Create the returned shipment with the generated ID
-    const newShipment: Shipment = {
-      id: docRef.id,
-      ...shipmentData,
-      createdAt: now.toDate().toISOString(),
-    };
-    
-    console.log('Shipment created successfully with ID:', docRef.id);
-    toast.success(`Expédition ${shipmentData.reference} créée avec succès`);
-    
-    return newShipment;
+    console.log('Shipment created with ID:', docRef.id);
+    return docRef.id;
   } catch (error) {
     console.error('Error creating shipment:', error);
-    toast.error('Erreur lors de la création de l\'expédition');
     throw error;
   }
 };
@@ -54,30 +50,14 @@ export const createShipment = async (shipmentData: Omit<Shipment, 'id' | 'create
  */
 export const updateShipment = async (shipmentId: string, shipmentData: Partial<Shipment>): Promise<void> => {
   try {
-    // Use the freight_shipments collection path from COLLECTIONS
     const shipmentRef = doc(db, COLLECTIONS.FREIGHT.SHIPMENTS, shipmentId);
-    
-    // Convert dates to Firestore timestamps if present
-    const dataToUpdate: any = { ...shipmentData };
-    
-    if (shipmentData.scheduledDate) {
-      dataToUpdate.scheduledDate = Timestamp.fromDate(new Date(shipmentData.scheduledDate));
-    }
-    
-    if (shipmentData.estimatedDeliveryDate) {
-      dataToUpdate.estimatedDeliveryDate = Timestamp.fromDate(new Date(shipmentData.estimatedDeliveryDate));
-    }
-    
-    if (shipmentData.actualDeliveryDate) {
-      dataToUpdate.actualDeliveryDate = Timestamp.fromDate(new Date(shipmentData.actualDeliveryDate));
-    }
-    
-    await updateDoc(shipmentRef, dataToUpdate);
-    console.log('Shipment updated successfully:', shipmentId);
-    toast.success('Expédition mise à jour avec succès');
+    await updateDoc(shipmentRef, {
+      ...shipmentData,
+      updatedAt: serverTimestamp()
+    });
+    console.log('Shipment updated:', shipmentId);
   } catch (error) {
     console.error('Error updating shipment:', error);
-    toast.error('Erreur lors de la mise à jour de l\'expédition');
     throw error;
   }
 };
@@ -89,56 +69,9 @@ export const deleteShipment = async (shipmentId: string): Promise<void> => {
   try {
     const shipmentRef = doc(db, COLLECTIONS.FREIGHT.SHIPMENTS, shipmentId);
     await deleteDoc(shipmentRef);
-    console.log('Shipment deleted successfully:', shipmentId);
-    toast.success('Expédition supprimée avec succès');
+    console.log('Shipment deleted:', shipmentId);
   } catch (error) {
     console.error('Error deleting shipment:', error);
-    toast.error('Erreur lors de la suppression de l\'expédition');
-    throw error;
-  }
-};
-
-/**
- * Get shipments by customer ID
- */
-export const getShipmentsByCustomer = async (customerId: string): Promise<Shipment[]> => {
-  try {
-    const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
-    const q = query(shipmentsRef, where('customer', '==', customerId));
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      
-      // Convert Firestore timestamps to ISO strings
-      const createdAt = data.createdAt instanceof Timestamp 
-        ? data.createdAt.toDate().toISOString() 
-        : data.createdAt;
-      
-      const scheduledDate = data.scheduledDate instanceof Timestamp 
-        ? data.scheduledDate.toDate().toISOString() 
-        : data.scheduledDate;
-      
-      const estimatedDeliveryDate = data.estimatedDeliveryDate instanceof Timestamp 
-        ? data.estimatedDeliveryDate.toDate().toISOString() 
-        : data.estimatedDeliveryDate;
-      
-      const actualDeliveryDate = data.actualDeliveryDate instanceof Timestamp 
-        ? data.actualDeliveryDate.toDate().toISOString() 
-        : data.actualDeliveryDate;
-      
-      return {
-        id: doc.id,
-        ...data,
-        createdAt,
-        scheduledDate,
-        estimatedDeliveryDate,
-        actualDeliveryDate
-      } as Shipment;
-    });
-  } catch (error) {
-    console.error('Error getting shipments by customer:', error);
-    toast.error('Erreur lors de la récupération des expéditions');
     throw error;
   }
 };
