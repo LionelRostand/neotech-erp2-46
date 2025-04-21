@@ -33,13 +33,13 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({ open, onO
 
   // Get lists from hooks
   const { clients } = useFreightClients();
-  const { carriers } = useCarriers();
-  const { routes } = useRoutes();
+  const { carriers, isLoading: carriersLoading } = useCarriers();
+  const { routes, isLoading: routesLoading } = useRoutes();
 
   // Préremplissage Origine/Destination via sélection route
   useEffect(() => {
     if (form.routeId && routes.length > 0) {
-      const route = routes.find((r: any) => r.id === form.routeId);
+      const route = routes.find((r) => r.id === form.routeId);
       if (route) {
         setForm(f => ({
           ...f,
@@ -50,10 +50,18 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({ open, onO
     }
   }, [form.routeId, routes]);
 
+  // Reset form when dialog is closed
+  useEffect(() => {
+    if (!open) {
+      setForm(initialForm);
+    }
+  }, [open]);
+
   // Gestion champs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+  
   const handleSelect = (name: string, value: string) => {
     setForm({ ...form, [name]: value });
   };
@@ -92,7 +100,30 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({ open, onO
             <Input id="status" name="status" value={form.status} onChange={handleChange} />
           </div>
 
-          {/* Ligne 3: Transporteur & Client */}
+          {/* Ligne 3: Route */}
+          <div className="col-span-2">
+            <Label>Route</Label>
+            <Select value={form.routeId} onValueChange={v => handleSelect("routeId", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une route" />
+              </SelectTrigger>
+              <SelectContent>
+                {routesLoading ? (
+                  <SelectItem value="loading">Chargement des routes...</SelectItem>
+                ) : routes && routes.length > 0 ? (
+                  routes.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name} ({r.origin} → {r.destination})
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none">Aucune route disponible</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Ligne 4: Transporteur & Client */}
           <div>
             <Label>Transporteur</Label>
             <Select value={form.carrier} onValueChange={v => handleSelect("carrier", v)}>
@@ -100,12 +131,15 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({ open, onO
                 <SelectValue placeholder="Sélectionner un transporteur" />
               </SelectTrigger>
               <SelectContent>
-                {carriers && carriers.length > 0
-                  ? carriers.map((carrier: any) => (
-                      <SelectItem key={carrier.id} value={carrier.name}>{carrier.name}</SelectItem>
-                    ))
-                  : <SelectItem value="">Aucun transporteur disponible</SelectItem>
-                }
+                {carriersLoading ? (
+                  <SelectItem value="loading">Chargement des transporteurs...</SelectItem>
+                ) : carriers && carriers.length > 0 ? (
+                  carriers.map((carrier) => (
+                    <SelectItem key={carrier.id} value={carrier.name}>{carrier.name}</SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none">Aucun transporteur disponible</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -116,32 +150,13 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({ open, onO
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                {clients && clients.length > 0
-                  ? clients.map((client: any) => (
-                      <SelectItem key={client.id} value={client.name}>{client.name}</SelectItem>
-                    ))
-                  : <SelectItem value="">Aucun client disponible</SelectItem>
-                }
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Ligne 4: Sélecteur de route */}
-          <div className="col-span-2">
-            <Label>Route</Label>
-            <Select value={form.routeId} onValueChange={v => handleSelect("routeId", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une route" />
-              </SelectTrigger>
-              <SelectContent>
-                {routes && routes.length > 0
-                  ? routes.map((r: any) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name} ({r.origin} → {r.destination})
-                      </SelectItem>
-                    ))
-                  : <SelectItem value="">Aucune route disponible</SelectItem>
-                }
+                {clients && clients.length > 0 ? (
+                  clients.map((client) => (
+                    <SelectItem key={client.id} value={client.name}>{client.name}</SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none">Aucun client disponible</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
