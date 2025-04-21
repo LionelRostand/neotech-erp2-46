@@ -1,30 +1,29 @@
 
 import React from 'react';
 import FreightDashboard from '../freight/FreightDashboard';
-import FreightClientPortal from '../freight/FreightClientPortal';
-import FreightDocuments from '../freight/FreightDocuments';
+import FreightShipments from '../FreightShipments';
 import FreightRoutes from '../freight/FreightRoutes';
+import FreightCarriers from '../freight/carriers/FreightCarriersList';
+import FreightDocuments from '../freight/FreightDocuments';
+import FreightPricing from '../freight/FreightPricing';
 import FreightSettings from '../freight/FreightSettings';
-import FreightPaymentsPage from '../freight/pricing/FreightPaymentsPage';
+import FreightClientPortal from '../freight/FreightClientPortal';
 import UnifiedTrackingPage from '../freight/tracking/UnifiedTrackingPage';
-import FreightShipmentsPage from '../freight/FreightShipmentsPage';
 
-interface FreightRendererProps {
-  submoduleId: string;
-}
-
-export const FreightRenderer: React.FC<FreightRendererProps> = ({ submoduleId }) => {
+export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId }) => {
   switch (submoduleId) {
     case 'freight-dashboard':
       return <FreightDashboard />;
     case 'freight-shipments':
-      return <FreightShipmentsPage />;
+      return <FreightShipments />;
     case 'freight-routes':
       return <FreightRoutes />;
+    case 'freight-carriers':
+      return <FreightCarriers />;
     case 'freight-tracking':
       return <UnifiedTrackingPage />;
     case 'freight-pricing':
-      return <FreightPaymentsPage />;
+      return <FreightPricing />;
     case 'freight-documents':
       return <FreightDocuments />;
     case 'freight-client-portal':
@@ -32,6 +31,8 @@ export const FreightRenderer: React.FC<FreightRendererProps> = ({ submoduleId })
     case 'freight-settings':
       return <FreightSettings />;
     default:
-      return <div>Module {submoduleId} en cours de développement</div>;
+      return <div>Submodule {submoduleId} not found in FreightRenderer</div>;
   }
 };
+
+export default FreightRenderer;
