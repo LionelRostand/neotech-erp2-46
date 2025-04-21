@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import NewContainerDialog from "./NewContainerDialog";
 import {
@@ -50,8 +51,25 @@ const data: Container[] = [
   },
 ];
 
-const ContainersListWithCreate: React.FC = () => {
+interface ContainersListWithCreateProps {
+  addDialogOpen?: boolean;
+  onCloseAddDialog?: () => void;
+}
+
+const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
+  addDialogOpen,
+  onCloseAddDialog
+}) => {
   const [openDialog, setOpenDialog] = useState(false);
+  
+  // Use either the controlled props or local state
+  const dialogOpen = addDialogOpen !== undefined ? addDialogOpen : openDialog;
+  const handleDialogOpenChange = (open: boolean) => {
+    setOpenDialog(open);
+    if (!open && onCloseAddDialog) {
+      onCloseAddDialog();
+    }
+  };
 
   return (
     <div>
@@ -94,7 +112,10 @@ const ContainersListWithCreate: React.FC = () => {
           ))}
         </TableBody>
       </Table>
-      <NewContainerDialog open={openDialog} onOpenChange={setOpenDialog} />
+      <NewContainerDialog 
+        open={dialogOpen} 
+        onOpenChange={handleDialogOpenChange} 
+      />
     </div>
   );
 };
