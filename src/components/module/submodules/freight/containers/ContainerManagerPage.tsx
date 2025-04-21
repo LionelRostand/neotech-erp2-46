@@ -11,7 +11,7 @@ import CreateEditContainerDialog from "./CreateEditContainerDialog";
 import DeleteContainerDialog from "./DeleteContainerDialog";
 
 const ContainerManagerPage: React.FC = () => {
-  const { containers, carriers, clients, routes, loading } = useFreightData();
+  const { containers = [], carriers = [], clients = [], routes = [], loading } = useFreightData();
   const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
   const [currentContainer, setCurrentContainer] = useState<any>(null);
 
@@ -38,23 +38,26 @@ const ContainerManagerPage: React.FC = () => {
     setCurrentContainer(null);
   };
 
-  // Optimisation pour l'autocomplete des options
-  const carrierOptions = useMemo(() => carriers.map((c: any) => ({
-    label: c.name,
-    value: c.id
-  })), [carriers]);
-  const clientOptions = useMemo(() => clients.map((c: any) => ({
-    label: c.name || c.clientName,
-    value: c.id
-  })), [clients]);
+  // Optimisation pour l'autocomplete des options - with null checks
+  const carrierOptions = useMemo(() => 
+    Array.isArray(carriers) ? carriers.map((c: any) => ({
+      label: c.name,
+      value: c.id
+    })) : [], [carriers]);
+    
+  const clientOptions = useMemo(() => 
+    Array.isArray(clients) ? clients.map((c: any) => ({
+      label: c.name || c.clientName,
+      value: c.id
+    })) : [], [clients]);
+    
   const routeOptions = useMemo(() =>
-    routes.map((r: any) => ({
+    Array.isArray(routes) ? routes.map((r: any) => ({
       label: `${r.name} (${r.origin} → ${r.destination})`,
       value: r.id,
       origin: r.origin,
       destination: r.destination,
-    }))
-  , [routes]);
+    })) : [], [routes]);
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-4">
@@ -68,7 +71,7 @@ const ContainerManagerPage: React.FC = () => {
       <div className="bg-white rounded shadow p-4">
         {loading ? (
           <div>Chargement...</div>
-        ) : containers.length === 0 ? (
+        ) : !containers || containers.length === 0 ? (
           <div className="text-center text-muted-foreground p-8">
             Aucun conteneur enregistré pour le moment.
           </div>

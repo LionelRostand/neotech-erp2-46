@@ -3,13 +3,15 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import type { Route as FreightRoute, Carrier, Shipment } from '@/types/freight';
+import type { Route as FreightRoute, Carrier, Shipment, Container } from '@/types/freight';
 import { fetchCollectionData } from '@/hooks/firestore/fetchCollectionData';
 
 export const useFreightData = () => {
   const [routes, setRoutes] = useState<FreightRoute[]>([]);
   const [carriers, setCarriers] = useState<Carrier[]>([]);
   const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [containers, setContainers] = useState<Container[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -38,6 +40,20 @@ export const useFreightData = () => {
         );
         setShipments(shipmentsData);
 
+        // Fetch clients
+        const clientsData = await fetchCollectionData<any>(
+          COLLECTIONS.FREIGHT.CLIENTS,
+          [orderBy('name')]
+        );
+        setClients(clientsData);
+
+        // Fetch containers
+        const containersData = await fetchCollectionData<Container>(
+          COLLECTIONS.FREIGHT.CONTAINERS,
+          [orderBy('number')]
+        );
+        setContainers(containersData);
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching freight data:', err);
@@ -53,6 +69,8 @@ export const useFreightData = () => {
     routes,
     carriers,
     shipments,
+    clients,
+    containers,
     loading,
     error,
   };
