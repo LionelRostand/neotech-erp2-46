@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -67,6 +66,17 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
   const updatePricing = (pricing: any) => setForm((f) => ({ ...f, pricing }));
   const updateTracking = (tracking: any) => setForm((f) => ({ ...f, tracking }));
 
+  // Calcul du prix total (doit être identique à celui de StepPricing)
+  const getTotalPrice = () => {
+    const { pricing, totalWeight = 0 } = form;
+    const weightPrice = totalWeight * 0.1;
+    const distancePrice = (pricing?.distance || 0) * 0.1;
+    const basePrice = typeof pricing?.basePrice === "number" ? pricing.basePrice : 10;
+    const extra = typeof pricing?.extraFees === "number" ? pricing.extraFees : 0;
+    const total = basePrice + weightPrice + distancePrice + extra;
+    return Number(total.toFixed(2));
+  };
+
   // Actual shipment creation with Firebase
   const handleCreate = async () => {
     setSubmitting(true);
@@ -87,7 +97,8 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
         estimatedDeliveryDate: new Date(Date.now() + (form.tracking.estimatedTime * 60 * 60 * 1000)).toISOString(),
         carrier: "default",
         carrierName: "Transport Standard",
-        notes: "Créé via l'assistant d'expédition"
+        notes: "Créé via l'assistant d'expédition",
+        totalPrice: getTotalPrice(),
       };
       
       // Save to Firebase

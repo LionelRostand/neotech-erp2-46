@@ -54,6 +54,7 @@ export interface Shipment {
   lines: ShipmentLine[];
   totalWeight: number;
   notes?: string;
+  totalPrice?: number; // Ajout pour stockage du prix total
 }
 
 export interface PackageType {
