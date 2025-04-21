@@ -9,7 +9,7 @@ import type { Container } from "@/types/freight";
 interface ContainerDeleteDialogProps {
   open: boolean;
   onClose: () => void;
-  container: Container;
+  container: Container | null;
   onConfirm?: (containerId: string) => void;
 }
 

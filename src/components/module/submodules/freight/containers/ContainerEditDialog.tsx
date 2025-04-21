@@ -1,12 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +29,9 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
   const [form, setForm] = useState<Container | null>(container);
   const updateContainer = useUpdateContainer();
 
-  React.useEffect(() => { setForm(container); }, [container]);
+  useEffect(() => { 
+    setForm(container); 
+  }, [container]);
 
   if (!form) return null;
 
@@ -39,7 +40,7 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
   };
 
   const handleSave = async () => {
-    if (!form) return;
+    if (!form || !form.id) return;
     
     try {
       await updateContainer.mutateAsync({ id: form.id, data: form });
