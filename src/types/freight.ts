@@ -214,7 +214,7 @@ export interface InvoiceItem {
   total: number;
 }
 
-// Adding Container interface that will be shared across components
+// Définition de l'interface Container avec tous les détails nécessaires
 export interface Container {
   id: string;
   number: string;
@@ -226,9 +226,34 @@ export interface Container {
   destination: string;
   departureDate: string;
   arrivalDate: string;
-  // These properties are used in ContainerDetailsDialog
   location: string;
   client: string;
-  departure: string;
-  arrival: string;
+  departure?: string;
+  arrival?: string;
+  articles?: any[];
+  costs?: any[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Adding ShipmentFormData type for our form
+export interface ShipmentFormData {
+  id: string;
+  reference: string;
+  origin: string;
+  destination: string;
+  customer: string;
+  carrier: string;
+  carrierName: string;
+  shipmentType: 'import' | 'export' | 'local' | 'international';
+  status: 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed';
+  trackingNumber?: string;
+  createdAt: string;
+  scheduledDate: string;
+  estimatedDeliveryDate: string;
+  actualDeliveryDate?: string;
+  routeId?: string;
+  lines: ShipmentLine[];
+  totalWeight: number;
+  notes?: string;
 }
