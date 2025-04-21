@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
@@ -107,6 +108,7 @@ const ContainerManagerPage: React.FC = () => {
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Transporteur</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Origine</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Destination</th>
+              <th className="px-5 py-3 text-left font-semibold text-gray-700">Coût</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Statut</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Actions</th>
             </tr>
@@ -114,7 +116,7 @@ const ContainerManagerPage: React.FC = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="text-center p-8 text-muted-foreground">
+                <td colSpan={8} className="text-center p-8 text-muted-foreground">
                   Chargement...
                 </td>
               </tr>
@@ -126,6 +128,11 @@ const ContainerManagerPage: React.FC = () => {
                   <td className="px-5 py-4">{getCarrierName(container.carrier)}</td>
                   <td className="px-5 py-4">{container.origin || "-"}</td>
                   <td className="px-5 py-4">{container.destination || "-"}</td>
+                  <td className="px-5 py-4">
+                    {typeof container.cost === "number" 
+                      ? <span className="text-green-700 font-medium">{container.cost.toLocaleString()} €</span> 
+                      : "-"}
+                  </td>
                   <td className="px-5 py-4">{container.status || "-"}</td>
                   <td className="px-5 py-4 space-x-2 flex items-center">
                     <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Voir">
@@ -142,7 +149,7 @@ const ContainerManagerPage: React.FC = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="text-center p-8 text-muted-foreground">
+                <td colSpan={8} className="text-center p-8 text-muted-foreground">
                   Aucun conteneur enregistré pour le moment.
                 </td>
               </tr>
@@ -179,3 +186,4 @@ const ContainerManagerPage: React.FC = () => {
 };
 
 export default ContainerManagerPage;
+
