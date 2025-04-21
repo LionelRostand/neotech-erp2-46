@@ -9,6 +9,8 @@ import ContainerArticlesTab from "./ContainerArticlesTab";
 import ContainerCostTab from "./ContainerCostTab";
 import { useForm, Controller } from "react-hook-form";
 import type { Container } from "@/types/freight";
+import { toast } from "sonner";
+import { useAddContainer } from "@/hooks/modules/useContainersFirestore";
 
 interface CreateContainerDialogProps {
   open: boolean;
@@ -32,11 +34,16 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({
   open,
   onOpenChange
 }) => {
+  const [articles, setArticles] = useState<{name: string; quantity: number; weight?: number}[]>([]);
+  const [cost, setCost] = useState(0);
+  const addContainer = useAddContainer();
+
   const {
     register,
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors }
   } = useForm<ContainerFormData>({
     defaultValues: {
@@ -53,19 +60,41 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({
     }
   });
 
+  // Reset the form when the dialog is closed
   useEffect(() => {
-    if (!open) reset();
+    if (!open) {
+      reset();
+      setArticles([]);
+      setCost(0);
+    }
   }, [open, reset]);
 
+  const containerType = watch("type");
+
   const onSubmit = (data: ContainerFormData) => {
-    // TODO: implement creation logic
-    console.log("Creating container with data:", data);
-    onOpenChange(false);
+    const containerData = {
+      ...data,
+      articles,
+      cost,
+      location: "À l'entrepôt", // Default value
+      createdAt: new Date().toISOString(),
+    };
+
+    addContainer.mutate(containerData, {
+      onSuccess: () => {
+        toast.success("Conteneur créé avec succès");
+        onOpenChange(false);
+      },
+      onError: (error) => {
+        console.error("Error creating container:", error);
+        toast.error("Erreur lors de la création du conteneur");
+      }
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nouveau conteneur</DialogTitle>
         </DialogHeader>
@@ -153,14 +182,16 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({
               </div>
             </TabsContent>
             <TabsContent value="articles" className="pt-4">
-              <ContainerArticlesTab />
+              <ContainerArticlesTab articles={articles} setArticles={setArticles} />
             </TabsContent>
             <TabsContent value="pricing" className="pt-4">
-              <ContainerCostTab />
+              <ContainerCostTab containerType={containerType} articles={articles} cost={cost} setCost={setCost} />
             </TabsContent>
             <DialogFooter className="flex justify-end space-x-2 mt-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-              <Button type="submit">Créer</Button>
+              <Button type="submit" disabled={addContainer.isPending}>
+                {addContainer.isPending ? "Création..." : "Créer"}
+              </Button>
             </DialogFooter>
           </form>
         </Tabs>
@@ -170,4 +201,3 @@ const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({
 };
 
 export default CreateContainerDialog;
-
