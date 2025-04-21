@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import FreightDashboard from '../FreightDashboard';
@@ -12,6 +13,7 @@ import FreightDocuments from '../freight/FreightDocuments';
 import FreightClientPortal from '../freight/FreightClientPortal';
 import FreightSettings from '../freight/FreightSettings';
 import FreightShipmentsPage from '../freight/FreightShipmentsPage';
+import FreightRoutesPage from '../freight/FreightRoutesPage';
 
 export const renderFreightSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log(`Rendering freight submodule: ${submoduleId}`);
@@ -21,6 +23,8 @@ export const renderFreightSubmodule = (submoduleId: string, submodule: SubModule
       return <FreightDashboard />;
     case 'freight-shipments':
       return <FreightShipmentsPage />;
+    case 'freight-routes':
+      return <FreightRoutesPage />;
     case 'freight-packages':
       return <FreightPackages />;
     case 'freight-tracking':
