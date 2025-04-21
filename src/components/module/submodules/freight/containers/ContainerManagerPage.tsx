@@ -1,14 +1,12 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
-import CreateEditContainerDialog from "./CreateEditContainerDialog";
-import DeleteContainerDialog from "./DeleteContainerDialog";
 import { useContainers, useAddContainer } from "@/hooks/modules/useContainersFirestore";
 import { toast } from "sonner";
 import { useFreightData } from "@/hooks/modules/useFreightData";
+import ContainerDialogTabs from "./ContainerDialogTabs";
+import DeleteContainerDialog from "./DeleteContainerDialog";
 
-// Define types for the data
 interface FreightClient {
   id: string;
   name: string;
@@ -75,7 +73,6 @@ const ContainerManagerPage: React.FC = () => {
     }
   };
 
-  // Helper function to safely get client name
   const getClientName = (clientId: string | undefined) => {
     if (!clientId) return "-";
     const client = clients.find((c: FreightClient) => c.id === clientId);
@@ -144,28 +141,25 @@ const ContainerManagerPage: React.FC = () => {
           </tbody>
         </table>
       </div>
-      {openDialog && (
-        <>
-          <CreateEditContainerDialog
-            open={openDialog === "create" || openDialog === "edit"}
-            onClose={closeDialog}
-            container={openDialog === "edit" ? currentContainer : null}
-            onSave={handleCreateContainer}
-            defaultNumber={generateContainerNumber()}
-            routes={routes as Route[]}
-            clients={clients.map((client: FreightClient) => ({
-              id: client.id,
-              name: client.name
-            }))}
-          />
-          {currentContainer && (
-            <DeleteContainerDialog
-              open={openDialog === "delete"}
-              onClose={closeDialog}
-              container={currentContainer}
-            />
-          )}
-        </>
+      {openDialog && openDialog === "create" && (
+        <ContainerDialogTabs
+          open={true}
+          onClose={closeDialog}
+          onSave={handleCreateContainer}
+          defaultNumber={generateContainerNumber()}
+          routes={routes as Route[]}
+          clients={clients.map((client: FreightClient) => ({
+            id: client.id,
+            name: client.name
+          }))}
+        />
+      )}
+      {openDialog && openDialog !== "create" && currentContainer && (
+        <DeleteContainerDialog
+          open={openDialog === "delete"}
+          onClose={closeDialog}
+          container={currentContainer}
+        />
       )}
     </div>
   );
