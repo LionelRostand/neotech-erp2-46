@@ -1,3 +1,4 @@
+
 import React from 'react';
 import FreightDashboard from '../freight/FreightDashboard';
 import FreightShipments from '../FreightShipments';
@@ -8,7 +9,7 @@ import FreightPricing from '../freight/FreightPricing';
 import FreightSettings from '../freight/FreightSettings';
 import FreightClientPortal from '../freight/FreightClientPortal';
 import UnifiedTrackingPage from '../freight/tracking/UnifiedTrackingPage';
-import FreightRoutesPage from '../freight/FreightRoutesPage'; // Ajout de l'import si ce n’était pas fait
+import FreightRoutesPage from '../freight/FreightRoutesPage';
 
 export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId }) => {
   switch (submoduleId) {
@@ -18,7 +19,7 @@ export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId
       return <FreightShipments />;
     // SUPPRIMÉ l'ancien case 'freight-routes'
     case 'freight-routes-main':
-      return <FreightRoutesPage />; // Nouveau : le vrai composant de gestion de routes, bouton/form inclus
+      return <FreightRoutesPage />; // Nouveau : le vrai composant de gestion de routes, bouton/form inclus
     case 'freight-carriers':
       return <FreightCarriers />;
     case 'freight-tracking':

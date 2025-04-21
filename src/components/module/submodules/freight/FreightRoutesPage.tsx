@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Plus, Save } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFreightData } from "@/hooks/modules/useFreightData";
 import { toast } from "@/hooks/use-toast";
@@ -93,4 +93,3 @@ const FreightRoutesPage: React.FC = () => {
 };
 
 export default FreightRoutesPage;
-

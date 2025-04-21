@@ -1,84 +1,193 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import type { Route as FreightRoute } from "@/types/freight";
 
-type FreightRouteFormProps = {
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
+  origin: z.string().min(2, { message: "L'origine doit être spécifiée" }),
+  destination: z.string().min(2, { message: "La destination doit être spécifiée" }),
+  distance: z.coerce.number().positive({ message: "La distance doit être positive" }),
+  estimatedTime: z.coerce.number().positive({ message: "Le temps estimé doit être positif" }),
+  transportType: z.enum(["road", "sea", "air", "rail", "multimodal"]),
+  active: z.boolean().default(true),
+});
+
+type RouteFormValues = z.infer<typeof formSchema>;
+
+interface FreightRouteFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (route: FreightRoute) => void;
-};
+  onSubmit: (data: FreightRoute) => void;
+  initialData?: Partial<FreightRoute>;
+}
 
-const DEFAULT_VALUES = {
-  name: "",
-  origin: "",
-  destination: "",
-  distance: 0,
-  estimatedTime: 0,
-  transportType: "road",
-  active: true,
-};
-
-const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange, onSubmit }) => {
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: DEFAULT_VALUES,
+const FreightRouteForm: React.FC<FreightRouteFormProps> = ({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData,
+}) => {
+  const form = useForm<RouteFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: initialData?.name || "",
+      origin: initialData?.origin || "",
+      destination: initialData?.destination || "",
+      distance: initialData?.distance || 0,
+      estimatedTime: initialData?.estimatedTime || 0,
+      transportType: initialData?.transportType || "road",
+      active: initialData?.active ?? true,
+    },
   });
 
-  const submitHandler = (data: Omit<FreightRoute, "id">) => {
-    // Ensure distance and estimatedTime are numbers
-    const formattedData = {
-      ...data,
-      distance: Number(data.distance),
-      estimatedTime: Number(data.estimatedTime),
-    };
-    
-    onSubmit({ ...formattedData, id: "" });
-    reset(DEFAULT_VALUES);
+  const handleSubmit = (values: RouteFormValues) => {
+    onSubmit({
+      id: initialData?.id || '',
+      ...values,
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => { onOpenChange(open); if (!open) reset(DEFAULT_VALUES); }}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nouvelle Route</DialogTitle>
+          <DialogTitle>{initialData ? "Modifier la route" : "Nouvelle route"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(submitHandler)} className="space-y-4 mt-2">
-          <Input required placeholder="Nom de la route" {...register("name")} />
-          <Input required placeholder="Origine" {...register("origin")} />
-          <Input required placeholder="Destination" {...register("destination")} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input 
-              type="number" 
-              required 
-              placeholder="Distance (km)" 
-              {...register("distance", { valueAsNumber: true })} 
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Paris - Lyon" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <Input 
-              type="number" 
-              required 
-              placeholder="Temps estimé (h)" 
-              {...register("estimatedTime", { valueAsNumber: true })} 
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="origin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Origine</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Paris" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="destination"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Destination</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Lyon" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="distance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Distance (km)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="estimatedTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Temps estimé (h)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="0.5" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="transportType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type de transport</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="road">Route</SelectItem>
+                      <SelectItem value="sea">Maritime</SelectItem>
+                      <SelectItem value="air">Aérien</SelectItem>
+                      <SelectItem value="rail">Ferroviaire</SelectItem>
+                      <SelectItem value="multimodal">Multimodal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <select {...register("transportType")} className="w-full rounded-md border px-3 py-2 text-sm">
-            <option value="road">Route</option>
-            <option value="sea">Mer</option>
-            <option value="air">Air</option>
-            <option value="rail">Rail</option>
-            <option value="multimodal">Multimodal</option>
-          </select>
-          <div className="flex gap-3 items-center">
-            <input type="checkbox" {...register("active")} className="accent-emerald-600" />
-            <span>Active</span>
-          </div>
-          <div className="flex justify-between gap-4 pt-3">
-            <Button type="button" variant="secondary" onClick={() => { onOpenChange(false); reset(DEFAULT_VALUES); }}>Annuler</Button>
-            <Button type="submit" className="bg-emerald-600 text-white">Enregistrer</Button>
-          </div>
-        </form>
+            <FormField
+              control={form.control}
+              name="active"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel>Active</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Annuler
+              </Button>
+              <Button type="submit">
+                {initialData ? "Mettre à jour" : "Créer"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

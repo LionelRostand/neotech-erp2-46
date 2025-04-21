@@ -1,150 +1,41 @@
-/**
- * Constantes pour les chemins des collections Firestore
- * Utilisé pour centraliser les noms des collections et éviter les erreurs de typo
- */
-export const COLLECTIONS = {
-  USERS: 'users',
-  USER_PERMISSIONS: 'user_permissions',
-  COMPANIES: 'companies',
-  
-  ACCOUNTING: {
-    CLIENTS: 'accounting_clients',
-    EXPENSES: 'accounting_expenses',
-    INVOICES: 'accounting_invoices',
-    PAYMENTS: 'accounting_payments',
-    PERMISSIONS: 'accounting_permissions',
-    REPORTS: 'accounting_reports',
-    SETTINGS: 'accounting_settings',
-    SUPPLIERS: 'accounting_suppliers',
-    TAXES: 'accounting_taxes',
-    TRANSACTIONS: 'accounting_transactions'
-  },
-  
-  CRM: {
-    ACTIVITIES: 'crm_activities',
-    CAMPAIGNS: 'crm_campaigns',
-    CLIENTS: 'crm_clients',
-    CONTACTS: 'crm_contacts',
-    DEALS: 'crm_deals',
-    LEADS: 'crm_leads',
-    OPPORTUNITIES: 'crm_opportunities',
-    PROSPECTS: 'crm_prospects',
-    REMINDERS: 'crm_reminders',
-    SETTINGS: 'crm_settings',
-    TASKS: 'crm_tasks'
-  },
-  
-  DOCUMENTS: {
-    MAIN: 'documents',
-    SETTINGS: 'document_settings',
-    TEMPLATES: 'document_templates'
-  },
-  
-  // Ajout de DOCUMENT_COLLECTIONS pour les services de documents
-  DOCUMENT_COLLECTIONS: {
-    DOCUMENTS: 'documents', 
-    SETTINGS: 'document_settings',
-    TEMPLATES: 'document_templates'
-  },
-  
-  FREIGHT: {
-    BILLING: 'freight_billing',
-    CARRIERS: 'freight_carriers',
-    CLIENTS: 'freight_clients',
-    CONTAINERS: 'freight_containers',
-    CUSTOMERS: 'freight_customers',
-    DOCUMENTS: 'freight_documents',
-    PACKAGE_TYPES: 'freight_package_types',
-    PACKAGES: 'freight_packages',
-    PRICING: 'freight_pricing',
-    QUOTES: 'freight_quotes',
-    ROUTES: 'freight_routes',
-    SETTINGS: 'freight_settings',
-    SHIPMENTS: 'freight_shipments',
-    TRACKING: 'freight_tracking',
-    TRACKING_EVENTS: 'freight_tracking_events',
-    USERS: 'freight_users'
-  },
-  
-  HEALTH: {
-    APPOINTMENTS: 'health_appointments',
-    BILLING: 'health_billing',
-    CONSULTATIONS: 'health_consultations',
-    DOCTORS: 'health_doctors',
-    INSURANCE: 'health_insurance',
-    INVENTORY: 'health_inventory',
-    LABORATORY: 'health_laboratory',
-    MEDICAL_RECORDS: 'health_medical_records',
-    PATIENTS: 'health_patients',
-    PERMISSIONS: 'health_permissions',
-    PRESCRIPTIONS: 'health_prescriptions',
-    SETTINGS: 'health_settings',
-    STAFF: 'health_staff'
-  },
-  
-  HR: {
-    ABSENCE_REQUESTS: 'hr_absence_requests',
-    ALERTS: 'hr_alerts',
-    ATTENDANCE: 'hr_attendance',
-    BADGES: 'hr_badges',
-    CONTRACTS: 'hr_contracts',
-    DEPARTMENTS: 'hr_departments',
-    DOCUMENTS: 'hr_documents',
-    EMPLOYEES: 'hr_employees',
-    EVALUATIONS: 'hr_evaluations',
-    LEAVE_REQUESTS: 'hr_leave_requests',
-    LEAVES: 'hr_leaves',
-    MANAGERS: 'hr_managers',
-    PAYSLIPS: 'hr_payslips',
-    PERMISSIONS: 'hr_permissions',
-    RECRUITMENT: 'hr_recruitment',
-    SALARIES: 'hr_salaries',
-    SETTINGS: 'hr_settings',
-    TIMESHEET: 'hr_timesheet',
-    TRAININGS: 'hr_trainings'
-  },
-  
-  LIBRARY: {
-    AUTHORS: 'library_authors',
-    BOOKS: 'library_books',
-    CATEGORIES: 'library_categories',
-    LOANS: 'library_loans',
-    MEMBERS: 'library_members',
-    PUBLISHERS: 'library_publishers',
-    RETURNS: 'library_returns',
-    SETTINGS: 'library_settings',
-    STATS: 'library_stats'
-  },
-  
-  MESSAGES: {
-    ARCHIVE: 'messages_archive',
-    INBOX: 'messages_inbox',
-    METRICS: 'messages_metrics',
-    SCHEDULED: 'messages_scheduled',
-    // Ajout des collections manquantes pour messages
-    CONTACTS: 'messages_contacts',
-    DRAFTS: 'messages_drafts',
-    SENT: 'messages_sent',
-    TRASH: 'messages_trash'
-  },
 
-  // Autres collections
-  ANALYTICS: 'analyticsStats',
-  MONTHLY_ANALYTICS: 'monthlyAnalytics',
-  MONTHLY_PERFORMANCE: 'monthlyPerformance',
-  PERFORMANCE_STATS: 'performanceStats',
-  PROJECT_NOTIFICATIONS: 'project_notifications',
-  PROJECTS: 'projects',
-  SMTP: 'smtp_config',
-  TASKS: 'tasks',
-  TEAMS: 'teams',
-  
-  TRANSPORT: {
-    CLIENTS: 'transport_clients',
-    DRIVERS: 'transport_drivers',
-    RESERVATIONS: 'transport_reservations',
-    ROUTES: 'transport_routes',
-    SETTINGS: 'transport_settings',
-    VEHICLES: 'transport_vehicles'
+export const COLLECTIONS = {
+  EMPLOYEES: 'employees',
+  DEPARTMENTS: 'departments',
+  CONTRACTS: 'contracts',
+  COMPANIES: 'companies',
+  DOCUMENTS: 'documents',
+  BADGES: 'badges',
+  PAYSLIPS: 'payslips',
+  LEAVE_REQUESTS: 'leave-requests',
+  ABSENCE_REQUESTS: 'absence-requests',
+  TIME_SHEETS: 'time-sheets',
+  EVALUATIONS: 'evaluations',
+  TRAININGS: 'trainings',
+  HR_DOCUMENTS: 'hr-documents',
+  HR_REPORTS: 'hr-reports',
+  HR_ALERTS: 'hr-alerts',
+  ATTENDANCE: 'attendance',
+  FREIGHT: {
+    SHIPMENTS: 'freight-shipments',
+    ROUTES: 'freight-routes',
+    CARRIERS: 'freight-carriers',
+    PACKAGES: 'freight-packages',
+    DOCUMENTS: 'freight-documents',
+    CONTAINERS: 'freight-containers',
+    TRACKING_EVENTS: 'freight-tracking-events',
+    CLIENTS: 'freight-clients'
+  },
+  CRM: {
+    CLIENTS: 'crm-clients',
+    PROSPECTS: 'crm-prospects',
+    OPPORTUNITIES: 'crm-opportunities',
+    REMINDERS: 'crm-reminders'
+  },
+  ACCOUNTING: {
+    INVOICES: 'accounting-invoices',
+    PAYMENTS: 'accounting-payments',
+    TAX_RATES: 'accounting-tax-rates',
+    TAX_DECLARATIONS: 'accounting-tax-declarations'
   }
 };
