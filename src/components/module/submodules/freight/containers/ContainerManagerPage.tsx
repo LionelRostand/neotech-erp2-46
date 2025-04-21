@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
@@ -86,7 +85,7 @@ const ContainerManagerPage: React.FC = () => {
               </tr>
             ) : (containers && containers.length > 0 ? (
               containers.map((container: any) => (
-                <tr key={container.id} className="border-t last:border-b-0 hover:bg-gray-50">
+                <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
                   <td className="px-5 py-4">{container.number}</td>
                   <td className="px-5 py-4">{container.client || "-"}</td>
                   <td className="px-5 py-4">{container.origin || "-"}</td>
@@ -94,13 +93,13 @@ const ContainerManagerPage: React.FC = () => {
                   <td className="px-5 py-4">{container.status || "-"}</td>
                   <td className="px-5 py-4 space-x-2 flex items-center">
                     <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Voir">
-                      <Eye className="w-4 h-4" />
+                      {/* Eye icon, non affiché */}
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => handleEdit(container)} className="hover:bg-gray-100" title="Modifier">
-                      <Edit className="w-4 h-4" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 11.25V15h3.75l6.134-6.134a2.25 2.25 0 00-3.182-3.182L9 11.25z" /></svg>
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => handleDelete(container)} className="hover:bg-gray-100" title="Supprimer">
-                      <Trash className="w-4 h-4 text-red-500" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4a2 2 0 012 2v2H7V5a2 2 0 012-2z" /></svg>
                     </Button>
                   </td>
                 </tr>
@@ -132,5 +131,4 @@ const ContainerManagerPage: React.FC = () => {
     </div>
   );
 };
-
 export default ContainerManagerPage;
