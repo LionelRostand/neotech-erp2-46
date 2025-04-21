@@ -1,29 +1,30 @@
 
 import React from 'react';
 import FreightDashboard from '../freight/FreightDashboard';
-import FreightShipments from '../FreightShipments';
-import FreightRoutes from '../freight/FreightRoutes';
-import FreightCarriers from '../freight/carriers/FreightCarriersList';
-import FreightDocuments from '../freight/FreightDocuments';
-import FreightPricing from '../freight/FreightPricing';
-import FreightSettings from '../freight/FreightSettings';
+import FreightShipmentsPage from '../freight/shipments/FreightShipmentsPage';
 import FreightClientPortal from '../freight/FreightClientPortal';
-import UnifiedTrackingPage from '../freight/tracking/UnifiedTrackingPage';
+import FreightDocuments from '../freight/FreightDocuments';
+import FreightRoutes from '../freight/FreightRoutes';
+import FreightSettings from '../freight/FreightSettings';
+import FreightTrackingPage from '../freight/tracking/FreightTrackingPage';
+import FreightPaymentsPage from '../freight/pricing/FreightPaymentsPage';
 
-export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId }) => {
+interface FreightRendererProps {
+  submoduleId: string;
+}
+
+export const FreightRenderer: React.FC<FreightRendererProps> = ({ submoduleId }) => {
   switch (submoduleId) {
     case 'freight-dashboard':
       return <FreightDashboard />;
     case 'freight-shipments':
-      return <FreightShipments />;
+      return <FreightShipmentsPage />;
     case 'freight-routes':
       return <FreightRoutes />;
-    case 'freight-carriers':
-      return <FreightCarriers />;
     case 'freight-tracking':
-      return <UnifiedTrackingPage />;
+      return <FreightTrackingPage />;
     case 'freight-pricing':
-      return <FreightPricing />;
+      return <FreightPaymentsPage />;
     case 'freight-documents':
       return <FreightDocuments />;
     case 'freight-client-portal':
@@ -31,8 +32,6 @@ export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId
     case 'freight-settings':
       return <FreightSettings />;
     default:
-      return <div>Submodule {submoduleId} not found in FreightRenderer</div>;
+      return <div>Module {submoduleId} en cours de développement</div>;
   }
 };
-
-export default FreightRenderer;
