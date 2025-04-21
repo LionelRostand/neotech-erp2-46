@@ -1,8 +1,11 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import FreightRouteForm from "./FreightRouteForm";
+import FreightRouteViewDialog from "./FreightRouteViewDialog";
+import FreightRouteEditDialog from "./FreightRouteEditDialog";
+import FreightRouteDeleteDialog from "./FreightRouteDeleteDialog";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import type { Route as FreightRoute } from "@/types/freight";
 import { useFirestore } from "@/hooks/useFirestore";
 import { toast } from "sonner";
@@ -12,23 +15,26 @@ const FreightRoutesPage: React.FC = () => {
   const [routes, setRoutes] = useState<FreightRoute[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewRoute, setViewRoute] = useState<FreightRoute | null>(null);
+  const [editRoute, setEditRoute] = useState<FreightRoute | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<FreightRoute | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  // Utiliser le hook pour la collection firestore
-  const { add, loading, getAll } = useFirestore("freight_routes");
+  const { add, loading, getAll, update, remove } = useFirestore("freight_routes");
 
-  // Fonction de chargement des routes extraite pour éviter les boucles
   const loadRoutes = useCallback(async () => {
-    if (isSubmitting) return; // Ne pas charger pendant une soumission
-    
+    if (isSubmitting) return;
+
     try {
       setIsLoading(true);
       const routesData = await getAll();
       
       if (Array.isArray(routesData) && routesData.length > 0) {
-        // Filtrer les documents qui contiennent au moins les champs obligatoires
         const formattedRoutes = routesData
           .filter(route => 
-            // S'assurer que l'objet a les propriétés minimales requises
             typeof route === 'object' && 
             route !== null && 
             'name' in route && 
@@ -58,31 +64,24 @@ const FreightRoutesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getAll, isSubmitting]); // Ne pas inclure setIsLoading/setRoutes (setState functions) dans les dépendances
+  }, [getAll, isSubmitting]);
 
-  // Charger les routes au chargement de la page - une seule fois
   useEffect(() => {
     loadRoutes();
-    // Cette fonction ne doit s'exécuter qu'une seule fois au montage
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []);
 
   const onAddRoute = async (route: FreightRoute) => {
     try {
       setIsSubmitting(true);
       
-      // Générer un id local pour un affichage instantané
       const localRoute = { ...route, id: String(Date.now()) };
 
-      // Mise à jour de l'affichage
       setRoutes((prev) => [...prev, localRoute]);
       setShowDialog(false);
 
-      // Sauvegarder en Firestore
       await add({ ...route, createdAt: new Date().toISOString() });
       toast.success("Route enregistrée avec succès dans la base de données.");
       
-      // Charger explicitement après ajout pour obtenir les données à jour
       loadRoutes();
     } catch (err: any) {
       console.error("Erreur d'enregistrement:", err);
@@ -90,6 +89,62 @@ const FreightRoutesPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onEditRoute = async (route: FreightRoute) => {
+    setEditRoute(route);
+    setEditDialogOpen(true);
+  };
+
+  const handleSubmitEdit = async (route: FreightRoute) => {
+    setIsSubmitting(true);
+    try {
+      await update(route.id, {
+        name: route.name,
+        origin: route.origin,
+        destination: route.destination,
+        distance: route.distance,
+        estimatedTime: route.estimatedTime,
+        transportType: route.transportType,
+        active: route.active
+      });
+      toast.success("Route mise à jour.");
+      setEditDialogOpen(false);
+      setEditRoute(null);
+      loadRoutes();
+    } catch (err: any) {
+      toast.error("Erreur lors de la mise à jour.");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmDeleteRoute = (route: FreightRoute) => {
+    setRouteToDelete(route);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteRoute = async () => {
+    if (!routeToDelete) return;
+    setDeleting(true);
+    try {
+      await remove(routeToDelete.id);
+      toast.success("Route supprimée.");
+      setDeleteDialogOpen(false);
+      setRouteToDelete(null);
+      loadRoutes();
+    } catch (err: any) {
+      toast.error("Erreur lors de la suppression.");
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const onViewRoute = (route: FreightRoute) => {
+    setViewRoute(route);
+    setViewDialogOpen(true);
   };
 
   return (
@@ -123,6 +178,7 @@ const FreightRoutesPage: React.FC = () => {
                   <th className="py-2">Temps estimé (h)</th>
                   <th className="py-2">Type</th>
                   <th className="py-2">Statut</th>
+                  <th className="py-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,6 +191,29 @@ const FreightRoutesPage: React.FC = () => {
                     <td className="py-2">{route.estimatedTime}</td>
                     <td className="py-2 capitalize">{route.transportType}</td>
                     <td className="py-2">{route.active ? "Active" : "Inactive"}</td>
+                    <td className="py-2 text-center">
+                      <button
+                        title="Voir"
+                        onClick={() => onViewRoute(route)}
+                        className="inline-flex items-center hover:bg-gray-100 rounded p-1 mr-2"
+                      >
+                        <Eye className="w-4 h-4 text-gray-700" />
+                      </button>
+                      <button
+                        title="Modifier"
+                        onClick={() => onEditRoute(route)}
+                        className="inline-flex items-center hover:bg-emerald-100 rounded p-1 mr-2"
+                      >
+                        <Pencil className="w-4 h-4 text-emerald-700" />
+                      </button>
+                      <button
+                        title="Supprimer"
+                        onClick={() => confirmDeleteRoute(route)}
+                        className="inline-flex items-center hover:bg-red-100 rounded p-1"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -150,6 +229,9 @@ const FreightRoutesPage: React.FC = () => {
         </div>
       </div>
       <FreightRouteForm open={showDialog} onOpenChange={setShowDialog} onSubmit={onAddRoute} />
+      <FreightRouteViewDialog open={viewDialogOpen} onOpenChange={setViewDialogOpen} route={viewRoute} />
+      <FreightRouteEditDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} route={editRoute} onSubmit={handleSubmitEdit} submitting={isSubmitting} />
+      <FreightRouteDeleteDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} route={routeToDelete} onDelete={handleDeleteRoute} deleting={deleting} />
     </div>
   );
 };
