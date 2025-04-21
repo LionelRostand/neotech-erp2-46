@@ -1,264 +1,230 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { COLLECTIONS } from "@/lib/firebase-collections";
-import { Container } from "@/types/freight";
+import ContainerTabs from "./ContainerTabs";
+import ContainerInformationsTab from "./ContainerInformationsTab";
+import ContainerArticlesTab from "./ContainerArticlesTab";
+import ContainerCostTab from "./ContainerCostTab";
+import { useCarriers } from "../hooks/useCarriers";
+import { useFreightClients } from "../hooks/useFreightClients";
+import { useRoutes } from "../hooks/useRoutes";
+import { useAddContainer } from "@/hooks/modules/useContainersFirestore";
+
+// Liste des types de conteneurs (statiques pour l'instant)
+const CONTAINER_TYPES = [
+  { type: "Standard", size: "20ft" },
+  { type: "Standard", size: "40ft" },
+  { type: "Réfrigéré", size: "20ft" },
+  { type: "Réfrigéré", size: "40ft" },
+  { type: "Open Top", size: "20ft" },
+  { type: "Flat Rack", size: "40ft" },
+  { type: "Tank", size: "20ft" }
+];
 
 interface ContainerCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated?: (container: Container) => void;
+  onSuccess?: () => void;
 }
 
-const ContainerCreateDialog: React.FC<ContainerCreateDialogProps> = ({
-  open,
+const ContainerCreateDialog: React.FC<ContainerCreateDialogProps> = ({ 
+  open, 
   onOpenChange,
-  onCreated,
+  onSuccess
 }) => {
-  const [container, setContainer] = useState({
-    number: "",
-    type: "standard",
-    size: "20ft",
-    status: "en attente",
-    carrierName: "",
+  // Récupération des données depuis les hooks
+  const { carriers, isLoading: isLoadingCarriers } = useCarriers();
+  const { clients, isLoading: isLoadingClients } = useFreightClients();
+  const { routes, isLoading: isLoadingRoutes } = useRoutes();
+  const addContainer = useAddContainer();
+
+  // État pour les onglets et les données du conteneur
+  const [currentTab, setCurrentTab] = useState("info");
+  const [containerData, setContainerData] = useState({
+    reference: "",
+    type: "",
+    size: "",
+    status: "",
+    transporteur: "",
+    client: "",
+    route: "",
     origin: "",
     destination: "",
-    departureDate: "",
-    arrivalDate: "",
-    location: "",
-    client: "",
-    departure: "",
-    arrival: "",
-    articles: [],
-    costs: []
+    departDate: "",
+    arrivalDate: ""
   });
-  const [loading, setLoading] = useState(false);
+  
+  const [articles, setArticles] = useState([]);
+  const [cost, setCost] = useState(0);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setContainer((prev) => ({ ...prev, [name]: value }));
+  // Mettre à jour les données du conteneur
+  const handleChange = (field: string, value: any) => {
+    setContainerData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!container.number || !container.type || !container.size) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-
-    setLoading(true);
+  // Création du conteneur
+  const handleCreate = async () => {
     try {
-      const docRef = await addDoc(collection(db, COLLECTIONS.FREIGHT.CONTAINERS), {
-        ...container,
-        createdAt: new Date().toISOString(),
-      });
+      // Validation de base
+      if (!containerData.reference || !containerData.type || !containerData.transporteur || !containerData.client) {
+        toast.error("Veuillez remplir tous les champs obligatoires");
+        return;
+      }
 
-      const newContainer = { ...container, id: docRef.id } as Container;
-      toast.success("Conteneur ajouté avec succès");
-      onCreated?.(newContainer);
+      // Préparer les données pour la sauvegarde
+      const containerToSave = {
+        number: containerData.reference,
+        type: containerData.type,
+        size: containerData.size,
+        status: containerData.status,
+        carrierName: carriers.find(c => c.id === containerData.transporteur)?.name || "",
+        client: clients.find(c => c.id === containerData.client)?.name || "",
+        origin: containerData.origin,
+        destination: containerData.destination,
+        departureDate: containerData.departDate,
+        arrivalDate: containerData.arrivalDate,
+        articles,
+        cost,
+        // Ces champs sont nécessaires pour la liste des conteneurs
+        location: containerData.origin, // On définit la location comme l'origine par défaut
+      };
+
+      await addContainer.mutateAsync(containerToSave);
+      toast.success("Conteneur créé avec succès!");
+      
+      // Réinitialiser le formulaire et fermer le dialogue
       resetForm();
       onOpenChange(false);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
-      console.error("Erreur lors de l'ajout du conteneur:", error);
-      toast.error("Erreur lors de l'ajout du conteneur");
-    } finally {
-      setLoading(false);
+      console.error("Erreur lors de la création du conteneur:", error);
+      toast.error("Une erreur est survenue lors de la création du conteneur");
     }
   };
 
+  // Réinitialiser le formulaire
   const resetForm = () => {
-    setContainer({
-      number: "",
-      type: "standard",
-      size: "20ft",
-      status: "en attente",
-      carrierName: "",
+    setContainerData({
+      reference: "",
+      type: "",
+      size: "",
+      status: "",
+      transporteur: "",
+      client: "",
+      route: "",
       origin: "",
       destination: "",
-      departureDate: "",
-      arrivalDate: "",
-      location: "",
-      client: "",
-      departure: "",
-      arrival: "",
-      articles: [],
-      costs: []
+      departDate: "",
+      arrivalDate: ""
     });
+    setArticles([]);
+    setCost(0);
+    setCurrentTab("info");
   };
 
-  React.useEffect(() => {
-    if (!open) resetForm();
-  }, [open]);
+  // Déterminer si l'onglet actuel est le dernier
+  const isLastTab = currentTab === "pricing";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        resetForm();
+      }
+      onOpenChange(isOpen);
+    }}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau conteneur</DialogTitle>
+          <DialogTitle>Nouveau conteneur</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Numéro <span className="text-red-500">*</span>
-              </label>
-              <Input
-                name="number"
-                value={container.number}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="type"
-                value={container.type}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              >
-                <option value="standard">Standard</option>
-                <option value="réfrigéré">Réfrigéré</option>
-                <option value="sec">Sec</option>
-                <option value="open-top">Open-top</option>
-                <option value="flat-rack">Flat-rack</option>
-                <option value="tank">Citerne</option>
-              </select>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Taille <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="size"
-                value={container.size}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              >
-                <option value="20ft">20 pieds</option>
-                <option value="40ft">40 pieds</option>
-                <option value="45ft">45 pieds</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Statut <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="status"
-                value={container.status}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              >
-                <option value="en attente">En attente</option>
-                <option value="en transit">En transit</option>
-                <option value="livré">Livré</option>
-                <option value="retardé">Retardé</option>
-              </select>
-            </div>
-          </div>
+        <ContainerTabs 
+          tab={currentTab} 
+          setTab={setCurrentTab} 
+          onNext={() => {}} 
+          isLastTab={isLastTab}
+        />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Transporteur</label>
-              <Input
-                name="carrierName"
-                value={container.carrierName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Client</label>
-              <Input
-                name="client"
-                value={container.client}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Origine</label>
-              <Input
-                name="origin"
-                value={container.origin}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Destination</label>
-              <Input
-                name="destination"
-                value={container.destination}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de départ</label>
-              <Input
-                type="date"
-                name="departureDate"
-                value={container.departureDate}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date d'arrivée prévue</label>
-              <Input
-                type="date"
-                name="arrivalDate"
-                value={container.arrivalDate}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Localisation actuelle</label>
-            <Input
-              name="location"
-              value={container.location}
+        <div className="mt-4">
+          {currentTab === "info" && (
+            <ContainerInformationsTab
+              values={containerData}
               onChange={handleChange}
+              transporteurs={carriers}
+              clients={clients}
+              routes={routes}
+              types={CONTAINER_TYPES}
             />
-          </div>
+          )}
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-green-700 hover:bg-green-800 text-white"
-            >
-              {loading ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
-        </form>
+          {currentTab === "articles" && (
+            <ContainerArticlesTab
+              articles={articles}
+              setArticles={setArticles}
+            />
+          )}
+
+          {currentTab === "pricing" && (
+            <ContainerCostTab
+              containerType={containerData.type}
+              articles={articles}
+              cost={cost}
+              setCost={setCost}
+            />
+          )}
+        </div>
+
+        <DialogFooter className="flex justify-between items-center mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          
+          <div className="flex gap-2">
+            {currentTab !== "info" && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  const currentIndex = ["info", "articles", "pricing"].indexOf(currentTab);
+                  if (currentIndex > 0) {
+                    setCurrentTab(["info", "articles", "pricing"][currentIndex - 1]);
+                  }
+                }}
+              >
+                Précédent
+              </Button>
+            )}
+            
+            {!isLastTab ? (
+              <Button 
+                onClick={() => {
+                  const currentIndex = ["info", "articles", "pricing"].indexOf(currentTab);
+                  if (currentIndex < 2) {
+                    setCurrentTab(["info", "articles", "pricing"][currentIndex + 1]);
+                  }
+                }}
+              >
+                Suivant
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleCreate} 
+                disabled={addContainer.isPending}
+              >
+                {addContainer.isPending ? "Création..." : "Créer"}
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

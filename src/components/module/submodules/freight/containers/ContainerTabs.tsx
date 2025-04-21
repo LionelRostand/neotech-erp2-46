@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Info, FileText, DollarSign } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface Props {
   tab: string;
@@ -49,9 +48,13 @@ const ContainerTabs: React.FC<Props> = ({ tab, setTab, onNext, isLastTab }) => {
 
       {!isLastTab && (
         <div className="flex justify-end mt-4">
-          <Button onClick={handleNext} type="button">
+          <button 
+            onClick={handleNext} 
+            type="button"
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 text-white rounded-md transition-colors"
+          >
             Suivant
-          </Button>
+          </button>
         </div>
       )}
     </div>

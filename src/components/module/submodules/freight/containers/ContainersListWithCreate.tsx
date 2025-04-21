@@ -2,49 +2,10 @@
 import React, { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
-
-// Typage simplifié pour la démo, adapter selon besoin réel
-interface Container {
-  id: string;
-  reference: string;
-  origin: string;
-  destination: string;
-  client: string;
-  transporteur: string;
-  type: string;
-  status: string;
-  plannedDate: string;
-  cost?: number;
-}
-
-// Données démo (adapter selon backend réel)
-const demoData: Container[] = [
-  {
-    id: "1",
-    reference: "CT-2024-1584",
-    origin: "Douala",
-    destination: "Anvers",
-    client: "Cameroun Service Import",
-    transporteur: "Bolloré Transport",
-    type: "Standard",
-    status: "vide",
-    plannedDate: "2024-07-15",
-    cost: 210.58
-  },
-  {
-    id: "2",
-    reference: "CT-2024-1129",
-    origin: "Lagos",
-    destination: "Paris",
-    client: "Global Trading",
-    transporteur: "CMA CGM",
-    type: "Réfrigéré",
-    status: "plein",
-    plannedDate: "2024-08-03",
-    cost: 350.00
-  }
-];
+import { Search, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useContainers } from "@/hooks/modules/useContainersFirestore";
+import { Container } from "@/types/freight";
 
 // Statuts mapping -> badge + label
 const STATUS_LABELS: Record<string, string> = {
@@ -66,26 +27,42 @@ const STATUS_COLORS: Record<string, string> = {
   in_transit: "bg-purple-100 text-purple-800 border-purple-200"
 };
 
-const ContainersListWithCreate: React.FC = () => {
-  const [search, setSearch] = useState("");
+interface ContainersListWithCreateProps {
+  onEditContainer?: (container: Container) => void;
+}
 
-  // En vrai, brancher data depuis Firestore ici pour remplacer demoData
-  const containers = demoData;
+const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({ onEditContainer }) => {
+  const [search, setSearch] = useState("");
+  const { data: containers = [], isLoading, error } = useContainers();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return containers;
     const s = search.trim().toLowerCase();
     return containers.filter(
-      c =>
-        c.reference.toLowerCase().includes(s) ||
-        c.origin.toLowerCase().includes(s) ||
-        c.destination.toLowerCase().includes(s) ||
-        c.client.toLowerCase().includes(s) ||
-        c.transporteur.toLowerCase().includes(s) ||
-        c.type.toLowerCase().includes(s) ||
+      (c: any) =>
+        c.number?.toLowerCase().includes(s) ||
+        c.origin?.toLowerCase().includes(s) ||
+        c.destination?.toLowerCase().includes(s) ||
+        c.client?.toLowerCase().includes(s) ||
+        c.carrierName?.toLowerCase().includes(s) ||
+        c.type?.toLowerCase().includes(s) ||
         (STATUS_LABELS[c.status]?.toLowerCase().includes(s))
     );
   }, [search, containers]);
+
+  const handleEditClick = (container: Container) => {
+    if (onEditContainer) {
+      onEditContainer(container);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Chargement des conteneurs...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">Erreur lors du chargement des conteneurs</div>;
+  }
 
   return (
     <div className="w-full bg-white rounded-xl shadow-sm overflow-hidden p-0">
@@ -116,31 +93,37 @@ const ContainersListWithCreate: React.FC = () => {
               <th className="px-6 py-4 font-semibold tracking-wider">STATUT</th>
               <th className="px-6 py-4 font-semibold tracking-wider">DATE PRÉVUE</th>
               <th className="px-6 py-4 font-semibold tracking-wider">COÛT</th>
+              <th className="px-6 py-4 font-semibold tracking-wider">ACTIONS</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className="text-center py-6 text-gray-500">
+                <td colSpan={10} className="text-center py-6 text-gray-500">
                   Aucun conteneur trouvé.
                 </td>
               </tr>
             ) : (
-              filtered.map((c) => (
+              filtered.map((c: any) => (
                 <tr key={c.id} className="border-b last:border-0">
-                  <td className="px-6 py-4">{c.reference}</td>
+                  <td className="px-6 py-4">{c.number}</td>
                   <td className="px-6 py-4">{c.origin}</td>
                   <td className="px-6 py-4">{c.destination}</td>
                   <td className="px-6 py-4">{c.client}</td>
-                  <td className="px-6 py-4">{c.transporteur}</td>
+                  <td className="px-6 py-4">{c.carrierName}</td>
                   <td className="px-6 py-4">{c.type}</td>
                   <td className="px-6 py-4">
                     <span className={`rounded-full px-3 py-1 text-xs font-medium border ${STATUS_COLORS[c.status] || "bg-gray-100 text-gray-800 border-gray-200"}`}>
                       {STATUS_LABELS[c.status] || c.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{c.plannedDate ? new Date(c.plannedDate).toLocaleDateString("fr-FR") : "-"}</td>
+                  <td className="px-6 py-4">{c.departureDate ? new Date(c.departureDate).toLocaleDateString("fr-FR") : "-"}</td>
                   <td className="px-6 py-4">{c.cost !== undefined ? c.cost.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }) : "-"}</td>
+                  <td className="px-6 py-4">
+                    <Button size="sm" variant="ghost" onClick={() => handleEditClick(c)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
               ))
             )}
@@ -152,4 +135,3 @@ const ContainersListWithCreate: React.FC = () => {
 };
 
 export default ContainersListWithCreate;
-
