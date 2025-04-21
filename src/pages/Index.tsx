@@ -9,8 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import GarageDashboard from '@/components/module/submodules/garage/GarageDashboard';
 
 const Index = () => {
-  const { stats, transactions, loading } = useDashboardData();
   const [installedModules, setInstalledModules] = useState<number[]>([]);
+  // Only load dashboard data if modules are installed
+  const loadData = installedModules.length > 0;
+  const { stats, transactions, loading } = useDashboardData(loadData);
 
   useEffect(() => {
     const loadInstalledModules = () => {

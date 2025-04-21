@@ -26,6 +26,11 @@ const validateCollectionPath = (path: string): boolean => {
 const getContainersCollectionPath = (): string => {
   const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
   console.log(`Using containers collection path: ${collectionPath}`);
+  if (!collectionPath || collectionPath.trim() === '') {
+    console.error('Containers collection path is empty or invalid');
+    toast.error('Erreur: Chemin de collection des conteneurs invalide');
+    return 'freight_containers'; // Fallback to a hardcoded path
+  }
   return collectionPath;
 };
 

@@ -24,6 +24,7 @@ export const useCollectionData = (
       console.error('Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));
       setIsLoading(false);
+      toast.error('Erreur: Chemin de collection invalide ou vide');
       return () => {}; // Return empty cleanup function
     }
     
@@ -79,6 +80,7 @@ export const useCollectionData = (
             console.error(`Error fetching from ${collectionPath}:`, err);
             setError(err);
             setIsLoading(false);
+            toast.error(`Erreur lors du chargement des données: ${err.message}`);
           }
         );
         
@@ -92,6 +94,7 @@ export const useCollectionData = (
         console.error(`Error setting up listener for ${collectionPath}:`, error);
         setError(error);
         setIsLoading(false);
+        toast.error(`Erreur lors du chargement des données: ${error.message}`);
       }
     }, 500); // Simulate a small delay for loading states to be visible
     
