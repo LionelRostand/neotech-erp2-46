@@ -110,17 +110,7 @@ const StepGeneral = ({
           />
         </div>
       </div>
-      {/* Ajout ici : Affichage résumé champs clés  */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-        <div>
-          <div className="text-xs text-gray-500 mb-1">Type d'expédition</div>
-          <div className="font-semibold">{form.shipmentType === "import" ? "Import" : form.shipmentType === "export" ? "Export" : form.shipmentType}</div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-500 mb-1">Statut actuel</div>
-          <div className="font-semibold capitalize">{form.status === "draft" ? "Brouillon" : form.status}</div>
-        </div>
-      </div>
+      {/* Removed summary block of type d'expédition and statut actuel */}
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" type="button" onClick={close}>
           Annuler
@@ -133,3 +123,4 @@ const StepGeneral = ({
   );
 };
 export default StepGeneral;
+
