@@ -3,12 +3,39 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 
+interface FreightClient {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  notes?: string;
+  createdAt?: any;
+}
+
+interface Container {
+  id: string;
+  number: string;
+  [key: string]: any;
+}
+
+interface Shipment {
+  id: string;
+  reference: string;
+  customer: string;
+  containerId: string;
+  totalPrice?: number;
+  status?: string;
+  scheduledDate?: string;
+  [key: string]: any;
+}
+
 interface FreightAccountingSummaryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  shipments: any[];
-  clients: any[];
-  containers: any[];
+  shipments: Shipment[];
+  clients: FreightClient[];
+  containers: Container[];
 }
 
 const FreightAccountingSummaryDialog: React.FC<FreightAccountingSummaryDialogProps> = ({
@@ -17,12 +44,12 @@ const FreightAccountingSummaryDialog: React.FC<FreightAccountingSummaryDialogPro
   // Helpers
   const findClient = (clientId: string) => {
     const client = clients.find((c) => c.id === clientId);
-    return client && typeof client === 'object' ? client : { name: "-", id: clientId };
+    return client ? client : { name: "-", id: clientId };
   };
   
   const findContainer = (containerId: string) => {
     const container = containers.find((c) => c.id === containerId);
-    return container && typeof container === 'object' ? container : { number: "-", id: containerId };
+    return container ? container : { number: "-", id: containerId };
   };
 
   return (
@@ -53,7 +80,7 @@ const FreightAccountingSummaryDialog: React.FC<FreightAccountingSummaryDialogPro
                     Pas d'expéditions à afficher
                   </TableCell>
                 </TableRow>
-              ) : (shipments.map((shipment: any) => {
+              ) : (shipments.map((shipment) => {
                 const client = findClient(shipment.customer);
                 const container = findContainer(shipment.containerId);
                 

@@ -6,12 +6,23 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import type { Route as FreightRoute, Carrier, Shipment, Container } from '@/types/freight';
 import { fetchCollectionData } from '@/hooks/firestore/fetchCollectionData';
 
+// Define a type for client data
+interface FreightClient {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  notes?: string;
+  createdAt?: any;
+}
+
 export const useFreightData = () => {
   const [routes, setRoutes] = useState<FreightRoute[]>([]);
   const [carriers, setCarriers] = useState<Carrier[]>([]);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [containers, setContainers] = useState<Container[]>([]);
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<FreightClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -46,7 +57,7 @@ export const useFreightData = () => {
         const processedClients = clientsSnapshot.docs.map(doc => {
           const data = doc.data();
           if (!data || typeof data !== 'object') {
-            return { id: doc.id, name: 'Client inconnu' };
+            return { id: doc.id, name: 'Client inconnu' } as FreightClient;
           }
           return {
             id: doc.id,
@@ -56,7 +67,7 @@ export const useFreightData = () => {
             address: data.address || '',
             notes: data.notes || '',
             createdAt: data.createdAt || null
-          };
+          } as FreightClient;
         });
         setClients(processedClients);
 

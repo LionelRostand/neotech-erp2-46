@@ -4,13 +4,14 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
-interface FreightClient {
+export interface FreightClient {
   id: string;
   name: string;
   email: string;
   phone: string;
   address: string;
   notes?: string;
+  createdAt?: any;
 }
 
 export const useFreightClients = () => {

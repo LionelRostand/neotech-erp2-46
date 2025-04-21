@@ -5,6 +5,30 @@ import { Button } from "@/components/ui/button";
 import { useFreightData } from "@/hooks/modules/useFreightData";
 import FreightAccountingSummaryDialog from "./FreightAccountingSummaryDialog";
 
+// Define types for the data
+interface FreightClient {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
+interface Container {
+  id: string;
+  number: string;
+  [key: string]: any;
+}
+
+interface Shipment {
+  id: string;
+  reference: string;
+  customer: string;
+  containerId: string;
+  totalPrice?: number;
+  status?: string;
+  scheduledDate?: string;
+  [key: string]: any;
+}
+
 const FreightAccountingPage: React.FC = () => {
   const { shipments = [], containers = [], clients = [], loading } = useFreightData();
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -12,12 +36,12 @@ const FreightAccountingPage: React.FC = () => {
   // Helper functions to safely get properties
   const getClientName = (clientId: string) => {
     const client = clients.find((c: any) => c.id === clientId);
-    return client && typeof client === 'object' ? client.name || '-' : '-';
+    return client ? client.name || '-' : '-';
   };
 
   const getContainerNumber = (containerId: string) => {
     const container = containers.find((c: any) => c.id === containerId);
-    return container && typeof container === 'object' ? container.number || '-' : '-';
+    return container ? container.number || '-' : '-';
   };
 
   return (
@@ -48,7 +72,7 @@ const FreightAccountingPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (shipments.length > 0 ? (
-                  shipments.map((shipment: any) => (
+                  shipments.map((shipment: Shipment) => (
                     <tr key={shipment.id || shipment.reference} className="border-t last:border-b-0 hover:bg-gray-50">
                       <td className="px-5 py-4">{shipment.reference || "-"}</td>
                       <td className="px-5 py-4">{getClientName(shipment.customer)}</td>
@@ -77,9 +101,9 @@ const FreightAccountingPage: React.FC = () => {
       <FreightAccountingSummaryDialog
         open={summaryOpen}
         onOpenChange={setSummaryOpen}
-        shipments={shipments}
-        clients={clients}
-        containers={containers}
+        shipments={shipments as Shipment[]}
+        clients={clients as FreightClient[]}
+        containers={containers as Container[]}
       />
       <p className="text-xs text-muted-foreground">
         Les coûts sont issus des expéditions, avec les clients et les conteneurs liés.<br />

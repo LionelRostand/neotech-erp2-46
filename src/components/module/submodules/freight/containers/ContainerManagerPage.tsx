@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
 import CreateEditContainerDialog from "./CreateEditContainerDialog";
@@ -7,6 +7,29 @@ import DeleteContainerDialog from "./DeleteContainerDialog";
 import { useContainers, useAddContainer } from "@/hooks/modules/useContainersFirestore";
 import { toast } from "sonner";
 import { useFreightData } from "@/hooks/modules/useFreightData";
+
+// Define types for the data
+interface FreightClient {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
+interface Container {
+  id: string;
+  number: string;
+  client?: string;
+  origin?: string;
+  destination?: string;
+  status?: string;
+  [key: string]: any;
+}
+
+interface Route {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
 
 const generateContainerNumber = () => {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -19,19 +42,19 @@ const ContainerManagerPage: React.FC = () => {
   const addContainerMutation = useAddContainer();
   const { routes = [], clients = [] } = useFreightData();
   const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
-  const [currentContainer, setCurrentContainer] = useState<any>(null);
+  const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
 
   const handleNew = () => {
     setCurrentContainer(null);
     setOpenDialog("create");
   };
 
-  const handleEdit = (container: any) => {
+  const handleEdit = (container: Container) => {
     setCurrentContainer(container);
     setOpenDialog("edit");
   };
 
-  const handleDelete = (container: any) => {
+  const handleDelete = (container: Container) => {
     setCurrentContainer(container);
     setOpenDialog("delete");
   };
@@ -55,8 +78,8 @@ const ContainerManagerPage: React.FC = () => {
   // Helper function to safely get client name
   const getClientName = (clientId: string | undefined) => {
     if (!clientId) return "-";
-    const client = clients.find((c: any) => c.id === clientId);
-    return client && typeof client === 'object' ? client.name || '-' : '-';
+    const client = clients.find((c: FreightClient) => c.id === clientId);
+    return client ? client.name || '-' : '-';
   };
 
   return (
@@ -91,7 +114,7 @@ const ContainerManagerPage: React.FC = () => {
                 </td>
               </tr>
             ) : (containers && containers.length > 0 ? (
-              containers.map((container: any) => (
+              containers.map((container: Container) => (
                 <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
                   <td className="px-5 py-4">{container.number || "-"}</td>
                   <td className="px-5 py-4">{getClientName(container.client)}</td>
@@ -129,8 +152,11 @@ const ContainerManagerPage: React.FC = () => {
             container={openDialog === "edit" ? currentContainer : null}
             onSave={handleCreateContainer}
             defaultNumber={generateContainerNumber()}
-            routes={routes}
-            clients={clients.map(client => typeof client === 'object' ? client : { id: 'unknown', name: 'Client inconnu' })}
+            routes={routes as Route[]}
+            clients={clients.map((client: FreightClient) => ({
+              id: client.id,
+              name: client.name
+            }))}
           />
           {currentContainer && (
             <DeleteContainerDialog
