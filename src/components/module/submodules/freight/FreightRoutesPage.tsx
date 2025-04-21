@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import FreightRouteForm from "./FreightRouteForm";
@@ -15,42 +15,43 @@ const FreightRoutesPage: React.FC = () => {
   // Utiliser le hook pour la collection firestore
   const { add, loading, getAll } = useFirestore("freight_routes");
 
-  // Charger les routes au chargement de la page
-  useEffect(() => {
-    const fetchRoutes = async () => {
-      try {
-        setIsLoading(true);
-        const routesData = await getAll();
-        console.log("Routes chargées:", routesData);
+  // Fonction de chargement des routes extraite pour éviter les boucles
+  const loadRoutes = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const routesData = await getAll();
+      console.log("Routes chargées:", routesData);
+      
+      if (Array.isArray(routesData) && routesData.length > 0) {
+        // Assurer que chaque route a les propriétés requises
+        const formattedRoutes = routesData.map(route => ({
+          id: route.id || String(Date.now()),
+          name: route.name || "",
+          origin: route.origin || "",
+          destination: route.destination || "",
+          distance: typeof route.distance === 'number' ? route.distance : 0,
+          estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
+          transportType: route.transportType || "road",
+          active: typeof route.active === 'boolean' ? route.active : true
+        }));
         
-        if (Array.isArray(routesData) && routesData.length > 0) {
-          // Assurer que chaque route a les propriétés requises
-          const formattedRoutes = routesData.map(route => ({
-            id: route.id || String(Date.now()),
-            name: route.name || "",
-            origin: route.origin || "",
-            destination: route.destination || "",
-            distance: typeof route.distance === 'number' ? route.distance : 0,
-            estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
-            transportType: route.transportType || "road",
-            active: typeof route.active === 'boolean' ? route.active : true
-          }));
-          
-          setRoutes(formattedRoutes);
-        } else {
-          setRoutes([]);
-          console.log("Aucune route trouvée dans la collection");
-        }
-      } catch (err: any) {
-        console.error("Erreur lors du chargement des routes:", err);
-        toast.error("Erreur lors du chargement des routes");
-      } finally {
-        setIsLoading(false);
+        setRoutes(formattedRoutes);
+      } else {
+        setRoutes([]);
+        console.log("Aucune route trouvée dans la collection");
       }
-    };
-
-    fetchRoutes();
+    } catch (err: any) {
+      console.error("Erreur lors du chargement des routes:", err);
+      toast.error("Erreur lors du chargement des routes");
+    } finally {
+      setIsLoading(false);
+    }
   }, [getAll]);
+
+  // Charger les routes au chargement de la page - une seule fois
+  useEffect(() => {
+    loadRoutes();
+  }, [loadRoutes]); // useCallback mémorisera cette fonction et évitera des rechargements infinis
 
   const onAddRoute = async (route: FreightRoute) => {
     // Générer un id local pour un affichage instantané
@@ -64,12 +65,9 @@ const FreightRoutesPage: React.FC = () => {
     try {
       const res = await add({ ...route, createdAt: new Date().toISOString() });
       toast.success("Route enregistrée avec succès dans la base de données.");
-      // Optionnel : remonter l'id firestore pour correspondre à la vraie donnée
-      setRoutes((prev) =>
-        prev.map((r) =>
-          r.id === localRoute.id && res?.id ? { ...r, id: res.id } : r
-        )
-      );
+      
+      // Recharger les routes pour obtenir les données à jour de Firestore
+      loadRoutes();
     } catch (err: any) {
       toast.error("Erreur lors de l'enregistrement dans la base de données.");
     }
