@@ -110,6 +110,7 @@ const ContainersListWithCreate: React.FC = () => {
         </table>
       </div>
 
+      {/* Dialogues */}
       <ContainerViewDialog
         open={viewDialog.open}
         onClose={() => setViewDialog({ open: false, container: null })}
