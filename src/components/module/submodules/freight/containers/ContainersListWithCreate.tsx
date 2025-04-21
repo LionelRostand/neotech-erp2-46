@@ -73,14 +73,7 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = ({
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded shadow"
-          onClick={() => setOpenDialog(true)}
-        >
-          Nouveau Conteneur
-        </button>
-      </div>
+      {/* Bouton supprimé selon demande */}
       <Table>
         <TableCaption>A list of your recent containers.</TableCaption>
         <TableHeader>
