@@ -1,202 +1,173 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import ContainerArticlesTab from "./ContainerArticlesTab";
+import ContainerCostTab from "./ContainerCostTab";
+import { useForm, Controller } from "react-hook-form";
+import type { Container } from "@/types/freight";
 
 interface CreateContainerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const initialState = {
-  reference: "",
-  type: "Standard (Dry)",
-  taille: "",
-  statut: "Prévu",
-  transporteur: "",
-  client: "",
-  origine: "",
-  destination: "",
-  pays: "",
-  dateDepart: "",
-  dateArrivee: "",
-};
+interface ContainerFormData {
+  number: string;
+  type: string;
+  size: string;
+  status: string;
+  carrierName: string;
+  client: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  arrivalDate: string;
+}
 
 const CreateContainerDialog: React.FC<CreateContainerDialogProps> = ({
   open,
-  onOpenChange,
+  onOpenChange
 }) => {
-  const [tab, setTab] = useState("informations");
-  const [form, setForm] = useState(initialState);
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors }
+  } = useForm<ContainerFormData>({
+    defaultValues: {
+      number: "",
+      type: "",
+      size: "",
+      status: "",
+      carrierName: "",
+      client: "",
+      origin: "",
+      destination: "",
+      departureDate: "",
+      arrivalDate: "",
+    }
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-  };
+  useEffect(() => {
+    if (!open) reset();
+  }, [open, reset]);
 
-  // Placeholder submit handler
-  const handleCreate = () => {
+  const onSubmit = (data: ContainerFormData) => {
+    // TODO: implement creation logic
+    console.log("Creating container with data:", data);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Nouveau conteneur</DialogTitle>
         </DialogHeader>
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="mb-4 grid grid-cols-3 w-full">
-            <TabsTrigger value="informations">Informations</TabsTrigger>
+        <Tabs defaultValue="info" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="info">Informations</TabsTrigger>
             <TabsTrigger value="articles">Articles</TabsTrigger>
-            <TabsTrigger value="tarif">Tarification</TabsTrigger>
+            <TabsTrigger value="pricing">Tarification</TabsTrigger>
           </TabsList>
-          <TabsContent value="informations" className="space-y-4">
-            {/* Champs avec labels visibles */}
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <TabsContent value="info" className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="reference">Référence</label>
-                <Input
-                  id="reference"
-                  name="reference"
-                  value={form.reference}
-                  onChange={handleChange}
-                  placeholder="CTR-20250421-90427"
-                />
+                <Label htmlFor="number">Référence</Label>
+                <Input id="number" {...register("number", { required: true })} />
+                {errors.number && <p className="text-sm text-destructive">Ce champ est requis.</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="type">Type</label>
-                <Input
-                  id="type"
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  placeholder="Standard (Dry)"
-                />
+                <Label htmlFor="type">Type</Label>
+                <Input id="type" {...register("type", { required: true })} />
+                {errors.type && <p className="text-sm text-destructive">Ce champ est requis.</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="size">Taille</Label>
+                <Input id="size" {...register("size", { required: true })} />
+                {errors.size && <p className="text-sm text-destructive">Ce champ est requis.</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="taille">Taille</label>
-                <Input
-                  id="taille"
-                  name="taille"
-                  value={form.taille}
-                  onChange={handleChange}
-                  placeholder="20 pieds"
-                />
+                <Label htmlFor="status">Statut</Label>
+                <Input id="status" {...register("status", { required: true })} />
+                {errors.status && <p className="text-sm text-destructive">Ce champ est requis.</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="statut">Statut</label>
+                <Label htmlFor="carrierName">Transporteur</Label>
                 <Input
-                  id="statut"
-                  name="statut"
-                  value={form.statut}
-                  onChange={handleChange}
-                  placeholder="Prévu"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="transporteur">Transporteur</label>
-                <Input
-                  id="transporteur"
-                  name="transporteur"
-                  value={form.transporteur}
-                  onChange={handleChange}
+                  id="carrierName"
                   placeholder="ex: TEST-TRANSPORT"
+                  {...register("carrierName")}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="client">Client</label>
-                <Input
-                  id="client"
-                  name="client"
-                  value={form.client}
-                  onChange={handleChange}
-                  placeholder="Sans nom"
+                <Label htmlFor="client">Client</Label>
+                <Input id="client" {...register("client")} />
+              </div>
+
+              <div>
+                <Label htmlFor="origin">Origine</Label>
+                <Input id="origin" {...register("origin", { required: true })} />
+                {errors.origin && <p className="text-sm text-destructive">Ce champ est requis.</p>}
+              </div>
+              <div>
+                <Label htmlFor="destination">Destination</Label>
+                <Input id="destination" {...register("destination", { required: true })} />
+                {errors.destination && <p className="text-sm text-destructive">Ce champ est requis.</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="departureDate">Date départ</Label>
+                <Controller
+                  name="departureDate"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="departureDate"
+                      type="date"
+                      {...field}
+                    />
+                  )}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="origine">Origine</label>
-                <Input
-                  id="origine"
-                  name="origine"
-                  value={form.origine}
-                  onChange={handleChange}
-                  placeholder="CAMEROUN-PARIS"
+                <Label htmlFor="arrivalDate">Date arrivée</Label>
+                <Controller
+                  name="arrivalDate"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="arrivalDate"
+                      type="date"
+                      {...field}
+                    />
+                  )}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="pays">Pays</label>
-                <Input
-                  id="pays"
-                  name="pays"
-                  value={form.pays}
-                  onChange={handleChange}
-                  placeholder="CAMEROUN"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="destination">Destination</label>
-                <Input
-                  id="destination"
-                  name="destination"
-                  value={form.destination}
-                  onChange={handleChange}
-                  placeholder="PARIS"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="dateDepart">Date départ</label>
-                <div className="relative flex items-center">
-                  <Input
-                    type="date"
-                    id="dateDepart"
-                    name="dateDepart"
-                    value={form.dateDepart}
-                    onChange={handleChange}
-                    placeholder="jj/mm/aaaa"
-                  />
-                  <Calendar className="absolute right-2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-              <div></div>
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="dateArrivee">Date arrivée</label>
-                <div className="relative flex items-center">
-                  <Input
-                    type="date"
-                    id="dateArrivee"
-                    name="dateArrivee"
-                    value={form.dateArrivee}
-                    onChange={handleChange}
-                    placeholder="jj/mm/aaaa"
-                  />
-                  <Calendar className="absolute right-2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="articles">
-            <div className="text-gray-500 text-center py-10">
-              <span>Ajoutez ici les articles pour ce conteneur.</span>
-            </div>
-          </TabsContent>
-          <TabsContent value="tarif">
-            <div className="text-gray-500 text-center py-10">
-              <span>Fixez le coût selon la distance et le type de conteneur.</span>
-            </div>
-          </TabsContent>
+            </TabsContent>
+            <TabsContent value="articles" className="pt-4">
+              <ContainerArticlesTab />
+            </TabsContent>
+            <TabsContent value="pricing" className="pt-4">
+              <ContainerCostTab />
+            </TabsContent>
+            <DialogFooter className="flex justify-end space-x-2 mt-6">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+              <Button type="submit">Créer</Button>
+            </DialogFooter>
+          </form>
         </Tabs>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleCreate}>Créer</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default CreateContainerDialog;
+
