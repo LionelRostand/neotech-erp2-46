@@ -2,8 +2,6 @@
 import React from "react";
 import ContainerCreateDialog from "./ContainerCreateDialog";
 import { Button } from "@/components/ui/button";
-// Remplacez ceci par votre hook réel pour récupérer la liste
-// import useFreightContainers from "@/hooks/freight/useFreightContainers";
 import { toast } from "sonner";
 
 // Dummy hook/fonction pour exemple, à remplacer par votre logique réelle.
@@ -36,8 +34,12 @@ const ContainersListWithCreate = () => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Gestion des Conteneurs</h2>
-        <Button variant="default" onClick={() => setOpenDialog(true)}>
-          + Ajouter un conteneur
+        <Button
+          variant="default"
+          className="bg-green-700 hover:bg-green-800 text-white"
+          onClick={() => setOpenDialog(true)}
+        >
+          + Nouveau Conteneur
         </Button>
       </div>
       <ContainerCreateDialog
@@ -45,7 +47,7 @@ const ContainersListWithCreate = () => {
         onOpenChange={setOpenDialog}
         onCreated={handleCreated}
       />
-      {/* Afficher la liste ici */}
+      {/* Liste des conteneurs */}
       <div>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Chargement...</div>
@@ -57,7 +59,6 @@ const ContainersListWithCreate = () => {
               <li key={c.number} className="p-4">
                 <div className="font-semibold">N° {c.number}</div>
                 <div>{c.type}, {c.size} - {c.status}</div>
-                {/* Ajoutez ici plus de champs si besoin */}
               </li>
             ))}
           </ul>
@@ -68,3 +69,4 @@ const ContainersListWithCreate = () => {
 };
 
 export default ContainersListWithCreate;
+
