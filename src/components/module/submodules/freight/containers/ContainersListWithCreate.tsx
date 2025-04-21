@@ -26,18 +26,21 @@ const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
       try {
         const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
         
-        // Validate collection path
+        // Validate collection path to prevent the empty path error
         if (!collectionPath || collectionPath.trim() === '') {
           console.error('Invalid containers collection path');
           toast.error('Erreur: Impossible d\'accéder à la collection des conteneurs');
           return [];
         }
         
+        console.log(`Fetching containers from collection: ${collectionPath}`);
+        
         const q = query(
           collection(db, collectionPath),
           orderBy("createdAt", "desc")
         );
         const querySnapshot = await getDocs(q);
+        
         return querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data()

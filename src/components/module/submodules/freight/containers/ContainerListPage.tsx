@@ -29,6 +29,7 @@ const ContainerListPage: React.FC = () => {
   const [editingContainer, setEditingContainer] = useState<ContainerType | null>(null);
 
   const handleEditContainer = (container: ContainerType) => {
+    console.log("Editing container:", container);
     setEditingContainer(container);
   };
 

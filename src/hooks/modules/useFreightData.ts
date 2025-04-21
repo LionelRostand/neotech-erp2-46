@@ -20,10 +20,13 @@ interface FreightClient {
 // Utility function to safely fetch from a collection
 const safelyFetchCollection = async <T>(collectionPath: string, queryConstraints: any[] = []): Promise<T[]> => {
   try {
+    // Validate collection path
     if (!collectionPath || collectionPath.trim() === '') {
       console.error('Collection path cannot be empty');
       return [];
     }
+    
+    console.log(`Safely fetching from collection: ${collectionPath}`);
     
     const collectionRef = collection(db, collectionPath);
     const q = query(collectionRef, ...queryConstraints);
@@ -62,6 +65,7 @@ export const useFreightData = () => {
         const routesPath = COLLECTIONS.FREIGHT.ROUTES;
         if (routesPath && routesPath.trim() !== '') {
           try {
+            console.log(`Fetching routes from: ${routesPath}`);
             const routesData = await safelyFetchCollection<FreightRoute>(
               routesPath, 
               [orderBy('name')]
@@ -71,12 +75,16 @@ export const useFreightData = () => {
             console.error('Error fetching routes:', err);
             setRoutes([]);
           }
+        } else {
+          console.warn('Routes collection path is empty or invalid');
+          setRoutes([]);
         }
 
         // Fetch carriers
         const carriersPath = COLLECTIONS.FREIGHT.CARRIERS;
         if (carriersPath && carriersPath.trim() !== '') {
           try {
+            console.log(`Fetching carriers from: ${carriersPath}`);
             const carriersData = await safelyFetchCollection<Carrier>(
               carriersPath, 
               [orderBy('name')]
@@ -86,12 +94,16 @@ export const useFreightData = () => {
             console.error('Error fetching carriers:', err);
             setCarriers([]);
           }
+        } else {
+          console.warn('Carriers collection path is empty or invalid');
+          setCarriers([]);
         }
 
         // Fetch shipments
         const shipmentsPath = COLLECTIONS.FREIGHT.SHIPMENTS;
         if (shipmentsPath && shipmentsPath.trim() !== '') {
           try {
+            console.log(`Fetching shipments from: ${shipmentsPath}`);
             const shipmentsData = await safelyFetchCollection<Shipment>(
               shipmentsPath, 
               [orderBy('createdAt', 'desc')]
@@ -101,12 +113,16 @@ export const useFreightData = () => {
             console.error('Error fetching shipments:', err);
             setShipments([]);
           }
+        } else {
+          console.warn('Shipments collection path is empty or invalid');
+          setShipments([]);
         }
 
         // Fetch clients
         const clientsPath = COLLECTIONS.FREIGHT.CLIENTS;
         if (clientsPath && clientsPath.trim() !== '') {
           try {
+            console.log(`Fetching clients from: ${clientsPath}`);
             const clientsSnapshot = await safelyFetchCollection<any>(clientsPath);
             // Process clients to ensure proper structure
             const processedClients = clientsSnapshot.map(data => {
@@ -128,12 +144,16 @@ export const useFreightData = () => {
             console.error('Error fetching clients:', err);
             setClients([]);
           }
+        } else {
+          console.warn('Clients collection path is empty or invalid');
+          setClients([]);
         }
 
         // Fetch containers
         const containersPath = COLLECTIONS.FREIGHT.CONTAINERS;
         if (containersPath && containersPath.trim() !== '') {
           try {
+            console.log(`Fetching containers from: ${containersPath}`);
             const containersData = await safelyFetchCollection<Container>(
               containersPath, 
               [orderBy('createdAt', 'desc')]
@@ -143,6 +163,9 @@ export const useFreightData = () => {
             console.error('Error fetching containers:', err);
             setContainers([]);
           }
+        } else {
+          console.warn('Containers collection path is empty or invalid');
+          setContainers([]);
         }
 
         setLoading(false);

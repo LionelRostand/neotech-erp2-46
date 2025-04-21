@@ -22,14 +22,21 @@ const validateCollectionPath = (path: string): boolean => {
   return true;
 };
 
+// Get the validated collection path
+const getContainersCollectionPath = (): string => {
+  const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
+  console.log(`Using containers collection path: ${collectionPath}`);
+  return collectionPath;
+};
+
 // Hook for creating a new container
 export const useCreateContainer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (containerData: Omit<Container, "id">) => {
-      // Validate the collection path
-      const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
+      // Get and validate the collection path
+      const collectionPath = getContainersCollectionPath();
       if (!validateCollectionPath(collectionPath)) {
         throw new Error('Invalid collection path');
       }
@@ -39,6 +46,7 @@ export const useCreateContainer = () => {
         containerData.createdAt = new Date().toISOString();
       }
 
+      console.log(`Adding container to collection: ${collectionPath}`, containerData);
       const docRef = await addDoc(
         collection(db, collectionPath), 
         containerData
@@ -69,8 +77,8 @@ export const useUpdateContainer = () => {
       id: string;
       data: Partial<Container>;
     }) => {
-      // Validate the collection path
-      const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
+      // Get and validate the collection path
+      const collectionPath = getContainersCollectionPath();
       if (!validateCollectionPath(collectionPath)) {
         throw new Error('Invalid collection path');
       }
@@ -78,6 +86,7 @@ export const useUpdateContainer = () => {
       // Add updatedAt timestamp
       data.updatedAt = new Date().toISOString();
       
+      console.log(`Updating container ${id} in collection: ${collectionPath}`, data);
       const docRef = doc(db, collectionPath, id);
       await updateDoc(docRef, data);
       
@@ -100,12 +109,13 @@ export const useDeleteContainer = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Validate the collection path
-      const collectionPath = COLLECTIONS.FREIGHT.CONTAINERS;
+      // Get and validate the collection path
+      const collectionPath = getContainersCollectionPath();
       if (!validateCollectionPath(collectionPath)) {
         throw new Error('Invalid collection path');
       }
       
+      console.log(`Deleting container ${id} from collection: ${collectionPath}`);
       const docRef = doc(db, collectionPath, id);
       await deleteDoc(docRef);
       return id;
