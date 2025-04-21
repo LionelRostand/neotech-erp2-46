@@ -1,234 +1,70 @@
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { COLLECTIONS } from "@/lib/firebase-collections";
-import { Container } from "@/types/freight";
+import { useUpdateContainer } from "@/hooks/modules/useContainersFirestore";
+import type { Container } from "@/types/freight";
 
 interface ContainerEditDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  container: Container;
-  onUpdated?: (container: Container) => void;
+  onClose: () => void;
+  container: Container | null;
 }
 
-const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
-  open,
-  onOpenChange,
-  container,
-  onUpdated,
-}) => {
-  const [editedContainer, setEditedContainer] = useState<Container>({...container});
-  const [loading, setLoading] = useState(false);
+const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({ open, onClose, container }) => {
+  const [form, setForm] = useState<Container | null>(container);
+  const updateContainer = useUpdateContainer();
 
-  useEffect(() => {
-    if (open && container) {
-      setEditedContainer({...container});
-    }
-  }, [open, container]);
+  React.useEffect(() => { setForm(container); }, [container]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setEditedContainer((prev) => ({ ...prev, [name]: value }));
+  if (!form) return null;
+
+  const handleChange = (field: keyof Container, value: string) => {
+    setForm({ ...form, [field]: value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!editedContainer.number || !editedContainer.type || !editedContainer.size) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const containerRef = doc(db, COLLECTIONS.FREIGHT.CONTAINERS, container.id);
-      
-      // Suppression de l'id avant mise à jour pour éviter les doublons
-      const { id, ...dataToUpdate } = editedContainer;
-      
-      await updateDoc(containerRef, {
-        ...dataToUpdate,
-        updatedAt: new Date().toISOString(),
-      });
-
-      toast.success("Conteneur mis à jour avec succès");
-      onUpdated?.(editedContainer);
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du conteneur:", error);
-      toast.error("Erreur lors de la mise à jour du conteneur");
-    } finally {
-      setLoading(false);
-    }
+  const handleSave = async () => {
+    if (!form) return;
+    await updateContainer.mutateAsync({ id: form.id, data: form });
+    toast.success("Conteneur modifié avec succès !");
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Modifier le conteneur</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Numéro <span className="text-red-500">*</span>
-              </label>
-              <Input
-                name="number"
-                value={editedContainer.number}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="type"
-                value={editedContainer.type}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              >
-                <option value="standard">Standard</option>
-                <option value="réfrigéré">Réfrigéré</option>
-                <option value="sec">Sec</option>
-                <option value="open-top">Open-top</option>
-                <option value="flat-rack">Flat-rack</option>
-                <option value="tank">Citerne</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Taille <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="size"
-                value={editedContainer.size}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              >
-                <option value="20ft">20 pieds</option>
-                <option value="40ft">40 pieds</option>
-                <option value="45ft">45 pieds</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Statut <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="status"
-                value={editedContainer.status}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              >
-                <option value="en attente">En attente</option>
-                <option value="en transit">En transit</option>
-                <option value="livré">Livré</option>
-                <option value="retardé">Retardé</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Transporteur</label>
-              <Input
-                name="carrierName"
-                value={editedContainer.carrierName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Client</label>
-              <Input
-                name="client"
-                value={editedContainer.client}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Origine</label>
-              <Input
-                name="origin"
-                value={editedContainer.origin}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Destination</label>
-              <Input
-                name="destination"
-                value={editedContainer.destination}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de départ</label>
-              <Input
-                type="date"
-                name="departureDate"
-                value={editedContainer.departureDate}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date d'arrivée prévue</label>
-              <Input
-                type="date"
-                name="arrivalDate"
-                value={editedContainer.arrivalDate}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Localisation actuelle</label>
-            <Input
-              name="location"
-              value={editedContainer.location}
-              onChange={handleChange}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-700 hover:bg-blue-800 text-white"
-            >
-              {loading ? "Mise à jour..." : "Mettre à jour"}
-            </Button>
-          </DialogFooter>
-        </form>
+        <div className="flex flex-col gap-2">
+          <Input placeholder="Numéro" value={form.number} onChange={e => handleChange("number", e.target.value)} />
+          <Input placeholder="Type" value={form.type} onChange={e => handleChange("type", e.target.value)} />
+          <Input placeholder="Taille" value={form.size} onChange={e => handleChange("size", e.target.value)} />
+          <Input placeholder="Client" value={form.client} onChange={e => handleChange("client", e.target.value)} />
+          <Input placeholder="Statut" value={form.status} onChange={e => handleChange("status", e.target.value)} />
+          <Input placeholder="Origine" value={form.origin} onChange={e => handleChange("origin", e.target.value)} />
+          <Input placeholder="Destination" value={form.destination} onChange={e => handleChange("destination", e.target.value)} />
+          <Input placeholder="Date départ" value={form.departureDate || ""} onChange={e => handleChange("departureDate", e.target.value)} />
+          <Input placeholder="Date arrivée" value={form.arrivalDate || ""} onChange={e => handleChange("arrivalDate", e.target.value)} />
+          <Input placeholder="Localisation" value={form.location} onChange={e => handleChange("location", e.target.value)} />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={handleSave} disabled={updateContainer.isPending}>
+            {updateContainer.isPending ? "Enregistrement..." : "Enregistrer"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
