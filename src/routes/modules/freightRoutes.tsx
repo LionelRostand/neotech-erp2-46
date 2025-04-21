@@ -15,8 +15,9 @@ export const FreightRoutes = (
     <Route path="dashboard" element={<SubmodulePage moduleId={2} submoduleId="freight-dashboard" />} />
     <Route path="shipments" element={<SubmodulePage moduleId={2} submoduleId="freight-shipments" />} />
     <Route path="create-shipment" element={<CreateShipmentPage />} />
-    <Route path="routes" element={<SubmodulePage moduleId={2} submoduleId="freight-routes" />} />
-    {/* <Route path="containers" element={<ContainersListWithCreate />} /> supprimé */}
+    {/* SUPPRIMÉ : <Route path="routes" element={<SubmodulePage moduleId={2} submoduleId="freight-routes" />} /> */}
+    {/* On map sur "freight-routes-main" maintenant */}
+    <Route path="routes" element={<SubmodulePage moduleId={2} submoduleId="freight-routes-main" />} />
     <Route path="containers-management" element={<ContainerManagerPage />} />
     <Route path="carriers" element={<SubmodulePage moduleId={2} submoduleId="freight-carriers" />} />
     <Route path="tracking" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
