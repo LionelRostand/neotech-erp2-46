@@ -1,62 +1,35 @@
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchFreightCollection } from '@/hooks/fetchFreightCollectionData';
-import { Container } from '@/types/freight';
-import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import ContainerViewDialog from './ContainerViewDialog';
-import ContainerEditDialog from './ContainerEditDialog';
-import ContainerDeleteDialog from './ContainerDeleteDialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import React from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye, Pencil, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Container } from "@/types/freight";
+import { useContainersData } from "@/hooks/modules/useContainersData";
+import ContainerDeleteDialog from "./ContainerDeleteDialog";
+import ContainerViewDialog from "./ContainerViewDialog";
+import ContainerEditDialog from "./ContainerEditDialog";
 
-interface ContainersListWithCreateProps {
-  onEditContainer?: (container: Container) => void;
+interface Props {
+  onEditContainer: (container: Container) => void;
 }
 
-const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = () => {
-  const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
+  const [selectedContainer, setSelectedContainer] = React.useState<Container | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const { containers, isLoading, error } = useContainersData();
 
-  const { data: containers = [], isLoading, refetch } = useQuery({
-    queryKey: ['freight', 'containers'],
-    queryFn: () => fetchFreightCollection<Container>('CONTAINERS'),
-  });
+  const calculateTotalCost = (costs: any[] = []) => {
+    return costs.reduce((total, cost) => total + Number(cost.amount), 0);
+  };
 
   if (isLoading) {
-    return <div className="p-8 text-center">Chargement des conteneurs...</div>;
+    return <div>Chargement...</div>;
   }
 
-  const handleViewContainer = (container: Container) => {
-    setSelectedContainer(container);
-    setViewDialogOpen(true);
-  };
-
-  const handleEditContainer = (container: Container) => {
-    setSelectedContainer(container);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteContainer = (container: Container) => {
-    setSelectedContainer(container);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteSuccess = () => {
-    setDeleteDialogOpen(false);
-    refetch();
-    toast.success('Conteneur supprimé avec succès');
-  };
+  if (error) {
+    return <div>Erreur lors du chargement des conteneurs</div>;
+  }
 
   return (
     <div>
@@ -68,6 +41,7 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = () => 
             <TableHead>Client</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Destination</TableHead>
+            <TableHead>Coût</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -80,31 +54,38 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = () => 
               <TableCell>{container.status}</TableCell>
               <TableCell>{container.destination}</TableCell>
               <TableCell>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewContainer(container)}
+                {container.costs && container.costs.length > 0 
+                  ? `${calculateTotalCost(container.costs).toLocaleString('fr-FR')} €` 
+                  : '0 €'}
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      setSelectedContainer(container);
+                      setIsViewDialogOpen(true);
+                    }}
                   >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Voir
+                    <Eye className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditContainer(container)}
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => onEditContainer(container)}
                   >
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Modifier
+                    <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                    onClick={() => handleDeleteContainer(container)}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => {
+                      setSelectedContainer(container);
+                      setIsDeleteDialogOpen(true);
+                    }}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Supprimer
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               </TableCell>
@@ -116,24 +97,20 @@ const ContainersListWithCreate: React.FC<ContainersListWithCreateProps> = () => 
       {selectedContainer && (
         <>
           <ContainerViewDialog
-            isOpen={viewDialogOpen}
-            onClose={() => setViewDialogOpen(false)}
-            container={selectedContainer}
-          />
-          <ContainerEditDialog
-            open={editDialogOpen}
-            onClose={() => setEditDialogOpen(false)}
-            container={selectedContainer}
-            onSave={() => {
-              setEditDialogOpen(false);
-              refetch();
+            open={isViewDialogOpen}
+            onClose={() => {
+              setIsViewDialogOpen(false);
+              setSelectedContainer(null);
             }}
+            container={selectedContainer}
           />
           <ContainerDeleteDialog
-            open={deleteDialogOpen} 
-            onClose={() => setDeleteDialogOpen(false)}
+            open={isDeleteDialogOpen}
+            onClose={() => {
+              setIsDeleteDialogOpen(false);
+              setSelectedContainer(null);
+            }}
             container={selectedContainer}
-            onDeleted={handleDeleteSuccess}
           />
         </>
       )}
