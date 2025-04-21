@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
@@ -10,13 +9,17 @@ import { useFreightData } from "@/hooks/modules/useFreightData";
 import CreateEditContainerDialog from "./CreateEditContainerDialog";
 import DeleteContainerDialog from "./DeleteContainerDialog";
 
+const generateContainerNumber = () => {
+  // Format: CTR-YYYYMMDD-XXXXX (5 chiffres pseudo-aléatoires)
+  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
+  return `CTR-${datePart}-${randomPart}`;
+};
+
 const ContainerManagerPage: React.FC = () => {
   const { containers = [], carriers = [], clients = [], routes = [], loading } = useFreightData();
   const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
   const [currentContainer, setCurrentContainer] = useState<any>(null);
-
-  // Lister les articles et coûts dans le conteneur (dummy. À remplacer par intégration réelle si besoin)
-  // Assume articles/costs are direct properties, ou vous pouvez raffiner plus tard
 
   const handleNew = () => {
     setCurrentContainer(null);
@@ -38,7 +41,6 @@ const ContainerManagerPage: React.FC = () => {
     setCurrentContainer(null);
   };
 
-  // Optimisation pour l'autocomplete des options - with null checks
   const carrierOptions = useMemo(() => 
     Array.isArray(carriers) ? carriers.map((c: any) => ({
       label: c.name,
@@ -123,6 +125,7 @@ const ContainerManagerPage: React.FC = () => {
         carrierOptions={carrierOptions}
         clientOptions={clientOptions}
         routeOptions={routeOptions}
+        defaultNumber={openDialog === "create" ? generateContainerNumber() : undefined}
       />
 
       <DeleteContainerDialog
