@@ -1,3 +1,4 @@
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -19,8 +20,10 @@ export interface Invoice {
   discountRate?: number;
   notes?: string;
   termsAndConditions?: string;
-  containerReference?: string;  // Added for container tracking
-  containerCost?: number;      // Added container cost
+  containerReference?: string;
+  containerCost?: number;
+  shipmentReference?: string;
+  shipmentStatus?: string;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;

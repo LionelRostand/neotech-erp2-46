@@ -5,14 +5,18 @@ import { useContainersData } from '@/hooks/modules/useContainersData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Invoice } from '../types/accounting-types';
 import { orderBy, where, QueryConstraint } from 'firebase/firestore';
-import { Container } from '@/types/freight';
+import { Container, Shipment } from '@/types/freight';
 
 export const useInvoicesData = (filterStatus?: string) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Récupérer les conteneurs
+  // Récupérer les conteneurs et expéditions
   const { containers, isLoading: containersLoading } = useContainersData();
+  const { data: shipments, isLoading: shipmentsLoading } = useCollectionData(
+    COLLECTIONS.FREIGHT.SHIPMENTS,
+    [orderBy('createdAt', 'desc')]
+  );
 
   // Préparer les contraintes de requête
   const constraints: QueryConstraint[] = [orderBy('issueDate', 'desc')];
@@ -21,27 +25,29 @@ export const useInvoicesData = (filterStatus?: string) => {
     constraints.push(where('status', '==', filterStatus));
   }
 
-  // Utiliser le hook useCollectionData pour récupérer les données en temps réel
   const { data, isLoading: dataLoading, error } = useCollectionData(
     COLLECTIONS.ACCOUNTING.INVOICES,
     constraints
   );
 
   useEffect(() => {
-    if (!dataLoading && !containersLoading && data) {
-      // Transformer les données en objets Invoice avec les infos des conteneurs
+    if (!dataLoading && !containersLoading && !shipmentsLoading && data) {
       const formattedInvoices: Invoice[] = data.map((doc: any) => {
         // Chercher le conteneur correspondant
         let containerInfo: Container | undefined;
+        let shipmentInfo: Shipment | undefined;
+        
         if (doc.containerReference) {
           containerInfo = containers?.find(c => c.number === doc.containerReference);
+          // Chercher l'expédition correspondante au conteneur
+          shipmentInfo = shipments?.find(s => s.reference === containerInfo?.number);
         }
 
         return {
           id: doc.id,
           invoiceNumber: doc.invoiceNumber || '',
           number: doc.invoiceNumber || doc.number || '',
-          clientName: doc.clientName || containerInfo?.client || '',
+          clientName: doc.clientName || containerInfo?.client || shipmentInfo?.customer || '',
           clientId: doc.clientId || '',
           clientEmail: doc.clientEmail || '',
           issueDate: doc.issueDate || '',
@@ -58,9 +64,10 @@ export const useInvoicesData = (filterStatus?: string) => {
           discountRate: doc.discountRate || 0,
           notes: doc.notes || '',
           termsAndConditions: doc.termsAndConditions || '',
-          // Ajouter les informations du conteneur si trouvées
           containerReference: doc.containerReference || containerInfo?.number || '',
           containerCost: containerInfo?.costs?.[0]?.amount || 0,
+          shipmentReference: shipmentInfo?.reference || '',
+          shipmentStatus: shipmentInfo?.status || '',
           createdAt: doc.createdAt || '',
           updatedAt: doc.updatedAt || '',
           createdBy: doc.createdBy || '',
@@ -70,7 +77,11 @@ export const useInvoicesData = (filterStatus?: string) => {
       setInvoices(formattedInvoices);
       setIsLoading(false);
     }
-  }, [data, dataLoading, containers, containersLoading]);
+  }, [data, dataLoading, containers, containersLoading, shipments, shipmentsLoading]);
 
-  return { invoices, isLoading: isLoading || dataLoading || containersLoading, error };
+  return { 
+    invoices, 
+    isLoading: isLoading || dataLoading || containersLoading || shipmentsLoading, 
+    error 
+  };
 };
