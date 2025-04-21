@@ -11,35 +11,40 @@ const FreightRoutesPage: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [routes, setRoutes] = useState<FreightRoute[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Utiliser le hook pour la collection firestore
   const { add, loading, getAll } = useFirestore("freight_routes");
 
   // Fonction de chargement des routes extraite pour éviter les boucles
   const loadRoutes = useCallback(async () => {
+    if (isSubmitting) return; // Ne pas charger pendant une soumission
+    
     try {
       setIsLoading(true);
       const routesData = await getAll();
-      console.log("Routes chargées:", routesData);
       
       if (Array.isArray(routesData) && routesData.length > 0) {
-        // Traiter chaque route pour s'assurer qu'elle a les propriétés nécessaires
+        // Filtrer les documents qui contiennent au moins les champs obligatoires
         const formattedRoutes = routesData
-          .map(route => {
-            // S'assurer que toutes les propriétés nécessaires existent
-            return {
-              id: route.id || String(Date.now()),
-              name: route.name || "",
-              origin: route.origin || "",
-              destination: route.destination || "",
-              distance: typeof route.distance === 'number' ? route.distance : 0,
-              estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
-              transportType: route.transportType || "road",
-              active: typeof route.active === 'boolean' ? route.active : true
-            };
-          })
-          // Ne garder que les routes qui ont au moins un nom
-          .filter(route => route.name.trim() !== "");
+          .filter(route => 
+            // S'assurer que l'objet a les propriétés minimales requises
+            typeof route === 'object' && 
+            route !== null && 
+            'name' in route && 
+            route.name && 
+            typeof route.name === 'string'
+          )
+          .map(route => ({
+            id: route.id || String(Date.now()),
+            name: route.name || "",
+            origin: route.origin || "",
+            destination: route.destination || "",
+            distance: typeof route.distance === 'number' ? route.distance : 0,
+            estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
+            transportType: route.transportType || "road",
+            active: typeof route.active === 'boolean' ? route.active : true
+          }));
         
         console.log("Routes formatées:", formattedRoutes);
         setRoutes(formattedRoutes);
@@ -53,31 +58,37 @@ const FreightRoutesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getAll]);
+  }, [getAll, isSubmitting]); // Ne pas inclure setIsLoading/setRoutes (setState functions) dans les dépendances
 
   // Charger les routes au chargement de la page - une seule fois
   useEffect(() => {
     loadRoutes();
-  }, [loadRoutes]); // useCallback mémorisera cette fonction et évitera des rechargements infinis
+    // Cette fonction ne doit s'exécuter qu'une seule fois au montage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   const onAddRoute = async (route: FreightRoute) => {
-    // Générer un id local pour un affichage instantané
-    const localRoute = { ...route, id: String(Date.now()) };
-
-    // Mise à jour de l'affichage
-    setRoutes((prev) => [...prev, localRoute]);
-    setShowDialog(false);
-
-    // Sauvegarder en Firestore
     try {
+      setIsSubmitting(true);
+      
+      // Générer un id local pour un affichage instantané
+      const localRoute = { ...route, id: String(Date.now()) };
+
+      // Mise à jour de l'affichage
+      setRoutes((prev) => [...prev, localRoute]);
+      setShowDialog(false);
+
+      // Sauvegarder en Firestore
       await add({ ...route, createdAt: new Date().toISOString() });
       toast.success("Route enregistrée avec succès dans la base de données.");
       
-      // Recharger les routes pour obtenir les données à jour de Firestore
-      await loadRoutes();
+      // Charger explicitement après ajout pour obtenir les données à jour
+      loadRoutes();
     } catch (err: any) {
       console.error("Erreur d'enregistrement:", err);
       toast.error("Erreur lors de l'enregistrement dans la base de données.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -88,7 +99,7 @@ const FreightRoutesPage: React.FC = () => {
         <Button
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
           onClick={() => setShowDialog(true)}
-          disabled={loading}
+          disabled={loading || isSubmitting}
         >
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle Route
