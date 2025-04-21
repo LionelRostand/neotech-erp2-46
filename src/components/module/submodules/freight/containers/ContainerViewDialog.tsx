@@ -19,6 +19,7 @@ interface ContainerViewDialogProps {
 
 const ContainerViewDialog: React.FC<ContainerViewDialogProps> = ({ open, onClose, container }) => {
   if (!container) return null;
+  
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -29,23 +30,23 @@ const ContainerViewDialog: React.FC<ContainerViewDialogProps> = ({ open, onClose
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2 py-2 text-sm">
-          <div><span className="font-medium">Numéro :</span> {container.number}</div>
-          <div><span className="font-medium">Type :</span> {container.type}</div>
-          <div><span className="font-medium">Taille :</span> {container.size}</div>
-          <div><span className="font-medium">Client :</span> {container.client}</div>
-          <div><span className="font-medium">Statut :</span> {container.status}</div>
-          <div><span className="font-medium">Origine :</span> {container.origin}</div>
-          <div><span className="font-medium">Destination :</span> {container.destination}</div>
-          <div><span className="font-medium">Date départ :</span> {container.departureDate}</div>
-          <div><span className="font-medium">Date arrivée :</span> {container.arrivalDate}</div>
-          <div><span className="font-medium">Localisation :</span> {container.location}</div>
+          <div><span className="font-medium">Numéro :</span> {container.number}</div>
+          <div><span className="font-medium">Type :</span> {container.type}</div>
+          <div><span className="font-medium">Taille :</span> {container.size}</div>
+          <div><span className="font-medium">Client :</span> {container.client}</div>
+          <div><span className="font-medium">Statut :</span> {container.status}</div>
+          <div><span className="font-medium">Origine :</span> {container.origin}</div>
+          <div><span className="font-medium">Destination :</span> {container.destination}</div>
+          <div><span className="font-medium">Date départ :</span> {container.departureDate}</div>
+          <div><span className="font-medium">Date arrivée :</span> {container.arrivalDate}</div>
+          <div><span className="font-medium">Localisation :</span> {container.location}</div>
         </div>
         <DialogFooter>
           <Button onClick={onClose}>Fermer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 export default ContainerViewDialog;

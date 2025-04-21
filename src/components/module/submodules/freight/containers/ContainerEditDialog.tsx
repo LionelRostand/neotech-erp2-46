@@ -18,9 +18,15 @@ interface ContainerEditDialogProps {
   open: boolean;
   onClose: () => void;
   container: Container | null;
+  onSave?: (updatedContainer: Container) => void;
 }
 
-const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({ open, onClose, container }) => {
+const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({ 
+  open, 
+  onClose, 
+  container,
+  onSave
+}) => {
   const [form, setForm] = useState<Container | null>(container);
   const updateContainer = useUpdateContainer();
 
@@ -34,9 +40,18 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({ open, onClose
 
   const handleSave = async () => {
     if (!form) return;
-    await updateContainer.mutateAsync({ id: form.id, data: form });
-    toast.success("Conteneur modifié avec succès !");
-    onClose();
+    
+    try {
+      await updateContainer.mutateAsync({ id: form.id, data: form });
+      toast.success("Conteneur modifié avec succès !");
+      if (onSave) {
+        onSave(form);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la modification du conteneur:", error);
+      toast.error("Erreur lors de la modification du conteneur");
+    }
   };
 
   return (
