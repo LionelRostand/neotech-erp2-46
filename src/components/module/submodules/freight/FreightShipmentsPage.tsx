@@ -10,6 +10,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { Shipment } from '@/types/freight';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { FirebaseErrorAlert } from './components/FirebaseErrorAlert';
 
 const FreightShipmentsPage: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -28,6 +29,17 @@ const FreightShipmentsPage: React.FC = () => {
         s.destination.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : shipments;
+
+  // Retry loading if there was an error
+  const handleRetry = () => {
+    // Le hook useShipments se réinitialisera si le filtre change
+    setActiveFilter(prev => {
+      // Force le raffraîchissement en basculant brièvement le filtre
+      const temp = prev === 'all' ? 'ongoing' : 'all';
+      setTimeout(() => setActiveFilter(prev), 10);
+      return temp;
+    });
+  };
 
   // Get status badge for shipment
   const getStatusBadge = (status: string) => {
@@ -109,10 +121,11 @@ const FreightShipmentsPage: React.FC = () => {
             <span className="ml-2">Chargement des expéditions...</span>
           </div>
         ) : error ? (
-          <div className="border rounded-md px-6 py-10 text-center text-red-500">
-            <p>Une erreur est survenue lors du chargement des expéditions</p>
-            <p className="text-sm mt-1">{error.message}</p>
-          </div>
+          <FirebaseErrorAlert 
+            error={error} 
+            onRetry={handleRetry}
+            className="mb-4"
+          />
         ) : filteredShipments.length > 0 ? (
           <div className="border rounded-md">
             <Table>

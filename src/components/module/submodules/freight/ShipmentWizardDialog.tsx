@@ -8,7 +8,6 @@ import StepPricing from "./shipment-wizard/StepPricing";
 import StepTracking from "./shipment-wizard/StepTracking";
 import { createShipment } from "./services/shipmentService";
 import { toast } from "sonner";
-import { Timestamp } from "firebase/firestore";
 
 const defaultForm = {
   reference: "",
