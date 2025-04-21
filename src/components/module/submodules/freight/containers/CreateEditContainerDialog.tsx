@@ -1,132 +1,181 @@
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import ContainerArticlesForm, { ContainerArticle } from "./ContainerArticlesForm";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { COLLECTIONS } from "@/lib/firebase-collections";
-import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
+import { updateDocument, setDocument } from "@/hooks/firestore/update-operations";
+import ContainerArticlesForm, { ContainerArticle } from "./ContainerArticlesForm";
 
-const defaultForm = (carriers: any[], clients: any[], routes: any[]) => ({
-  number: "CTN" + String(Math.floor(10000000 + Math.random() * 90000000)),
-  type: "",
-  size: "",
-  status: "",
-  carrierId: carriers.length ? carriers[0].id : "",
-  carrierName: carriers.length ? carriers[0].name : "",
-  client: clients.length ? (clients[0].name || clients[0].clientName) : "",
-  routeId: routes.length ? routes[0].id : "",
-  origin: routes.length ? routes[0].origin : "",
-  destination: routes.length ? routes[0].destination : "",
-  departureDate: "",
-  arrivalDate: "",
-  articles: [],
-  costs: []
-});
+// Types pour les options d'autocomplete
+type Option = { label: string; value: string; origin?: string; destination?: string };
 
-const sizeOptions = [
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  container?: any;
+  carrierOptions: Option[];
+  clientOptions: Option[];
+  routeOptions: Option[];
+}
+
+const containerTypes = [
+  { value: "dry", label: "Standard (Dry)" },
+  { value: "reefer", label: "Réfrigéré (Reefer)" },
+  { value: "open_top", label: "Open Top" },
+  { value: "flat_rack", label: "Flat Rack" },
+  { value: "tank", label: "Citerne (Tank)" },
+  { value: "high_cube", label: "High Cube" }
+];
+
+const containerSizes = [
   { value: "20ft", label: "20 pieds" },
   { value: "40ft", label: "40 pieds" },
-  { value: "40ftHC", label: "40 pieds High Cube" }
+  { value: "45ft", label: "45 pieds" }
 ];
 
-const statusOptions = [
-  { value: "vide", label: "Vide" },
-  { value: "chargé", label: "Chargé" },
-  { value: "livré", label: "Livré" },
-  { value: "entretien", label: "En cours d'entretien" }
+const containerStatuses = [
+  { value: "available", label: "Disponible" },
+  { value: "in_transit", label: "En transit" },
+  { value: "loading", label: "En chargement" },
+  { value: "unloading", label: "En déchargement" },
+  { value: "maintenance", label: "En maintenance" },
+  { value: "reserved", label: "Réservé" }
 ];
 
-const typeOptions = [
-  { value: "dry", label: "Dry" },
-  { value: "reefer", label: "Reefer" },
-  { value: "open-top", label: "Open Top" },
-  { value: "tank", label: "Tank" },
-  { value: "autre", label: "Autre" }
-];
+// Générer un numéro de conteneur aléatoire
+const generateContainerNumber = () => {
+  const prefix = "CONT";
+  const randomDigits = Math.floor(100000 + Math.random() * 900000).toString();
+  return `${prefix}${randomDigits}`;
+};
 
-const CreateEditContainerDialog = ({
+const CreateEditContainerDialog: React.FC<Props> = ({
   open,
   onClose,
   container,
   carrierOptions,
   clientOptions,
   routeOptions
-}: {
-  open: boolean;
-  onClose: () => void;
-  container: any;
-  carrierOptions: {label: string; value: string;}[];
-  clientOptions: {label: string; value: string;}[];
-  routeOptions: {label: string; value: string; origin: string; destination: string;}[];
 }) => {
-  const [tab, setTab] = useState<"general" | "articles">("general");
+  const [formData, setFormData] = useState({
+    number: "",
+    type: "dry",
+    size: "20ft",
+    status: "available",
+    weight: 0,
+    carrier: "",
+    carrierName: "",
+    client: "",
+    route: "",
+    origin: "",
+    destination: "",
+    notes: ""
+  });
 
-  // Form state
-  const [form, setForm] = useState<any>(defaultForm(carrierOptions, clientOptions, routeOptions));
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
+  const [articles, setArticles] = useState<ContainerArticle[]>([]);
 
+  // Initialiser le formulaire avec les données existantes ou générées
   useEffect(() => {
     if (container) {
-      setForm({ ...defaultForm(carrierOptions, clientOptions, routeOptions), ...container });
-    } else {
-      setForm(defaultForm(carrierOptions, clientOptions, routeOptions));
-    }
-    setTab("general");
-    // eslint-disable-next-line
-  }, [open, container, carrierOptions, clientOptions, routeOptions]);
-
-  const handleChange = (key: string, value: any) => {
-    if (key === "routeId") {
-      const route = routeOptions.find(r => r.value === value);
-      if (route) {
-        setForm(f => ({ ...f, routeId: value, origin: route.origin, destination: route.destination }));
-      } else {
-        setForm(f => ({ ...f, routeId: value }));
+      setFormData({
+        number: container.number || "",
+        type: container.type || "dry",
+        size: container.size || "20ft",
+        status: container.status || "available",
+        weight: container.weight || 0,
+        carrier: container.carrier || "",
+        carrierName: container.carrierName || "",
+        client: container.client || "",
+        route: container.route || "",
+        origin: container.origin || "",
+        destination: container.destination || "",
+        notes: container.notes || ""
+      });
+      // Initialiser les articles si disponibles
+      if (container.articles && Array.isArray(container.articles)) {
+        setArticles(container.articles);
       }
-    } else if (key === "carrierId") {
-      const carrier = carrierOptions.find(c => c.value === value);
-      setForm(f => ({
-        ...f,
-        carrierId: value,
-        carrierName: carrier?.label || ""
-      }));
-    } else if (key === "client") {
-      setForm(f => ({ ...f, client: value }));
     } else {
-      setForm(f => ({ ...f, [key]: value }));
+      // Pour un nouveau conteneur, générer un numéro
+      setFormData(prev => ({
+        ...prev,
+        number: generateContainerNumber()
+      }));
+    }
+  }, [container]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    if (name === "route") {
+      // Trouver la route sélectionnée pour obtenir origine et destination
+      const selectedRoute = routeOptions.find(r => r.value === value);
+      if (selectedRoute) {
+        setFormData(prev => ({
+          ...prev,
+          route: value,
+          origin: selectedRoute.origin || "",
+          destination: selectedRoute.destination || ""
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, route: value }));
+      }
+    } else if (name === "carrier") {
+      // Trouver le nom du transporteur sélectionné
+      const selectedCarrier = carrierOptions.find(c => c.value === value);
+      setFormData(prev => ({
+        ...prev,
+        carrier: value,
+        carrierName: selectedCarrier?.label || ""
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // Mise à jour des articles dans le form state
-  const handleArticlesChange = (articles: ContainerArticle[]) => {
-    setForm((f: any) => ({ ...f, articles }));
+  const handleArticlesChange = (updatedArticles: ContainerArticle[]) => {
+    setArticles(updatedArticles);
   };
 
-  // Enregistrer (ajouter ou modifier) le conteneur
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Préparer les données du conteneur
+      const containerData = {
+        ...formData,
+        weight: Number(formData.weight) || 0,
+        articles: articles,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Créer ou mettre à jour le conteneur
       if (container?.id) {
-        await updateDoc(doc(db, COLLECTIONS.FREIGHT.CONTAINERS, container.id), {
-          ...form,
-          updatedAt: new Date().toISOString()
-        });
+        // Mise à jour d'un conteneur existant
+        await updateDocument(COLLECTIONS.FREIGHT.CONTAINERS, container.id, containerData);
         toast.success("Conteneur mis à jour !");
       } else {
-        await addDoc(collection(db, COLLECTIONS.FREIGHT.CONTAINERS), {
-          ...form,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-        toast.success("Conteneur créé !");
+        // Création d'un nouveau conteneur
+        containerData.createdAt = new Date().toISOString();
+        await addDoc(collection(db, COLLECTIONS.FREIGHT.CONTAINERS), containerData);
+        toast.success("Nouveau conteneur créé !");
       }
+      
       onClose();
-    } catch (e) {
-      toast.error("Erreur lors de la sauvegarde !");
+    } catch (err: any) {
+      console.error("Erreur lors de la sauvegarde du conteneur:", err);
+      toast.error(`Erreur de sauvegarde: ${err.message || err}`);
     } finally {
       setSaving(false);
     }
@@ -134,111 +183,213 @@ const CreateEditContainerDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{container ? "Modifier" : "Nouveau"} Conteneur</DialogTitle>
+          <DialogTitle>
+            {container ? "Modifier le Conteneur" : "Nouveau Conteneur"}
+          </DialogTitle>
         </DialogHeader>
-        <Tabs value={tab} onValueChange={v => setTab(v as "general" | "articles")} className="mb-2">
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="general">Général</TabsTrigger>
+            <TabsTrigger value="general">Informations Générales</TabsTrigger>
             <TabsTrigger value="articles">Articles</TabsTrigger>
           </TabsList>
-          <TabsContent value="general">
-            <div className="space-y-4 pt-3">
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Numéro du conteneur</label>
-                  <Input value={form.number} disabled placeholder="Numéro automatique" readOnly />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Type</label>
-                  <select className="w-full border rounded p-2" value={form.type} onChange={e => handleChange("type", e.target.value)}>
-                    <option value="">Sélectionner</option>
-                    {typeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Taille</label>
-                  <select className="w-full border rounded p-2" value={form.size} onChange={e => handleChange("size", e.target.value)}>
-                    <option value="">Sélectionner</option>
-                    {sizeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
-                </div>
+
+          <TabsContent value="general" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="number">Numéro de Conteneur</Label>
+                <Input
+                  id="number"
+                  name="number"
+                  value={formData.number}
+                  onChange={handleInputChange}
+                  readOnly
+                  disabled
+                />
               </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Status</label>
-                  <select className="w-full border rounded p-2" value={form.status} onChange={e => handleChange("status", e.target.value)}>
-                    <option value="">Sélectionner</option>
-                    {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Transporteur</label>
-                  <select className="w-full border rounded p-2" value={form.carrierId} onChange={e => handleChange("carrierId", e.target.value)}>
-                    {carrierOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Client</label>
-                  <select className="w-full border rounded p-2" value={form.client} onChange={e => handleChange("client", e.target.value)}>
-                    {clientOptions.map(opt => <option key={opt.value} value={opt.label}>{opt.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Route</label>
-                  <select className="w-full border rounded p-2" value={form.routeId} onChange={e => handleChange("routeId", e.target.value)}>
-                    <option value="">Sélectionner la route</option>
-                    {routeOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
+
+              <div className="space-y-2">
+                <Label htmlFor="type">Type de Conteneur</Label>
+                <Select
+                  name="type"
+                  value={formData.type}
+                  onValueChange={value => handleSelectChange("type", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {containerTypes.map(type => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
                     ))}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Origine</label>
-                  <Input value={form.origin} readOnly />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Destination</label>
-                  <Input value={form.destination} readOnly />
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Date de départ</label>
-                  <Input
-                    type="date"
-                    value={form.departureDate}
-                    onChange={e => handleChange("departureDate", e.target.value)}
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1">Date d'arrivée</label>
-                  <Input
-                    type="date"
-                    value={form.arrivalDate}
-                    onChange={e => handleChange("arrivalDate", e.target.value)}
-                  />
-                </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="size">Taille</Label>
+                <Select
+                  name="size"
+                  value={formData.size}
+                  onValueChange={value => handleSelectChange("size", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une taille" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {containerSizes.map(size => (
+                      <SelectItem key={size.value} value={size.value}>
+                        {size.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Statut</Label>
+                <Select
+                  name="status"
+                  value={formData.status}
+                  onValueChange={value => handleSelectChange("status", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {containerStatuses.map(status => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weight">Poids (kg)</Label>
+                <Input
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="carrier">Transporteur</Label>
+                <Select
+                  name="carrier"
+                  value={formData.carrier}
+                  onValueChange={value => handleSelectChange("carrier", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un transporteur" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {carrierOptions.map(carrier => (
+                      <SelectItem key={carrier.value} value={carrier.value}>
+                        {carrier.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="client">Client</Label>
+                <Select
+                  name="client"
+                  value={formData.client}
+                  onValueChange={value => handleSelectChange("client", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientOptions.map(client => (
+                      <SelectItem key={client.value} value={client.value}>
+                        {client.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="route">Route</Label>
+                <Select
+                  name="route"
+                  value={formData.route}
+                  onValueChange={value => handleSelectChange("route", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une route" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {routeOptions.map(route => (
+                      <SelectItem key={route.value} value={route.value}>
+                        {route.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="origin">Origine</Label>
+                <Input
+                  id="origin"
+                  name="origin"
+                  value={formData.origin}
+                  onChange={handleInputChange}
+                  readOnly={!!formData.route}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="destination">Destination</Label>
+                <Input
+                  id="destination"
+                  name="destination"
+                  value={formData.destination}
+                  onChange={handleInputChange}
+                  readOnly={!!formData.route}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Input
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+              />
+            </div>
           </TabsContent>
-          <TabsContent value="articles">
+
+          <TabsContent value="articles" className="mt-4">
             <ContainerArticlesForm
-              articles={form.articles || []}
+              articles={articles}
               onChange={handleArticlesChange}
             />
           </TabsContent>
         </Tabs>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" type="button" onClick={onClose} disabled={saving}>
+
+        <DialogFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
             Annuler
           </Button>
-          <Button type="button" onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving}>
             {saving ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </DialogFooter>
@@ -248,4 +399,3 @@ const CreateEditContainerDialog = ({
 };
 
 export default CreateEditContainerDialog;
-

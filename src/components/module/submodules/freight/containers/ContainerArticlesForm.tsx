@@ -20,7 +20,7 @@ interface Props {
 }
 
 const defaultArticle = (): ContainerArticle => ({
-  id: Date.now().toString() + Math.random(),
+  id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
   name: "",
   description: "",
   quantity: 1,
@@ -29,12 +29,24 @@ const defaultArticle = (): ContainerArticle => ({
 });
 
 const ContainerArticlesForm: React.FC<Props> = ({ articles, onChange }) => {
-  const [articleLines, setArticleLines] = useState<ContainerArticle[]>(articles?.length ? articles : [defaultArticle()]);
+  // Initialiser avec les articles existants ou un article par défaut
+  const [articleLines, setArticleLines] = useState<ContainerArticle[]>(
+    articles?.length ? articles : [defaultArticle()]
+  );
 
+  // Mettre à jour le parent quand les articles changent
   useEffect(() => {
-    onChange(articleLines);
-    // eslint-disable-next-line
-  }, [articleLines]);
+    // Valider les données avant de les passer au parent
+    const validArticles = articleLines.map(article => ({
+      ...article,
+      // S'assurer que les valeurs numériques sont correctement typées
+      quantity: Number(article.quantity) || 1,
+      weight: Number(article.weight) || 0,
+      value: article.value !== undefined ? Number(article.value) || 0 : undefined
+    }));
+    
+    onChange(validArticles);
+  }, [articleLines, onChange]);
 
   const addLine = () => setArticleLines(lines => [...lines, defaultArticle()]);
 
@@ -69,17 +81,25 @@ const ContainerArticlesForm: React.FC<Props> = ({ articles, onChange }) => {
           {articleLines.map(line => (
             <TableRow key={line.id}>
               <TableCell>
-                <Input value={line.name} onChange={e => updateLine(line.id, "name", e.target.value)} placeholder="Article" />
+                <Input 
+                  value={line.name} 
+                  onChange={e => updateLine(line.id, "name", e.target.value)} 
+                  placeholder="Article" 
+                />
               </TableCell>
               <TableCell>
-                <Input value={line.description ?? ''} onChange={e => updateLine(line.id, "description", e.target.value)} placeholder="Description" />
+                <Input 
+                  value={line.description ?? ''} 
+                  onChange={e => updateLine(line.id, "description", e.target.value)} 
+                  placeholder="Description" 
+                />
               </TableCell>
               <TableCell>
                 <Input
                   type="number"
                   min={1}
                   value={line.quantity}
-                  onChange={e => updateLine(line.id, "quantity", parseInt(e.target.value, 10) || 0)}
+                  onChange={e => updateLine(line.id, "quantity", parseInt(e.target.value, 10) || 1)}
                   className="w-20"
                 />
               </TableCell>
@@ -99,7 +119,10 @@ const ContainerArticlesForm: React.FC<Props> = ({ articles, onChange }) => {
                   min={0}
                   step={0.01}
                   value={line.value ?? ""}
-                  onChange={e => updateLine(line.id, "value", parseFloat(e.target.value) || undefined)}
+                  onChange={e => {
+                    const val = e.target.value.trim() === "" ? undefined : parseFloat(e.target.value);
+                    updateLine(line.id, "value", val);
+                  }}
                   className="w-24"
                 />
               </TableCell>
@@ -130,4 +153,3 @@ const ContainerArticlesForm: React.FC<Props> = ({ articles, onChange }) => {
 };
 
 export default ContainerArticlesForm;
-
