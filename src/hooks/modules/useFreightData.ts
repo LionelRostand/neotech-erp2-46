@@ -45,7 +45,14 @@ export const useFreightData = () => {
           COLLECTIONS.FREIGHT.CLIENTS,
           [orderBy('name')]
         );
-        setClients(clientsData);
+        // Ensure clients have proper structure
+        const processedClients = clientsData.map(client => {
+          if (typeof client !== 'object') {
+            return { id: 'unknown', name: 'Client inconnu' };
+          }
+          return client;
+        });
+        setClients(processedClients);
 
         // Fetch containers
         const containersData = await fetchCollectionData<Container>(

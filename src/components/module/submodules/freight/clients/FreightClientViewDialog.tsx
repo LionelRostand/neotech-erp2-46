@@ -20,6 +20,7 @@ type Props = {
 
 const FreightClientViewDialog: React.FC<Props> = ({ open, onOpenChange, client }) => {
   if (!client) return null;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

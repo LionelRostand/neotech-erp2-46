@@ -9,6 +9,17 @@ const FreightAccountingPage: React.FC = () => {
   const { shipments = [], containers = [], clients = [], loading } = useFreightData();
   const [summaryOpen, setSummaryOpen] = useState(false);
 
+  // Helper functions to safely get properties
+  const getClientName = (clientId: string) => {
+    const client = clients.find((c: any) => c.id === clientId);
+    return client && typeof client === 'object' ? client.name || '-' : '-';
+  };
+
+  const getContainerNumber = (containerId: string) => {
+    const container = containers.find((c: any) => c.id === containerId);
+    return container && typeof container === 'object' ? container.number || '-' : '-';
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-bold mb-2">Comptabilité des Expéditions</h2>
@@ -40,8 +51,8 @@ const FreightAccountingPage: React.FC = () => {
                   shipments.map((shipment: any) => (
                     <tr key={shipment.id || shipment.reference} className="border-t last:border-b-0 hover:bg-gray-50">
                       <td className="px-5 py-4">{shipment.reference}</td>
-                      <td className="px-5 py-4">{clients.find((c) => c.id === shipment.customer)?.name || "-"}</td>
-                      <td className="px-5 py-4">{containers.find((c) => c.id === shipment.containerId)?.number || "-"}</td>
+                      <td className="px-5 py-4">{getClientName(shipment.customer)}</td>
+                      <td className="px-5 py-4">{getContainerNumber(shipment.containerId)}</td>
                       <td className="px-5 py-4">
                         {shipment.totalPrice ?
                           shipment.totalPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" }) :

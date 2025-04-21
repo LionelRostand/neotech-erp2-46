@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
@@ -122,7 +123,7 @@ const ContainerManagerPage: React.FC = () => {
             onSave={handleCreateContainer}
             defaultNumber={generateContainerNumber()}
             routes={routes}
-            clients={clients}
+            clients={clients.map(client => typeof client === 'object' ? client : { id: 'unknown', name: 'Client inconnu' })}
           />
           {currentContainer && (
             <DeleteContainerDialog
