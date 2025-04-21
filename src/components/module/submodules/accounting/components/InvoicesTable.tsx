@@ -81,11 +81,11 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
         <TableRow>
           <TableHead>Facture #</TableHead>
           <TableHead>Conteneur</TableHead>
-          <TableHead>Coût Conteneur</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Date</TableHead>
+          <TableHead>Coût Conteneur</TableHead>
+          <TableHead>Total</TableHead>
           <TableHead>Statut</TableHead>
-          <TableHead>Montant</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -100,6 +100,8 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 <span className="text-muted-foreground text-sm">-</span>
               )}
             </TableCell>
+            <TableCell>{invoice.clientName}</TableCell>
+            <TableCell>{invoice.issueDate}</TableCell>
             <TableCell>
               {invoice.containerCost ? (
                 formatCurrency(invoice.containerCost, invoice.currency)
@@ -107,10 +109,8 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 <span className="text-muted-foreground text-sm">-</span>
               )}
             </TableCell>
-            <TableCell>{invoice.clientName}</TableCell>
-            <TableCell>{invoice.issueDate}</TableCell>
-            <TableCell>{getStatusBadge(invoice.status)}</TableCell>
             <TableCell>{formatCurrency(invoice.total, invoice.currency)}</TableCell>
+            <TableCell>{getStatusBadge(invoice.status)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" size="icon" onClick={() => onView(invoice.id)}>

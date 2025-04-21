@@ -41,7 +41,7 @@ export const useInvoicesData = (filterStatus?: string) => {
           id: doc.id,
           invoiceNumber: doc.invoiceNumber || '',
           number: doc.invoiceNumber || doc.number || '',
-          clientName: doc.clientName || '',
+          clientName: doc.clientName || containerInfo?.client || '',
           clientId: doc.clientId || '',
           clientEmail: doc.clientEmail || '',
           issueDate: doc.issueDate || '',
