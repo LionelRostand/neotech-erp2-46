@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ShipmentViewDialog from './ShipmentViewDialog';
 import ShipmentEditDialog from './ShipmentEditDialog';
 import ShipmentDeleteDialog from './ShipmentDeleteDialog';
+import ShipmentCreateDialog from './ShipmentCreateDialog'; // Add this new dialog for creation
 import useFreightData from '@/hooks/modules/useFreightData';
 import { Shipment } from '@/types/freight';
 import { updateShipment, deleteShipment } from './services/shipmentService';
@@ -18,6 +19,7 @@ const FreightShipmentsPage: React.FC = () => {
   const [viewing, setViewing] = useState<Shipment | null>(null);
   const [editing, setEditing] = useState<Shipment | null>(null);
   const [deleting, setDeleting] = useState<Shipment | null>(null);
+  const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
 
@@ -49,7 +51,17 @@ const FreightShipmentsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-xl font-bold mb-6">Gestion des Expéditions</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-bold">Gestion des Expéditions</h1>
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={() => setCreating(true)}
+          leftIcon={<Plus className="h-4 w-4" />}
+        >
+          Nouvelle Expédition
+        </Button>
+      </div>
       <div className="rounded-md border bg-white">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -125,6 +137,16 @@ const FreightShipmentsPage: React.FC = () => {
           shipment={deleting}
           onConfirm={handleDelete}
           isDeleting={removing}
+        />
+      )}
+      {creating && (
+        <ShipmentCreateDialog
+          isOpen={creating}
+          onClose={() => setCreating(false)}
+          onCreated={() => {
+            setCreating(false);
+            toast.success("Expédition créée avec succès !");
+          }}
         />
       )}
     </div>
