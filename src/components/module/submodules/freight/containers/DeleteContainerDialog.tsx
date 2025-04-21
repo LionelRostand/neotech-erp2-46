@@ -3,68 +3,54 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useDeleteContainer } from "@/hooks/modules/useContainersFirestore";
-import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 interface DeleteContainerDialogProps {
   open: boolean;
-  onClose: () => void;
-  container: {
-    id: string;
-    number: string;
-  };
+  onOpenChange: (open: boolean) => void;
+  onDelete: () => void;
+  containerNumber?: string;
 }
 
 const DeleteContainerDialog: React.FC<DeleteContainerDialogProps> = ({
   open,
-  onClose,
-  container,
-}) => {
-  const deleteContainerMutation = useDeleteContainer();
-
-  const handleDelete = async () => {
-    try {
-      await deleteContainerMutation.mutateAsync(container.id);
-      toast.success("Conteneur supprimé avec succès!");
-      onClose();
-    } catch (error) {
-      console.error("Error deleting container:", error);
-      toast.error("Erreur lors de la suppression du conteneur");
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Confirmer la suppression</DialogTitle>
-          <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer le conteneur{" "}
-            <span className="font-semibold">{container?.number}</span>? Cette
-            action est irréversible.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={deleteContainerMutation.isPending}
-          >
-            {deleteContainerMutation.isPending ? "Suppression..." : "Supprimer"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+  onOpenChange,
+  onDelete,
+  containerNumber,
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-md">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2 text-destructive">
+          <Trash2 className="h-5 w-5" />
+          Supprimer le conteneur
+        </DialogTitle>
+        <DialogDescription>
+          Êtes-vous sûr de vouloir supprimer le conteneur
+          {containerNumber ? <> <span className="font-semibold">{containerNumber}</span></> : ""} ?
+          Cette action est irréversible.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter className="gap-2 sm:justify-end">
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          Annuler
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => onDelete()}
+        >
+          Supprimer définitivement
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
 
 export default DeleteContainerDialog;
