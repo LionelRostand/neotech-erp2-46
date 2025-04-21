@@ -5,7 +5,6 @@ import {
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -81,6 +80,7 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
       <TableHeader>
         <TableRow>
           <TableHead>Facture #</TableHead>
+          <TableHead>Conteneur</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Statut</TableHead>
@@ -92,6 +92,13 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
         {invoices.map((invoice) => (
           <TableRow key={invoice.id}>
             <TableCell className="font-medium">{invoice.invoiceNumber || invoice.number}</TableCell>
+            <TableCell>
+              {invoice.containerReference ? (
+                <Badge variant="outline">{invoice.containerReference}</Badge>
+              ) : (
+                <span className="text-muted-foreground text-sm">-</span>
+              )}
+            </TableCell>
             <TableCell>{invoice.clientName}</TableCell>
             <TableCell>{invoice.issueDate}</TableCell>
             <TableCell>{getStatusBadge(invoice.status)}</TableCell>
