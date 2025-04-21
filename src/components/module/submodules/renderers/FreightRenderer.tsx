@@ -6,8 +6,8 @@ import FreightDocuments from '../freight/FreightDocuments';
 import FreightRoutes from '../freight/FreightRoutes';
 import FreightSettings from '../freight/FreightSettings';
 import FreightPaymentsPage from '../freight/pricing/FreightPaymentsPage';
-import FreightShipments from '../../FreightShipments';
 import UnifiedTrackingPage from '../freight/tracking/UnifiedTrackingPage';
+import FreightShipmentsPage from '../freight/FreightShipmentsPage';
 
 interface FreightRendererProps {
   submoduleId: string;
@@ -18,7 +18,7 @@ export const FreightRenderer: React.FC<FreightRendererProps> = ({ submoduleId })
     case 'freight-dashboard':
       return <FreightDashboard />;
     case 'freight-shipments':
-      return <FreightShipments />;
+      return <FreightShipmentsPage />;
     case 'freight-routes':
       return <FreightRoutes />;
     case 'freight-tracking':
