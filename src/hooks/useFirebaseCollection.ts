@@ -25,6 +25,7 @@ export const useFirebaseCollection = <T>(
       console.error('Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));
       setIsLoading(false);
+      toast.error('Erreur: Chemin de collection invalide ou vide');
       return () => {}; // Return empty cleanup function
     }
     
