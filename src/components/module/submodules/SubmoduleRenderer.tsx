@@ -11,13 +11,14 @@ import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 import FreightCarriersList from "./freight/carriers/FreightCarriersList";
 import ContainersListWithCreate from "./freight/containers/ContainersListWithCreate";
 import ContainerManagerPage from "./freight/containers/ContainerManagerPage";
+import UnifiedTrackingPage from './freight/tracking/UnifiedTrackingPage';
 
 interface SubmoduleRenderProps {
   submoduleId: string;
   submodule: SubModule;
 }
 
-export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRenderProps) => {
+export function renderSubmoduleContent({ submoduleId, submodule }: SubmoduleRenderProps) {
   console.log('SubmoduleRenderer - Rendering submodule:', submoduleId);
   
   const modulePrefix = submoduleId.split('-')[0];
@@ -28,6 +29,10 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
   
   if (submoduleId === "freight-containers-management") {
     return <ContainerManagerPage />;
+  }
+
+  if (submoduleId === "freight-tracking") {
+    return <UnifiedTrackingPage />;
   }
 
   switch (modulePrefix) {
@@ -49,4 +54,4 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
-};
+}
