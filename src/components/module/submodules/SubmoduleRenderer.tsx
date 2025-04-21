@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
@@ -9,6 +8,7 @@ import { renderHealthSubmodule } from './renderers/HealthRenderer';
 import { renderVehicleRentalsSubmodule } from './renderers/VehicleRentalsRenderer';
 import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
+import FreightCarriersList from "./freight/carriers/FreightCarriersList";
 
 interface SubmoduleRenderProps {
   submoduleId: string;
@@ -20,6 +20,10 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
   
   const modulePrefix = submoduleId.split('-')[0];
   
+  if (submoduleId === "freight-carriers") {
+    return <FreightCarriersList />;
+  }
+
   switch (modulePrefix) {
     case 'employees':
       return renderEmployeesSubmodule(submoduleId, submodule);
