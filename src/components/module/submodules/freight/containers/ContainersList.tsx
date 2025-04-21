@@ -8,6 +8,7 @@ import ContainerCreateDialog from "./ContainerCreateDialog";
 import { toast } from "sonner";
 import { Container } from "@/types/freight";
 import { fetchCollectionData } from "@/lib/fetchCollectionData";
+import ModuleContainer from "@/components/module/ModuleContainer";
 
 const ContainersList: React.FC = () => {
   // Etat d'ouverture du dialog
@@ -31,71 +32,76 @@ const ContainersList: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Barre d'action */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Liste des Conteneurs</h2>
-        <Button onClick={() => setOpenDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouveau Conteneur
-        </Button>
-      </div>
-      {/* Liste des conteneurs */}
-      <div className="overflow-x-auto border rounded-md">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-2 font-semibold text-left">Numéro</th>
-              <th className="px-4 py-2">Type</th>
-              <th className="px-4 py-2">Taille</th>
-              <th className="px-4 py-2">Statut</th>
-              <th className="px-4 py-2">Transporteur</th>
-              <th className="px-4 py-2">Origine</th>
-              <th className="px-4 py-2">Destination</th>
-              <th className="px-4 py-2">Départ</th>
-              <th className="px-4 py-2">Arrivée</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
+    <ModuleContainer>
+      <div className="space-y-6">
+        {/* Barre d'action */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Liste des Conteneurs</h2>
+          <Button 
+            onClick={() => setOpenDialog(true)}
+            variant="default"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Nouveau Conteneur
+          </Button>
+        </div>
+        {/* Liste des conteneurs */}
+        <div className="overflow-x-auto border rounded-md">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={9} className="p-6 text-center">
-                  Chargement des conteneurs...
-                </td>
+                <th className="px-4 py-2 font-semibold text-left">Numéro</th>
+                <th className="px-4 py-2">Type</th>
+                <th className="px-4 py-2">Taille</th>
+                <th className="px-4 py-2">Statut</th>
+                <th className="px-4 py-2">Transporteur</th>
+                <th className="px-4 py-2">Origine</th>
+                <th className="px-4 py-2">Destination</th>
+                <th className="px-4 py-2">Départ</th>
+                <th className="px-4 py-2">Arrivée</th>
               </tr>
-            ) : containers.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="p-6 text-center text-gray-400">
-                  Aucun conteneur enregistré
-                </td>
-              </tr>
-            ) : (
-              containers.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-4 py-2 font-semibold">{c.number}</td>
-                  <td className="px-4 py-2">{c.type}</td>
-                  <td className="px-4 py-2">{c.size}</td>
-                  <td className="px-4 py-2">{c.status}</td>
-                  <td className="px-4 py-2">{c.carrierName}</td>
-                  <td className="px-4 py-2">{c.origin}</td>
-                  <td className="px-4 py-2">{c.destination}</td>
-                  <td className="px-4 py-2">{c.departureDate}</td>
-                  <td className="px-4 py-2">{c.arrivalDate}</td>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={9} className="p-6 text-center">
+                    Chargement des conteneurs...
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : containers.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="p-6 text-center text-gray-400">
+                    Aucun conteneur enregistré
+                  </td>
+                </tr>
+              ) : (
+                containers.map((c) => (
+                  <tr key={c.id}>
+                    <td className="px-4 py-2 font-semibold">{c.number}</td>
+                    <td className="px-4 py-2">{c.type}</td>
+                    <td className="px-4 py-2">{c.size}</td>
+                    <td className="px-4 py-2">{c.status}</td>
+                    <td className="px-4 py-2">{c.carrierName}</td>
+                    <td className="px-4 py-2">{c.origin}</td>
+                    <td className="px-4 py-2">{c.destination}</td>
+                    <td className="px-4 py-2">{c.departureDate}</td>
+                    <td className="px-4 py-2">{c.arrivalDate}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Dialog de création */}
+        <ContainerCreateDialog
+          open={openDialog}
+          onOpenChange={setOpenDialog}
+          onCreated={onCreated}
+        />
       </div>
-      {/* Dialog de création */}
-      <ContainerCreateDialog
-        open={openDialog}
-        onOpenChange={setOpenDialog}
-        onCreated={onCreated}
-      />
-    </div>
+    </ModuleContainer>
   );
 };
 
 export default ContainersList;
-
