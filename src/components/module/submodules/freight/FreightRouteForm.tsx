@@ -12,23 +12,21 @@ type FreightRouteFormProps = {
   onSubmit: (route: FreightRoute) => void;
 };
 
-const DEFAULT_VALUES: Omit<FreightRoute, "id"> = {
+const DEFAULT_VALUES: Omit<FreightRoute, "id" | "distance" | "estimatedTime"> = {
   name: "",
   origin: "",
   destination: "",
-  distance: 0,
-  estimatedTime: 0,
   transportType: "road",
   active: true,
 };
 
 const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange, onSubmit }) => {
-  const { register, handleSubmit, reset } = useForm<Omit<FreightRoute, "id">>({
+  const { register, handleSubmit, reset } = useForm<Omit<FreightRoute, "id" | "distance" | "estimatedTime">>({
     defaultValues: DEFAULT_VALUES,
   });
 
-  const submitHandler = (data: Omit<FreightRoute, "id">) => {
-    onSubmit({ ...data, id: "" });
+  const submitHandler = (data: Omit<FreightRoute, "id" | "distance" | "estimatedTime">) => {
+    onSubmit({ ...data, id: "", distance: 0, estimatedTime: 0 });
     reset(DEFAULT_VALUES);
   };
 
@@ -42,22 +40,6 @@ const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange,
           <Input required placeholder="Nom de la route" {...register("name")} />
           <Input required placeholder="Origine" {...register("origin")} />
           <Input required placeholder="Destination" {...register("destination")} />
-          <Input
-            required
-            type="number"
-            min={1}
-            step={1}
-            placeholder="Distance (km)"
-            {...register("distance", { valueAsNumber: true })}
-          />
-          <Input
-            required
-            type="number"
-            min={0.1}
-            step={0.1}
-            placeholder="Temps estimé (h)"
-            {...register("estimatedTime", { valueAsNumber: true })}
-          />
           <select {...register("transportType")} className="w-full rounded-md border px-3 py-2 text-sm">
             <option value="road">Route</option>
             <option value="sea">Mer</option>
@@ -80,3 +62,4 @@ const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange,
 };
 
 export default FreightRouteForm;
+
