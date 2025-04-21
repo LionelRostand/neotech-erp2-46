@@ -16,6 +16,28 @@ export const COLLECTIONS = {
   HR_REPORTS: 'hr-reports',
   HR_ALERTS: 'hr-alerts',
   ATTENDANCE: 'attendance',
+  HR: {
+    TRAININGS: 'hr-trainings',
+    EVALUATIONS: 'hr-evaluations',
+    CONTRACTS: 'hr-contracts',
+    LEAVE_REQUESTS: 'hr-leave-requests',
+    PAYSLIPS: 'hr-payslips',
+    DOCUMENTS: 'hr-documents'
+  },
+  MESSAGES: {
+    CONTACTS: 'messages-contacts',
+    INBOX: 'messages-inbox',
+    SENT: 'messages-sent',
+    DRAFTS: 'messages-drafts',
+    SCHEDULED: 'messages-scheduled',
+    ARCHIVED: 'messages-archived'
+  },
+  DOCUMENT_COLLECTIONS: {
+    MAIN: 'documents',
+    TEMPLATES: 'document-templates',
+    SHARED: 'shared-documents',
+    ARCHIVED: 'archived-documents'
+  },
   FREIGHT: {
     SHIPMENTS: 'freight-shipments',
     ROUTES: 'freight-routes',
