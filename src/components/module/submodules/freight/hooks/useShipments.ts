@@ -15,16 +15,9 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
     // Reference to the shipments collection
     const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
     
-    // Create query based on filter
-    let q = query(shipmentsRef, orderBy('createdAt', 'desc'));
-    
-    if (filter === 'ongoing') {
-      q = query(shipmentsRef, where('status', 'in', ['confirmed', 'in_transit']), orderBy('createdAt', 'desc'));
-    } else if (filter === 'delivered') {
-      q = query(shipmentsRef, where('status', '==', 'delivered'), orderBy('createdAt', 'desc'));
-    } else if (filter === 'delayed') {
-      q = query(shipmentsRef, where('status', '==', 'delayed'), orderBy('createdAt', 'desc'));
-    }
+    // Solution: Fetch all shipments with only orderBy, then filter in memory
+    // This avoids the need for a composite index
+    const q = query(shipmentsRef, orderBy('createdAt', 'desc'));
     
     setIsLoading(true);
     
@@ -72,9 +65,26 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
           } as Shipment;
         });
         
-        setShipments(shipmentsData);
+        // Filter the data in memory instead of in Firestore query
+        let filteredShipments = shipmentsData;
+        
+        if (filter === 'ongoing') {
+          filteredShipments = shipmentsData.filter(
+            shipment => ['confirmed', 'in_transit'].includes(shipment.status)
+          );
+        } else if (filter === 'delivered') {
+          filteredShipments = shipmentsData.filter(
+            shipment => shipment.status === 'delivered'
+          );
+        } else if (filter === 'delayed') {
+          filteredShipments = shipmentsData.filter(
+            shipment => shipment.status === 'delayed'
+          );
+        }
+        
+        setShipments(filteredShipments);
         setIsLoading(false);
-        console.log(`Loaded ${shipmentsData.length} shipments (filter: ${filter})`);
+        console.log(`Loaded ${filteredShipments.length} shipments (filter: ${filter}) from ${shipmentsData.length} total`);
       },
       (error) => {
         console.error('Error loading shipments:', error);
