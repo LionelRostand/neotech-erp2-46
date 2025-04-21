@@ -12,21 +12,30 @@ type FreightRouteFormProps = {
   onSubmit: (route: FreightRoute) => void;
 };
 
-const DEFAULT_VALUES: Omit<FreightRoute, "id" | "distance" | "estimatedTime"> = {
+const DEFAULT_VALUES = {
   name: "",
   origin: "",
   destination: "",
+  distance: 0,
+  estimatedTime: 0,
   transportType: "road",
   active: true,
 };
 
 const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange, onSubmit }) => {
-  const { register, handleSubmit, reset } = useForm<Omit<FreightRoute, "id" | "distance" | "estimatedTime">>({
+  const { register, handleSubmit, reset } = useForm({
     defaultValues: DEFAULT_VALUES,
   });
 
-  const submitHandler = (data: Omit<FreightRoute, "id" | "distance" | "estimatedTime">) => {
-    onSubmit({ ...data, id: "", distance: 0, estimatedTime: 0 });
+  const submitHandler = (data: Omit<FreightRoute, "id">) => {
+    // Ensure distance and estimatedTime are numbers
+    const formattedData = {
+      ...data,
+      distance: Number(data.distance),
+      estimatedTime: Number(data.estimatedTime),
+    };
+    
+    onSubmit({ ...formattedData, id: "" });
     reset(DEFAULT_VALUES);
   };
 
@@ -40,6 +49,20 @@ const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange,
           <Input required placeholder="Nom de la route" {...register("name")} />
           <Input required placeholder="Origine" {...register("origin")} />
           <Input required placeholder="Destination" {...register("destination")} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input 
+              type="number" 
+              required 
+              placeholder="Distance (km)" 
+              {...register("distance", { valueAsNumber: true })} 
+            />
+            <Input 
+              type="number" 
+              required 
+              placeholder="Temps estimé (h)" 
+              {...register("estimatedTime", { valueAsNumber: true })} 
+            />
+          </div>
           <select {...register("transportType")} className="w-full rounded-md border px-3 py-2 text-sm">
             <option value="road">Route</option>
             <option value="sea">Mer</option>
@@ -62,4 +85,3 @@ const FreightRouteForm: React.FC<FreightRouteFormProps> = ({ open, onOpenChange,
 };
 
 export default FreightRouteForm;
-

@@ -7,11 +7,9 @@ import type { Route as FreightRoute } from "@/types/freight";
 import { useFirestore } from "@/hooks/useFirestore";
 import { toast } from "sonner";
 
-const initialRoutes: FreightRoute[] = [];
-
 const FreightRoutesPage: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
-  const [routes, setRoutes] = useState<FreightRoute[]>(initialRoutes);
+  const [routes, setRoutes] = useState<FreightRoute[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Utiliser le hook pour la collection firestore
@@ -24,7 +22,25 @@ const FreightRoutesPage: React.FC = () => {
         setIsLoading(true);
         const routesData = await getAll();
         console.log("Routes chargées:", routesData);
-        setRoutes(routesData as FreightRoute[]);
+        
+        if (Array.isArray(routesData) && routesData.length > 0) {
+          // Assurer que chaque route a les propriétés requises
+          const formattedRoutes = routesData.map(route => ({
+            id: route.id || String(Date.now()),
+            name: route.name || "",
+            origin: route.origin || "",
+            destination: route.destination || "",
+            distance: typeof route.distance === 'number' ? route.distance : 0,
+            estimatedTime: typeof route.estimatedTime === 'number' ? route.estimatedTime : 0,
+            transportType: route.transportType || "road",
+            active: typeof route.active === 'boolean' ? route.active : true
+          }));
+          
+          setRoutes(formattedRoutes);
+        } else {
+          setRoutes([]);
+          console.log("Aucune route trouvée dans la collection");
+        }
       } catch (err: any) {
         console.error("Erreur lors du chargement des routes:", err);
         toast.error("Erreur lors du chargement des routes");
@@ -51,7 +67,7 @@ const FreightRoutesPage: React.FC = () => {
       // Optionnel : remonter l'id firestore pour correspondre à la vraie donnée
       setRoutes((prev) =>
         prev.map((r) =>
-          r.id === localRoute.id && res?.id ? { ...res, ...r } : r
+          r.id === localRoute.id && res?.id ? { ...r, id: res.id } : r
         )
       );
     } catch (err: any) {
