@@ -3,280 +3,355 @@ import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { useAddContainer, useUpdateContainer } from "@/hooks/modules/useContainersFirestore";
-import { toast } from "sonner";
+import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from "@/components/ui/select";
 
-// Options statiques pour correspondre à la maquette
-const TYPES = [
-  { value: "Reefer", label: "Réfrigéré (Reefer)" },
-  { value: "Standard", label: "Standard" },
-  { value: "OpenTop", label: "Toit ouvert" },
-  { value: "FlatRack", label: "Flat Rack" },
-];
-const SIZES = [
-  { value: "20 pieds", label: "20 pieds" },
-  { value: "40 pieds", label: "40 pieds" },
-];
-const STATUS = [
-  { value: "En transit", label: "En transit" },
-  { value: "Arrivé", label: "Arrivé" },
-  { value: "Bloqué", label: "Bloqué" },
-  { value: "Livré", label: "Livré" },
-];
-const CARRIERS = [
-  { value: "TEST-TRANSPORT", label: "TEST-TRANSPORT" },
-  { value: "CMA CGM", label: "CMA CGM" },
-  { value: "MAERSK", label: "MAERSK" },
-];
-const CLIENTS = [
-  { value: "DJOSSA LIONEL", label: "DJOSSA LIONEL" },
-  { value: "SOCAPALM", label: "SOCAPALM" },
-  { value: "TRANSAFRIC", label: "TRANSAFRIC" },
-];
-const ROUTES = [
-  { value: "CAMEROUN-PARIS (CAMEROUN)", label: "CAMEROUN-PARIS (CAMEROUN)" },
-  { value: "DLA-ABJ", label: "DLA-ABJ" },
-];
-
-function generateContainerNumber() {
-  // MSCU + 7 chiffres aléatoires
-  return `MSCU${Math.floor(1000000 + Math.random() * 9000000)}`;
+interface RouteType {
+  id: string;
+  name: string;
+  origin: string;
+  destination: string;
 }
 
-const defaultForm = {
-  number: "",
-  type: TYPES[0]?.value || "",
-  size: SIZES[0]?.value || "",
-  status: STATUS[0]?.value || "",
-  carrierName: CARRIERS[0]?.value || "",
-  client: CLIENTS[0]?.value || "",
-  origin: "",
-  destination: "",
-  route: ROUTES[0]?.value || "",
-  departureDate: undefined,
-  arrivalDate: undefined,
-};
+interface ClientType {
+  id: string;
+  name: string;
+}
 
-const CreateEditContainerDialog = ({
-  open,
-  onClose,
-  onSave,
-  container,
-  defaultNumber,
-}: {
+interface ContainerFormData {
+  number: string;
+  type: string;
+  size: string;
+  status: string;
+  carrierName: string;
+  routeId?: string;
+  origin: string;
+  destination: string;
+  location: string;
+  client: string;
+  departureDate?: string;
+  arrivalDate?: string;
+}
+
+interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
-  container: any | null;
+  container?: Partial<ContainerFormData> | null;
+  onSave: (data: ContainerFormData) => void;
   defaultNumber: string;
-}) => {
-  const [form, setForm] = useState<any>(defaultForm);
+  routes?: RouteType[];
+  clients?: ClientType[];
+}
 
+const typeOptions = ["Dry", "Reefer", "Open Top", "Flat Rack"];
+const sizeOptions = ["20'", "40'", "40' HC"];
+const statusOptions = ["Disponible", "Chargé", "En transit", "Livré", "Maintenance"];
+
+const CreateEditContainerDialog: React.FC<Props> = ({
+  open,
+  onClose,
+  container,
+  onSave,
+  defaultNumber,
+  routes = [],
+  clients = [],
+}) => {
+  // Etat éditable pour chaque champ
+  const [form, setForm] = useState<ContainerFormData>({
+    number: defaultNumber,
+    type: "",
+    size: "",
+    status: "",
+    carrierName: "",
+    routeId: "",
+    origin: "",
+    destination: "",
+    location: "",
+    client: "",
+    departureDate: "",
+    arrivalDate: "",
+    ...container, // Pour l'édition : préremplir les champs
+  });
+
+  // Si routeId change, options de route changent, MAJ origine et destination
   useEffect(() => {
-    if (open) {
-      if (container) {
-        setForm({
-          ...defaultForm,
-          ...container,
-        });
-      } else {
-        setForm({
-          ...defaultForm,
-          number: defaultNumber || generateContainerNumber(),
-        });
+    if (form.routeId && routes?.length) {
+      const route = routes.find((r) => r.id === form.routeId);
+      if (route) {
+        setForm((prev) => ({
+          ...prev,
+          origin: route.origin,
+          destination: route.destination,
+        }));
       }
     }
-    // eslint-disable-next-line
-  }, [open, container, defaultNumber]);
-
-  // Champs handlers
-  const handleField = (field: string, value: any) => setForm((prev: any) => ({ ...prev, [field]: value }));
-
-  // Validation simple
-  const validate = () => {
-    if (!form.number?.trim()) return toast.error("Le numéro de conteneur est requis");
-    if (!form.type) return toast.error("Le type est requis");
-    if (!form.size) return toast.error("La taille est requise");
-    if (!form.status) return toast.error("Le statut est requis");
-    if (!form.carrierName) return toast.error("Le transporteur est requis");
-    if (!form.client) return toast.error("Le client est requis");
-    if (!form.origin?.trim()) return toast.error("L'origine est requise");
-    if (!form.destination?.trim()) return toast.error("La destination est requise");
-    if (!form.route) return toast.error("La route est requise");
-    if (!form.departureDate) return toast.error("Date de départ requise");
-    if (!form.arrivalDate) return toast.error("Date d'arrivée requise");
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    if (container) {
-      // Edition : On délègue au parent l'appel mutation d'update (pour homogénéité !)
-      onSave({ ...form, id: container.id });
-    } else {
-      onSave(form);
+    // Si route effacée : ne pas conserver ancienne origine/destination
+    if (!form.routeId) {
+      setForm((prev) => ({
+        ...prev,
+        origin: "",
+        destination: "",
+      }));
     }
+  }, [form.routeId, routes]);
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  // Pour le select de route
+  const handleRouteChange = (routeId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      routeId,
+    }));
+  };
+
+  // Pour le select client
+  const handleClientChange = (client: string) => {
+    setForm((prev) => ({
+      ...prev,
+      client,
+    }));
+  };
+
+  // Pour le select type/size/status
+  const handleSelectChange = (name: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Validation & submit
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(form);
+  };
+
+  // Reset le formulaire à l'ouverture pour éviter les erreurs
+  useEffect(() => {
+    if (open && !container) {
+      setForm({
+        number: defaultNumber,
+        type: "",
+        size: "",
+        status: "",
+        carrierName: "",
+        routeId: "",
+        origin: "",
+        destination: "",
+        location: "",
+        client: "",
+        departureDate: "",
+        arrivalDate: "",
+      });
+    }
+    if (open && container) {
+      setForm({ ...form, ...container });
+    }
+    // eslint-disable-next-line
+  }, [open, defaultNumber, container]);
 
   return (
-    <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="sm:max-w-[600px] p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Nouveau conteneur</DialogTitle>
-            <DialogDescription className="text-sm">Remplissez les informations du conteneur.</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            {/* Numéro */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Numéro de conteneur</label>
-              <Input
-                placeholder="ex: MSCU1234567"
-                value={form.number || ""}
-                onChange={(e) => handleField("number", e.target.value)}
+    <Dialog open={open} onOpenChange={(state) => !state && onClose()}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>{container ? "Modifier le conteneur" : "Nouveau Conteneur"}</DialogTitle>
+          <DialogDescription>
+            {container
+              ? "Modifier les informations du conteneur."
+              : "Créer un nouveau conteneur de fret."}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* ligne 1 : Référence - Client */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Référence</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                name="number"
+                value={form.number}
+                onChange={handleInput}
                 required
-                autoFocus
-                className="bg-white"
+                disabled={!!container}
               />
             </div>
-            {/* Type */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Type</label>
-              <Select value={form.type} onValueChange={val => handleField("type", val)}>
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Client</label>
+              <Select
+                value={form.client}
+                onValueChange={handleClientChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map(cl =>
+                    <SelectItem key={cl.id} value={cl.name}>{cl.name}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {/* ligne 2 : Route - Type - Taille */}
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Route</label>
+              <Select
+                value={form.routeId}
+                onValueChange={handleRouteChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une route" />
+                </SelectTrigger>
+                <SelectContent>
+                  {routes.map(route =>
+                    <SelectItem key={route.id} value={route.id}>{route.name}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Type</label>
+              <Select
+                value={form.type}
+                onValueChange={(value) => handleSelectChange("type", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TYPES.map(option => (
-                    <SelectItem value={option.value} key={option.value}>{option.label}</SelectItem>
-                  ))}
+                  {typeOptions.map(t =>
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
-            {/* Taille */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Taille</label>
-              <Select value={form.size} onValueChange={val => handleField("size", val)}>
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Taille</label>
+              <Select
+                value={form.size}
+                onValueChange={(value) => handleSelectChange("size", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Taille" />
                 </SelectTrigger>
                 <SelectContent>
-                  {SIZES.map(option => (
-                    <SelectItem value={option.value} key={option.value}>{option.label}</SelectItem>
-                  ))}
+                  {sizeOptions.map(sz =>
+                    <SelectItem key={sz} value={sz}>{sz}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
-            {/* Statut */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Statut</label>
-              <Select value={form.status} onValueChange={val => handleField("status", val)}>
+          </div>
+          {/* ligne 3 : Origine et Destination côte à côte */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Origine</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                name="origin"
+                value={form.origin}
+                onChange={handleInput}
+                required
+                readOnly={!!form.routeId}
+                placeholder="Origine"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Destination</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                name="destination"
+                value={form.destination}
+                onChange={handleInput}
+                required
+                readOnly={!!form.routeId}
+                placeholder="Destination"
+              />
+            </div>
+          </div>
+          {/* Statut et Transporteur (ligne 4) */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Statut</label>
+              <Select
+                value={form.status}
+                onValueChange={(value) => handleSelectChange("status", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUS.map(option => (
-                    <SelectItem value={option.value} key={option.value}>{option.label}</SelectItem>
-                  ))}
+                  {statusOptions.map(s =>
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
-            {/* Transporteur */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Transporteur</label>
-              <Select value={form.carrierName} onValueChange={val => handleField("carrierName", val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Transporteur" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CARRIERS.map(option => (
-                    <SelectItem value={option.value} key={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Client */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Client</label>
-              <Select value={form.client} onValueChange={val => handleField("client", val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CLIENTS.map(option => (
-                    <SelectItem value={option.value} key={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Route */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Route</label>
-              <Select value={form.route} onValueChange={val => handleField("route", val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Route" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROUTES.map(option => (
-                    <SelectItem value={option.value} key={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Origine */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Origine</label>
-              <Input
-                placeholder="CAMEROUN"
-                value={form.origin || ""}
-                onChange={e => handleField("origin", e.target.value)}
-                className="bg-white"
-              />
-            </div>
-            {/* Destination */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Destination</label>
-              <Input
-                placeholder="PARIS"
-                value={form.destination || ""}
-                onChange={e => handleField("destination", e.target.value)}
-                className="bg-white"
-              />
-            </div>
-            {/* Date de départ */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Date de départ</label>
-              <DatePicker
-                date={form.departureDate ? new Date(form.departureDate) : undefined}
-                onSelect={date => handleField("departureDate", date ? date.toISOString() : undefined)}
-                placeholder="Date de départ"
-                className="w-full"
-              />
-            </div>
-            {/* Date d'arrivée prévue */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Date d'arrivée prévue</label>
-              <DatePicker
-                date={form.arrivalDate ? new Date(form.arrivalDate) : undefined}
-                onSelect={date => handleField("arrivalDate", date ? date.toISOString() : undefined)}
-                placeholder="Date d'arrivée"
-                className="w-full"
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Transporteur</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                name="carrierName"
+                value={form.carrierName}
+                onChange={handleInput}
+                required
+                placeholder="Transporteur"
               />
             </div>
           </div>
-          <DialogFooter className="pt-6">
-            <Button variant="outline" type="button" onClick={onClose}>Annuler</Button>
-            <Button type="submit" className="bg-green-600 text-white hover:bg-green-700" disabled={false}>
+          {/* Emplacement / lieu (ligne 5) */}
+          <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Emplacement</label>
+            <input
+              className="w-full border rounded px-3 py-2 text-sm"
+              name="location"
+              value={form.location}
+              onChange={handleInput}
+              required
+              placeholder="Emplacement actuel"
+            />
+          </div>
+          {/* Dates (ligne 6 : départ/arrivée) */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Départ</label>
+              <input
+                type="date"
+                className="w-full border rounded px-3 py-2 text-sm"
+                name="departureDate"
+                value={form.departureDate || ""}
+                onChange={handleInput}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Arrivée</label>
+              <input
+                type="date"
+                className="w-full border rounded px-3 py-2 text-sm"
+                name="arrivalDate"
+                value={form.arrivalDate || ""}
+                onChange={handleInput}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit">
               {container ? "Enregistrer" : "Créer"}
             </Button>
           </DialogFooter>
@@ -285,5 +360,4 @@ const CreateEditContainerDialog = ({
     </Dialog>
   );
 };
-
 export default CreateEditContainerDialog;

@@ -5,8 +5,8 @@ import CreateEditContainerDialog from "./CreateEditContainerDialog";
 import DeleteContainerDialog from "./DeleteContainerDialog";
 import { useContainers, useAddContainer } from "@/hooks/modules/useContainersFirestore";
 import { toast } from "sonner";
+import { useFreightData } from "@/hooks/modules/useFreightData";
 
-// Génération automatique du numéro
 const generateContainerNumber = () => {
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
@@ -16,7 +16,7 @@ const generateContainerNumber = () => {
 const ContainerManagerPage: React.FC = () => {
   const { data: containers = [], isLoading } = useContainers();
   const addContainerMutation = useAddContainer();
-  // No carriers/routes/clients here for brevity, adapt as needed (ou récupérez-les pareil avec d'autres hooks)
+  const { routes = [], clients = [] } = useFreightData();
   const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
   const [currentContainer, setCurrentContainer] = useState<any>(null);
 
@@ -40,7 +40,6 @@ const ContainerManagerPage: React.FC = () => {
     setCurrentContainer(null);
   };
 
-  // Ajout mutation
   const handleCreateContainer = async (containerData: any) => {
     try {
       await addContainerMutation.mutateAsync(containerData);
@@ -120,6 +119,8 @@ const ContainerManagerPage: React.FC = () => {
         container={openDialog === "edit" ? currentContainer : null}
         onSave={handleCreateContainer}
         defaultNumber={generateContainerNumber()}
+        routes={routes}
+        clients={clients}
       />
       {currentContainer && (
         <DeleteContainerDialog
