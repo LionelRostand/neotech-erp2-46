@@ -1,31 +1,30 @@
 
 import React, { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { useFreightClients } from "../hooks/useFreightClients";
 import { useCarriers } from "../hooks/useCarriers";
 import { useRoutes } from "../hooks/useRoutes";
-import { useFreightData } from "@/hooks/modules/useFreightData";
 
-// Différents types de conteneurs disponibles
+// Liste des types de conteneurs
 const CONTAINER_TYPES = [
-  { value: "Standard", size: "20ft" },
-  { value: "Refrigerated", size: "40ft" },
-  { value: "High Cube", size: "40ft High Cube" },
-  { value: "Open Top", size: "20ft" },
-  { value: "Flat Rack", size: "40ft" },
-  { value: "Tank", size: "20ft" }
+  { value: "standard", label: "Standard", size: "20ft" },
+  { value: "high-cube", label: "High Cube", size: "40ft" },
+  { value: "refrigerated", label: "Réfrigéré", size: "40ft" },
+  { value: "open-top", label: "Open Top", size: "20ft" },
+  { value: "flat-rack", label: "Flat Rack", size: "20ft" },
 ];
 
-// Liste des statuts - correspondance capture
+// Liste des statuts en français
 const STATUS_OPTIONS = [
   { value: "vide", label: "Vide" },
   { value: "chargement", label: "En chargement" },
   { value: "plein", label: "Plein" },
-  { value: "en transit", label: "En transit" },
-  { value: "livré", label: "Livré" }
+  { value: "en_transit", label: "En transit" },
+  { value: "livre", label: "Livré" }
 ];
 
 const initialFormState = {
@@ -35,11 +34,11 @@ const initialFormState = {
   status: "",
   carrier: "",
   client: "",
-  route: "",
   origin: "",
   destination: "",
   departureDate: "",
   arrivalDate: "",
+  route: ""
 };
 
 const NewContainerDialog = ({ open, onOpenChange }) => {
@@ -48,58 +47,74 @@ const NewContainerDialog = ({ open, onOpenChange }) => {
   const [articles, setArticles] = useState([]);
   const [cost, setCost] = useState(0);
 
-  // Fetch clients, carriers, routes depuis les hooks
-  const { clients, loading: isClientsLoading } = useFreightData();
-  const { carriers, isLoading: isCarriersLoading } = useCarriers();
-  const { routes, isLoading: isRoutesLoading } = useRoutes();
+  // Fetch clients, carriers, routes
+  const { clients = [], isLoading: isClientsLoading } = useFreightClients();
+  const { carriers = [], isLoading: isCarriersLoading } = useCarriers();
+  const { routes = [], isLoading: isRoutesLoading } = useRoutes();
 
-  // Remplit taille selon le type sélectionné
+  // Sélection d'un type = update taille automatiquement
   useEffect(() => {
-    const typeObj = CONTAINER_TYPES.find((t) => t.value === form.type);
-    if (typeObj) {
-      setForm((f) => ({ ...f, size: typeObj.size }));
-    } else if(form.type === "") {
-      setForm((f) => ({ ...f, size: "" }));
+    if (form.type) {
+      const selected = CONTAINER_TYPES.find((t) => t.value === form.type);
+      setForm((f) => ({
+        ...f,
+        size: selected ? selected.size : ""
+      }));
     }
     // eslint-disable-next-line
   }, [form.type]);
 
-  // Remplit origine/destination selon la route
+  // Sélection d'une route = update origine et destination
   useEffect(() => {
-    if (form.route && routes.length > 0) {
-      const routeObj = routes.find((r) => r.id === form.route);
-      if (routeObj) {
+    if (form.route && routes.length) {
+      const selected = routes.find((r) => r.id === form.route);
+      if (selected) {
         setForm((f) => ({
           ...f,
-          origin: routeObj.origin,
-          destination: routeObj.destination
+          origin: selected.origin,
+          destination: selected.destination
         }));
       }
     }
     // eslint-disable-next-line
   }, [form.route, routes]);
 
-  // Champs dynamiques des articles (tab Articles)
-  const handleAddArticle = () => {
-    setArticles([...articles, { name: "", quantity: 1, weight: 0 }]);
-  };
-  const handleArticleChange = (idx, key, value) => {
-    setArticles(
-      articles.map((a, i) =>
-        i === idx ? { ...a, [key]: key === "quantity" || key === "weight" ? Number(value) : value } : a
-      )
-    );
-  };
-  const handleRemoveArticle = (idx) => setArticles(articles.filter((_, i) => i !== idx));
-
-  // Formulaire
   const handleFieldChange = (field, value) => {
-    setForm((f) => ({ ...f, [field]: value }));
+    setForm((f) => ({
+      ...f,
+      [field]: value
+    }));
   };
 
-  // Simuler la création (ferme pop-up)
-  const handleCreate = () => onOpenChange(false);
-  const handleCancel = () => onOpenChange(false);
+  const handleAddArticle = () => {
+    setArticles([
+      ...articles,
+      {
+        name: '',
+        quantity: 1
+      }
+    ]);
+  };
+
+  const handleArticleChange = (idx, key, value) => {
+    setArticles(articles.map((a, i) => i === idx ? {
+      ...a,
+      [key]: key === 'quantity' || key === 'weight' ? Number(value) : value
+    } : a));
+  };
+
+  const handleRemoveArticle = (idx) => {
+    setArticles(articles.filter((_, i) => i !== idx));
+  };
+
+  const handleCreate = () => {
+    // Démo only: pas d'appel réel pour la création
+    onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,6 +122,7 @@ const NewContainerDialog = ({ open, onOpenChange }) => {
         <DialogHeader>
           <DialogTitle>Nouveau conteneur</DialogTitle>
         </DialogHeader>
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="info">Informations</TabsTrigger>
@@ -114,173 +130,178 @@ const NewContainerDialog = ({ open, onOpenChange }) => {
             <TabsTrigger value="cost">Tarification</TabsTrigger>
           </TabsList>
 
-          {/* Onglet Informations */}
+          {/* TAB INFORMATIONS */}
           <TabsContent value="info">
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={e => e.preventDefault()} autoComplete="off">
+            <form 
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              autoComplete="off"
+              onSubmit={e => e.preventDefault()}
+            >
               {/* Référence */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="reference">Référence</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Référence</label>
                 <Input
-                  id="reference"
-                  name="reference"
                   value={form.reference}
-                  placeholder="Référence"
                   onChange={e => handleFieldChange("reference", e.target.value)}
+                  placeholder="Référence"
+                  name="reference"
                   autoFocus
                 />
               </div>
               {/* Type */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="type">Type</label>
-                <Select value={form.type} onValueChange={v => handleFieldChange("type", v)} name="type">
-                  <SelectTrigger id="type">
+                <label className="block mb-1 text-sm font-medium text-gray-700">Type</label>
+                <Select
+                  value={form.type}
+                  onValueChange={v => handleFieldChange("type", v)}
+                  name="type"
+                >
+                  <SelectTrigger>
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[99] bg-white">
                     {CONTAINER_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.value}
-                      </SelectItem>
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              {/* Taille (auto selon type) */}
+              {/* Taille (dépend du type) */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="size">Taille</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Taille</label>
                 <Input
-                  id="size"
-                  name="size"
-                  placeholder="Taille"
                   value={form.size}
+                  placeholder="Taille"
+                  name="size"
                   readOnly
-                  className="bg-gray-50"
+                  className="bg-gray-100 cursor-not-allowed"
                 />
               </div>
               {/* Statut */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="status">Statut</label>
-                <Select value={form.status} onValueChange={v => handleFieldChange("status", v)} name="status">
-                  <SelectTrigger id="status">
+                <label className="block mb-1 text-sm font-medium text-gray-700">Statut</label>
+                <Select
+                  value={form.status}
+                  onValueChange={v => handleFieldChange("status", v)}
+                  name="status"
+                >
+                  <SelectTrigger>
                     <SelectValue placeholder="Statut" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[99] bg-white">
                     {STATUS_OPTIONS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               {/* Transporteur */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="carrier">Transporteur</label>
-                <Select value={form.carrier} onValueChange={v => handleFieldChange("carrier", v)} name="carrier">
-                  <SelectTrigger id="carrier">
+                <label className="block mb-1 text-sm font-medium text-gray-700">Transporteur</label>
+                <Select
+                  value={form.carrier}
+                  onValueChange={v => handleFieldChange("carrier", v)}
+                  name="carrier"
+                >
+                  <SelectTrigger>
                     <SelectValue placeholder={isCarriersLoading ? "Chargement..." : "Transporteur"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[99] bg-white">
                     {carriers.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               {/* Client */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="client">Client</label>
-                <Select value={form.client} onValueChange={v => handleFieldChange("client", v)} name="client">
-                  <SelectTrigger id="client">
+                <label className="block mb-1 text-sm font-medium text-gray-700">Client</label>
+                <Select
+                  value={form.client}
+                  onValueChange={v => handleFieldChange("client", v)}
+                  name="client"
+                >
+                  <SelectTrigger>
                     <SelectValue placeholder={isClientsLoading ? "Chargement..." : "Client"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[99] bg-white">
                     {clients.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               {/* Route */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="route">Route</label>
-                <Select value={form.route} onValueChange={v => handleFieldChange("route", v)} name="route">
-                  <SelectTrigger id="route">
+                <label className="block mb-1 text-sm font-medium text-gray-700">Route</label>
+                <Select
+                  value={form.route}
+                  onValueChange={v => handleFieldChange("route", v)}
+                  name="route"
+                >
+                  <SelectTrigger>
                     <SelectValue placeholder={isRoutesLoading ? "Chargement..." : "Route"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[99] bg-white">
                     {routes.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name}
-                      </SelectItem>
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               {/* Origine */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="origin">Origine</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Origine</label>
                 <Input
-                  id="origin"
-                  name="origin"
                   value={form.origin}
                   placeholder="Origine"
+                  name="origin"
                   readOnly
-                  className="bg-gray-50"
+                  className="bg-gray-100"
                 />
               </div>
               {/* Destination */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="destination">Destination</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Destination</label>
                 <Input
-                  id="destination"
-                  name="destination"
                   value={form.destination}
                   placeholder="Destination"
+                  name="destination"
                   readOnly
-                  className="bg-gray-50"
+                  className="bg-gray-100"
                 />
               </div>
-              {/* Départ */}
+              {/* Date départ */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="departureDate">Date départ</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Date départ</label>
                 <Input
-                  type="date"
-                  id="departureDate"
-                  name="departureDate"
                   value={form.departureDate}
                   onChange={e => handleFieldChange("departureDate", e.target.value)}
                   placeholder="jj/mm/aaaa"
+                  type="date"
+                  name="departureDate"
                 />
               </div>
-              {/* Arrivée */}
+              {/* Date arrivée */}
               <div>
-                <label className="block text-sm mb-1 font-medium" htmlFor="arrivalDate">Date arrivée</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Date arrivée</label>
                 <Input
-                  type="date"
-                  id="arrivalDate"
-                  name="arrivalDate"
                   value={form.arrivalDate}
                   onChange={e => handleFieldChange("arrivalDate", e.target.value)}
                   placeholder="jj/mm/aaaa"
+                  type="date"
+                  name="arrivalDate"
                 />
               </div>
+              {/* Boutons footer */}
+              <div className="col-span-2 flex justify-end gap-2 mt-6">
+                <Button type="button" variant="outline" onClick={handleCancel}>Annuler</Button>
+                <Button type="submit" onClick={handleCreate}>Créer</Button>
+              </div>
             </form>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Annuler
-              </Button>
-              <Button type="submit" onClick={handleCreate}>
-                Créer
-              </Button>
-            </div>
           </TabsContent>
 
-          {/* Onglet Articles */}
+          {/* TAB ARTICLES */}
           <TabsContent value="articles">
             <div className="space-y-2">
               {articles.map((a, idx) => (
@@ -311,18 +332,14 @@ const NewContainerDialog = ({ open, onOpenChange }) => {
                     onClick={() => handleRemoveArticle(idx)}
                     className="ml-2 text-destructive border-destructive hover:bg-red-100"
                     title="Supprimer"
-                  >
-                    ×
-                  </Button>
+                  >×</Button>
                 </div>
               ))}
-              <Button type="button" variant="secondary" onClick={handleAddArticle}>
-                + Ajouter un article
-              </Button>
+              <Button type="button" variant="secondary" onClick={handleAddArticle}>+ Ajouter un article</Button>
             </div>
           </TabsContent>
 
-          {/* Onglet Tarification */}
+          {/* TAB TARIFICATION */}
           <TabsContent value="cost">
             <div className="bg-gray-50 p-4 rounded-md">
               <h3 className="font-medium mb-4">Résumé des coûts</h3>
