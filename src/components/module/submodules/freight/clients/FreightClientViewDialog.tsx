@@ -28,11 +28,11 @@ const FreightClientViewDialog: React.FC<Props> = ({ open, onOpenChange, client }
           <DialogTitle>Détail du client</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
-          <p><b>Nom :</b> {client.name}</p>
-          <p><b>Email :</b> {client.email}</p>
-          <p><b>Téléphone :</b> {client.phone}</p>
-          <p><b>Adresse :</b> {client.address}</p>
-          {client.notes && <p><b>Notes :</b> {client.notes}</p>}
+          <p><b>Nom :</b> {client.name || "-"}</p>
+          <p><b>Email :</b> {client.email || "-"}</p>
+          <p><b>Téléphone :</b> {client.phone || "-"}</p>
+          <p><b>Adresse :</b> {client.address || "-"}</p>
+          {client.notes && <p><b>Notes :</b> {client.notes || "-"}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>

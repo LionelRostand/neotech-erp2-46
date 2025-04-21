@@ -1,35 +1,22 @@
 
-import React from 'react';
-import { useForm } from "react-hook-form";
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import React, { useState, FormEvent } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { Loader2 } from "lucide-react";
 
-interface CreateClientDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
-interface FormValues {
+interface ClientFormData {
   name: string;
   email: string;
   phone: string;
@@ -37,38 +24,53 @@ interface FormValues {
   notes: string;
 }
 
-const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
-  open,
-  onOpenChange,
-  onSuccess
-}) => {
-  const form = useForm<FormValues>({
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      notes: ''
-    }
-  });
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+const initialFormData: ClientFormData = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+  notes: ""
+};
 
-  const onSubmit = async (data: FormValues) => {
+const CreateClientDialog: React.FC<Props> = ({ open, onOpenChange, onSuccess }) => {
+  const [formData, setFormData] = useState<ClientFormData>(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onOpenChange(false);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.phone || !formData.address) {
+      toast.error("Tous les champs obligatoires doivent être remplis");
+      return;
+    }
+    
     setIsSubmitting(true);
+    
     try {
-      // Ensure all values are strings and not undefined
-      const clientData = {
-        ...data,
-        notes: data.notes || '', // Convert undefined/null to empty string
-        createdAt: new Date().toISOString()
-      };
+      await addDoc(collection(db, COLLECTIONS.FREIGHT.CLIENTS), {
+        ...formData,
+        createdAt: serverTimestamp()
+      });
       
-      await addDoc(collection(db, COLLECTIONS.FREIGHT.CLIENTS), clientData);
       toast.success("Client créé avec succès");
-      form.reset();
-      onSuccess();
+      handleClose();
+      onSuccess?.();
     } catch (error) {
-      console.error('Error creating client:', error);
+      console.error("Error creating client:", error);
       toast.error("Erreur lors de la création du client");
     } finally {
       setIsSubmitting(false);
@@ -76,94 +78,66 @@ const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Nouveau client</DialogTitle>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Input
               name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nom du client" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Nom du client"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
             />
-
-            <FormField
-              control={form.control}
+            <Input
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
             />
-
-            <FormField
-              control={form.control}
+            <Input
               name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Téléphone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Téléphone" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Téléphone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
             />
-
-            <FormField
-              control={form.control}
+            <Input
               name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Adresse</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Adresse" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Adresse"
+              value={formData.address}
+              onChange={handleInputChange}
+              required
             />
-
-            <FormField
-              control={form.control}
+            <Textarea
               name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Notes additionnelles" {...field} value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Notes (facultatif)"
+              value={formData.notes}
+              onChange={handleInputChange}
+              className="min-h-[100px]"
             />
-
-            <div className="flex justify-end gap-4 mt-6">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                Créer le client
-              </Button>
-            </div>
-          </form>
-        </Form>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Création...
+                </>
+              ) : (
+                "Créer"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
