@@ -1,18 +1,23 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useContainers } from "@/hooks/modules/useContainersFirestore";
+import { useContainers, useAddContainer, useUpdateContainer, useDeleteContainer } from "@/hooks/modules/useContainersFirestore";
 import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import ContainerCostTab from "./ContainerCostTab";
 import DeleteContainerDialog from "./DeleteContainerDialog";
 import ContainerViewDialog from "./ContainerViewDialog";
 import ContainerEditDialog from "./ContainerEditDialog";
+import { toast } from "sonner";
 
 const ContainersListWithCreate: React.FC = () => {
   const { data: containers, isLoading } = useContainers();
   const [viewDialog, setViewDialog] = useState<{ open: boolean; container: any | null }>({ open: false, container: null });
   const [editDialog, setEditDialog] = useState<{ open: boolean; container: any | null }>({ open: false, container: null });
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; container: any | null }>({ open: false, container: null });
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const addContainer = useAddContainer();
+  const updateContainer = useUpdateContainer();
+  const deleteContainer = useDeleteContainer();
 
   // Pour simuler le coût, on refait le calcul avec ContainerCostTab logic :
   const computeCost = (container) => {
@@ -25,22 +30,64 @@ const ContainersListWithCreate: React.FC = () => {
 
   // Gestionnaires pour les icônes d'action
   const handleView = (container) => {
+    console.log("Ouverture du dialogue de visualisation pour:", container.number);
     setViewDialog({ open: true, container });
   };
 
   const handleEdit = (container) => {
+    console.log("Ouverture du dialogue d'édition pour:", container.number);
     setEditDialog({ open: true, container });
   };
 
   const handleDelete = (container) => {
+    console.log("Ouverture du dialogue de suppression pour:", container.number);
     setDeleteDialog({ open: true, container });
+  };
+
+  const handleAddContainer = (newContainerData) => {
+    addContainer.mutate(newContainerData, {
+      onSuccess: () => {
+        toast.success("Conteneur ajouté avec succès");
+        setIsCreateDialogOpen(false);
+      },
+      onError: (error) => {
+        console.error("Erreur lors de l'ajout du conteneur:", error);
+        toast.error("Erreur lors de l'ajout du conteneur");
+      }
+    });
+  };
+
+  const handleUpdateContainer = (updatedContainer) => {
+    updateContainer.mutate({ id: updatedContainer.id, data: updatedContainer }, {
+      onSuccess: () => {
+        toast.success("Conteneur mis à jour avec succès");
+        setEditDialog({ open: false, container: null });
+      },
+      onError: (error) => {
+        console.error("Erreur lors de la mise à jour du conteneur:", error);
+        toast.error("Erreur lors de la mise à jour du conteneur");
+      }
+    });
+  };
+
+  const handleDeleteConfirm = (containerId) => {
+    deleteContainer.mutate(containerId, {
+      onSuccess: () => {
+        toast.success("Conteneur supprimé avec succès");
+        setDeleteDialog({ open: false, container: null });
+      },
+      onError: (error) => {
+        console.error("Erreur lors de la suppression du conteneur:", error);
+        toast.error("Erreur lors de la suppression du conteneur");
+      }
+    });
   };
 
   return (
     <div className="p-4">
       <div className="flex justify-between mb-6">
         <h2 className="text-2xl font-bold">Gestion des Conteneurs</h2>
-        <Button>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau conteneur
         </Button>
@@ -76,7 +123,7 @@ const ContainersListWithCreate: React.FC = () => {
                     <td className="p-2">{container.status}</td>
                     <td className="p-2">{totalWeight} kg</td>
                     <td className="p-2 text-green-700 font-bold">{cost.toLocaleString()} €</td>
-                    <td className="p-2 flex space-x-1">
+                    <td className="p-2 flex space-x-2">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -120,11 +167,13 @@ const ContainersListWithCreate: React.FC = () => {
         open={editDialog.open}
         onClose={() => setEditDialog({ open: false, container: null })}
         container={editDialog.container}
+        onSave={handleUpdateContainer}
       />
       <DeleteContainerDialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, container: null })}
         container={deleteDialog.container || { id: "", number: "" }}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );
