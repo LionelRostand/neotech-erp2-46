@@ -15,14 +15,12 @@ export const FreightRoutes = (
     <Route path="dashboard" element={<SubmodulePage moduleId={2} submoduleId="freight-dashboard" />} />
     <Route path="shipments" element={<SubmodulePage moduleId={2} submoduleId="freight-shipments" />} />
     <Route path="create-shipment" element={<CreateShipmentPage />} />
-    {/* SUPPRIMÉ : <Route path="routes" element={<SubmodulePage moduleId={2} submoduleId="freight-routes" />} /> */}
-    {/* On map sur "freight-routes-main" maintenant */}
     <Route path="routes" element={<SubmodulePage moduleId={2} submoduleId="freight-routes-main" />} />
     <Route path="containers-management" element={<ContainerManagerPage />} />
     <Route path="carriers" element={<SubmodulePage moduleId={2} submoduleId="freight-carriers" />} />
     <Route path="tracking" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
     <Route path="tracking/:trackingCode" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
-    <Route path="pricing" element={<SubmodulePage moduleId={2} submoduleId="freight-pricing" />} />
+    <Route path="accounting" element={<SubmodulePage moduleId={2} submoduleId="freight-accounting" />} />
     <Route path="documents" element={<SubmodulePage moduleId={2} submoduleId="freight-documents" />} />
     <Route path="client-portal" element={<SubmodulePage moduleId={2} submoduleId="freight-client-portal" />} />
     <Route path="settings" element={<SubmodulePage moduleId={2} submoduleId="freight-settings" />} />

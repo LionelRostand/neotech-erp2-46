@@ -1,3 +1,4 @@
+
 import React from 'react';
 import FreightDashboard from '../freight/FreightDashboard';
 import FreightShipments from '../FreightShipments';
@@ -17,7 +18,7 @@ export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId
       return <FreightDashboard />;
     case 'freight-shipments':
       return <FreightShipments />;
-    case 'freight-accounting': // Renvoie le nouveau composant pour la compta
+    case 'freight-accounting':
       return <FreightAccountingPage />;
     case 'freight-routes-main':
       return <FreightRoutesPage />;
