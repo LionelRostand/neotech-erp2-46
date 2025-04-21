@@ -4,15 +4,15 @@ import SubmoduleHeader from "../../SubmoduleHeader";
 import ContainersListWithCreate from "./ContainersListWithCreate";
 import ContainerCreateDialog from "./ContainerCreateDialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Container } from "lucide-react";
 import ContainerEditDialog from "./ContainerEditDialog";
-import { Container } from "@/types/freight";
+import { Container as ContainerType } from "@/types/freight";
 
 const ContainerListPage: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editingContainer, setEditingContainer] = useState<Container | null>(null);
+  const [editingContainer, setEditingContainer] = useState<ContainerType | null>(null);
 
-  const handleEditContainer = (container: Container) => {
+  const handleEditContainer = (container: ContainerType) => {
     setEditingContainer(container);
   };
 
