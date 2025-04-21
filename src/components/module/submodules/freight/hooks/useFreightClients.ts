@@ -18,10 +18,19 @@ export const useFreightClients = () => {
     queryKey: ['freight', 'clients'],
     queryFn: async () => {
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.CLIENTS));
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as FreightClient[];
+      // Ensure we only return proper client objects with the expected structure
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          notes: data.notes || '',
+          createdAt: data.createdAt || null
+        } as FreightClient;
+      });
     }
   });
 

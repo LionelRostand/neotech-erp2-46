@@ -96,25 +96,29 @@ const FreightClientsPage: React.FC = () => {
         onOpenChange={setIsCreateDialogOpen}
         onSuccess={handleCreateSuccess}
       />
-      <FreightClientViewDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        client={selectedClient}
-      />
-      <FreightClientEditDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        client={selectedClient}
-        onSubmit={handleEditSubmit}
-        submitting={editLoading}
-      />
-      <FreightClientDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        client={selectedClient}
-        onDelete={handleDeleteConfirm}
-        deleting={deleteLoading}
-      />
+      {selectedClient && (
+        <>
+          <FreightClientViewDialog
+            open={viewDialogOpen}
+            onOpenChange={setViewDialogOpen}
+            client={selectedClient}
+          />
+          <FreightClientEditDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            client={selectedClient}
+            onSubmit={handleEditSubmit}
+            submitting={editLoading}
+          />
+          <FreightClientDeleteDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            client={selectedClient}
+            onDelete={handleDeleteConfirm}
+            deleting={deleteLoading}
+          />
+        </>
+      )}
     </div>
   );
 };

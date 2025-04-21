@@ -41,16 +41,22 @@ export const useFreightData = () => {
         setShipments(shipmentsData);
 
         // Fetch clients
-        const clientsData = await fetchCollectionData<any>(
-          COLLECTIONS.FREIGHT.CLIENTS,
-          [orderBy('name')]
-        );
-        // Ensure clients have proper structure
-        const processedClients = clientsData.map(client => {
-          if (typeof client !== 'object') {
-            return { id: 'unknown', name: 'Client inconnu' };
+        const clientsSnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.CLIENTS));
+        // Process clients to ensure proper structure
+        const processedClients = clientsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          if (!data || typeof data !== 'object') {
+            return { id: doc.id, name: 'Client inconnu' };
           }
-          return client;
+          return {
+            id: doc.id,
+            name: data.name || 'Sans nom',
+            email: data.email || '',
+            phone: data.phone || '',
+            address: data.address || '',
+            notes: data.notes || '',
+            createdAt: data.createdAt || null
+          };
         });
         setClients(processedClients);
 

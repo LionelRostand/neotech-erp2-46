@@ -50,7 +50,7 @@ const FreightAccountingPage: React.FC = () => {
                 ) : (shipments.length > 0 ? (
                   shipments.map((shipment: any) => (
                     <tr key={shipment.id || shipment.reference} className="border-t last:border-b-0 hover:bg-gray-50">
-                      <td className="px-5 py-4">{shipment.reference}</td>
+                      <td className="px-5 py-4">{shipment.reference || "-"}</td>
                       <td className="px-5 py-4">{getClientName(shipment.customer)}</td>
                       <td className="px-5 py-4">{getContainerNumber(shipment.containerId)}</td>
                       <td className="px-5 py-4">

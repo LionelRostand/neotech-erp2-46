@@ -93,7 +93,7 @@ const ContainerManagerPage: React.FC = () => {
             ) : (containers && containers.length > 0 ? (
               containers.map((container: any) => (
                 <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
-                  <td className="px-5 py-4">{container.number}</td>
+                  <td className="px-5 py-4">{container.number || "-"}</td>
                   <td className="px-5 py-4">{getClientName(container.client)}</td>
                   <td className="px-5 py-4">{container.origin || "-"}</td>
                   <td className="px-5 py-4">{container.destination || "-"}</td>

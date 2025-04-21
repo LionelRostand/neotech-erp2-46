@@ -59,7 +59,7 @@ const FreightAccountingSummaryDialog: React.FC<FreightAccountingSummaryDialogPro
                 
                 return (
                   <TableRow key={shipment.id || shipment.reference}>
-                    <TableCell>{shipment.reference}</TableCell>
+                    <TableCell>{shipment.reference || "-"}</TableCell>
                     <TableCell>{client.name || "-"}</TableCell>
                     <TableCell>{container.number || "-"}</TableCell>
                     <TableCell>
