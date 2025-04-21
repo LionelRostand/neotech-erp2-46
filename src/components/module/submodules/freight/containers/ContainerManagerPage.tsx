@@ -1,64 +1,110 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2 } from "lucide-react";
-import { useContainers, useDeleteContainer } from "@/hooks/modules/useContainersFirestore";
-import ContainerDetailsDialog from "./ContainerDetailsDialog";
-import EditContainerDialog from "./EditContainerDialog";
+import { Eye, Edit, Trash } from "lucide-react";
+import { useContainers, useAddContainer } from "@/hooks/modules/useContainersFirestore";
+import { toast } from "sonner";
+import { useFreightData } from "@/hooks/modules/useFreightData";
+import ContainerDialogTabs from "./ContainerDialogTabs";
 import DeleteContainerDialog from "./DeleteContainerDialog";
 
-const ContainerManagerPage = () => {
+interface FreightClient {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
+interface Container {
+  id: string;
+  number: string;
+  client?: string;
+  origin?: string;
+  destination?: string;
+  status?: string;
+  carrier?: string;
+  [key: string]: any;
+}
+
+interface Route {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
+
+const generateContainerNumber = () => {
+  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const randomPart = Math.floor(10000 + Math.random() * 90000).toString();
+  return `CTR-${datePart}-${randomPart}`;
+};
+
+const ContainerManagerPage: React.FC = () => {
   const { data: containers = [], isLoading } = useContainers();
+  const addContainerMutation = useAddContainer();
+  const { routes = [], clients = [], carriers = [] } = useFreightData();
+  const [openDialog, setOpenDialog] = useState<"create" | "edit" | "delete" | null>(null);
+  const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
 
-  // Popups
-  const [selectedContainer, setSelectedContainer] = useState<any>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-
-  const { mutate: deleteContainer, isLoading: deleteLoading } = useDeleteContainer();
-
-  const openView = (container: any) => {
-    setSelectedContainer(container);
-    setShowDetails(true);
+  const handleNew = () => {
+    setCurrentContainer(null);
+    setOpenDialog("create");
   };
 
-  const openEdit = (container: any) => {
-    setSelectedContainer(container);
-    setShowEdit(true);
+  const handleEdit = (container: Container) => {
+    setCurrentContainer(container);
+    setOpenDialog("edit");
   };
 
-  const openDelete = (container: any) => {
-    setSelectedContainer(container);
-    setShowDelete(true);
+  const handleDelete = (container: Container) => {
+    setCurrentContainer(container);
+    setOpenDialog("delete");
   };
 
-  const handleDelete = () => {
-    if (selectedContainer && selectedContainer.id) {
-      deleteContainer(selectedContainer.id, {
-        onSuccess: () => {
-          setShowDelete(false);
-          setSelectedContainer(null);
-        },
-      });
+  const closeDialog = () => {
+    setOpenDialog(null);
+    setCurrentContainer(null);
+  };
+
+  const handleCreateContainer = async (containerData: any) => {
+    try {
+      await addContainerMutation.mutateAsync(containerData);
+      toast.success("Conteneur ajouté avec succès !");
+      closeDialog();
+    } catch (error) {
+      console.error("Error creating container:", error);
+      toast.error("Erreur lors de l'ajout du conteneur");
     }
   };
 
-  const getCarrierName = (str: string | undefined) => {
-    if (!str) return "-";
-    return str;
+  const getClientName = (clientId: string | undefined) => {
+    if (!clientId) return "-";
+    const client = clients.find((c: any) => c.id === clientId);
+    return client ? client.name || '-' : '-';
+  };
+
+  const getCarrierName = (carrierId: string | undefined) => {
+    if (!carrierId) return "-";
+    const carrier = carriers.find((c: any) => c.id === carrierId);
+    return carrier ? carrier.name || '-' : '-';
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-6">Gestion des Conteneurs</h2>
-      <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full table-auto">
+    <div className="max-w-5xl mx-auto p-6 space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Gestion des Conteneurs</h2>
+        <Button
+          onClick={handleNew}
+          className="flex items-center px-4 py-2 rounded-md"
+        >
+          <span className="mr-2 text-lg font-bold">+</span>
+          Nouveau Conteneur
+        </Button>
+      </div>
+      <div className="bg-white rounded-md shadow border">
+        <table className="w-full text-sm">
           <thead>
             <tr>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Numéro</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Type</th>
-              <th className="px-5 py-3 text-left font-semibold text-gray-700">Taille</th>
+              <th className="px-5 py-3 text-left font-semibold text-gray-700">Référence</th>
+              <th className="px-5 py-3 text-left font-semibold text-gray-700">Client</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Transporteur</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Origine</th>
               <th className="px-5 py-3 text-left font-semibold text-gray-700">Destination</th>
@@ -70,78 +116,74 @@ const ContainerManagerPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={9} className="text-center p-8 text-muted-foreground">
+                <td colSpan={8} className="text-center p-8 text-muted-foreground">
                   Chargement...
                 </td>
               </tr>
-            ) : containers.length > 0 ? (
-              containers.map((container: any) => (
-                <tr key={container.id}>
-                  <td className="px-5 py-4">{container.number}</td>
-                  <td className="px-5 py-4">{container.type}</td>
-                  <td className="px-5 py-4">{container.size}</td>
-                  <td className="px-5 py-4">{getCarrierName(container.carrierName)}</td>
+            ) : (containers && containers.length > 0 ? (
+              containers.map((container: Container) => (
+                <tr key={container.id || container.number} className="border-t last:border-b-0 hover:bg-gray-50">
+                  <td className="px-5 py-4">{container.number || "-"}</td>
+                  <td className="px-5 py-4">{getClientName(container.client)}</td>
+                  <td className="px-5 py-4">{getCarrierName(container.carrier)}</td>
                   <td className="px-5 py-4">{container.origin || "-"}</td>
                   <td className="px-5 py-4">{container.destination || "-"}</td>
                   <td className="px-5 py-4">
-                    {typeof container.cost === "number"
-                      ? <span className="text-green-700 font-medium">{container.cost.toLocaleString()} €</span>
+                    {typeof container.cost === "number" 
+                      ? <span className="text-green-700 font-medium">{container.cost.toLocaleString()} €</span> 
                       : "-"}
                   </td>
                   <td className="px-5 py-4">{container.status || "-"}</td>
                   <td className="px-5 py-4 space-x-2 flex items-center">
-                    <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Voir"
-                      onClick={() => openView(container)}>
-                      <Eye className="w-5 h-5" />
+                    <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Voir">
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Modifier"
-                      onClick={() => openEdit(container)}>
-                      <Edit className="w-5 h-5" />
+                    <Button size="icon" variant="ghost" onClick={() => handleEdit(container)} className="hover:bg-gray-100" title="Modifier">
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="hover:bg-gray-100" title="Supprimer"
-                      onClick={() => openDelete(container)}>
-                      <Trash2 className="w-5 h-5" />
+                    <Button size="icon" variant="ghost" onClick={() => handleDelete(container)} className="hover:bg-gray-100" title="Supprimer">
+                      <Trash className="h-4 w-4 text-red-500" />
                     </Button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="text-center p-8 text-muted-foreground">
+                <td colSpan={8} className="text-center p-8 text-muted-foreground">
                   Aucun conteneur enregistré pour le moment.
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>
-      <ContainerDetailsDialog
-        open={showDetails}
-        onOpenChange={(op) => {
-          setShowDetails(op);
-          if (!op) setSelectedContainer(null);
-        }}
-        container={selectedContainer}
-      />
-      <EditContainerDialog
-        open={showEdit}
-        onOpenChange={(op) => {
-          setShowEdit(op);
-          if (!op) setSelectedContainer(null);
-        }}
-        container={selectedContainer}
-      />
-      <DeleteContainerDialog
-        open={showDelete}
-        onOpenChange={(op) => {
-          setShowDelete(op);
-          if (!op) setSelectedContainer(null);
-        }}
-        onDelete={handleDelete}
-        containerNumber={selectedContainer?.number}
-      />
+      {openDialog && openDialog === "create" && (
+        <ContainerDialogTabs
+          open={true}
+          onClose={closeDialog}
+          onSave={handleCreateContainer}
+          defaultNumber={generateContainerNumber()}
+          routes={routes as Route[]}
+          clients={clients.map((client: any) => ({
+            id: client.id,
+            name: client.name
+          }))}
+          carriers={carriers.map((carrier: any) => ({
+            id: carrier.id,
+            name: carrier.name
+          }))}
+        />
+      )}
+      {openDialog && openDialog !== "create" && currentContainer && (
+        <DeleteContainerDialog
+          open={openDialog === "delete"}
+          onClose={closeDialog}
+          container={currentContainer}
+        />
+      )}
     </div>
   );
 };
 
 export default ContainerManagerPage;
+
