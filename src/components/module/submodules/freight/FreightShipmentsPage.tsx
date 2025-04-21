@@ -1,156 +1,190 @@
 
-import React, { useState, useEffect } from 'react';
-import { useFreightData } from '@/hooks/modules/useFreightData';
+import React, { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
 import { Shipment } from '@/types/freight';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, FileText } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
+import useFreightData from '@/hooks/modules/useFreightData';
+import ShipmentCreateDialog from './ShipmentCreateDialog';
+import ShipmentViewDialog from './ShipmentViewDialog';
+import ShipmentDeleteDialog from './ShipmentDeleteDialog';
+import ShipmentEditDialog from './ShipmentEditDialog';
+import StatusBadge from '@/components/module/submodules/StatusBadge';
 import { format } from 'date-fns';
 
 const FreightShipmentsPage: React.FC = () => {
   const { shipments, loading } = useFreightData();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredShipments, setFilteredShipments] = useState<Shipment[]>([]);
-  const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  useEffect(() => {
-    if (shipments) {
-      let filtered = [...shipments];
-      
-      if (searchTerm) {
-        filtered = filtered.filter(shipment => {
-          // Safe checks to prevent errors when properties are undefined
-          const reference = shipment.reference ? shipment.reference.toLowerCase() : '';
-          const origin = shipment.origin ? shipment.origin.toLowerCase() : '';
-          const destination = shipment.destination ? shipment.destination.toLowerCase() : '';
-          const customer = shipment.customer ? shipment.customer.toLowerCase() : '';
-          const carrierName = shipment.carrierName ? shipment.carrierName.toLowerCase() : '';
-          
-          const term = searchTerm.toLowerCase();
-          return (
-            reference.includes(term) || 
-            origin.includes(term) || 
-            destination.includes(term) || 
-            customer.includes(term) || 
-            carrierName.includes(term)
-          );
-        });
-      }
-      
-      setFilteredShipments(filtered);
-    }
-  }, [shipments, searchTerm]);
+  // Safely filter shipments by checking if the search string exists in any field
+  const filteredShipments = shipments.filter(shipment => {
+    if (!search.trim()) return true;
+    
+    // Safely check each field that might be searched, handling undefined values
+    const searchLower = search.toLowerCase();
+    return (
+      (shipment.reference && shipment.reference.toLowerCase().includes(searchLower)) ||
+      (shipment.origin && shipment.origin.toLowerCase().includes(searchLower)) ||
+      (shipment.destination && shipment.destination.toLowerCase().includes(searchLower)) ||
+      (shipment.customer && shipment.customer.toLowerCase().includes(searchLower)) ||
+      (shipment.carrierName && shipment.carrierName.toLowerCase().includes(searchLower)) ||
+      (shipment.status && shipment.status.toLowerCase().includes(searchLower))
+    );
+  });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft': return 'bg-gray-200 text-gray-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'in_transit': return 'bg-yellow-100 text-yellow-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'delayed': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const handleCreateSuccess = () => {
+    setIsCreateOpen(false);
+    // You might want to refresh your data here if not using real-time updates
   };
 
   const columns = [
     {
-      header: 'Référence',
-      accessorKey: 'reference',
-      cell: ({ row }: { row: { original: Shipment } }) => (
-        <div className="font-medium">{row.original.reference}</div>
-      ),
+      header: "Référence",
+      accessorKey: "reference",
     },
     {
-      header: 'Client',
-      accessorKey: 'customer',
+      header: "Origine",
+      accessorKey: "origin",
     },
     {
-      header: 'Origine',
-      accessorKey: 'origin',
+      header: "Destination",
+      accessorKey: "destination",
     },
     {
-      header: 'Destination',
-      accessorKey: 'destination',
+      header: "Client",
+      accessorKey: "customer",
     },
     {
-      header: 'Statut',
-      accessorKey: 'status',
-      cell: ({ row }: { row: { original: Shipment } }) => (
-        <Badge className={getStatusColor(row.original.status)}>
-          {row.original.status === 'in_transit' ? 'En transit' : 
-           row.original.status === 'delivered' ? 'Livré' : 
-           row.original.status === 'confirmed' ? 'Confirmé' : 
-           row.original.status === 'draft' ? 'Brouillon' : 
-           row.original.status === 'cancelled' ? 'Annulé' : 
-           row.original.status === 'delayed' ? 'Retardé' : 
-           row.original.status}
-        </Badge>
-      ),
+      header: "Transporteur",
+      accessorKey: "carrierName",
     },
     {
-      header: 'Date d\'expédition',
-      accessorKey: 'scheduledDate',
-      cell: ({ row }: { row: { original: Shipment } }) => (
-        <div>{row.original.scheduledDate ? format(new Date(row.original.scheduledDate), 'dd/MM/yyyy') : '-'}</div>
-      ),
+      header: "Type",
+      accessorKey: "shipmentType",
+      cell: ({ row }: { row: { original: Shipment } }) => {
+        const shipment = row.original;
+        return (
+          <div className="capitalize">
+            {shipment.shipmentType === 'import' ? 'Import' :
+             shipment.shipmentType === 'export' ? 'Export' :
+             shipment.shipmentType === 'local' ? 'Local' : 'International'}
+          </div>
+        );
+      }
     },
     {
-      header: 'Transporteur',
-      accessorKey: 'carrierName',
+      header: "Statut",
+      accessorKey: "status",
+      cell: ({ row }: { row: { original: Shipment } }) => {
+        const shipment = row.original;
+        return (
+          <StatusBadge 
+            status={shipment.status} 
+            statusMapping={{
+              draft: {label: "Brouillon", color: "gray"},
+              confirmed: {label: "Confirmé", color: "blue"},
+              in_transit: {label: "En transit", color: "yellow"},
+              delivered: {label: "Livré", color: "green"},
+              cancelled: {label: "Annulé", color: "red"},
+              delayed: {label: "Retardé", color: "orange"}
+            }}
+          />
+        );
+      }
     },
     {
-      header: 'Coût',
-      accessorKey: 'totalPrice',
-      cell: ({ row }: { row: { original: Shipment } }) => (
-        <div>{row.original.totalPrice ? `${row.original.totalPrice.toLocaleString()} €` : '-'}</div>
-      ),
+      header: "Date Prévue",
+      accessorKey: "scheduledDate",
+      cell: ({ row }: { row: { original: Shipment } }) => {
+        const shipment = row.original;
+        return shipment.scheduledDate ? format(new Date(shipment.scheduledDate), 'dd/MM/yyyy') : '-';
+      }
     },
     {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }: { row: { original: Shipment } }) => (
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate(`/modules/freight/shipments/${row.original.id}`)}
-          >
-            <FileText className="h-4 w-4 mr-1" />
-            Voir
-          </Button>
-        </div>
-      ),
+      header: "Coût",
+      accessorKey: "totalPrice",
+      cell: ({ row }: { row: { original: Shipment } }) => {
+        const shipment = row.original;
+        return shipment.totalPrice ? `${shipment.totalPrice.toFixed(2)} €` : '-';
+      }
     },
+    {
+      header: "Actions",
+      id: "actions",
+      cell: ({ row }: { row: { original: Shipment } }) => {
+        const shipment = row.original;
+        return (
+          <div className="flex space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setSelectedShipment(shipment);
+                setIsViewOpen(true);
+              }}
+            >
+              Voir
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setSelectedShipment(shipment);
+                setIsEditOpen(true);
+              }}
+            >
+              Modifier
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-red-500 hover:text-red-700" 
+              onClick={() => {
+                setSelectedShipment(shipment);
+                setIsDeleteOpen(true);
+              }}
+            >
+              Supprimer
+            </Button>
+          </div>
+        );
+      }
+    }
   ];
 
-  const handleCreateShipment = () => {
-    navigate('/modules/freight/create-shipment');
-  };
-
   return (
-    <div className="container mx-auto py-6">
+    <div className="space-y-4 p-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Gestion des Expéditions</h1>
+        <Button 
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus size={16} />
+          Nouvelle Expédition
+        </Button>
+      </div>
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-2xl font-bold">Gestion des Expéditions</CardTitle>
-          <Button onClick={handleCreateShipment}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nouvelle Expédition
-          </Button>
+        <CardHeader className="pb-2">
+          <CardTitle>Expéditions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Rechercher par référence, client, origine, destination..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Rechercher une expédition..."
+                className="w-full pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
@@ -163,6 +197,54 @@ const FreightShipmentsPage: React.FC = () => {
           />
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <ShipmentCreateDialog 
+        isOpen={isCreateOpen} 
+        onClose={() => setIsCreateOpen(false)} 
+        onCreated={handleCreateSuccess}
+      />
+      
+      {selectedShipment && (
+        <>
+          <ShipmentViewDialog 
+            shipment={selectedShipment}
+            isOpen={isViewOpen} 
+            onClose={() => {
+              setIsViewOpen(false);
+              setSelectedShipment(null);
+            }} 
+          />
+          
+          <ShipmentEditDialog 
+            shipment={selectedShipment}
+            isOpen={isEditOpen} 
+            onClose={() => {
+              setIsEditOpen(false);
+              setSelectedShipment(null);
+            }} 
+            onUpdated={() => {
+              setIsEditOpen(false);
+              setSelectedShipment(null);
+              // Refresh data if needed
+            }}
+          />
+          
+          <ShipmentDeleteDialog 
+            shipment={selectedShipment}
+            isOpen={isDeleteOpen} 
+            onClose={() => {
+              setIsDeleteOpen(false);
+              setSelectedShipment(null);
+            }} 
+            onDeleted={() => {
+              setIsDeleteOpen(false);
+              setSelectedShipment(null);
+              // Refresh data if needed
+            }}
+          />
+        </>
+      )}
     </div>
   );
 };
