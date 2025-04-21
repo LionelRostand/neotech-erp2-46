@@ -1,42 +1,26 @@
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Package, DollarSign } from "lucide-react";
 import ContainerStatusSelect from "./ContainerStatusSelect";
 import ContainerDateFields from "./ContainerDateFields";
-
-interface Route {
-  id: string;
-  name: string;
-  origin: string;
-  destination: string;
-}
-
-interface ClientOption {
-  id: string;
-  name: string;
-}
-
-interface CarrierOption {
-  id: string;
-  name: string;
-}
+import ContainerArticlesTab from "./ContainerArticlesTab";
+import ContainerCostTab from "./ContainerCostTab";
 
 interface ContainerDialogTabsProps {
   open: boolean;
   onClose: () => void;
-  onSave: (containerData: any) => void;
+  onSave: (container: any) => void;
   defaultNumber: string;
-  routes: Route[];
-  clients: ClientOption[];
-  carriers: CarrierOption[];
-  containerToEdit?: any;
+  routes: { id: string; name: string; origin: string; destination: string }[];
+  clients: { id: string; name: string }[];
+  carriers: { id: string; name: string }[];
+  initialData?: any;
 }
 
-const STATUSES = [
+const DEFAULT_STATUSES = [
   { value: "vide", label: "Vide" },
   { value: "chargement", label: "En chargement" },
   { value: "plein", label: "Plein" },
@@ -44,205 +28,148 @@ const STATUSES = [
   { value: "livré", label: "Livré" },
 ];
 
+const CONTAINER_TYPES = [
+  { value: "20ft", label: "20 pieds" },
+  { value: "40ft", label: "40 pieds" }
+];
+
 const ContainerDialogTabs: React.FC<ContainerDialogTabsProps> = ({
   open,
   onClose,
   onSave,
   defaultNumber,
-  routes = [],
-  clients = [],
-  carriers = [],
-  containerToEdit,
+  routes,
+  clients,
+  carriers,
+  initialData,
 }) => {
-  // Data states
-  const [activeTab, setActiveTab] = useState("details");
-  const [number, setNumber] = useState(defaultNumber);
-  const [selectedClient, setSelectedClient] = useState("");
-  const [selectedCarrier, setSelectedCarrier] = useState("");
-  const [selectedRoute, setSelectedRoute] = useState("");
-  const [status, setStatus] = useState(STATUSES[0].value);
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [cost, setCost] = useState("");
-  const [entryDate, setEntryDate] = useState<Date>();
-  const [exitDate, setExitDate] = useState<Date>();
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState("infos");
+  const [number, setNumber] = useState(initialData?.number ?? defaultNumber);
+  const [client, setClient] = useState(initialData?.client ?? "");
+  const [carrier, setCarrier] = useState(initialData?.carrier ?? "");
+  const [routeId, setRouteId] = useState(initialData?.routeId ?? "");
+  const [origin, setOrigin] = useState(initialData?.origin ?? "");
+  const [destination, setDestination] = useState(initialData?.destination ?? "");
+  const [status, setStatus] = useState(initialData?.status ?? "vide");
+  const [entryDate, setEntryDate] = useState<Date | undefined>(initialData?.entryDate);
+  const [exitDate, setExitDate] = useState<Date | undefined>(initialData?.exitDate);
+  const [containerType, setContainerType] = useState(initialData?.type ?? "20ft");
+  const [articles, setArticles] = useState<any[]>(initialData?.articles ?? []);
+  const [cost, setCost] = useState<number>(initialData?.cost ?? 0);
 
-  // Remplir les champs si édition
-  useEffect(() => {
-    if (containerToEdit) {
-      setNumber(containerToEdit.number || defaultNumber);
-      setSelectedClient(containerToEdit.client || "");
-      setSelectedCarrier(containerToEdit.carrier || "");
-      setSelectedRoute(containerToEdit.routeId || "");
-      setStatus(containerToEdit.status || STATUSES[0].value);
-      setOrigin(containerToEdit.origin || "");
-      setDestination(containerToEdit.destination || "");
-      setCost(containerToEdit.cost ? String(containerToEdit.cost) : "");
-      setEntryDate(containerToEdit.entryDate ? new Date(containerToEdit.entryDate) : undefined);
-      setExitDate(containerToEdit.exitDate ? new Date(containerToEdit.exitDate) : undefined);
-      setArticles(containerToEdit.articles || []);
-    } else {
-      setNumber(defaultNumber);
-      setSelectedClient("");
-      setSelectedCarrier("");
-      setSelectedRoute("");
-      setStatus(STATUSES[0].value);
-      setOrigin("");
-      setDestination("");
-      setCost("");
-      setEntryDate(undefined);
-      setExitDate(undefined);
-      setArticles([]);
-    }
-  }, [containerToEdit, defaultNumber, open]);
-
-  // Lorsqu'on sélectionne une route, remplir automatiquement origine/destination
-  useEffect(() => {
-    if (selectedRoute) {
-      const routeObj = routes.find((r) => r.id === selectedRoute);
-      if (routeObj) {
-        setOrigin(routeObj.origin || "");
-        setDestination(routeObj.destination || "");
+  // Remplit automatiquement origine/destination si la route change
+  React.useEffect(() => {
+    if (routeId) {
+      const route = routes.find(r => r.id === routeId);
+      if (route) {
+        setOrigin(route.origin || "");
+        setDestination(route.destination || "");
       }
     }
-  }, [selectedRoute, routes]);
+  }, [routeId, routes]);
 
   const handleSave = () => {
-    if (!number) {
-      toast.error("Un numéro de conteneur est requis !");
-      return;
-    }
-    if (!selectedClient) {
-      toast.error("Veuillez sélectionner un client.");
-      return;
-    }
-    if (!selectedCarrier) {
-      toast.error("Veuillez sélectionner un transporteur.");
-      return;
-    }
-    setLoading(true);
-
     onSave({
       number,
-      client: selectedClient,
-      carrier: selectedCarrier,
-      routeId: selectedRoute,
+      client,
+      carrier,
+      routeId,
       origin,
       destination,
       status,
-      cost: cost ? parseFloat(cost) : 0,
-      entryDate: entryDate ? entryDate.toISOString() : null,
-      exitDate: exitDate ? exitDate.toISOString() : null,
+      entryDate: entryDate ? entryDate.toISOString() : undefined,
+      exitDate: exitDate ? exitDate.toISOString() : undefined,
+      type: containerType,
       articles,
+      cost,
     });
-    setLoading(false);
   };
 
+  // Callbacks articles/cost can be refined if you manage at root level
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="min-w-[450px]">
+    <Dialog open={open} onOpenChange={val => !val && onClose()}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {containerToEdit ? "Modifier le conteneur" : "Nouveau Conteneur"}
-          </DialogTitle>
+          <DialogTitle>Nouveau Conteneur</DialogTitle>
         </DialogHeader>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="details">Détails</TabsTrigger>
-            <TabsTrigger value="articles">Articles</TabsTrigger>
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="infos">Infos</TabsTrigger>
+            <TabsTrigger value="articles" className="flex items-center gap-2">
+              <Package className="w-4 h-4 mr-1" /> Articles
+            </TabsTrigger>
+            <TabsTrigger value="cost" className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 mr-1" /> Cout
+            </TabsTrigger>
           </TabsList>
-          {/* Tab Détails */}
-          <TabsContent value="details">
-            <form className="space-y-3">
-              {/* Numéro */}
-              <div>
-                <label className="block text-xs font-medium mb-1">Référence</label>
-                <Input value={number} onChange={(e) => setNumber(e.target.value)} required />
-              </div>
-              {/* Client & Transporteur */}
-              <div className="flex gap-2">
-                <div className="flex-1">
+          <TabsContent value="infos">
+            <form className="space-y-4" onSubmit={e => {e.preventDefault(); handleSave();}}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Référence</label>
+                  <input className="border rounded px-2 py-2 w-full" value={number} onChange={e => setNumber(e.target.value)} required />
+                </div>
+                <div>
                   <label className="block text-xs font-medium mb-1">Client</label>
-                  <select className="w-full border rounded px-2 py-2" value={selectedClient} onChange={e => setSelectedClient(e.target.value)} required>
-                    <option value="">Sélectionnez un client</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>{client.name}</option>
-                    ))}
+                  <select className="border rounded px-2 py-2 w-full" value={client} onChange={e => setClient(e.target.value)} required>
+                    <option value="">Sélectionner</option>
+                    {clients.map(cl => <option key={cl.id} value={cl.id}>{cl.name}</option>)}
                   </select>
                 </div>
-                <div className="flex-1">
+                <div>
                   <label className="block text-xs font-medium mb-1">Transporteur</label>
-                  <select className="w-full border rounded px-2 py-2" value={selectedCarrier} onChange={e => setSelectedCarrier(e.target.value)} required>
-                    <option value="">Sélectionnez un transporteur</option>
-                    {carriers.map(carrier => (
-                      <option key={carrier.id} value={carrier.id}>{carrier.name}</option>
-                    ))}
+                  <select className="border rounded px-2 py-2 w-full" value={carrier} onChange={e => setCarrier(e.target.value)} required>
+                    <option value="">Sélectionner</option>
+                    {carriers.map(car => <option key={car.id} value={car.id}>{car.name}</option>)}
                   </select>
                 </div>
-              </div>
-              {/* Route / Origine / Destination */}
-              <div className="flex gap-2">
-                <div className="flex-1">
+                <div>
                   <label className="block text-xs font-medium mb-1">Route</label>
-                  <select className="w-full border rounded px-2 py-2" value={selectedRoute} onChange={e => setSelectedRoute(e.target.value)}>
-                    <option value="">Sélectionnez une route</option>
-                    {routes.map(route => (
-                      <option key={route.id} value={route.id}>{route.name}</option>
-                    ))}
+                  <select className="border rounded px-2 py-2 w-full" value={routeId} onChange={e => setRouteId(e.target.value)}>
+                    <option value="">Sélectionner</option>
+                    {routes.map(rt => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                   </select>
                 </div>
-                <div className="flex-1 flex gap-2">
-                  <div className="w-1/2">
-                    <label className="block text-xs font-medium mb-1">Origine</label>
-                    <Input value={origin} onChange={e => setOrigin(e.target.value)} />
-                  </div>
-                  <div className="w-1/2">
-                    <label className="block text-xs font-medium mb-1">Destination</label>
-                    <Input value={destination} onChange={e => setDestination(e.target.value)} />
-                  </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Type</label>
+                  <select className="border rounded px-2 py-2 w-full" value={containerType} onChange={e => setContainerType(e.target.value)}>
+                    {CONTAINER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Statut</label>
+                  <ContainerStatusSelect value={status} onChange={setStatus} />
                 </div>
               </div>
-              {/* Statut */}
-              <div>
-                <label className="block text-xs font-medium mb-1">Statut</label>
-                <ContainerStatusSelect value={status} onChange={setStatus} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Origine</label>
+                  <input className="border rounded px-2 py-2 w-full" value={origin} onChange={e => setOrigin(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Destination</label>
+                  <input className="border rounded px-2 py-2 w-full" value={destination} onChange={e => setDestination(e.target.value)} required />
+                </div>
               </div>
-              {/* Dates */}
               <ContainerDateFields
                 entryDate={entryDate}
-                exitDate={exitDate}
                 setEntryDate={setEntryDate}
+                exitDate={exitDate}
                 setExitDate={setExitDate}
               />
-              {/* Coût */}
-              <div>
-                <label className="block text-xs font-medium mb-1">Coût (calculé ou manuel)</label>
-                <Input
-                  type="number"
-                  value={cost}
-                  onChange={e => setCost(e.target.value)}
-                  placeholder="Coût du conteneur en fonction du trajet"
-                  min="0"
-                />
-              </div>
-              <div className="flex justify-end gap-3 mt-4">
-                <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-                <Button type="button" onClick={handleSave} disabled={loading}>
-                  {containerToEdit ? "Mettre à jour" : "Créer"}
-                </Button>
-              </div>
             </form>
           </TabsContent>
-          {/* Tab Articles */}
           <TabsContent value="articles">
-            <div className="py-2 text-muted-foreground text-center text-xs">
-              Module Articles à implémenter ici (prochaine étape).
-            </div>
+            <ContainerArticlesTab articles={articles} setArticles={setArticles} />
+          </TabsContent>
+          <TabsContent value="cost">
+            <ContainerCostTab containerType={containerType} articles={articles} cost={cost} setCost={setCost} />
           </TabsContent>
         </Tabs>
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button onClick={handleSave}>Enregistrer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
