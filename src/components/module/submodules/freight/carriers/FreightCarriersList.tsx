@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useCollectionData } from "@/hooks/useCollectionData";
 import { COLLECTIONS } from "@/lib/firebase-collections";
@@ -7,6 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Carrier } from "@/types/freight";
 import CreateCarrierDialog from "./CreateCarrierDialog";
 import { Plus } from "lucide-react";
+import ViewCarrierDialog from "./ViewCarrierDialog";
+import EditCarrierDialog from "./EditCarrierDialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toast } from "sonner";
 
 const columns = [
   { header: "Nom", accessorKey: "name" },
@@ -30,15 +35,35 @@ const FreightCarriersList: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const { data: carriers, isLoading, error } = useCollectionData(COLLECTIONS.FREIGHT.CARRIERS);
 
-  // Remonte la liste après création
+  const [viewCarrier, setViewCarrier] = useState<Carrier | null>(null);
+  const [editCarrier, setEditCarrier] = useState<Carrier | null>(null);
+  const [deleteCarrier, setDeleteCarrier] = useState<Carrier | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const handleCarrierCreated = () => {
     setOpenDialog(false);
-    // useCollectionData se met à jour automatiquement via onSnapshot
+  };
+
+  const handleCarrierUpdated = () => {
+    setEditCarrier(null);
+  };
+
+  const handleDeleteCarrier = async () => {
+    if (!deleteCarrier) return;
+    setDeleteLoading(true);
+    try {
+      await deleteDoc(doc(db, COLLECTIONS.FREIGHT.CARRIERS, deleteCarrier.id));
+      toast.success("Transporteur supprimé !");
+      setDeleteCarrier(null);
+    } catch (e) {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   return (
     <div>
-      {/* Header section */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Gestion des Transporteurs</h2>
         <Button
@@ -55,7 +80,48 @@ const FreightCarriersList: React.FC = () => {
         onOpenChange={setOpenDialog}
         onCreated={handleCarrierCreated}
       />
-      {/* Table displaying carriers */}
+
+      <ViewCarrierDialog
+        open={!!viewCarrier}
+        onOpenChange={() => setViewCarrier(null)}
+        carrier={viewCarrier}
+      />
+      <EditCarrierDialog
+        open={!!editCarrier}
+        onOpenChange={() => setEditCarrier(null)}
+        carrier={editCarrier}
+        onUpdated={handleCarrierUpdated}
+      />
+      <Dialog open={!!deleteCarrier} onOpenChange={open => { if (!open) setDeleteCarrier(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer ce transporteur ?</DialogTitle>
+            <DialogDescription>
+              Voulez-vous vraiment supprimer le transporteur <strong>{deleteCarrier?.name}</strong> ?
+              Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteCarrier(null)}
+              disabled={deleteLoading}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteCarrier}
+              disabled={deleteLoading}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteLoading ? "Suppression..." : "Confirmer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="bg-white shadow rounded-md overflow-x-auto">
         <table className="w-full min-w-[700px]">
           <thead>
@@ -99,13 +165,12 @@ const FreightCarriersList: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3 flex gap-2">
-                    {/* Actions: voir/éditer/supprimer (icônes en placeholder, fonction à implémenter) */}
                     <Button
                       size="icon"
                       variant="ghost"
                       className="hover:bg-primary/10"
                       title="Voir"
-                      disabled
+                      onClick={() => setViewCarrier(carrier)}
                     >
                       <svg width="18" height="18" fill="none"><circle cx="9" cy="9" r="8" stroke="#1e293b" strokeWidth="1.5"/><circle cx="9" cy="9" r="2.5" stroke="#1e293b" strokeWidth="1.5"/></svg>
                     </Button>
@@ -114,7 +179,7 @@ const FreightCarriersList: React.FC = () => {
                       variant="ghost"
                       className="hover:bg-green-100 text-green-700"
                       title="Éditer"
-                      disabled
+                      onClick={() => setEditCarrier(carrier)}
                     >
                       <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12.38 5.76l5.86 5.87-8.97 8.97H3.4v-5.87l8.98-8.97zm2.97-2.97a2 2 0 0 1 2.83 0l2.03 2.03a2 2 0 0 1 0 2.83l-2.12 2.12-4.86-4.86 2.12-2.12z" stroke="#047857" strokeWidth="1.4"/></svg>
                     </Button>
@@ -123,7 +188,7 @@ const FreightCarriersList: React.FC = () => {
                       variant="ghost"
                       className="hover:bg-red-100 text-red-600"
                       title="Supprimer"
-                      disabled
+                      onClick={() => setDeleteCarrier(carrier)}
                     >
                       <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 7h12M9 7v8m6-8v8M9 7V5a3 3 0 0 1 6 0v2M4 7h16" stroke="#dc2626" strokeWidth="1.4"/></svg>
                     </Button>
