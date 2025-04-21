@@ -10,11 +10,11 @@ import { toast } from 'sonner';
  * @param queryConstraints Optional query constraints (where, orderBy, limit, etc.)
  * @returns Object containing data, loading state, and error if any
  */
-export const useCollectionData = (
+export const useCollectionData = <T>(
   collectionPath: string,
   queryConstraints: QueryConstraint[] = []
 ) => {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -71,7 +71,7 @@ export const useCollectionData = (
             const documents = snapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
-            }));
+            })) as T[];
             setData(documents);
             setIsLoading(false);
             console.log(`Received ${documents.length} documents from ${collectionPath}`);
@@ -95,11 +95,12 @@ export const useCollectionData = (
         setError(error);
         setIsLoading(false);
         toast.error(`Erreur lors du chargement des données: ${error.message}`);
+        return () => {}; // Return empty cleanup function
       }
     }, 500); // Simulate a small delay for loading states to be visible
     
     return () => clearTimeout(timeoutId);
   }, [collectionPath, JSON.stringify(queryConstraints)]);
 
-  return { data, isLoading, error };
+  return { data: data || [], isLoading, error };
 };

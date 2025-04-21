@@ -16,9 +16,13 @@ const Index = () => {
 
   useEffect(() => {
     const loadInstalledModules = () => {
-      const savedModules = localStorage.getItem('installedModules');
-      if (savedModules) {
-        setInstalledModules(JSON.parse(savedModules));
+      try {
+        const savedModules = localStorage.getItem('installedModules');
+        if (savedModules) {
+          setInstalledModules(JSON.parse(savedModules));
+        }
+      } catch (error) {
+        console.error('Error loading installed modules:', error);
       }
     };
     

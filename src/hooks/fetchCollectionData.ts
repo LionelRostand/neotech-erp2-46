@@ -14,10 +14,9 @@ export async function fetchCollectionData<T>(
   constraints: QueryConstraint[] = []
 ): Promise<T[]> {
   try {
-    // Check for empty collection path
+    // Check for empty collection path and handle gracefully
     if (!collectionPath || collectionPath.trim() === '') {
-      const error = new Error('Collection path cannot be empty');
-      console.error('Error fetching data:', error);
+      console.error('Error: Collection path cannot be empty');
       toast.error(`Erreur lors du chargement des données: Collection path cannot be empty`);
       return [];
     }
