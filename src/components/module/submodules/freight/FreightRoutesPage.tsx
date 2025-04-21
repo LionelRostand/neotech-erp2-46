@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import FreightRouteForm from "./FreightRouteForm";
@@ -12,9 +12,28 @@ const initialRoutes: FreightRoute[] = [];
 const FreightRoutesPage: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [routes, setRoutes] = useState<FreightRoute[]>(initialRoutes);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Utiliser le hook pour la collection firestore
-  const { add, loading } = useFirestore("freight_routes");
+  const { add, loading, getAll } = useFirestore("freight_routes");
+
+  // Charger les routes au chargement de la page
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        setIsLoading(true);
+        const routesData = await getAll();
+        setRoutes(routesData as FreightRoute[]);
+      } catch (err: any) {
+        console.error("Erreur lors du chargement des routes:", err);
+        toast.error("Erreur lors du chargement des routes");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoutes();
+  }, [getAll]);
 
   const onAddRoute = async (route: FreightRoute) => {
     // Générer un id local pour un affichage instantané
@@ -28,7 +47,7 @@ const FreightRoutesPage: React.FC = () => {
     try {
       const res = await add({ ...route, createdAt: new Date().toISOString() });
       toast.success("Route enregistrée avec succès dans la base de données.");
-      // Optionnel : remonter l'id firestore pour correspondre à la vraie donnée
+      // Optionnel : remonter l'id firestore pour correspondre à la vraie donnée
       setRoutes((prev) =>
         prev.map((r) =>
           r.id === localRoute.id && res?.id ? { ...res, ...r } : r
@@ -54,7 +73,12 @@ const FreightRoutesPage: React.FC = () => {
       </div>
       <div className="bg-white rounded-lg shadow-md p-8">
         <div>
-          {routes.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-6">
+              <div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Chargement des routes...</p>
+            </div>
+          ) : routes.length > 0 ? (
             <table className="min-w-full">
               <thead>
                 <tr className="border-b text-left">
