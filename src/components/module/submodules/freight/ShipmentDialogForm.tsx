@@ -1,455 +1,444 @@
 
-import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Plus } from "lucide-react";
-import { useFreightClients } from "./hooks/useFreightClients";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { createShipment } from "./services/shipmentService";
-import { format } from "date-fns";
+import { useFreightClients } from '@/components/module/submodules/freight/hooks/useFreightClients';
+import { ShipmentFormData, ShipmentLine } from '@/types/freight';
+import { X, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export interface ShipmentLine {
-  name: string;
-  quantity: number;
-  weight: number;
-  packaging: string;
-  totalWeight: number;
+interface ShipmentDialogFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: ShipmentFormData) => Promise<void>;
 }
 
-export interface ShipmentData {
-  reference: string;
-  customer: string;
-  shipmentType: string;
-  origin: string;
-  destination: string;
-  carrier: string;
-  carrierName: string;
-  scheduledDate: string;
-  estimatedDeliveryDate: string;
-  status: string;
-  totalWeight: number;
-  trackingNumber?: string;
-  notes?: string;
-  lines: ShipmentLine[];
-  // tarification/route (could be extended)
-}
-
-const emptyShipment: ShipmentData = {
-  reference: `EXP-${Date.now().toString().slice(-6)}`,
-  customer: "",
-  shipmentType: "local",
-  origin: "",
-  destination: "",
-  carrier: "",
-  carrierName: "",
-  scheduledDate: "",
-  estimatedDeliveryDate: "",
-  status: "draft",
-  totalWeight: 0,
-  trackingNumber: "",
-  notes: "",
-  lines: [],
-};
-
-const packagingTypes = ["Carton", "Palette", "Caisse", "Sachet"];
-
-const ShipmentDialogForm: React.FC = () => {
+const ShipmentDialogForm: React.FC<ShipmentDialogFormProps> = ({
+  open,
+  onOpenChange,
+  onSubmit,
+}) => {
+  const [activeTab, setActiveTab] = useState<"general" | "articles" | "pricing" | "tracking">("general");
+  const [loading, setLoading] = useState(false);
   const { clients, isLoading: clientsLoading } = useFreightClients();
-  const [open, setOpen] = useState(false);
-  const [step, setStep] = useState("general");
-  const [shipment, setShipment] = useState<ShipmentData>({
-    ...emptyShipment,
-    scheduledDate: "",
-    estimatedDeliveryDate: "",
-    reference: `EXP-${Date.now().toString().slice(-6)}`,
-    lines: [
-      {
-        name: "",
-        quantity: 1,
-        weight: 0,
-        packaging: packagingTypes[0],
-        totalWeight: 0,
-      },
-    ],
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState<ShipmentFormData>({
+    reference: '',
+    origin: '',
+    destination: '',
+    customer: '',
+    customerName: '',
+    carrier: '',
+    carrierName: '',
+    shipmentType: 'export',
+    status: 'draft',
+    scheduledDate: '',
+    estimatedDeliveryDate: '',
+    lines: [],
+    totalWeight: 0,
+    notes: '',
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  // --- field change helpers
-  const handleChange = (field: keyof ShipmentData, value: any) => {
-    setShipment((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const [formErrors, setFormErrors] = useState<{
+    [key: string]: string;
+  }>({});
 
-  // --- LINE HANDLING ---
-  const handleLineChange = (idx: number, field: keyof ShipmentLine, value: any) => {
-    setShipment((prev) => ({
-      ...prev,
-      lines: prev.lines.map((l, i) => i === idx ? { ...l, [field]: value, totalWeight: field === "quantity" || field === "weight" ? (field === "quantity" ? value : l.quantity) * (field === "weight" ? value : l.weight) : l.totalWeight } : l)
-    }));
-  };
-
-  const addLine = () => {
-    setShipment((prev) => ({
-      ...prev,
-      lines: [
-        ...prev.lines,
-        { name: "", quantity: 1, weight: 0, packaging: packagingTypes[0], totalWeight: 0 },
-      ]
-    }));
-  };
-
-  const removeLine = (idx: number) => {
-    setShipment((prev) => ({
-      ...prev,
-      lines: prev.lines.filter((_, i) => i !== idx)
-    }));
-  };
-
-  // --- SUBMIT
-  const submitShipment = async () => {
-    setSubmitting(true);
-    try {
-      await createShipment({
-        ...shipment,
-        shipmentType: shipment.shipmentType as any,
-        status: shipment.status as any,
-        lines: shipment.lines,
-        scheduledDate: shipment.scheduledDate,
-        estimatedDeliveryDate: shipment.estimatedDeliveryDate,
-        totalWeight: shipment.lines.reduce((acc, l) => acc + l.quantity * l.weight, 0),
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when field is updated
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
       });
-      setOpen(false);
-      toast.success("Expédition créée !");
-    } catch (e) {
-      toast.error("Erreur création expédition");
     }
-    setSubmitting(false);
   };
 
-  // --- RENDER
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when field is updated
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    // If customer selection changes, update customer name
+    if (name === 'customer') {
+      const selectedClient = clients.find(client => client.id === value);
+      if (selectedClient) {
+        setFormData(prev => ({ 
+          ...prev, 
+          customer: value,
+          customerName: selectedClient.name 
+        }));
+      }
+    }
+  };
+
+  const handleAddLine = () => {
+    const newLine: ShipmentLine = {
+      id: `line-${Date.now()}`,
+      productName: '',
+      quantity: 1,
+      weight: 0,
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      lines: [...prev.lines, newLine]
+    }));
+  };
+
+  const handleRemoveLine = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      lines: prev.lines.filter(line => line.id !== id)
+    }));
+  };
+
+  const handleLineChange = (id: string, field: keyof ShipmentLine, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      lines: prev.lines.map(line => 
+        line.id === id ? { ...line, [field]: value } : line
+      )
+    }));
+
+    // Recalculate total weight
+    calculateTotalWeight();
+  };
+
+  const calculateTotalWeight = () => {
+    const totalWeight = formData.lines.reduce((sum, line) => sum + Number(line.weight), 0);
+    setFormData(prev => ({ ...prev, totalWeight }));
+  };
+
+  const validateForm = (): boolean => {
+    const errors: { [key: string]: string } = {};
+    
+    // General tab validation
+    if (!formData.reference.trim()) {
+      errors.reference = "La référence est requise";
+    }
+    
+    if (!formData.origin.trim()) {
+      errors.origin = "L'origine est requise";
+    }
+    
+    if (!formData.destination.trim()) {
+      errors.destination = "La destination est requise";
+    }
+    
+    if (!formData.customer) {
+      errors.customer = "Le client est requis";
+    }
+    
+    if (!formData.scheduledDate) {
+      errors.scheduledDate = "La date prévue est requise";
+    }
+    
+    if (!formData.estimatedDeliveryDate) {
+      errors.estimatedDeliveryDate = "La date de livraison estimée est requise";
+    }
+    
+    // Lines validation (if on articles tab)
+    if (activeTab === "articles" && formData.lines.length === 0) {
+      errors.lines = "Ajoutez au moins un article";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      // Show error toast if validation fails
+      toast.error("Veuillez corriger les erreurs du formulaire");
+      
+      // Switch to the tab with errors
+      if (formErrors.reference || formErrors.origin || formErrors.destination || 
+          formErrors.customer || formErrors.scheduledDate || formErrors.estimatedDeliveryDate) {
+        setActiveTab("general");
+      } else if (formErrors.lines) {
+        setActiveTab("articles");
+      }
+      
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await onSubmit(formData);
+      toast.success("Expédition créée avec succès");
+      onOpenChange(false);
+      // Navigate to shipments list
+      navigate('/modules/freight/shipments');
+    } catch (error) {
+      console.error("Error creating shipment:", error);
+      toast.error("Erreur lors de la création de l'expédition");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default" className="gap-2">
-          <Plus className="h-5 w-5" />
-          Nouvelle Expédition
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nouvelle Expédition</DialogTitle>
         </DialogHeader>
-        <Tabs value={step} onValueChange={setStep} className="mt-4">
-          <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="general">Informations générales</TabsTrigger>
-            <TabsTrigger value="articles">Articles</TabsTrigger>
-            <TabsTrigger value="pricing">Tarification</TabsTrigger>
-            <TabsTrigger value="route">Suivi & Route</TabsTrigger>
-          </TabsList>
-
-          {/* Etape 1 : Infos générales */}
-          <TabsContent value="general">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Référence</label>
-                <Input value={shipment.reference} disabled className="bg-gray-50" />
+        
+        <form onSubmit={handleSubmit}>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="mt-4">
+            <TabsList className="grid grid-cols-4 mb-6">
+              <TabsTrigger value="general">Général</TabsTrigger>
+              <TabsTrigger value="articles">Articles</TabsTrigger>
+              <TabsTrigger value="pricing">Tarification</TabsTrigger>
+              <TabsTrigger value="tracking">Suivi & Route</TabsTrigger>
+            </TabsList>
+            
+            {/* General Tab */}
+            <TabsContent value="general" className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reference">Référence</Label>
+                  <Input 
+                    id="reference" 
+                    name="reference" 
+                    value={formData.reference} 
+                    onChange={handleInputChange}
+                    className={formErrors.reference ? "border-red-500" : ""}
+                  />
+                  {formErrors.reference && <p className="text-red-500 text-xs">{formErrors.reference}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="shipmentType">Type d'expédition</Label>
+                  <Select
+                    value={formData.shipmentType}
+                    onValueChange={(value) => handleSelectChange("shipmentType", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="import">Import</SelectItem>
+                      <SelectItem value="export">Export</SelectItem>
+                      <SelectItem value="local">Local</SelectItem>
+                      <SelectItem value="international">International</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Client</label>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="origin">Origine</Label>
+                  <Input 
+                    id="origin" 
+                    name="origin" 
+                    value={formData.origin} 
+                    onChange={handleInputChange}
+                    className={formErrors.origin ? "border-red-500" : ""}
+                  />
+                  {formErrors.origin && <p className="text-red-500 text-xs">{formErrors.origin}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="destination">Destination</Label>
+                  <Input 
+                    id="destination" 
+                    name="destination" 
+                    value={formData.destination} 
+                    onChange={handleInputChange}
+                    className={formErrors.destination ? "border-red-500" : ""}
+                  />
+                  {formErrors.destination && <p className="text-red-500 text-xs">{formErrors.destination}</p>}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="customer">Client</Label>
                 <Select
-                  value={shipment.customer}
-                  onValueChange={val => handleChange("customer", val)}
-                  disabled={clientsLoading}
+                  value={formData.customer}
+                  onValueChange={(value) => handleSelectChange("customer", value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Nom du client" />
+                  <SelectTrigger className={formErrors.customer ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
                   <SelectContent>
-                    {clients.map(client =>
-                      <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                    {clientsLoading ? (
+                      <SelectItem value="loading">Chargement...</SelectItem>
+                    ) : clients.length > 0 ? (
+                      clients.map(client => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-clients">Aucun client trouvé</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
+                {formErrors.customer && <p className="text-red-500 text-xs">{formErrors.customer}</p>}
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Type d&apos;expédition</label>
-                <Select value={shipment.shipmentType} onValueChange={v => handleChange("shipmentType", v)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="local">Local</SelectItem>
-                    <SelectItem value="international">International</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Transporteur</label>
-                <Input value={shipment.carrierName} placeholder="Sélectionner un transporteur" onChange={(e) => handleChange("carrierName", e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Origine</label>
-                <Input value={shipment.origin} placeholder="Adresse d'origine" onChange={e => handleChange("origin", e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Destination</label>
-                <Input value={shipment.destination} placeholder="Adresse de destination" onChange={e => handleChange("destination", e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Date d&apos;expédition</label>
-                <Input type="date" value={shipment.scheduledDate} onChange={e => handleChange("scheduledDate", e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Date de livraison estimée</label>
-                <Input type="date" value={shipment.estimatedDeliveryDate} onChange={e => handleChange("estimatedDeliveryDate", e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">Notes</label>
-                <textarea value={shipment.notes} onChange={e => handleChange("notes", e.target.value)} placeholder="Informations complémentaires..." className="w-full rounded border border-gray-300 min-h-[60px] px-2 py-1" />
-              </div>
-            </div>
-            <div className="flex justify-between mt-8">
-              <div />
-              <Button variant="default" disabled={!shipment.customer} onClick={() => setStep("articles")}>Suivant</Button>
-            </div>
-          </TabsContent>
-
-          {/* Articles */}
-          <TabsContent value="articles">
-            {/* Table des articles */}
-            <div className="overflow-x-auto mb-3">
-              <table className="w-full text-sm border border-gray-200 bg-gray-50">
-                <thead>
-                  <tr>
-                    <th className="font-medium px-3 py-2">Article</th>
-                    <th className="font-medium px-3 py-2">Quantité</th>
-                    <th className="font-medium px-3 py-2">Poids (kg)</th>
-                    <th className="font-medium px-3 py-2">Type d&apos;emballage</th>
-                    <th className="font-medium px-3 py-2">Poids total</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {shipment.lines.map((line, i) => (
-                    <tr key={i} className="bg-white even:bg-gray-50">
-                      <td>
-                        <Input value={line.name}
-                               placeholder="Nom de l'article"
-                               onChange={e => handleLineChange(i, "name", e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={line.quantity}
-                          onChange={e => handleLineChange(i, "quantity", Number(e.target.value))}
-                          className="w-16" />
-                      </td>
-                      <td>
-                        <Input
-                          type="number"
-                          value={line.weight}
-                          min={0}
-                          step={0.01}
-                          onChange={e => handleLineChange(i, "weight", Number(e.target.value))}
-                          className="w-20" />
-                      </td>
-                      <td>
-                        <Select
-                          value={line.packaging}
-                          onValueChange={v => handleLineChange(i, "packaging", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {packagingTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td>
-                        {(line.quantity * line.weight).toFixed(2)} kg
-                      </td>
-                      <td>
-                        {shipment.lines.length > 1 && (
-                          <Button variant="ghost" size="icon" onClick={() => removeLine(i)}>
-                            <span className="text-red-500 font-bold text-lg">&times;</span>
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addLine}
-                className="mt-3"
-              >+ Ajouter une ligne</Button>
-              <div className="flex justify-between items-center mt-4">
-                <div>
-                  <span className="font-medium">Total articles: </span>
-                  {shipment.lines.length}
-                  <span className="ml-4 font-medium">Poids total: </span>
-                  {shipment.lines.reduce((acc, l) => acc + l.quantity * l.weight, 0).toFixed(2)} kg
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledDate">Date prévue</Label>
+                  <Input 
+                    id="scheduledDate" 
+                    name="scheduledDate" 
+                    type="date"
+                    value={formData.scheduledDate} 
+                    onChange={handleInputChange}
+                    className={formErrors.scheduledDate ? "border-red-500" : ""}
+                  />
+                  {formErrors.scheduledDate && <p className="text-red-500 text-xs">{formErrors.scheduledDate}</p>}
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setStep("general")}>Précédent</Button>
-                  <Button variant="default" onClick={() => setStep("pricing")}>Suivant</Button>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedDeliveryDate">Date de livraison estimée</Label>
+                  <Input 
+                    id="estimatedDeliveryDate" 
+                    name="estimatedDeliveryDate" 
+                    type="date"
+                    value={formData.estimatedDeliveryDate} 
+                    onChange={handleInputChange}
+                    className={formErrors.estimatedDeliveryDate ? "border-red-500" : ""}
+                  />
+                  {formErrors.estimatedDeliveryDate && <p className="text-red-500 text-xs">{formErrors.estimatedDeliveryDate}</p>}
                 </div>
               </div>
-            </div>
-          </TabsContent>
-
-          {/* Tarification */}
-          <TabsContent value="pricing">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardContent className="pt-4 space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Prix de base (€)</label>
-                    <Input type="number" min={0} value={10} disabled />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Zone géographique</label>
-                    <Select value="national" onValueChange={() => {}}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="national">National</SelectItem>
-                        <SelectItem value="international">International</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Type d&apos;expédition</label>
-                    <Select value="standard" onValueChange={() => {}}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">Standard (1-3 jours)</SelectItem>
-                        <SelectItem value="express">Express</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Distance estimée (km)</label>
-                    <Input type="number" min={0} value={100} disabled />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Frais supplémentaires (€)</label>
-                    <Input type="number" min={0} value={0} disabled />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 space-y-3">
-                  <div className="font-bold mb-3">Résumé du calcul</div>
-                  <div>Poids total: {shipment.lines.reduce((acc, l) => acc + l.quantity * l.weight, 0).toFixed(2)} kg</div>
-                  <div>Tarif de base: 10.00 €</div>
-                  <div>Tarif au poids: 0.00 €</div>
-                  <div>Tarif à la distance: 10.00 €</div>
-                  <div className="font-bold text-lg mt-2">
-                    PRIX TOTAL: 20.00 €
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="flex justify-between items-center mt-6">
-              <div>
-                <Button variant="outline" onClick={() => setStep("articles")}>Précédent</Button>
-              </div>
-              <Button variant="default" onClick={() => setStep("route")}>Suivant</Button>
-            </div>
-          </TabsContent>
-
-          {/* Suivi & Route */}
-          <TabsContent value="route">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Numéro de suivi</label>
-                <Input value={shipment.trackingNumber || `TRK${Date.now().toString().slice(-6)}`} 
-                  onChange={e => handleChange("trackingNumber", e.target.value)} 
-                  placeholder="Numéro de suivi"
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea 
+                  id="notes" 
+                  name="notes" 
+                  value={formData.notes} 
+                  onChange={handleInputChange}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Statut</label>
-                <Select value={shipment.status} onValueChange={v => handleChange("status", v)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Brouillon</SelectItem>
-                    <SelectItem value="confirmed">Confirmée</SelectItem>
-                    <SelectItem value="in_transit">En transit</SelectItem>
-                  </SelectContent>
-                </Select>
+            </TabsContent>
+            
+            {/* Articles Tab */}
+            <TabsContent value="articles" className="space-y-4">
+              <Button 
+                type="button" 
+                onClick={handleAddLine}
+                variant="outline"
+                className="flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter un article
+              </Button>
+              
+              {formErrors.lines && <p className="text-red-500 text-xs">{formErrors.lines}</p>}
+              
+              {formData.lines.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Aucun article ajouté. Cliquez sur "Ajouter un article" ci-dessus.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {formData.lines.map((line, index) => (
+                    <div key={line.id} className="border p-4 rounded-md relative">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-2 right-2 h-8 w-8"
+                        onClick={() => handleRemoveLine(line.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`line-${index}-name`}>Nom du produit</Label>
+                          <Input 
+                            id={`line-${index}-name`}
+                            value={line.productName} 
+                            onChange={(e) => handleLineChange(line.id, 'productName', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor={`line-${index}-quantity`}>Quantité</Label>
+                          <Input 
+                            id={`line-${index}-quantity`}
+                            type="number"
+                            min="1"
+                            value={line.quantity} 
+                            onChange={(e) => handleLineChange(line.id, 'quantity', parseInt(e.target.value))}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor={`line-${index}-weight`}>Poids (kg)</Label>
+                          <Input 
+                            id={`line-${index}-weight`}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={line.weight} 
+                            onChange={(e) => handleLineChange(line.id, 'weight', parseFloat(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="flex justify-end">
+                    <div className="font-medium">
+                      Poids total: {formData.totalWeight} kg
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+            
+            {/* Pricing Tab */}
+            <TabsContent value="pricing" className="space-y-4">
+              <div className="bg-gray-50 p-6 rounded-md text-center">
+                Cette section sera disponible dans une version future
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Route</label>
-                <Input value="" placeholder="Sélectionner une route" disabled />
+            </TabsContent>
+            
+            {/* Tracking Tab */}
+            <TabsContent value="tracking" className="space-y-4">
+              <div className="bg-gray-50 p-6 rounded-md text-center">
+                Cette section sera disponible dans une version future
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Type de transport</label>
-                <Select value="route" onValueChange={() => {}}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="route">Route</SelectItem>
-                    <SelectItem value="air">Aérien</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Délai de transit (heures)</label>
-                <Input type="number" value={24} disabled />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Distance (km)</label>
-                <Input type="number" value={100} disabled />
-              </div>
-            </div>
-            <div className="bg-blue-50 p-3 mt-6 rounded flex items-center gap-2 text-blue-700">
-              <span role="img" aria-label="gps">📍</span>
-              Suivi en temps réel : un lien sera généré automatiquement à la création.
-            </div>
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={() => setStep("pricing")}>Précédent</Button>
-              <div className="flex gap-2">
-                <DialogClose asChild>
-                  <Button variant="ghost">Annuler</Button>
-                </DialogClose>
-                <Button
-                  variant="default"
-                  onClick={submitShipment}
-                  disabled={submitting || !shipment.customer}
-                  loading={submitting}
-                >
-                  Créer l&apos;expédition
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+          
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Création en cours..." : "Créer l'expédition"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
