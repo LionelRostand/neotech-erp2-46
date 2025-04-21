@@ -4,10 +4,10 @@ import { MapPin, Package, Container, Truck } from "lucide-react";
 import 'leaflet/dist/leaflet.css';
 
 export interface UnifiedTrackingItem {
-  id: string; // eventId
-  refId: string; // packageId or containerId
+  id: string;
+  refId: string;
   type: "package" | "container" | "shipment";
-  label: string; // description
+  label: string;
   status: string;
   latitude: number;
   longitude: number;
@@ -26,6 +26,7 @@ const UnifiedTrackingMap: React.FC<UnifiedTrackingMapProps> = ({ items }) => {
 
   useEffect(() => {
     if (!mapRef.current) return;
+
     const initMap = async () => {
       console.log("Initialisation de la carte avec", items.length, "éléments");
       const L = (await import("leaflet")).default;

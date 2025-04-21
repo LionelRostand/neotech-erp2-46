@@ -20,6 +20,16 @@ const isContainerReference = (ref: string): boolean => {
   return /^CT-\d{4}-\d{4}$/.test(normalized);
 };
 
+const getRandomCoordinates = (base: { lat: number, lng: number }, radius: number) => {
+  const r = radius * Math.sqrt(Math.random());
+  const theta = Math.random() * 2 * Math.PI;
+  
+  return {
+    latitude: base.lat + r * Math.cos(theta),
+    longitude: base.lng + r * Math.sin(theta)
+  };
+};
+
 const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTrackingItem[]> => {
   const items: UnifiedTrackingItem[] = [];
 
@@ -29,7 +39,7 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
     const normalizedQuery = normalizeReference(searchQuery);
     console.log("Recherche normalisée:", normalizedQuery);
 
-    // If the search query matches a shipment reference format (EXPxxxxx)
+    // Si la référence correspond à un format d'expédition (EXPxxxxx)
     if (isShipmentReference(normalizedQuery)) {
       console.log("Recherche d'expédition:", normalizedQuery);
       const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
@@ -40,23 +50,26 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
       console.log("Résultats d'expédition trouvés:", shipmentsSnapshot.size);
       shipmentsSnapshot.forEach((doc) => {
         const shipment = doc.data() as Shipment;
-        if (shipment.trackingNumber && shipment.origin && shipment.destination) {
+        // Générer des coordonnées aléatoires autour de Paris pour la démo
+        const coords = getRandomCoordinates({ lat: 48.8566, lng: 2.3522 }, 0.1);
+        
+        if (shipment.reference) {
           items.push({
             id: doc.id,
             refId: shipment.reference,
-            type: 'package',
+            type: 'shipment',
             label: `Expédition: ${shipment.reference}`,
-            status: shipment.status,
-            latitude: 48.8566,
-            longitude: 2.3522,
+            status: shipment.status || 'unknown',
+            latitude: coords.latitude,
+            longitude: coords.longitude,
             timestamp: shipment.createdAt,
-            locationText: shipment.origin
+            locationText: shipment.origin || 'Localisation inconnue'
           });
         }
       });
     }
 
-    // If the search query matches a container reference format (CT-2025-3179)
+    // Si la référence correspond à un format de conteneur (CT-2025-3179)
     if (isContainerReference(normalizedQuery)) {
       console.log("Recherche de conteneur:", normalizedQuery);
       const containersRef = collection(db, COLLECTIONS.FREIGHT.CONTAINERS);
@@ -67,16 +80,19 @@ const fetchUnifiedTrackingData = async (searchQuery?: string): Promise<UnifiedTr
       console.log("Résultats de conteneur trouvés:", containersSnapshot.size);
       containersSnapshot.forEach((doc) => {
         const container = doc.data() as Container;
+        // Générer des coordonnées aléatoires autour de Londres pour la démo
+        const coords = getRandomCoordinates({ lat: 51.5074, lng: -0.1278 }, 0.1);
+        
         items.push({
           id: doc.id,
           refId: container.number,
           type: 'container',
           label: `Conteneur: ${container.number}`,
           status: container.status,
-          latitude: 51.5074,
-          longitude: -0.1278,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
           timestamp: container.createdAt || new Date().toISOString(),
-          locationText: container.location || container.origin
+          locationText: container.location || 'Localisation inconnue'
         });
       });
     }
