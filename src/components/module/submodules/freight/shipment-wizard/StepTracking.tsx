@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import useFreightData from "@/hooks/modules/useFreightData";
 
 const statusOptions = [
   { value: "draft", label: "Brouillon" },
@@ -36,6 +37,39 @@ const StepTracking = ({
   submitting: boolean;
 }) => {
   const { tracking } = form;
+  const { routes, loading } = useFreightData();
+  const [selectedRouteId, setSelectedRouteId] = useState<string>("");
+
+  useEffect(() => {
+    // Si une route est sélectionnée, auto-fill type+distance
+    if (selectedRouteId && Array.isArray(routes)) {
+      const route = routes.find((r: any) => r.id === selectedRouteId);
+      if (route) {
+        updateTracking({
+          ...tracking,
+          route: route.name,
+          transportType: route.transportType || "road",
+          distance: route.distance || 0,
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRouteId]);
+
+  // On met à jour le champ route si la valeur texte a changé
+  useEffect(() => {
+    if (
+      tracking.route &&
+      routes &&
+      !selectedRouteId &&
+      routes.some((r: any) => r.name === tracking.route)
+    ) {
+      const route = routes.find((r: any) => r.name === tracking.route);
+      if (route) setSelectedRouteId(route.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracking.route, routes]);
+
   return (
     <form
       className="space-y-4"
@@ -73,18 +107,33 @@ const StepTracking = ({
             ))}
           </select>
         </div>
+        {/* ROUTE : Select */}
         <div>
           <label className="font-medium mb-1 block">Route</label>
-          <Input
-            value={tracking.route}
-            onChange={e => updateTracking({ ...tracking, route: e.target.value })}
-            placeholder="Sélectionner une route"
-          />
+          <select
+            value={selectedRouteId}
+            onChange={e => setSelectedRouteId(e.target.value)}
+            className="rounded-md border px-3 py-2 bg-white w-full"
+            disabled={loading}
+          >
+            <option value="">Sélectionner une route</option>
+            {loading ? (
+              <option disabled>Chargement...</option>
+            ) : (
+              Array.isArray(routes) && routes.length > 0 &&
+              routes.map((route: any) => (
+                <option key={route.id} value={route.id}>
+                  {route.name} ({route.origin} → {route.destination}, {route.distance}km, {route.transportType})
+                </option>
+              ))
+            )}
+          </select>
         </div>
         <div>
           <label className="font-medium mb-1 block">Type de transport</label>
           <select
             value={tracking.transportType}
+            disabled={!!selectedRouteId}
             onChange={e => updateTracking({ ...tracking, transportType: e.target.value })}
             className="rounded-md border px-3 py-2 bg-white w-full"
           >
@@ -111,6 +160,7 @@ const StepTracking = ({
             type="number"
             min="0"
             value={tracking.distance}
+            disabled={!!selectedRouteId}
             onChange={e => updateTracking({ ...tracking, distance: parseFloat(e.target.value) || 0 })}
             placeholder="Distance (km)"
           />
@@ -136,3 +186,4 @@ const StepTracking = ({
   );
 };
 export default StepTracking;
+
