@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import FreightRouteForm from "./FreightRouteForm";
 import type { Route as FreightRoute } from "@/types/freight";
+import { useFirestore } from "@/hooks/useFirestore";
+import { toast } from "sonner";
 
 const initialRoutes: FreightRoute[] = [];
 
@@ -11,9 +13,30 @@ const FreightRoutesPage: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [routes, setRoutes] = useState<FreightRoute[]>(initialRoutes);
 
-  const onAddRoute = (route: FreightRoute) => {
-    setRoutes([...routes, { ...route, id: String(Date.now()) }]);
+  // Utiliser le hook pour la collection firestore
+  const { add, loading } = useFirestore("freight_routes");
+
+  const onAddRoute = async (route: FreightRoute) => {
+    // Générer un id local pour un affichage instantané
+    const localRoute = { ...route, id: String(Date.now()) };
+
+    // Mise à jour de l'affichage
+    setRoutes((prev) => [...prev, localRoute]);
     setShowDialog(false);
+
+    // Sauvegarder en Firestore
+    try {
+      const res = await add({ ...route, createdAt: new Date().toISOString() });
+      toast.success("Route enregistrée avec succès dans la base de données.");
+      // Optionnel : remonter l'id firestore pour correspondre à la vraie donnée
+      setRoutes((prev) =>
+        prev.map((r) =>
+          r.id === localRoute.id && res?.id ? { ...res, ...r } : r
+        )
+      );
+    } catch (err: any) {
+      toast.error("Erreur lors de l'enregistrement dans la base de données.");
+    }
   };
 
   return (
@@ -23,6 +46,7 @@ const FreightRoutesPage: React.FC = () => {
         <Button
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
           onClick={() => setShowDialog(true)}
+          disabled={loading}
         >
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle Route
