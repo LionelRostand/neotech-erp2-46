@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
@@ -58,7 +57,7 @@ const ContainerManagerPage: React.FC = () => {
         <h2 className="text-2xl font-bold">Gestion des Conteneurs</h2>
         <Button
           onClick={handleNew}
-          className="bg-green-600 hover:bg-green-700 text-white flex items-center px-4 py-2 rounded-md"
+          className="flex items-center px-4 py-2 rounded-md"
         >
           <span className="mr-2 text-lg font-bold">+</span>
           Nouveau Conteneur
