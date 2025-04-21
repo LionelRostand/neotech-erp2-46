@@ -1,13 +1,13 @@
 
 import React from 'react';
 import FreightDashboard from '../freight/FreightDashboard';
-import FreightShipmentsPage from '../freight/shipments/FreightShipmentsPage';
 import FreightClientPortal from '../freight/FreightClientPortal';
 import FreightDocuments from '../freight/FreightDocuments';
 import FreightRoutes from '../freight/FreightRoutes';
 import FreightSettings from '../freight/FreightSettings';
 import FreightTrackingPage from '../freight/tracking/FreightTrackingPage';
 import FreightPaymentsPage from '../freight/pricing/FreightPaymentsPage';
+import FreightShipments from '../../FreightShipments';
 
 interface FreightRendererProps {
   submoduleId: string;
@@ -18,7 +18,7 @@ export const FreightRenderer: React.FC<FreightRendererProps> = ({ submoduleId })
     case 'freight-dashboard':
       return <FreightDashboard />;
     case 'freight-shipments':
-      return <FreightShipmentsPage />;
+      return <FreightShipments />;
     case 'freight-routes':
       return <FreightRoutes />;
     case 'freight-tracking':
