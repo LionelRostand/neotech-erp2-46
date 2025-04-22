@@ -35,18 +35,18 @@ const defaultValues = {
 
 // Liste des types de conteneurs standards en français
 const CONTAINER_TYPES = [
-  { type: "Conteneur sec standard", size: "20 pieds" },
-  { type: "Conteneur sec standard", size: "40 pieds" },
-  { type: "Conteneur high cube", size: "40 pieds" },
-  { type: "Conteneur high cube", size: "45 pieds" },
-  { type: "Conteneur frigorifique", size: "20 pieds" },
-  { type: "Conteneur frigorifique", size: "40 pieds" },
-  { type: "Conteneur open top", size: "20 pieds" },
-  { type: "Conteneur open top", size: "40 pieds" },
-  { type: "Conteneur flat rack", size: "20 pieds" },
-  { type: "Conteneur flat rack", size: "40 pieds" },
-  { type: "Conteneur citerne", size: "20 pieds" },
-  { type: "Conteneur citerne", size: "30 pieds" },
+  { type: "Conteneur standard 20'", size: "20 pieds" },
+  { type: "Conteneur standard 40'", size: "40 pieds" },
+  { type: "Conteneur high cube 40'", size: "40 pieds HC" },
+  { type: "Conteneur high cube 45'", size: "45 pieds" },
+  { type: "Conteneur frigorifique 20'", size: "20 pieds" },
+  { type: "Conteneur frigorifique 40'", size: "40 pieds" },
+  { type: "Conteneur open top 20'", size: "20 pieds" },
+  { type: "Conteneur open top 40'", size: "40 pieds" },
+  { type: "Conteneur flat rack 20'", size: "20 pieds" },
+  { type: "Conteneur flat rack 40'", size: "40 pieds" },
+  { type: "Conteneur citerne 20'", size: "20 pieds" },
+  { type: "Conteneur citerne 30'", size: "30 pieds" },
 ];
 
 interface ContainerCreateDialogProps {
