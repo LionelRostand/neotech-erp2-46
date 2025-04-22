@@ -1,16 +1,47 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, CreditCard } from "lucide-react";
 import CreateFreightInvoiceDialog from './CreateFreightInvoiceDialog';
+import { PayFreightInvoiceDialog } from '../accounting/PayFreightInvoiceDialog';
 import { DataTable } from '@/components/ui/data-table';
 import { useFreightInvoices, FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
+import { useFreightDocumentGenerator } from '../hooks/useFreightDocumentGenerator';
 
 const FreightInvoicesPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const { invoices, isLoading } = useFreightInvoices();
+  const [showPayDialog, setShowPayDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<FreightInvoice | null>(null);
+  const { invoices, isLoading, refetchInvoices } = useFreightInvoices();
+  const { generateInvoicePdf, generateDeliveryNotePdf } = useFreightDocumentGenerator();
+
+  const handlePayInvoice = (invoice: FreightInvoice) => {
+    setSelectedInvoice(invoice);
+    setShowPayDialog(true);
+  };
+
+  const handlePaymentSubmit = async (paymentData: any) => {
+    try {
+      // In a real app, this would make an API call to record the payment
+      toast.success('Paiement enregistré avec succès');
+      
+      // Generate invoice and delivery note PDFs with QR codes
+      if (selectedInvoice) {
+        await generateInvoicePdf(selectedInvoice.id, paymentData);
+        await generateDeliveryNotePdf(selectedInvoice.id, paymentData);
+      }
+      
+      // Refresh the invoices list
+      refetchInvoices();
+      setShowPayDialog(false);
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Erreur lors du traitement du paiement');
+    }
+  };
 
   const columns = [
     {
@@ -57,6 +88,23 @@ const FreightInvoicesPage = () => {
       cell: ({ row }: { row: { original: FreightInvoice } }) => (
         <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>
       ),
+    },
+    {
+      header: "Actions",
+      cell: ({ row }: { row: { original: FreightInvoice } }) => (
+        <div className="flex space-x-2">
+          {row.original.status !== "paid" && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handlePayInvoice(row.original)}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Payer
+            </Button>
+          )}
+        </div>
+      ),
     }
   ];
 
@@ -99,6 +147,15 @@ const FreightInvoicesPage = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
       />
+
+      {selectedInvoice && (
+        <PayFreightInvoiceDialog
+          open={showPayDialog}
+          onOpenChange={setShowPayDialog}
+          invoice={selectedInvoice}
+          onSubmit={handlePaymentSubmit}
+        />
+      )}
     </div>
   );
 };
