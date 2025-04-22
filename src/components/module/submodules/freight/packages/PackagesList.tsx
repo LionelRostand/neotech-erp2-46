@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Shipment } from "@/hooks/freight/useFreightShipments";
@@ -20,17 +21,13 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
 
   // Calcule le coût total d'un colis (somme des coûts de chaque ligne)
   const getTotalCost = (pkg: Shipment) => {
-    // Certaines expéditions ont un champ lines, d'autres un champ cost ou coût unique
-    // On regarde d'abord s'il y a un champ lines (array d'objets avec un champ cost)
     if (Array.isArray((pkg as any).lines) && (pkg as any).lines.length > 0) {
       const sum = (pkg as any).lines.reduce((total: number, line: any) => total + ((line.cost ?? 0) * (line.quantity ?? 1)), 0);
       return `${sum.toFixed(2)} €`;
     }
-    // On regarde s'il y a un champ cost unique
     if (typeof (pkg as any).cost === "number") {
       return `${((pkg as any).cost).toFixed(2)} €`;
     }
-    // Par défaut 0€
     return "0 €";
   };
 
@@ -55,8 +52,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
 
   const formatDate = (dateValue: any): string => {
     if (!dateValue) return "-";
-    
-    // Handle Firebase timestamp (object with seconds and nanoseconds)
     if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
       try {
         const date = new Date(dateValue.seconds * 1000);
@@ -65,8 +60,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
         return "Date invalide";
       }
     }
-    
-    // Handle string dates
     if (typeof dateValue === 'string') {
       try {
         return format(new Date(dateValue), "dd MMM yyyy", { locale: fr });
@@ -74,7 +67,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
         return dateValue;
       }
     }
-    
     return "Format de date non reconnu";
   };
 
@@ -144,3 +136,4 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
 };
 
 export default PackagesList;
+
