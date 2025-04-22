@@ -18,12 +18,12 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
   drivers
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedDriverType, setSelectedDriverType] = useState<string | undefined>("all");
+  const [selectedDriverType, setSelectedDriverType] = useState<string | undefined>("all_drivers");
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<TransportDriver | null>(null);
   
   // Filter drivers by type if a type is selected
-  const filteredDrivers = selectedDriverType && selectedDriverType !== "all"
+  const filteredDrivers = selectedDriverType && selectedDriverType !== "all_drivers"
     ? drivers.filter(d => d.skills?.includes(selectedDriverType))
     : drivers;
   
@@ -59,14 +59,14 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
             <div className="mb-6">
               <label className="text-sm font-medium mb-2 block">Filtrer par compétence</label>
               <Select
-                value={selectedDriverType ?? "all"}
+                value={selectedDriverType ?? "all_drivers"}
                 onValueChange={setSelectedDriverType}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Toutes les compétences" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les compétences</SelectItem>
+                  <SelectItem value="all_drivers">Toutes les compétences</SelectItem>
                   <SelectItem value="luxury">VIP/Luxe</SelectItem>
                   <SelectItem value="airport">Aéroport</SelectItem>
                   <SelectItem value="events">Événements</SelectItem>

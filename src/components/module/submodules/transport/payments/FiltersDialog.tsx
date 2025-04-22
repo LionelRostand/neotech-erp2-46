@@ -115,7 +115,7 @@ const FiltersDialog: React.FC<FiltersDialogProps> = ({ open, onOpenChange, onApp
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="all_statuses">Tous</SelectItem>
                   <SelectItem value="paid">Payée</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="partially_paid">Partiellement payée</SelectItem>
@@ -132,7 +132,7 @@ const FiltersDialog: React.FC<FiltersDialogProps> = ({ open, onOpenChange, onApp
                   <SelectValue placeholder="Toutes les méthodes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="all_methods">Toutes</SelectItem>
                   <SelectItem value="card">Carte bancaire</SelectItem>
                   <SelectItem value="transfer">Virement bancaire</SelectItem>
                   <SelectItem value="cash">Espèces</SelectItem>

@@ -72,14 +72,14 @@ const RecruitmentFilterDialog: React.FC<RecruitmentFilterDialogProps> = ({
             <div className="space-y-1">
               <Label htmlFor="filter-department">Département</Label>
               <Select
-                value={filterCriteria.department || "all"}
-                onValueChange={(value) => setFilterCriteria({...filterCriteria, department: value === "all" ? null : value})}
+                value={filterCriteria.department || "all_departments"}
+                onValueChange={(value) => setFilterCriteria({...filterCriteria, department: value === "all_departments" ? null : value})}
               >
                 <SelectTrigger id="filter-department">
                   <SelectValue placeholder="Tous les départements" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les départements</SelectItem>
+                  <SelectItem value="all_departments">Tous les départements</SelectItem>
                   {departments.map(department => (
                     <SelectItem key={department} value={department}>{department}</SelectItem>
                   ))}
@@ -90,14 +90,14 @@ const RecruitmentFilterDialog: React.FC<RecruitmentFilterDialogProps> = ({
             <div className="space-y-1">
               <Label htmlFor="filter-contractType">Type de contrat</Label>
               <Select
-                value={filterCriteria.contractType || "all"}
-                onValueChange={(value) => setFilterCriteria({...filterCriteria, contractType: value === "all" ? null : value})}
+                value={filterCriteria.contractType || "all_contract_types"}
+                onValueChange={(value) => setFilterCriteria({...filterCriteria, contractType: value === "all_contract_types" ? null : value})}
               >
                 <SelectTrigger id="filter-contractType">
                   <SelectValue placeholder="Tous les types de contrat" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types de contrat</SelectItem>
+                  <SelectItem value="all_contract_types">Tous les types de contrat</SelectItem>
                   {contractTypes.map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
@@ -108,14 +108,14 @@ const RecruitmentFilterDialog: React.FC<RecruitmentFilterDialogProps> = ({
             <div className="space-y-1">
               <Label htmlFor="filter-status">Statut</Label>
               <Select
-                value={filterCriteria.status || "all"}
-                onValueChange={(value) => setFilterCriteria({...filterCriteria, status: value === "all" ? null : value})}
+                value={filterCriteria.status || "all_statuses"}
+                onValueChange={(value) => setFilterCriteria({...filterCriteria, status: value === "all_statuses" ? null : value})}
               >
                 <SelectTrigger id="filter-status">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="all_statuses">Tous les statuts</SelectItem>
                   {statusOptions.map(status => (
                     <SelectItem key={status} value={status}>{status}</SelectItem>
                   ))}
@@ -126,14 +126,14 @@ const RecruitmentFilterDialog: React.FC<RecruitmentFilterDialogProps> = ({
             <div className="space-y-1">
               <Label htmlFor="filter-priority">Priorité</Label>
               <Select
-                value={filterCriteria.priority || "all"}
-                onValueChange={(value) => setFilterCriteria({...filterCriteria, priority: value === "all" ? null : value})}
+                value={filterCriteria.priority || "all_priorities"}
+                onValueChange={(value) => setFilterCriteria({...filterCriteria, priority: value === "all_priorities" ? null : value})}
               >
                 <SelectTrigger id="filter-priority">
                   <SelectValue placeholder="Toutes les priorités" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les priorités</SelectItem>
+                  <SelectItem value="all_priorities">Toutes les priorités</SelectItem>
                   {priorities.map(priority => (
                     <SelectItem key={priority} value={priority}>{priority}</SelectItem>
                   ))}
@@ -144,14 +144,14 @@ const RecruitmentFilterDialog: React.FC<RecruitmentFilterDialogProps> = ({
             <div className="space-y-1">
               <Label htmlFor="filter-location">Localisation</Label>
               <Select
-                value={filterCriteria.location || "all"}
-                onValueChange={(value) => setFilterCriteria({...filterCriteria, location: value === "all" ? null : value})}
+                value={filterCriteria.location || "all_locations"}
+                onValueChange={(value) => setFilterCriteria({...filterCriteria, location: value === "all_locations" ? null : value})}
               >
                 <SelectTrigger id="filter-location">
                   <SelectValue placeholder="Toutes les localisations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les localisations</SelectItem>
+                  <SelectItem value="all_locations">Toutes les localisations</SelectItem>
                   {locations.map(location => (
                     <SelectItem key={location} value={location}>{location}</SelectItem>
                   ))}

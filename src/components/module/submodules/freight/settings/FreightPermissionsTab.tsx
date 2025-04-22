@@ -91,11 +91,11 @@ const FreightPermissionsTab: React.FC = () => {
                                   ? employee.permissions[module.id].edit 
                                     ? "write" 
                                     : "read" 
-                                  : "none"
+                                  : "none_permission"
                                 }
                                 onValueChange={(value) => {
                                   const permissions = {
-                                    view: value !== "none",
+                                    view: value !== "none_permission",
                                     create: value === "write",
                                     edit: value === "write",
                                     delete: value === "write",
@@ -109,7 +109,7 @@ const FreightPermissionsTab: React.FC = () => {
                                 <SelectContent>
                                   <SelectItem value="write">Lecture/Écriture</SelectItem>
                                   <SelectItem value="read">Lecture seule</SelectItem>
-                                  <SelectItem value="none">Aucun accès</SelectItem>
+                                  <SelectItem value="none_permission">Aucun accès</SelectItem>
                                 </SelectContent>
                               </Select>
                             </td>
