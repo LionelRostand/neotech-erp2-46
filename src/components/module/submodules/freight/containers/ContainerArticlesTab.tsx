@@ -7,6 +7,7 @@ import { Plus, Trash } from "lucide-react";
 interface Article {
   id: string;
   description: string;
+  name?: string; // Add name field
   quantity: number;
   weight: number;
 }
@@ -17,17 +18,19 @@ interface Props {
 }
 
 const ContainerArticlesTab: React.FC<Props> = ({ articles, onChange }) => {
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [weight, setWeight] = useState(0);
 
   const addArticle = () => {
-    if (!description) {
+    if (!name && !description) {
       return;
     }
 
     const newArticle = {
       id: Date.now().toString(),
+      name: name,
       description,
       quantity,
       weight,
@@ -36,6 +39,7 @@ const ContainerArticlesTab: React.FC<Props> = ({ articles, onChange }) => {
     onChange([...articles, newArticle]);
     
     // Reset form
+    setName("");
     setDescription("");
     setQuantity(1);
     setWeight(0);
@@ -48,12 +52,20 @@ const ContainerArticlesTab: React.FC<Props> = ({ articles, onChange }) => {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-12 gap-2 items-end">
-        <div className="col-span-6">
+        <div className="col-span-3">
+          <label className="block text-sm font-medium text-gray-900 mb-1">Nom</label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nom de l'article"
+          />
+        </div>
+        <div className="col-span-3">
           <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
           <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description de l'article"
+            placeholder="Description"
           />
         </div>
         <div className="col-span-2">
@@ -88,7 +100,7 @@ const ContainerArticlesTab: React.FC<Props> = ({ articles, onChange }) => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
+                  Article
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Quantité
@@ -105,7 +117,7 @@ const ContainerArticlesTab: React.FC<Props> = ({ articles, onChange }) => {
               {articles.map((article) => (
                 <tr key={article.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {article.description}
+                    {article.name || article.description || "Article sans nom"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {article.quantity}

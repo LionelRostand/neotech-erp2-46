@@ -11,35 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Container } from "@/types/freight";
 import ContainerInformationsTab from "./ContainerInformationsTab";
-import ArticlesTab from "../shipments/tabs/ArticlesTab";
+import ContainerArticlesTab from "./ContainerArticlesTab";
 import { toast } from "sonner";
-
-// Sample data for dropdown options
-const transporteurs = [
-  { id: "carrier1", name: "Maersk" },
-  { id: "carrier2", name: "MSC" },
-  { id: "carrier3", name: "CMA CGM" },
-];
-
-const clients = [
-  { id: "client1", name: "Entreprise A" },
-  { id: "client2", name: "Entreprise B" },
-  { id: "client3", name: "Entreprise C" },
-];
-
-const routes = [
-  { id: "route1", name: "Shanghai - Rotterdam", origin: "Shanghai", destination: "Rotterdam" },
-  { id: "route2", name: "Los Angeles - New York", origin: "Los Angeles", destination: "New York" },
-  { id: "route3", name: "Dubai - Singapour", origin: "Dubai", destination: "Singapour" },
-];
-
-const containerTypes = [
-  { type: "20ft Standard", size: "20ft" },
-  { type: "40ft Standard", size: "40ft" },
-  { type: "40ft High Cube", size: "40ft HC" },
-  { type: "20ft Réfrigéré", size: "20ft" },
-  { type: "40ft Réfrigéré", size: "40ft" },
-];
+import useFreightData from "@/hooks/modules/useFreightData";
 
 interface ContainerEditDialogProps {
   container: Container | null;
@@ -54,6 +28,7 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
 }) => {
   const [tab, setTab] = useState("info");
   const [values, setValues] = useState<Partial<Container>>(container || {});
+  const { carriers, clients, routes } = useFreightData();
 
   // Update values when container changes
   useEffect(() => {
@@ -72,6 +47,22 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
       toast.error("Erreur lors de la mise à jour du conteneur");
     }
   };
+
+  // Liste des types de conteneurs standards
+  const containerTypes = [
+    { type: "Conteneur standard 20'", size: "20 pieds" },
+    { type: "Conteneur standard 40'", size: "40 pieds" },
+    { type: "Conteneur high cube 40'", size: "40 pieds HC" },
+    { type: "Conteneur high cube 45'", size: "45 pieds" },
+    { type: "Conteneur frigorifique 20'", size: "20 pieds" },
+    { type: "Conteneur frigorifique 40'", size: "40 pieds" },
+    { type: "Conteneur open top 20'", size: "20 pieds" },
+    { type: "Conteneur open top 40'", size: "40 pieds" },
+    { type: "Conteneur flat rack 20'", size: "20 pieds" },
+    { type: "Conteneur flat rack 40'", size: "40 pieds" },
+    { type: "Conteneur citerne 20'", size: "20 pieds" },
+    { type: "Conteneur citerne 30'", size: "30 pieds" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -93,7 +84,7 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
                 onChange={(field, value) =>
                   setValues((prev) => ({ ...prev, [field]: value }))
                 }
-                transporteurs={transporteurs}
+                transporteurs={carriers}
                 clients={clients}
                 routes={routes}
                 types={containerTypes}
@@ -101,7 +92,12 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
             </TabsContent>
 
             <TabsContent value="articles">
-              <ArticlesTab lines={container?.articles || []} />
+              <ContainerArticlesTab
+                articles={container?.articles || []}
+                onChange={(articles) =>
+                  setValues((prev) => ({ ...prev, articles }))
+                }
+              />
             </TabsContent>
           </div>
         </Tabs>
