@@ -2,9 +2,13 @@
 import React, { useState } from 'react';
 import { useInvoicesData } from './hooks/useInvoicesData';
 import { InvoicesTable } from './components/InvoicesTable';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import CreateInvoiceDialog from './components/CreateInvoiceDialog';
 
 export const InvoicesPage = () => {
   const { invoices, isLoading, error } = useInvoicesData();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const handleViewInvoice = (id: string) => {
     console.log('View invoice:', id);
@@ -22,7 +26,10 @@ export const InvoicesPage = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Factures</h1>
-        {/* Button removed as per request */}
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle Facture
+        </Button>
       </div>
 
       <InvoicesTable 
@@ -31,6 +38,11 @@ export const InvoicesPage = () => {
         onView={handleViewInvoice}
         onEdit={handleEditInvoice}
         onDelete={handleDeleteInvoice}
+      />
+
+      <CreateInvoiceDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
       />
     </div>
   );

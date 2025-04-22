@@ -227,11 +227,15 @@ export interface Container {
   destination: string;
   departureDate: string;
   arrivalDate: string;
-  // These properties are used in ContainerDetailsDialog
   location: string;
   client: string;
   departure: string;
   arrival: string;
+  costs?: Array<{
+    amount: number;
+    description?: string;
+    type?: string;
+  }>;
 }
 
 // Adding ShipmentFormData type for our form
