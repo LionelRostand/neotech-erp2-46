@@ -6,14 +6,23 @@ import { useAccountingData } from '@/hooks/modules/useAccountingData';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CreateFreightInvoiceDialog } from './CreateFreightInvoiceDialog';
+import { ViewFreightInvoiceDialog } from './ViewFreightInvoiceDialog';
+import { EditFreightInvoiceDialog } from './EditFreightInvoiceDialog';
+import { DeleteFreightInvoiceDialog } from './DeleteFreightInvoiceDialog';
+import { PayFreightInvoiceDialog } from './PayFreightInvoiceDialog';
 import { toast } from 'sonner';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const FreightAccountingPage = () => {
   const { containers, shipments, clients } = useFreightData();
   const { invoices, isLoading } = useAccountingData();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPayDialog, setShowPayDialog] = useState(false);
 
   // Filter and format invoices to include container and shipment info
   const enrichedInvoices = React.useMemo(() => {
@@ -54,6 +63,88 @@ const FreightAccountingPage = () => {
     }
   };
 
+  const handleViewInvoice = (id: string) => {
+    const invoice = enrichedInvoices.find(inv => inv.id === id);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setShowViewDialog(true);
+    }
+  };
+
+  const handleEditInvoice = (id: string) => {
+    const invoice = enrichedInvoices.find(inv => inv.id === id);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setShowEditDialog(true);
+    }
+  };
+
+  const handleUpdateInvoice = async (updatedData: any) => {
+    try {
+      if (!selectedInvoice?.id) return;
+      
+      const invoiceRef = doc(db, 'freight_billing', selectedInvoice.id);
+      await updateDoc(invoiceRef, updatedData);
+      
+      toast.success('Facture mise à jour avec succès');
+      setShowEditDialog(false);
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      toast.error('Erreur lors de la mise à jour de la facture');
+    }
+  };
+
+  const handleDeleteInvoice = (id: string) => {
+    const invoice = enrichedInvoices.find(inv => inv.id === id);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setShowDeleteDialog(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (!selectedInvoice?.id) return;
+      
+      await deleteDoc(doc(db, 'freight_billing', selectedInvoice.id));
+      
+      toast.success('Facture supprimée avec succès');
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast.error('Erreur lors de la suppression de la facture');
+    }
+  };
+
+  const handlePayInvoice = (id: string) => {
+    const invoice = enrichedInvoices.find(inv => inv.id === id);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setShowPayDialog(true);
+    }
+  };
+
+  const handleProcessPayment = async (paymentData: any) => {
+    try {
+      if (!selectedInvoice?.id) return;
+      
+      // Update invoice status to paid
+      const invoiceRef = doc(db, 'freight_billing', selectedInvoice.id);
+      await updateDoc(invoiceRef, {
+        status: 'paid',
+        paymentMethod: paymentData.method,
+        paymentDate: new Date().toISOString(),
+        paymentReference: paymentData.reference || ''
+      });
+      
+      toast.success('Paiement enregistré avec succès');
+      setShowPayDialog(false);
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error('Erreur lors du traitement du paiement');
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -81,10 +172,10 @@ const FreightAccountingPage = () => {
         <InvoicesTable 
           invoices={enrichedInvoices}
           isLoading={isLoading}
-          onView={(id) => console.log('View invoice:', id)}
-          onEdit={(id) => console.log('Edit invoice:', id)}
-          onDelete={(id) => console.log('Delete invoice:', id)}
-          onPay={(id) => console.log('Pay invoice:', id)}
+          onView={handleViewInvoice}
+          onEdit={handleEditInvoice}
+          onDelete={handleDeleteInvoice}
+          onPay={handlePayInvoice}
         />
       )}
 
@@ -93,6 +184,37 @@ const FreightAccountingPage = () => {
         onOpenChange={setShowCreateDialog}
         onSubmit={handleCreateInvoice}
       />
+      
+      {selectedInvoice && (
+        <>
+          <ViewFreightInvoiceDialog
+            open={showViewDialog}
+            onOpenChange={setShowViewDialog}
+            invoice={selectedInvoice}
+          />
+          
+          <EditFreightInvoiceDialog
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            invoice={selectedInvoice}
+            onSubmit={handleUpdateInvoice}
+          />
+          
+          <DeleteFreightInvoiceDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            invoice={selectedInvoice}
+            onConfirmDelete={handleConfirmDelete}
+          />
+          
+          <PayFreightInvoiceDialog
+            open={showPayDialog}
+            onOpenChange={setShowPayDialog}
+            invoice={selectedInvoice}
+            onSubmit={handleProcessPayment}
+          />
+        </>
+      )}
     </div>
   );
 };
