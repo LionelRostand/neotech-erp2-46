@@ -17,7 +17,14 @@ export const FreightInvoicesPage = () => {
   const handleUpdate = async (id: string, data: any) => {
     try {
       await updateInvoice(id, data);
-      toast.success('Facture mise à jour avec succès');
+      
+      // Show specific toast message for payment
+      if (data.status === 'paid') {
+        toast.success('Facture marquée comme payée');
+      } else {
+        toast.success('Facture mise à jour avec succès');
+      }
+      
       return true;
     } catch (error) {
       console.error('Error updating invoice:', error);

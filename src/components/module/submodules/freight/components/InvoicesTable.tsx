@@ -2,7 +2,7 @@
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import { ViewInvoiceDialog } from './ViewInvoiceDialog';
 import { EditInvoiceDialog } from './EditInvoiceDialog';
@@ -19,6 +19,19 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handlePayInvoice = async (invoice: FreightInvoice) => {
+    // Mark the invoice as paid
+    const success = await onUpdate(invoice.id, { 
+      status: 'paid',
+      paidAt: new Date().toISOString(),
+    });
+    
+    if (success) {
+      // You might want to show a toast or some feedback here
+      console.log("Invoice marked as paid:", invoice.id);
+    }
+  };
 
   const columns = [
     {
@@ -39,7 +52,8 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
       header: 'STATUT',
       cell: ({ row }: any) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          row.original.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          row.original.status === 'paid' ? 'bg-green-100 text-green-800' : 
+          row.original.status === 'pending' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'
         }`}>
           {row.original.status === 'paid' ? 'Payée' : 
            row.original.status === 'pending' ? 'En attente' : 'Annulée'}
@@ -56,6 +70,7 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
       cell: ({ row }: any) => {
         const invoice = row.original as FreightInvoice;
         const isPaid = invoice.status === 'paid';
+        const isPending = invoice.status === 'pending';
         
         return (
           <div className="flex items-center gap-2">
@@ -80,6 +95,48 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
                   }}
                 >
                   <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoice(invoice);
+                    setDeleteDialogOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            
+            {isPending && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoice(invoice);
+                    setViewDialogOpen(true);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoice(invoice);
+                    setEditDialogOpen(true);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handlePayInvoice(invoice)}
+                >
+                  <CreditCard className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
