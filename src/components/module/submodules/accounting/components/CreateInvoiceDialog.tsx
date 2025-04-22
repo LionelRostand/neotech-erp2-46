@@ -35,10 +35,10 @@ export const CreateInvoiceDialog = ({
   onOpenChange,
   onSubmit
 }: CreateInvoiceDialogProps) => {
-  const [selectedContainer, setSelectedContainer] = useState<string>('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card'); // Default value to prevent empty selection
+  const [selectedShipment, setSelectedShipment] = useState<string>('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card');
   const [invoiceData, setInvoiceData] = useState<Partial<Invoice>>({
-    paymentMethod: 'card' // Set default payment method
+    paymentMethod: 'card'
   });
 
   const { containers, isLoading: containersLoading } = useContainersData();
@@ -47,20 +47,19 @@ export const CreateInvoiceDialog = ({
   );
 
   useEffect(() => {
-    if (selectedContainer && containers && shipments) {
-      const container = containers.find(c => c.number === selectedContainer);
-      const shipment = shipments.find(s => s.reference === container?.number);
+    if (selectedShipment && containers && shipments) {
+      const shipment = shipments.find(s => s.reference === selectedShipment);
+      const container = containers.find(c => c.number === shipment?.reference);
       
-      if (container) {
-        // Safely access costs with optional chaining and provide fallbacks
+      if (shipment && container) {
         const containerCost = container.costs?.[0]?.amount || 0;
         
         setInvoiceData({
           containerReference: container.number,
           containerCost: containerCost,
-          clientName: container.client || 'Client non spécifié',
-          shipmentReference: shipment?.reference || '',
-          shipmentStatus: shipment?.status || '',
+          clientName: shipment.customer || container.client || 'Client non spécifié',
+          shipmentReference: shipment.reference,
+          shipmentStatus: shipment.status,
           total: containerCost,
           currency: 'EUR',
           status: 'pending',
@@ -70,11 +69,11 @@ export const CreateInvoiceDialog = ({
         });
       }
     }
-  }, [selectedContainer, containers, shipments, selectedPaymentMethod]);
+  }, [selectedShipment, containers, shipments, selectedPaymentMethod]);
 
   const handleSubmit = () => {
-    if (!invoiceData.containerReference) {
-      toast.error('Veuillez sélectionner un conteneur');
+    if (!selectedShipment) {
+      toast.error('Veuillez sélectionner une expédition');
       return;
     }
     if (!selectedPaymentMethod) {
@@ -85,22 +84,11 @@ export const CreateInvoiceDialog = ({
     onOpenChange(false);
   };
 
-  // Function to generate a safe container value that is never empty
-  const getSafeContainerValue = (container: Container): string => {
-    if (container.number && container.number.trim() !== '') {
-      return container.number;
-    }
-    // Fallback to ID or generated ID, ensuring it's never an empty string
-    return `container-${container.id || Date.now().toString()}`;
+  const getShipmentLabel = (shipment: Shipment): string => {
+    return `${shipment.reference} - ${shipment.customer || 'Client non spécifié'}`;
   };
 
-  // Function to generate a unique key for each container
-  const getContainerKey = (container: Container): string => {
-    return container.id || container.number || `container-${Math.random().toString(36).substring(2, 11)}`;
-  };
-
-  // Check if containers are available before rendering SelectItems
-  const hasValidContainers = containers && containers.length > 0;
+  const hasValidShipments = shipments && shipments.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,32 +99,32 @@ export const CreateInvoiceDialog = ({
 
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label>Conteneur</Label>
+            <Label>Expédition</Label>
             <Select
-              value={selectedContainer}
-              onValueChange={setSelectedContainer}
+              value={selectedShipment}
+              onValueChange={setSelectedShipment}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un conteneur" />
+                <SelectValue placeholder="Sélectionner une expédition" />
               </SelectTrigger>
               <SelectContent>
-                {hasValidContainers ? (
-                  containers.map((container) => (
+                {hasValidShipments ? (
+                  shipments.map((shipment) => (
                     <SelectItem 
-                      key={getContainerKey(container)} 
-                      value={getSafeContainerValue(container)}
+                      key={shipment.id} 
+                      value={shipment.reference}
                     >
-                      {container.number || 'Sans numéro'} - {container.client || 'Client inconnu'}
+                      {getShipmentLabel(shipment)}
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="no-containers">Aucun conteneur disponible</SelectItem>
+                  <SelectItem value="no-shipments">Aucune expédition disponible</SelectItem>
                 )}
               </SelectContent>
             </Select>
           </div>
 
-          {selectedContainer && (
+          {selectedShipment && (
             <>
               <div className="space-y-2">
                 <Label>Client</Label>
@@ -149,8 +137,8 @@ export const CreateInvoiceDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Référence expédition</Label>
-                <Input value={invoiceData.shipmentReference || ''} readOnly />
+                <Label>Numéro de conteneur</Label>
+                <Input value={invoiceData.containerReference || ''} readOnly />
               </div>
 
               <div className="space-y-2">
