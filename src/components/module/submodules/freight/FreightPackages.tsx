@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import PackagesList from './packages/PackagesList';
 import PackageCreateDialog from './packages/PackageCreateDialog';
 import { mockPackages } from './mockPackages';
@@ -14,18 +14,16 @@ const FreightPackages: React.FC = () => {
   const [currentFilter, setCurrentFilter] = useState<string>('all');
 
   const filteredPackages = mockPackages.filter(pkg => {
-    // Filter by search query
     const matchesSearch = !searchQuery || 
       pkg.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.carrierName?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Filter by status
     const matchesStatus = currentFilter === 'all' || 
       (currentFilter === 'draft' && pkg.status === 'draft') ||
       (currentFilter === 'ready' && pkg.status === 'ready') ||
-      (currentFilter === 'in_transit' && (pkg.status === 'shipped')) ||
+      (currentFilter === 'in_transit' && pkg.status === 'shipped') ||
       (currentFilter === 'delivered' && pkg.status === 'delivered') ||
       (currentFilter === 'others' && ['returned', 'lost'].includes(pkg.status));
       
