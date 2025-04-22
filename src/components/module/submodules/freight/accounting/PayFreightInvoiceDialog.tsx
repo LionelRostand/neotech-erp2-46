@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { CreditCard, CashRegister as CashRegisterIcon, Bank as BankIcon, PaypalLogo } from "lucide-react";
+import { CreditCard, Banknote as BankIcon, ScanBarcode } from "lucide-react";
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import { toast } from 'sonner';
+import QRCode from '../tracking/QRCode';
 
 interface PaymentMethod {
   id: string;
@@ -35,9 +36,8 @@ export const PayFreightInvoiceDialog: React.FC<PayFreightInvoiceDialogProps> = (
 
   const paymentMethods: PaymentMethod[] = [
     { id: "card", name: "Carte bancaire", icon: <CreditCard className="h-4 w-4" /> },
-    { id: "paypal", name: "PayPal", icon: <PaypalLogo className="h-4 w-4" /> },
     { id: "transfer", name: "Virement bancaire", icon: <BankIcon className="h-4 w-4" /> },
-    { id: "cash", name: "Espèces", icon: <CashRegisterIcon className="h-4 w-4" /> }
+    { id: "cash", name: "Espèces", icon: <BankIcon className="h-4 w-4" /> }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,14 +52,21 @@ export const PayFreightInvoiceDialog: React.FC<PayFreightInvoiceDialogProps> = (
         date: new Date().toISOString(),
         amount: invoice.amount,
         currency: invoice.currency || "EUR",
-        notes
+        notes,
+        trackingCode: `${invoice.invoiceNumber}-${new Date().getTime()}`
       };
       
       await onSubmit(paymentData);
-      // The dialog will be closed by the parent component after onSubmit
+      
+      // Generate QR code for tracking
+      const trackingUrl = `/modules/freight/tracking/${paymentData.trackingCode}`;
+      console.log('Tracking URL generated:', trackingUrl);
+      
+      toast.success('Paiement enregistré avec succès');
     } catch (error) {
       console.error("Payment error:", error);
       toast.error("Erreur lors du traitement du paiement");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -136,7 +143,6 @@ export const PayFreightInvoiceDialog: React.FC<PayFreightInvoiceDialogProps> = (
                 onChange={(e) => setPaymentReference(e.target.value)}
                 placeholder={
                   paymentMethod === "card" ? "4 derniers chiffres de la carte" :
-                  paymentMethod === "paypal" ? "Email PayPal ou ID de transaction" :
                   paymentMethod === "transfer" ? "Référence du virement" :
                   "Reçu caisse N°"
                 }

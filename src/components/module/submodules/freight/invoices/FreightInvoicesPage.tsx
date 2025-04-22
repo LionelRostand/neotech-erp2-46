@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, CreditCard } from "lucide-react";
@@ -10,6 +9,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useFreightDocumentGenerator } from '../hooks/useFreightDocumentGenerator';
+import { generateDocuments } from '../utils/documentGenerator';
 
 const FreightInvoicesPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -30,8 +30,8 @@ const FreightInvoicesPage = () => {
       
       // Generate invoice and delivery note PDFs with QR codes
       if (selectedInvoice) {
-        await generateInvoicePdf(selectedInvoice.id, paymentData);
-        await generateDeliveryNotePdf(selectedInvoice.id, paymentData);
+        await generateDocuments(selectedInvoice, paymentData);
+        toast.success('Documents générés avec succès');
       }
       
       // Refresh the invoices list
