@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useFreightData } from '@/hooks/modules/useFreightData';
-import type { Container, Shipment } from '@/types/freight';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface CreateFreightInvoiceDialogProps {
   open: boolean;
@@ -19,6 +20,8 @@ const CreateFreightInvoiceDialog = ({
   onOpenChange,
 }: CreateFreightInvoiceDialogProps) => {
   const { shipments, containers } = useFreightData();
+  const firestore = useFirestore(COLLECTIONS.FREIGHT.BILLING);
+  
   const [selectedShipment, setSelectedShipment] = useState<string>('');
   const [selectedContainer, setSelectedContainer] = useState<string>('');
   const [clientName, setClientName] = useState('');
@@ -42,12 +45,27 @@ const CreateFreightInvoiceDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Vous pouvez implémenter la logique de création de facture ici
+      if (!clientName || amount <= 0) {
+        toast.error("Veuillez remplir tous les champs requis");
+        return;
+      }
+
+      const invoiceData = {
+        clientName,
+        amount,
+        shipmentReference: selectedShipment,
+        containerNumber: selectedContainer,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      await firestore.add(invoiceData);
       toast.success('Facture créée avec succès');
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating invoice:', error);
-      toast.error('Erreur lors de la création de la facture');
+      toast.error("Erreur lors de la création de la facture");
     }
   };
 
