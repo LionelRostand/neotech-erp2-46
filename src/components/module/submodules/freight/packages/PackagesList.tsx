@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Eye, Printer, FileText } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
-import { Package, Shipment } from '@/types/freight';
+import type { Shipment } from '@/types/freight';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PackageDetailsDialog from './PackageDetailsDialog';
@@ -22,7 +22,7 @@ interface PackagesListProps {
 }
 
 const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
-  const [selectedPackage, setSelectedPackage] = React.useState<Package | null>(null);
+  const [selectedPackage, setSelectedPackage] = React.useState<Shipment | null>(null);
   
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
     switch (status) {
@@ -63,6 +63,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
               <TableHead>Transporteur</TableHead>
               <TableHead>N° Suivi</TableHead>
               <TableHead>Créé le</TableHead>
+              <TableHead>Coût</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -89,6 +90,9 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
                       {format(new Date(pkg.createdAt), 'dd MMM yyyy', { locale: fr })}
                     </TableCell>
                     <TableCell>
+                      {pkg.totalPrice ? `${pkg.totalPrice.toFixed(2)} €` : '-'}
+                    </TableCell>
+                    <TableCell>
                       <StatusBadge status={statusInfo.type}>
                         {statusInfo.text}
                       </StatusBadge>
@@ -98,7 +102,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => setSelectedPackage(pkg as unknown as Package)}
+                          onClick={() => setSelectedPackage(pkg)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -119,7 +123,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6 text-gray-500">
+                <TableCell colSpan={9} className="text-center py-6 text-gray-500">
                   Aucun colis trouvé
                 </TableCell>
               </TableRow>
