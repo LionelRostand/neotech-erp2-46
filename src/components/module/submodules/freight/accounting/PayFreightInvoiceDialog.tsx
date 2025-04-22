@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { CreditCard, CashRegister, Bank as BankIcon, PaypalLogo } from "lucide-react";
+import { CreditCard, CashRegister as CashRegisterIcon, Bank as BankIcon, PaypalLogo } from "lucide-react";
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import { toast } from 'sonner';
 
@@ -37,8 +36,8 @@ export const PayFreightInvoiceDialog: React.FC<PayFreightInvoiceDialogProps> = (
   const paymentMethods: PaymentMethod[] = [
     { id: "card", name: "Carte bancaire", icon: <CreditCard className="h-4 w-4" /> },
     { id: "paypal", name: "PayPal", icon: <PaypalLogo className="h-4 w-4" /> },
-    { id: "transfer", name: "Virement bancaire", icon: <Bank className="h-4 w-4" /> },
-    { id: "cash", name: "Espèces", icon: <CashRegister className="h-4 w-4" /> }
+    { id: "transfer", name: "Virement bancaire", icon: <BankIcon className="h-4 w-4" /> },
+    { id: "cash", name: "Espèces", icon: <CashRegisterIcon className="h-4 w-4" /> }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
