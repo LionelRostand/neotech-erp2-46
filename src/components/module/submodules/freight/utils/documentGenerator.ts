@@ -1,8 +1,8 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import QRCode from 'qrcode';
+import { saveDocumentToModule } from './documentUtils';
 
 // Company information (In a real app, this would come from settings/config)
 const COMPANY_INFO = {
@@ -18,6 +18,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
   try {
     const trackingUrl = `${window.location.origin}/modules/freight/tracking/${paymentData.trackingCode}`;
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl);
+    const timestamp = new Date().toISOString();
 
     // Generate invoice PDF
     const invoicePdf = new jsPDF();
@@ -68,8 +69,17 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     invoicePdf.setFontSize(10);
     invoicePdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
-    // Generate PDF
-    invoicePdf.save(`facture_${invoice.invoiceNumber}.pdf`);
+    // Save invoice PDF
+    const invoicePdfBlob = new Blob([invoicePdf.output('blob')], { type: 'application/pdf' });
+    const invoicePdfUrl = URL.createObjectURL(invoicePdfBlob);
+    
+    await saveDocumentToModule({
+      name: `Facture ${invoice.invoiceNumber}`,
+      type: 'invoice',
+      url: invoicePdfUrl,
+      reference: invoice.invoiceNumber,
+      createdAt: timestamp
+    });
 
     // Generate delivery note
     const deliveryPdf = new jsPDF();
@@ -121,16 +131,16 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     deliveryPdf.setFontSize(10);
     deliveryPdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
-    // Generate PDF
-    deliveryPdf.save(`bon_livraison_${invoice.invoiceNumber}.pdf`);
-
-    // Also save documents to the Documents module
-    // In a real app, this would involve an API call to store the documents
-    // For now, we'll just console.log
-    console.log('Documents saved to Documents module:', {
-      invoice: `facture_${invoice.invoiceNumber}.pdf`,
-      deliveryNote: `bon_livraison_${invoice.invoiceNumber}.pdf`,
-      trackingCode: paymentData.trackingCode
+    // Save delivery note
+    const deliveryPdfBlob = new Blob([deliveryPdf.output('blob')], { type: 'application/pdf' });
+    const deliveryPdfUrl = URL.createObjectURL(deliveryPdfBlob);
+    
+    await saveDocumentToModule({
+      name: `Bon de livraison ${invoice.invoiceNumber}`,
+      type: 'delivery_note',
+      url: deliveryPdfUrl,
+      reference: invoice.invoiceNumber,
+      createdAt: timestamp
     });
 
     return true;

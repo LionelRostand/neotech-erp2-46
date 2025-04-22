@@ -37,12 +37,12 @@ const FreightInvoicesPage = () => {
         paymentReference: paymentData.reference
       });
 
-      // Generate documents if needed
+      // Generate and save documents
       await generateDocuments(selectedInvoice, paymentData);
       
       // Refresh the invoices list and show success message
       await refetchInvoices();
-      toast.success('Paiement enregistré avec succès');
+      toast.success('Paiement enregistré et documents générés avec succès');
       setShowPayDialog(false);
     } catch (error) {
       console.error('Payment error:', error);
