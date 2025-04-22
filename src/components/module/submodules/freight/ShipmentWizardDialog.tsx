@@ -12,8 +12,8 @@ import { toast } from "sonner";
 const defaultForm = {
   reference: "",
   customer: "",
-  origin: "",
-  destination: "",
+  carrier: "", // New field
+  carrierName: "", // New field
   totalWeight: 0,
   scheduledDate: new Date().toISOString(),
   shipmentType: "import",

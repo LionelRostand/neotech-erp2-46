@@ -3,6 +3,8 @@ import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFreightClients } from "../hooks/useFreightClients";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCarriers } from "../hooks/useCarriers";
 
 function generateReference() {
   return "EXP" + Math.floor(100000 + Math.random() * 900000);
@@ -21,14 +23,14 @@ const StepGeneral = ({
   close: () => void;
   submitting: boolean;
 }) => {
-  const { clients, isLoading } = useFreightClients();
+  const { clients, isLoading: clientsLoading } = useFreightClients();
+  const { carriers, isLoading: carriersLoading } = useCarriers();
 
   // Auto-générer une référence si le champ est vide au chargement
   useEffect(() => {
     if (!form.reference) {
       updateForm({ reference: generateReference() });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -62,6 +64,7 @@ const StepGeneral = ({
             </Button>
           </div>
         </div>
+
         {/* Client expéditeur */}
         <div>
           <label className="block font-medium mb-1">Client</label>
@@ -71,10 +74,10 @@ const StepGeneral = ({
             value={form.customer}
             onChange={e => updateForm({ customer: e.target.value })}
             className="w-full rounded-md border px-3 py-2 text-sm bg-white z-10"
-            disabled={isLoading}
+            disabled={clientsLoading}
           >
             <option value="">Sélectionner un client</option>
-            {isLoading ? (
+            {clientsLoading ? (
               <option disabled>Chargement...</option>
             ) : clients && clients.length > 0 ? (
               clients.map((client: any) => (
@@ -87,30 +90,37 @@ const StepGeneral = ({
             )}
           </select>
         </div>
-        {/* Origine */}
-        <div>
-          <label className="block font-medium mb-1">Origine</label>
-          <Input
+
+        {/* Nouveau champ Transporteur */}
+        <div className="col-span-2">
+          <label className="block font-medium mb-1">Transporteur</label>
+          <select
             required
-            name="origin"
-            placeholder="Origine"
-            value={form.origin}
-            onChange={e => updateForm({ origin: e.target.value })}
-          />
-        </div>
-        {/* Destination */}
-        <div>
-          <label className="block font-medium mb-1">Destination</label>
-          <Input
-            required
-            name="destination"
-            placeholder="Destination"
-            value={form.destination}
-            onChange={e => updateForm({ destination: e.target.value })}
-          />
+            name="carrier"
+            value={form.carrier}
+            onChange={e => updateForm({ 
+              carrier: e.target.value,
+              carrierName: carriers.find((c: any) => c.id === e.target.value)?.name || ''
+            })}
+            className="w-full rounded-md border px-3 py-2 text-sm bg-white z-10"
+            disabled={carriersLoading}
+          >
+            <option value="">Sélectionner un transporteur</option>
+            {carriersLoading ? (
+              <option disabled>Chargement...</option>
+            ) : carriers && carriers.length > 0 ? (
+              carriers.map((carrier: any) => (
+                <option key={carrier.id} value={carrier.id}>
+                  {carrier.name} - {carrier.type}
+                </option>
+              ))
+            ) : (
+              <option disabled>Aucun transporteur trouvé</option>
+            )}
+          </select>
         </div>
       </div>
-      {/* Removed summary block of type d'expédition and statut actuel */}
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" type="button" onClick={close}>
           Annuler
@@ -122,5 +132,5 @@ const StepGeneral = ({
     </form>
   );
 };
-export default StepGeneral;
 
+export default StepGeneral;
