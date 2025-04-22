@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Container, Shipment } from '@/types/freight';
-import { toast } from 'sonner';
 
 interface CreateInvoiceDialogProps {
   open: boolean;
@@ -58,32 +57,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      // Prepare invoice data
-      const invoiceData = {
-        invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-        clientName,
-        issueDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        total: amount,
-        status: 'pending',
-        currency: 'EUR',
-        containerReference: selectedContainer || '',
-        shipmentReference: selectedShipment || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      // Save to Firestore
-      await addDoc(collection(db, COLLECTIONS.ACCOUNTING.INVOICES), invoiceData);
-      
-      toast.success('Facture créée avec succès');
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error creating invoice:', error);
-      toast.error("Erreur lors de la création de la facture");
-    }
+    // Ajouter la logique de création de facture ici
+    onOpenChange(false);
   };
 
   // Helper function to ensure we never have empty values for SelectItem
@@ -151,7 +126,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
 
           <div className="space-y-2">
             <Label>Client</Label>
-            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} />
+            <Input value={clientName} disabled />
           </div>
 
           <div className="space-y-2">
