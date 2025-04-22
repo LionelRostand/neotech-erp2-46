@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useFreightData } from '@/hooks/modules/useFreightData';
-import { InvoicesTable } from '../../../accounting/components/InvoicesTable';
+import { InvoicesTable } from '@/components/module/submodules/accounting/components/InvoicesTable';
 import { useInvoicesData } from '@/hooks/modules/useAccountingData';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
