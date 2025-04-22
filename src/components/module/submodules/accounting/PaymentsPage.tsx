@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +9,13 @@ import PaymentViewDialog from './components/PaymentViewDialog';
 import PaymentFormDialog from './components/PaymentFormDialog';
 import { Payment } from './types/accounting-types';
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PaymentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isNewPaymentDialogOpen, setIsNewPaymentDialogOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all_statuses');
   const { payments, isLoading, error, reload } = usePaymentsData();
 
   const handleCreatePayment = async (data: Partial<Payment>) => {
@@ -28,8 +31,8 @@ const PaymentsPage = () => {
   };
 
   const filteredPayments = payments.filter(payment => 
-    payment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+    payment.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -57,6 +60,17 @@ const PaymentsPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all_statuses">Tous les statuts</SelectItem>
+                <SelectItem value="completed">Terminé</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+                <SelectItem value="failed">Échoué</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-2" />
               Filtrer
@@ -132,20 +146,6 @@ const PaymentsPage = () => {
           )}
         </CardContent>
       </Card>
-
-      {selectedPayment && (
-        <PaymentViewDialog 
-          open={!!selectedPayment}
-          onOpenChange={() => setSelectedPayment(null)}
-          payment={selectedPayment}
-        />
-      )}
-
-      <PaymentFormDialog
-        open={isNewPaymentDialogOpen}
-        onOpenChange={setIsNewPaymentDialogOpen}
-        onSubmit={handleCreatePayment}
-      />
     </div>
   );
 };
