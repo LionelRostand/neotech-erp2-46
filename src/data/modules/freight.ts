@@ -9,7 +9,8 @@ import {
   Settings,
   Container as LucideContainerIcon,
   Route as LucideRouteIcon,
-  Receipt
+  Receipt,
+  Package as PackageIcon  // Added to use for the new menu item
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -22,7 +23,7 @@ export const freightModule: AppModule = {
   category: 'services',
   submodules: [
     { id: "freight-dashboard", name: "Tableau de bord", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
-    { id: "freight-shipments", name: "Expéditions", href: "/modules/freight/shipments", icon: createIcon(Ship) },
+    { id: "freight-shipments", name: "Colis", href: "/modules/freight/shipments", icon: createIcon(PackageIcon) }, // Changed name from "Expéditions" to "Colis"
     { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(LucideContainerIcon) },
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
     { id: "freight-invoices", name: "Factures", href: "/modules/freight/invoices", icon: createIcon(Receipt) },
