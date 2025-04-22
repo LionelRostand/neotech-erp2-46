@@ -12,8 +12,10 @@ import { toast } from "sonner";
 const defaultForm = {
   reference: "",
   customer: "",
-  carrier: "", // New field
-  carrierName: "", // New field
+  carrier: "", 
+  carrierName: "",
+  origin: "", // Make sure origin is properly initialized
+  destination: "", // Make sure destination is properly initialized
   totalWeight: 0,
   scheduledDate: new Date().toISOString(),
   shipmentType: "import",
@@ -82,6 +84,21 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
   const handleCreate = async () => {
     setSubmitting(true);
     try {
+      // Make sure we have valid origin and destination values
+      if (!form.origin) {
+        toast.error("Veuillez spécifier l'origine de l'expédition");
+        setCurrentStep("general");
+        setSubmitting(false);
+        return;
+      }
+      
+      if (!form.destination) {
+        toast.error("Veuillez spécifier la destination de l'expédition");
+        setCurrentStep("general");
+        setSubmitting(false);
+        return;
+      }
+      
       // Prepare the data for Firebase
       const shipmentData = {
         reference: form.reference,
@@ -96,11 +113,13 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
         createdAt: new Date().toISOString(),
         scheduledDate: form.scheduledDate,
         estimatedDeliveryDate: new Date(Date.now() + (form.tracking.estimatedTime * 60 * 60 * 1000)).toISOString(),
-        carrier: "default",
-        carrierName: "Transport Standard",
+        carrier: form.carrier || "default",
+        carrierName: form.carrierName || "Transport Standard",
         notes: "Créé via l'assistant d'expédition",
         totalPrice: getTotalPrice(),
       };
+      
+      console.log("Shipment data to submit:", shipmentData);
       
       // Save to Firebase
       await createShipment(shipmentData);

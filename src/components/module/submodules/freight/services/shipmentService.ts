@@ -21,6 +21,7 @@ export interface CreateShipmentData {
   carrier: string;
   carrierName: string;
   notes?: string;
+  totalPrice?: number;
 }
 
 /**
@@ -28,8 +29,19 @@ export interface CreateShipmentData {
  */
 export const createShipment = async (shipmentData: CreateShipmentData): Promise<string> => {
   try {
+    // Validate required fields
+    if (!shipmentData.origin) {
+      throw new Error("Le champ 'origin' est requis");
+    }
+    
+    if (!shipmentData.destination) {
+      throw new Error("Le champ 'destination' est requis");
+    }
+
     // Reference to the shipments collection
     const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
+    
+    console.log('Creating shipment with data:', shipmentData);
     
     // Add document with server timestamp
     const docRef = await addDoc(shipmentsRef, {
