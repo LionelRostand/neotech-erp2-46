@@ -49,25 +49,31 @@ export const CreateInvoiceDialog = ({
   useEffect(() => {
     if (selectedShipment && containers && shipments) {
       const shipment = shipments.find(s => s.reference === selectedShipment);
-      const container = containers.find(c => c.number === shipment?.reference);
       
-      if (shipment && container) {
-        const containerCost = container.costs?.[0]?.amount || 0;
-        
-        setInvoiceData({
-          containerReference: container.number,
-          containerCost: containerCost,
-          clientName: shipment.customer || container.client || 'Client non spécifié',
-          shipmentReference: shipment.reference,
-          shipmentStatus: shipment.status,
-          total: containerCost,
-          currency: 'EUR',
-          status: 'pending',
-          issueDate: new Date().toISOString().split('T')[0],
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          paymentMethod: selectedPaymentMethod
-        });
-      }
+      // Make sure we have a valid shipment before proceeding
+      if (!shipment) return;
+      
+      // Find the container - ensure it's a valid reference
+      const container = shipment.reference ? 
+        containers.find(c => c.number === shipment.reference) : 
+        undefined;
+      
+      // Safely access container cost with fallbacks
+      const containerCost = container?.costs?.[0]?.amount || 0;
+      
+      setInvoiceData({
+        containerReference: container?.number || 'Non spécifié',
+        containerCost: containerCost,
+        clientName: shipment.customer || container?.client || 'Client non spécifié',
+        shipmentReference: shipment.reference,
+        shipmentStatus: shipment.status,
+        total: containerCost,
+        currency: 'EUR',
+        status: 'pending',
+        issueDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        paymentMethod: selectedPaymentMethod
+      });
     }
   }, [selectedShipment, containers, shipments, selectedPaymentMethod]);
 
@@ -84,11 +90,27 @@ export const CreateInvoiceDialog = ({
     onOpenChange(false);
   };
 
-  const getShipmentLabel = (shipment: Shipment): string => {
-    return `${shipment.reference} - ${shipment.customer || 'Client non spécifié'}`;
+  // Helper function to ensure we have valid SelectItem values
+  const getSafeShipmentLabel = (shipment: Shipment): string => {
+    return `${shipment.reference || 'Référence inconnue'} - ${shipment.customer || 'Client non spécifié'}`;
   };
 
+  // Check if there are valid shipments to display
   const hasValidShipments = shipments && shipments.length > 0;
+
+  // Loading state
+  if (shipmentsLoading || containersLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Nouvelle Facture</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center">Chargement des données...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,13 +134,13 @@ export const CreateInvoiceDialog = ({
                   shipments.map((shipment) => (
                     <SelectItem 
                       key={shipment.id} 
-                      value={shipment.reference}
+                      value={shipment.reference || `shipment-${shipment.id}`} // Ensure non-empty value
                     >
-                      {getShipmentLabel(shipment)}
+                      {getSafeShipmentLabel(shipment)}
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="no-shipments">Aucune expédition disponible</SelectItem>
+                  <SelectItem value="no-shipments-available">Aucune expédition disponible</SelectItem>
                 )}
               </SelectContent>
             </Select>
