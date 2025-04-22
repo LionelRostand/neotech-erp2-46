@@ -4,6 +4,16 @@ import 'jspdf-autotable';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import QRCode from 'qrcode';
 
+// Company information (In a real app, this would come from settings/config)
+const COMPANY_INFO = {
+  name: "Transport & Logistics SA",
+  address: "123 Avenue du Commerce",
+  city: "75001 Paris",
+  phone: "+33 1 23 45 67 89",
+  email: "contact@transport-logistics.fr",
+  siret: "123 456 789 00012"
+};
+
 export const generateDocuments = async (invoice: FreightInvoice, paymentData: any) => {
   try {
     const trackingUrl = `${window.location.origin}/modules/freight/tracking/${paymentData.trackingCode}`;
@@ -12,20 +22,51 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     // Generate invoice PDF
     const invoicePdf = new jsPDF();
     
-    // Add header
+    // Add company header
     invoicePdf.setFontSize(18);
-    invoicePdf.text("FACTURE", 105, 20, { align: "center" });
+    invoicePdf.text(COMPANY_INFO.name, 105, 20, { align: "center" });
+    
+    invoicePdf.setFontSize(10);
+    invoicePdf.text([
+      COMPANY_INFO.address,
+      COMPANY_INFO.city,
+      `Tél: ${COMPANY_INFO.phone}`,
+      `Email: ${COMPANY_INFO.email}`,
+      `SIRET: ${COMPANY_INFO.siret}`
+    ], 105, 30, { align: "center" });
+
+    // Add FACTURE title
+    invoicePdf.setFontSize(24);
+    invoicePdf.text("FACTURE", 105, 60, { align: "center" });
     
     // Add invoice details
     invoicePdf.setFontSize(12);
-    invoicePdf.text(`N° Facture: ${invoice.invoiceNumber}`, 20, 40);
-    invoicePdf.text(`Client: ${invoice.clientName}`, 20, 50);
-    invoicePdf.text(`Montant: ${invoice.amount} ${invoice.currency || "EUR"}`, 20, 60);
-    invoicePdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, 70);
+    invoicePdf.text([
+      `N° Facture: ${invoice.invoiceNumber}`,
+      `Date: ${new Date().toLocaleDateString()}`,
+      `Client: ${invoice.clientName}`,
+      `Montant: ${invoice.amount} ${invoice.currency || "EUR"}`,
+      `Référence: ${invoice.shipmentReference || invoice.containerNumber || "N/A"}`
+    ], 20, 80);
+    
+    // Add items table if available
+    if (invoice.items && invoice.items.length > 0) {
+      invoicePdf.autoTable({
+        startY: 120,
+        head: [['Description', 'Quantité', 'Prix unitaire', 'Total']],
+        body: invoice.items.map(item => [
+          item.description,
+          item.quantity,
+          `${item.unitPrice} ${invoice.currency || "EUR"}`,
+          `${item.quantity * item.unitPrice} ${invoice.currency || "EUR"}`
+        ])
+      });
+    }
     
     // Add QR code
     invoicePdf.addImage(qrCodeDataUrl, "PNG", 150, 30, 40, 40);
-    invoicePdf.text("Scanner pour suivre", 150, 80, { align: "center" });
+    invoicePdf.setFontSize(10);
+    invoicePdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
     // Generate PDF
     invoicePdf.save(`facture_${invoice.invoiceNumber}.pdf`);
@@ -33,24 +74,64 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     // Generate delivery note
     const deliveryPdf = new jsPDF();
     
-    // Add header
+    // Add company header
     deliveryPdf.setFontSize(18);
-    deliveryPdf.text("BON DE LIVRAISON", 105, 20, { align: "center" });
+    deliveryPdf.text(COMPANY_INFO.name, 105, 20, { align: "center" });
+    
+    deliveryPdf.setFontSize(10);
+    deliveryPdf.text([
+      COMPANY_INFO.address,
+      COMPANY_INFO.city,
+      `Tél: ${COMPANY_INFO.phone}`,
+      `Email: ${COMPANY_INFO.email}`
+    ], 105, 30, { align: "center" });
+
+    // Add BON DE LIVRAISON title
+    deliveryPdf.setFontSize(24);
+    deliveryPdf.text("BON DE LIVRAISON", 105, 60, { align: "center" });
     
     // Add delivery details
     deliveryPdf.setFontSize(12);
-    deliveryPdf.text(`Référence: ${invoice.shipmentReference || "N/A"}`, 20, 40);
-    deliveryPdf.text(`Client: ${invoice.clientName}`, 20, 50);
+    deliveryPdf.text([
+      `Référence: ${invoice.shipmentReference || "N/A"}`,
+      `Client: ${invoice.clientName}`,
+      `Date: ${new Date().toLocaleDateString()}`
+    ], 20, 80);
+
     if (invoice.containerNumber) {
-      deliveryPdf.text(`Conteneur: ${invoice.containerNumber}`, 20, 60);
+      deliveryPdf.text(`Conteneur: ${invoice.containerNumber}`, 20, 100);
+    }
+    
+    // Add items table if available
+    if (invoice.items && invoice.items.length > 0) {
+      deliveryPdf.autoTable({
+        startY: 120,
+        head: [['Description', 'Quantité', 'Poids', 'Remarques']],
+        body: invoice.items.map(item => [
+          item.description,
+          item.quantity,
+          item.weight ? `${item.weight} kg` : 'N/A',
+          item.notes || ''
+        ])
+      });
     }
     
     // Add QR code
     deliveryPdf.addImage(qrCodeDataUrl, "PNG", 150, 30, 40, 40);
-    deliveryPdf.text("Scanner pour suivre", 150, 80, { align: "center" });
+    deliveryPdf.setFontSize(10);
+    deliveryPdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
     // Generate PDF
     deliveryPdf.save(`bon_livraison_${invoice.invoiceNumber}.pdf`);
+
+    // Also save documents to the Documents module
+    // In a real app, this would involve an API call to store the documents
+    // For now, we'll just console.log
+    console.log('Documents saved to Documents module:', {
+      invoice: `facture_${invoice.invoiceNumber}.pdf`,
+      deliveryNote: `bon_livraison_${invoice.invoiceNumber}.pdf`,
+      trackingCode: paymentData.trackingCode
+    });
 
     return true;
   } catch (error) {
