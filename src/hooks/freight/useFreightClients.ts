@@ -20,9 +20,10 @@ export const useFreightClients = () => {
     queryFn: async () => {
       console.log('Fetching freight clients...');
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.CLIENTS));
+      
       const clientsData = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        return {
+        const client = {
           id: doc.id,
           name: data.name || '',
           email: data.email || '',
@@ -31,11 +32,12 @@ export const useFreightClients = () => {
           notes: data.notes || '',
           createdAt: data.createdAt || null
         } as FreightClient;
+        
+        console.log('Loaded client:', client.id, client.name);
+        return client;
       });
-      console.log('Freight clients loaded:', clientsData.length, 'clients');
-      clientsData.forEach(client => {
-        console.log('Client ID:', client.id, 'Name:', client.name);
-      });
+      
+      console.log(`Freight clients loaded: ${clientsData.length} clients`);
       return clientsData;
     }
   });

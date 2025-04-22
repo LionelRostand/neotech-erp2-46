@@ -19,6 +19,8 @@ export interface Shipment {
   labelGenerated: boolean;
   documents: any[];
   description: string;
+  origin?: string;
+  destination?: string;
 }
 
 export const useFreightShipments = () => {
@@ -50,11 +52,13 @@ export const useFreightShipments = () => {
           createdAt: data.createdAt || '',
           labelGenerated: data.labelGenerated || false,
           documents: data.documents || [],
-          description: data.description || ''
+          description: data.description || '',
+          origin: data.origin || '',
+          destination: data.destination || ''
         } as Shipment;
       });
     },
-    enabled: !clientsLoading
+    enabled: true // Always enabled, the query will wait for clients internally
   });
 
   return { 

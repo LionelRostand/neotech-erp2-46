@@ -18,10 +18,15 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ value, onCha
   const { clients, isLoading } = useFreightClients();
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
 
+  // Update the selected customer name whenever value or clients change
   useEffect(() => {
     if (value && clients.length > 0) {
       const customer = clients.find(c => c.id === value);
-      if (customer) setSelectedCustomerName(customer.name || "");
+      if (customer) {
+        setSelectedCustomerName(customer.name || "");
+      }
+    } else if (!value) {
+      setSelectedCustomerName("");
     }
   }, [value, clients]);
 
@@ -29,12 +34,17 @@ export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ value, onCha
     const customer = clients.find(c => c.id === newValue);
     if (customer) {
       onChange(newValue, customer.name || "");
+      setSelectedCustomerName(customer.name || "");
     }
   };
 
   return (
-    <Select value={value} onValueChange={handleValueChange} disabled={isLoading}>
-      <SelectTrigger>
+    <Select 
+      value={value} 
+      onValueChange={handleValueChange} 
+      disabled={isLoading}
+    >
+      <SelectTrigger className="w-full">
         <SelectValue placeholder="Sélectionner un client">
           {selectedCustomerName || "Sélectionner un client"}
         </SelectValue>
