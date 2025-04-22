@@ -20,6 +20,13 @@ const StepRecap = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Vérifier si les champs obligatoires sont présents
+      if (!form.origin || !form.destination) {
+        toast.error("Les champs origine et destination sont obligatoires!");
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Appeler le service pour enregistrer dans la collection "freight_shipments"
       await createShipment({
         reference: form.reference,
@@ -79,6 +86,8 @@ const StepRecap = ({
             <p><span className="font-medium">Client:</span> {form.customerName}</p>
             <p><span className="font-medium">Transporteur:</span> {form.carrierName}</p>
             <p><span className="font-medium">Type d'expédition:</span> {form.shipmentType === 'export' ? 'Export' : 'Import'}</p>
+            <p><span className="font-medium">Origine:</span> {form.origin}</p>
+            <p><span className="font-medium">Destination:</span> {form.destination}</p>
             <p><span className="font-medium">Date d'envoi:</span> {form.scheduledDate}</p>
             <p><span className="font-medium">Date de livraison estimée:</span> {form.estimatedDeliveryDate}</p>
           </div>

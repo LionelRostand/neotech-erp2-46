@@ -7,7 +7,6 @@ import StepArticles from "./shipment-wizard/StepArticles";
 import StepTracking from "./shipment-wizard/StepTracking";
 import StepPricing from "./shipment-wizard/StepPricing";
 import StepRecap from "./shipment-wizard/StepRecap";
-import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 
 interface ShipmentWizardDialogProps {
@@ -40,6 +39,8 @@ const ShipmentWizardDialog: React.FC<ShipmentWizardDialogProps> = ({
     routeId: "",
     notes: "",
     totalWeight: 0,
+    origin: "", // Ajout du champ origin
+    destination: "", // Ajout du champ destination
     pricing: {
       basePrice: 10,
       geoZone: "National",
@@ -98,6 +99,8 @@ const ShipmentWizardDialog: React.FC<ShipmentWizardDialogProps> = ({
         routeId: "",
         notes: "",
         totalWeight: 0,
+        origin: "", // Réinitialisation du champ origin
+        destination: "", // Réinitialisation du champ destination
         pricing: {
           basePrice: 10,
           geoZone: "National",
@@ -114,7 +117,6 @@ const ShipmentWizardDialog: React.FC<ShipmentWizardDialogProps> = ({
       onSuccess();
     }
     handleClose();
-    toast.success("Expédition créée avec succès!");
   };
 
   return (

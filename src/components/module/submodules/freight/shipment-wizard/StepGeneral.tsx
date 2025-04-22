@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,28 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
           <CarrierSelector
             value={form.carrier}
             onChange={(value, name) => updateForm({ carrier: value, carrierName: name })}
+          />
+        </div>
+      </div>
+
+      {/* Ajout des champs origin et destination */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Origine *</label>
+          <Input
+            value={form.origin || ""}
+            onChange={(e) => updateForm({ origin: e.target.value })}
+            placeholder="Ville ou pays d'origine"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Destination *</label>
+          <Input
+            value={form.destination || ""}
+            onChange={(e) => updateForm({ destination: e.target.value })}
+            placeholder="Ville ou pays de destination"
+            required
           />
         </div>
       </div>
