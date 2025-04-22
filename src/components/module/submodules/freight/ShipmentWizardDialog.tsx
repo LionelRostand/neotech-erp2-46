@@ -1,173 +1,187 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StepGeneral from "./shipment-wizard/StepGeneral";
 import StepArticles from "./shipment-wizard/StepArticles";
-import StepPricing from "./shipment-wizard/StepPricing";
 import StepTracking from "./shipment-wizard/StepTracking";
-import { createShipment } from "./services/shipmentService";
+import StepPricing from "./shipment-wizard/StepPricing";
+import StepRecap from "./shipment-wizard/StepRecap";
+import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 
-const defaultForm = {
-  reference: "",
-  customer: "",
-  carrier: "",
-  carrierName: "",
-  origin: "", // S'assurer que origin est initialisé
-  destination: "", // S'assurer que destination est initialisé
-  totalWeight: 0,
-  scheduledDate: new Date().toISOString(),
-  estimatedDeliveryDate: new Date().toISOString(),
-  shipmentType: "import",
-  status: "draft",
-  lines: [
-    { id: Date.now().toString(), productName: "", quantity: 1, weight: 0, cost: 0, packageType: "box" }
-  ],
-  pricing: {
-    basePrice: 10,
-    geoZone: "National",
-    shipmentKind: "standard",
-    distance: 100,
-    extraFees: 0,
-  },
-  tracking: {
-    trackingNumber: `TRK${Math.floor(100000000 + Math.random()*900000000)}`,
-    route: "",
-    transportType: "road",
-    estimatedTime: 24,
-    distance: 100,
-    status: "draft"
-  }
-};
+interface ShipmentWizardDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+  children?: React.ReactNode;
+}
 
-const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) => {
-  const [form, setForm] = useState({ ...defaultForm });
-  const [currentStep, setCurrentStep] = useState<"general" | "articles" | "pricing" | "tracking">("general");
-  const [submitting, setSubmitting] = useState(false);
+const ShipmentWizardDialog: React.FC<ShipmentWizardDialogProps> = ({
+  open,
+  onOpenChange,
+  onSuccess,
+  children,
+}) => {
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState("general");
+  const [wizardForm, setWizardForm] = useState({
+    reference: "",
+    customer: "",
+    customerName: "",
+    carrier: "",
+    carrierName: "",
+    shipmentType: "export",
+    status: "draft",
+    scheduledDate: "",
+    estimatedDeliveryDate: "",
+    lines: [],
+    trackingNumber: "",
+    routeId: "",
+    notes: "",
+    totalWeight: 0,
+    pricing: {
+      basePrice: 10,
+      geoZone: "National",
+      shipmentKind: "standard",
+      distance: 0,
+      extraFees: 0,
+    },
+  });
 
-  const handleClose = () => {
-    setForm({ ...defaultForm });
-    setCurrentStep("general");
-    onOpenChange(false);
+  // Helper functions
+  const goToStep = (step: string) => {
+    setCurrentStep(step);
   };
 
-  // Navigation
-  const next = () => {
-    if (currentStep === "general") setCurrentStep("articles");
-    else if (currentStep === "articles") setCurrentStep("pricing");
-    else if (currentStep === "pricing") setCurrentStep("tracking");
-  };
-  const prev = () => {
-    if (currentStep === "tracking") setCurrentStep("pricing");
-    else if (currentStep === "pricing") setCurrentStep("articles");
-    else if (currentStep === "articles") setCurrentStep("general");
-  };
-
-  // Ajout et édition par étapes
-  const updateForm = (fields: any) => setForm((old) => ({ ...old, ...fields }));
-  const updateLines = (lines: any) => setForm((f) => ({ ...f, lines, totalWeight: lines.reduce((sum: number, l: any) => sum + (l.weight*l.quantity), 0) }));
-  const updatePricing = (pricing: any) => setForm((f) => ({ ...f, pricing }));
-  const updateTracking = (tracking: any) => setForm((f) => ({ ...f, tracking }));
-
-  // Calcul du prix total (doit être identique à celui de StepPricing)
-  const getTotalPrice = () => {
-    const { pricing, totalWeight = 0 } = form;
-    const weightPrice = totalWeight * 0.1;
-    const distancePrice = (pricing?.distance || 0) * 0.1;
-    const basePrice = typeof pricing?.basePrice === "number" ? pricing.basePrice : 10;
-    const extra = typeof pricing?.extraFees === "number" ? pricing.extraFees : 0;
-    const total = basePrice + weightPrice + distancePrice + extra;
-    return Number(total.toFixed(2));
-  };
-
-  // Actual shipment creation with Firebase
-  const handleCreate = async () => {
-    setSubmitting(true);
-    try {
-      // Vérifier que origin et destination ne sont pas undefined
-      if (!form.origin || !form.destination) {
-        toast.error("L'origine et la destination sont requises.");
-        setSubmitting(false);
-        setCurrentStep("general");
-        return;
+  const handleUpdateForm = (data: any) => {
+    setWizardForm((prev) => {
+      const newState = { ...prev, ...data };
+      
+      // Calculate total weight whenever lines are updated
+      if (data.lines) {
+        newState.totalWeight = data.lines.reduce(
+          (sum: number, line: any) => sum + Number(line.weight) * Number(line.quantity),
+          0
+        );
       }
       
-      // Prepare the data for Firebase
-      const shipmentData = {
-        reference: form.reference,
-        customer: form.customer,
-        origin: form.origin,
-        destination: form.destination,
-        totalWeight: form.totalWeight,
-        shipmentType: form.shipmentType as 'import' | 'export' | 'local' | 'international',
-        status: form.tracking.status || "draft" as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
-        lines: form.lines,
-        trackingNumber: form.tracking.trackingNumber,
-        createdAt: new Date().toISOString(),
-        scheduledDate: form.scheduledDate,
-        estimatedDeliveryDate: form.estimatedDeliveryDate || new Date(Date.now() + (form.tracking.estimatedTime * 60 * 60 * 1000)).toISOString(),
-        carrier: form.carrier || "default",
-        carrierName: form.carrierName || "Transport Standard",
-        notes: "Créé via l'assistant d'expédition",
-        totalPrice: getTotalPrice(),
-      };
-      
-      console.log("Données d'expédition à envoyer:", shipmentData);
-      
-      // Save to Firebase
-      await createShipment(shipmentData);
-      
-      // Show success message
-      toast.success(`Expédition ${form.reference} créée avec succès!`);
-      
-      // Close dialog and reset form
-      handleClose();
-    } catch (error) {
-      console.error("Erreur lors de la création de l'expédition:", error);
-      toast.error("Une erreur est survenue lors de la création de l'expédition");
-    } finally {
-      setSubmitting(false);
+      return newState;
+    });
+  };
+
+  const handleUpdateLines = (lines: any[]) => {
+    handleUpdateForm({ lines });
+  };
+
+  const handleUpdatePricing = (pricing: any) => {
+    handleUpdateForm({ pricing });
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    // Wait for dialog animation to complete before resetting form
+    setTimeout(() => {
+      setCurrentStep("general");
+      setWizardForm({
+        reference: "",
+        customer: "",
+        customerName: "",
+        carrier: "",
+        carrierName: "",
+        shipmentType: "export",
+        status: "draft",
+        scheduledDate: "",
+        estimatedDeliveryDate: "",
+        lines: [],
+        trackingNumber: "",
+        routeId: "",
+        notes: "",
+        totalWeight: 0,
+        pricing: {
+          basePrice: 10,
+          geoZone: "National",
+          shipmentKind: "standard",
+          distance: 0,
+          extraFees: 0,
+        },
+      });
+    }, 300);
+  };
+
+  const handleSuccess = () => {
+    if (onSuccess) {
+      onSuccess();
     }
+    handleClose();
+    toast.success("Expédition créée avec succès!");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="sm:max-w-3xl" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Nouveau Colis</DialogTitle>
+          <DialogTitle>Créer une nouvelle expédition</DialogTitle>
+          <DialogDescription>
+            Remplissez les informations pour créer une nouvelle expédition
+          </DialogDescription>
         </DialogHeader>
-        <Tabs value={currentStep} onValueChange={val => setCurrentStep(val as any)} className="mt-2">
-          <TabsList>
-            <TabsTrigger value="general">Informations générales</TabsTrigger>
+
+        <Tabs value={currentStep} className="mt-4" onValueChange={goToStep}>
+          <TabsList className="grid grid-cols-5 mb-6">
+            <TabsTrigger value="general">Informations</TabsTrigger>
             <TabsTrigger value="articles">Articles</TabsTrigger>
-            <TabsTrigger value="pricing">Tarification</TabsTrigger>
             <TabsTrigger value="tracking">Suivi & Route</TabsTrigger>
+            <TabsTrigger value="pricing">Prix</TabsTrigger>
+            <TabsTrigger value="recap">Récapitulatif</TabsTrigger>
           </TabsList>
-          <div className="pt-4" />
+
           <TabsContent value="general">
-            <StepGeneral form={form} updateForm={updateForm} next={next} close={handleClose} submitting={submitting} />
-          </TabsContent>
-          <TabsContent value="articles">
-            <StepArticles lines={form.lines} updateLines={updateLines} next={next} prev={prev} close={handleClose} />
-          </TabsContent>
-          <TabsContent value="pricing">
-            <StepPricing
-              form={form}
-              updatePricing={updatePricing}
-              next={next}
-              prev={prev}
+            <StepGeneral
+              form={wizardForm}
+              updateForm={handleUpdateForm}
+              prev={() => {}}
+              next={() => goToStep("articles")}
               close={handleClose}
             />
           </TabsContent>
+
+          <TabsContent value="articles">
+            <StepArticles
+              lines={wizardForm.lines || []}
+              updateLines={handleUpdateLines}
+              prev={() => goToStep("general")}
+              next={() => goToStep("tracking")}
+              close={handleClose}
+            />
+          </TabsContent>
+
           <TabsContent value="tracking">
             <StepTracking
-              form={form}
-              updateTracking={updateTracking}
-              create={handleCreate}
-              prev={prev}
+              form={wizardForm}
+              updateForm={handleUpdateForm}
+              prev={() => goToStep("articles")}
+              next={() => goToStep("pricing")}
               close={handleClose}
-              submitting={submitting}
+            />
+          </TabsContent>
+
+          <TabsContent value="pricing">
+            <StepPricing
+              form={wizardForm}
+              updatePricing={handleUpdatePricing}
+              prev={() => goToStep("tracking")}
+              next={() => goToStep("recap")}
+              close={handleClose}
+            />
+          </TabsContent>
+
+          <TabsContent value="recap">
+            <StepRecap
+              form={wizardForm}
+              prev={() => goToStep("pricing")}
+              onSuccess={handleSuccess}
+              close={handleClose}
             />
           </TabsContent>
         </Tabs>
@@ -175,4 +189,5 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
     </Dialog>
   );
 };
+
 export default ShipmentWizardDialog;
