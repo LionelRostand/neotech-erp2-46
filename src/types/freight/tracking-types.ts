@@ -1,46 +1,41 @@
 
 export interface TrackingEvent {
   id: string;
-  packageId: string;
+  shipmentId?: string;
+  containerId?: string;
+  packageId?: string;
+  eventType: string;
+  location: string;
   timestamp: string;
-  status: PackageStatus;
-  location?: GeoLocation;
   description: string;
-  isNotified: boolean;
+  latitude?: number;
+  longitude?: number;
+  performedBy?: string;
+  notes?: string;
 }
 
-export interface GeoLocation {
+export interface TrackingPoint {
+  id: string;
   latitude: number;
   longitude: number;
-  address?: string;
-  city?: string;
-  country?: string;
-  postalCode?: string;
+  timestamp: string;
+  name: string;
+  description?: string;
+  status?: string;
 }
 
-export type PackageStatus = 
-  | 'registered'
-  | 'processing'
-  | 'in_transit'
-  | 'out_for_delivery'
-  | 'delivered'
-  | 'delayed'
-  | 'exception'
-  | 'returned'
-  | 'lost';
-
-export interface NotificationPreference {
-  id: string;
-  userId: string;
-  email: boolean;
-  sms: boolean;
-  statuses: PackageStatus[];
-}
-
-export interface TrackingFilters {
-  search?: string;
-  statuses?: PackageStatus[];
-  dateFrom?: Date;
-  dateTo?: Date;
-  carriers?: string[];
+export interface TrackingInfo {
+  reference: string;
+  type: 'shipment' | 'container' | 'package';
+  status: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  arrivalDate: string;
+  events: TrackingEvent[];
+  currentLocation?: string;
+  currentCoordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }

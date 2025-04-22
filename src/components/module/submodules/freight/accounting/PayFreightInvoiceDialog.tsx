@@ -1,187 +1,181 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { CreditCard, Wallet, BanknoteIcon, QrCode } from 'lucide-react';
-import { formatCurrency } from '@/components/module/submodules/accounting/utils/formatting';
+import { CreditCard, CashRegister, Bank, PaypalLogo } from "lucide-react";
+import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
+import { toast } from 'sonner';
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}
 
 interface PayFreightInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: any;
-  onSubmit: (data: any) => void;
+  invoice: FreightInvoice;
+  onSubmit: (paymentData: any) => Promise<void>;
 }
 
-export const PayFreightInvoiceDialog = ({ 
-  open, 
+export const PayFreightInvoiceDialog: React.FC<PayFreightInvoiceDialogProps> = ({
+  open,
   onOpenChange,
   invoice,
-  onSubmit 
-}: PayFreightInvoiceDialogProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<string>('card');
-  const [reference, setReference] = useState<string>('');
-  const [notes, setNotes] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  onSubmit
+}) => {
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
+  const [paymentReference, setPaymentReference] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const handlePaymentMethodChange = (value: string) => {
-    setPaymentMethod(value);
-  };
+  const paymentMethods: PaymentMethod[] = [
+    { id: "card", name: "Carte bancaire", icon: <CreditCard className="h-4 w-4" /> },
+    { id: "paypal", name: "PayPal", icon: <PaypalLogo className="h-4 w-4" /> },
+    { id: "transfer", name: "Virement bancaire", icon: <Bank className="h-4 w-4" /> },
+    { id: "cash", name: "Espèces", icon: <CashRegister className="h-4 w-4" /> }
+  ];
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      setLoading(true);
-      await onSubmit({
+      setIsSubmitting(true);
+      
+      const paymentData = {
         method: paymentMethod,
-        reference,
-        notes,
-        amount: invoice.amount,
+        reference: paymentReference,
         date: new Date().toISOString(),
-        invoiceId: invoice.id,
-        clientName: invoice.clientName,
-        shipmentReference: invoice.shipmentReference,
-        containerNumber: invoice.containerNumber
-      });
-      setLoading(false);
+        amount: invoice.amount,
+        currency: invoice.currency || "EUR",
+        notes
+      };
+      
+      await onSubmit(paymentData);
+      // The dialog will be closed by the parent component after onSubmit
     } catch (error) {
-      console.error('Error submitting payment:', error);
-      setLoading(false);
+      console.error("Payment error:", error);
+      toast.error("Erreur lors du traitement du paiement");
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) {
-        setPaymentMethod('card');
-        setReference('');
-        setNotes('');
-      }
-      onOpenChange(newOpen);
-    }}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Effectuer un paiement</DialogTitle>
+          <DialogTitle>Paiement de facture</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="p-4 bg-gray-50 rounded-md mb-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-500">Facture</p>
-                <p className="font-semibold">{invoice.invoiceNumber || `n°${invoice.id}`}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Montant</p>
-                <p className="text-xl font-bold">{formatCurrency(invoice.amount, invoice.currency || 'EUR')}</p>
-              </div>
-            </div>
-
-            {(invoice.shipmentReference || invoice.containerNumber) && (
-              <div className="mt-2 text-sm text-gray-500">
-                {invoice.shipmentReference && <p>Expédition: {invoice.shipmentReference}</p>}
-                {invoice.containerNumber && <p>Conteneur: {invoice.containerNumber}</p>}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="paymentMethod">Méthode de paiement</Label>
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              <Button
-                type="button"
-                variant={paymentMethod === 'card' ? 'default' : 'outline'}
-                className="flex flex-col items-center justify-center h-20 px-2"
-                onClick={() => handlePaymentMethodChange('card')}
-              >
-                <CreditCard className="h-8 w-8 mb-1" />
-                <span className="text-xs">Carte bancaire</span>
-              </Button>
-              <Button
-                type="button"
-                variant={paymentMethod === 'paypal' ? 'default' : 'outline'}
-                className="flex flex-col items-center justify-center h-20 px-2"
-                onClick={() => handlePaymentMethodChange('paypal')}
-              >
-                <Wallet className="h-8 w-8 mb-1" />
-                <span className="text-xs">PayPal</span>
-              </Button>
-              <Button
-                type="button"
-                variant={paymentMethod === 'transfer' ? 'default' : 'outline'}
-                className="flex flex-col items-center justify-center h-20 px-2"
-                onClick={() => handlePaymentMethodChange('transfer')}
-              >
-                <BanknoteIcon className="h-8 w-8 mb-1" />
-                <span className="text-xs">Virement</span>
-              </Button>
-              <Button
-                type="button"
-                variant={paymentMethod === 'cash' ? 'default' : 'outline'}
-                className="flex flex-col items-center justify-center h-20 px-2"
-                onClick={() => handlePaymentMethodChange('cash')}
-              >
-                <BanknoteIcon className="h-8 w-8 mb-1" />
-                <span className="text-xs">Espèces</span>
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="reference">Référence du paiement</Label>
-            <Input
-              id="reference"
-              value={reference}
-              onChange={e => setReference(e.target.value)}
-              placeholder={
-                paymentMethod === 'card' ? 'Numéro d\'autorisation' :
-                paymentMethod === 'paypal' ? 'Identifiant de transaction PayPal' :
-                paymentMethod === 'transfer' ? 'Référence du virement' :
-                'Référence du paiement'
-              }
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Informations supplémentaires sur le paiement"
-            />
-          </div>
-
-          <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
-            <div className="flex items-start">
-              <QrCode className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
-              <div>
-                <p className="text-sm font-medium text-blue-700">Information</p>
-                <p className="text-xs text-blue-600">
-                  Un QR code sera généré sur la facture et le bon de livraison pour permettre le suivi de votre expédition et de vos conteneurs.
-                </p>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2 mb-4">
+              <Label htmlFor="invoice-details">Détails de la facture</Label>
+              <div className="p-3 bg-slate-50 rounded-md text-sm">
+                <div className="flex justify-between mb-1">
+                  <span>Client:</span>
+                  <span className="font-medium">{invoice.clientName}</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span>Montant:</span>
+                  <span className="font-medium">{invoice.amount.toFixed(2)} {invoice.currency || "EUR"}</span>
+                </div>
+                {invoice.invoiceNumber && (
+                  <div className="flex justify-between mb-1">
+                    <span>Facture N°:</span>
+                    <span className="font-medium">{invoice.invoiceNumber}</span>
+                  </div>
+                )}
+                {invoice.shipmentReference && (
+                  <div className="flex justify-between mb-1">
+                    <span>Expédition:</span>
+                    <span className="font-medium">{invoice.shipmentReference}</span>
+                  </div>
+                )}
+                {invoice.containerNumber && (
+                  <div className="flex justify-between mb-1">
+                    <span>Conteneur:</span>
+                    <span className="font-medium">{invoice.containerNumber}</span>
+                  </div>
+                )}
               </div>
             </div>
+            
+            <div>
+              <Label htmlFor="payment-method" className="mb-2 block">Méthode de paiement</Label>
+              <RadioGroup 
+                id="payment-method" 
+                value={paymentMethod} 
+                onValueChange={setPaymentMethod}
+                className="grid grid-cols-2 gap-4"
+              >
+                {paymentMethods.map((method) => (
+                  <div key={method.id} className="flex items-center space-x-2">
+                    <RadioGroupItem value={method.id} id={`payment-${method.id}`} />
+                    <Label 
+                      htmlFor={`payment-${method.id}`}
+                      className="flex items-center cursor-pointer"
+                    >
+                      {method.icon}
+                      <span className="ml-2">{method.name}</span>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+            
+            <div>
+              <Label htmlFor="reference">Référence de paiement</Label>
+              <Input
+                id="reference"
+                value={paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                placeholder={
+                  paymentMethod === "card" ? "4 derniers chiffres de la carte" :
+                  paymentMethod === "paypal" ? "Email PayPal ou ID de transaction" :
+                  paymentMethod === "transfer" ? "Référence du virement" :
+                  "Reçu caisse N°"
+                }
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="notes">Notes additionnelles</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Informations complémentaires sur le paiement..."
+                rows={3}
+              />
+            </div>
           </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Traitement...' : 'Confirmer le paiement'}
-          </Button>
-        </DialogFooter>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Traitement..." : "Confirmer le paiement"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default PayFreightInvoiceDialog;
