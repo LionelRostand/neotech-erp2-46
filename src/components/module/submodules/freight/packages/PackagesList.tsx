@@ -24,6 +24,22 @@ interface PackagesListProps {
 const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
   const [selectedPackage, setSelectedPackage] = React.useState<Shipment | null>(null);
   
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString: string | undefined): string => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date:', dateString);
+        return '-';
+      }
+      return format(date, 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
+    }
+  };
+
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
     switch (status) {
       case 'delivered':
@@ -43,24 +59,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
     }
   };
 
-  // Helper function to safely format dates
-  const safeFormatDate = (dateString: string | undefined): string => {
-    if (!dateString) return '-';
-    
-    try {
-      const date = new Date(dateString);
-      // Check if date is valid before formatting
-      if (isNaN(date.getTime())) {
-        console.warn('Invalid date:', dateString);
-        return '-';
-      }
-      return format(date, 'dd MMM yyyy', { locale: fr });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return '-';
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="text-center py-6 text-gray-500">
@@ -76,9 +74,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Référence</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Poids</TableHead>
-              <TableHead>Transporteur</TableHead>
+              <TableHead>Client</TableHead>
               <TableHead>N° Suivi</TableHead>
               <TableHead>Créé le</TableHead>
               <TableHead>Coût</TableHead>
@@ -93,9 +89,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
                 return (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">{pkg.reference}</TableCell>
-                    <TableCell>{pkg.lines[0]?.productName || '-'}</TableCell>
-                    <TableCell>{pkg.totalWeight} kg</TableCell>
-                    <TableCell>{pkg.carrierName || '-'}</TableCell>
+                    <TableCell>{pkg.customer || '-'}</TableCell>
                     <TableCell>
                       {pkg.trackingNumber ? 
                         <span className="text-blue-600 hover:underline cursor-pointer">
@@ -141,7 +135,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-6 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-6 text-gray-500">
                   Aucun colis trouvé
                 </TableCell>
               </TableRow>
