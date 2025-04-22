@@ -13,6 +13,8 @@ import { Loader2 } from 'lucide-react';
 import { deleteShipment } from '@/components/module/submodules/freight/services/shipmentService';
 import { toast } from 'sonner';
 import { Shipment } from '@/hooks/freight/useFreightShipments';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface DeletePackageDialogProps {
   open: boolean;
@@ -46,6 +48,44 @@ const DeletePackageDialog: React.FC<DeletePackageDialogProps> = ({
     }
   };
 
+  // Helper function to safely format dates
+  const formatDate = (dateValue: any): string => {
+    if (!dateValue) return '';
+    
+    // Check if it's a Firebase timestamp (has seconds and nanoseconds)
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
+      try {
+        const date = new Date(dateValue.seconds * 1000);
+        return format(date, 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        console.error("Error formatting timestamp:", error);
+        return 'Date invalide';
+      }
+    }
+    
+    // Handle string dates
+    if (typeof dateValue === 'string') {
+      try {
+        return format(new Date(dateValue), 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        console.error("Error formatting date string:", error);
+        return dateValue;
+      }
+    }
+    
+    // Handle Date objects
+    if (dateValue instanceof Date) {
+      try {
+        return format(dateValue, 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        console.error("Error formatting Date object:", error);
+        return 'Date invalide';
+      }
+    }
+    
+    return 'Date inconnue';
+  };
+
   if (!shipment) return null;
 
   return (
@@ -58,6 +98,22 @@ const DeletePackageDialog: React.FC<DeletePackageDialogProps> = ({
             Cette action est irréversible.
           </DialogDescription>
         </DialogHeader>
+        
+        <div className="py-4">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Client:</span> {shipment.customerName || "-"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Date de création:</span> {formatDate(shipment.createdAt)}
+            </p>
+            {shipment.carrierName && (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Transporteur:</span> {shipment.carrierName}
+              </p>
+            )}
+          </div>
+        </div>
         
         <DialogFooter className="mt-4">
           <Button

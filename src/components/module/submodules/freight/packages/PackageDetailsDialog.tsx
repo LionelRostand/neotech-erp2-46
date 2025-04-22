@@ -14,13 +14,41 @@ interface Props {
 const PackageDetailsDialog: React.FC<Props> = ({ open, onOpenChange, packageData }) => {
   if (!packageData) return null;
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "-";
-    try {
-      return format(new Date(dateStr), "dd MMM yyyy", { locale: fr });
-    } catch {
-      return dateStr;
+  const formatDate = (dateValue: any): string => {
+    if (!dateValue) return "-";
+    
+    // Handle Firebase timestamp (object with seconds and nanoseconds)
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
+      try {
+        const date = new Date(dateValue.seconds * 1000);
+        return format(date, "dd MMM yyyy", { locale: fr });
+      } catch (error) {
+        console.error("Error formatting timestamp:", error);
+        return "Date invalide";
+      }
     }
+    
+    // Handle string dates
+    if (typeof dateValue === 'string') {
+      try {
+        return format(new Date(dateValue), "dd MMM yyyy", { locale: fr });
+      } catch (error) {
+        console.error("Error formatting date string:", error);
+        return dateValue;
+      }
+    }
+    
+    // Handle Date objects
+    if (dateValue instanceof Date) {
+      try {
+        return format(dateValue, "dd MMM yyyy", { locale: fr });
+      } catch (error) {
+        console.error("Error formatting Date object:", error);
+        return "Date invalide";
+      }
+    }
+    
+    return "Format de date non reconnu";
   };
 
   return (

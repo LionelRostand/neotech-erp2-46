@@ -29,13 +29,41 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   
   // Fonction sécurisée pour formater les dates
-  const safeFormatDate = (dateString: string) => {
-    try {
-      return dateString ? format(new Date(dateString), 'dd MMM yyyy', { locale: fr }) : '-';
-    } catch (error) {
-      console.error('Invalid date:', dateString);
-      return '-';
+  const safeFormatDate = (dateValue: any) => {
+    if (!dateValue) return '-';
+    
+    // Si c'est un Timestamp Firestore (avec seconds et nanoseconds)
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
+      try {
+        const date = new Date(dateValue.seconds * 1000);
+        return format(date, 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        console.error('Error formatting Firestore timestamp:', error);
+        return '-';
+      }
     }
+    
+    // Si c'est une chaîne de date
+    if (typeof dateValue === 'string') {
+      try {
+        return format(new Date(dateValue), 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        console.error('Invalid date string:', dateValue, error);
+        return '-';
+      }
+    }
+    
+    // Si c'est déjà un objet Date
+    if (dateValue instanceof Date) {
+      try {
+        return format(dateValue, 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        console.error('Error formatting Date object:', error);
+        return '-';
+      }
+    }
+    
+    return '-';
   };
   
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
@@ -98,7 +126,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
             {packages.length > 0 ? (
               packages.map((pkg) => {
                 const statusInfo = getStatusInfo(pkg.status);
-                console.log('Rendering package:', pkg.id, 'with customer name:', pkg.customerName);
                 return (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">{pkg.reference}</TableCell>
