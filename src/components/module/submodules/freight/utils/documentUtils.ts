@@ -11,7 +11,10 @@ export const saveDocumentToModule = async (document: {
   createdAt: string;
 }) => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTIONS.FREIGHT.DOCUMENTS), {
+    console.log('Saving document to Firestore:', document);
+    console.log('Collection path:', COLLECTIONS.FREIGHT.DOCUMENTS);
+    
+    const documentData = {
       ...document,
       module: 'freight',
       category: document.type === 'delivery_note' ? 'delivery_note' : 'invoice',
@@ -24,7 +27,10 @@ export const saveDocumentToModule = async (document: {
         documentCategory: 'billing',
         invoiceReference: document.reference
       }
-    });
+    };
+    
+    const docRef = await addDoc(collection(db, COLLECTIONS.FREIGHT.DOCUMENTS), documentData);
+    console.log('Document saved successfully with ID:', docRef.id);
     
     return docRef.id;
   } catch (error) {

@@ -35,6 +35,8 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
     switch(document.type) {
       case 'invoice':
         return <FileText className="h-6 w-6 text-blue-500" />;
+      case 'delivery_note':
+        return <FileText className="h-6 w-6 text-green-500" />;
       case 'bol':
         return <FileText className="h-6 w-6 text-amber-500" />;
       case 'customs':
@@ -51,6 +53,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
   const getDocumentTypeLabel = (type: string) => {
     switch(type) {
       case 'invoice': return 'Facture';
+      case 'delivery_note': return 'Bon de livraison';
       case 'bol': return 'Connaissement';
       case 'customs': return 'Document douanier';
       case 'contract': return 'Contrat';
@@ -75,6 +78,8 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
       return 'Date invalide';
     }
   };
+
+  console.log('Viewing document:', document);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -118,7 +123,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
             <h3 className="text-sm font-medium text-gray-500">Expédition associée</h3>
-            <p className="mt-1">{document.shipment || 'Non spécifié'}</p>
+            <p className="mt-1">{document.shipment || document.reference || 'Non spécifié'}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-gray-500">Créateur</h3>

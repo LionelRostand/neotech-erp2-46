@@ -9,7 +9,6 @@ import { useFreightInvoices, FreightInvoice } from '@/hooks/modules/useFreightIn
 import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useFreightDocumentGenerator } from '../hooks/useFreightDocumentGenerator';
 import { generateDocuments } from '../utils/documentGenerator';
 
 const FreightInvoicesPage = () => {
@@ -17,7 +16,6 @@ const FreightInvoicesPage = () => {
   const [showPayDialog, setShowPayDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<FreightInvoice | null>(null);
   const { invoices, isLoading, refetchInvoices, updateInvoice } = useFreightInvoices();
-  const { generateInvoicePdf, generateDeliveryNotePdf } = useFreightDocumentGenerator();
 
   const handlePayInvoice = (invoice: FreightInvoice) => {
     setSelectedInvoice(invoice);
@@ -28,9 +26,10 @@ const FreightInvoicesPage = () => {
     try {
       if (!selectedInvoice) return;
 
+      console.log('Processing payment for invoice:', selectedInvoice.id);
+      
       // Update invoice status to paid
       await updateInvoice(selectedInvoice.id, {
-        ...selectedInvoice,
         status: 'paid',
         paidAt: new Date().toISOString(),
         paymentMethod: paymentData.method,
@@ -38,6 +37,7 @@ const FreightInvoicesPage = () => {
       });
 
       // Generate and save documents
+      console.log('Generating documents for invoice:', selectedInvoice.invoiceNumber);
       await generateDocuments(selectedInvoice, paymentData);
       
       // Refresh the invoices list and show success message

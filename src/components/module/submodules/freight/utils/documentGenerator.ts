@@ -17,6 +17,7 @@ const COMPANY_INFO = {
 
 export const generateDocuments = async (invoice: FreightInvoice, paymentData: any) => {
   try {
+    console.log('Starting document generation for invoice:', invoice.invoiceNumber);
     const trackingUrl = `${window.location.origin}/modules/freight/tracking/${paymentData.trackingCode}`;
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl);
     const timestamp = new Date().toISOString();
@@ -74,13 +75,17 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     const invoicePdfBlob = new Blob([invoicePdf.output('blob')], { type: 'application/pdf' });
     const invoicePdfUrl = URL.createObjectURL(invoicePdfBlob);
     
-    await saveDocumentToModule({
+    console.log('Invoice PDF generated, saving to Firestore...');
+    
+    const invoiceDocId = await saveDocumentToModule({
       name: `Facture ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'invoice',
       url: invoicePdfUrl,
       reference: invoice.invoiceNumber,
       createdAt: timestamp
     });
+    
+    console.log('Invoice document saved with ID:', invoiceDocId);
 
     // Generate delivery note
     const deliveryPdf = new jsPDF();
@@ -136,13 +141,17 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     const deliveryPdfBlob = new Blob([deliveryPdf.output('blob')], { type: 'application/pdf' });
     const deliveryPdfUrl = URL.createObjectURL(deliveryPdfBlob);
     
-    await saveDocumentToModule({
+    console.log('Delivery PDF generated, saving to Firestore...');
+    
+    const deliveryDocId = await saveDocumentToModule({
       name: `Bon de livraison ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'delivery_note',
       url: deliveryPdfUrl,
       reference: invoice.invoiceNumber,
       createdAt: timestamp
     });
+    
+    console.log('Delivery note document saved with ID:', deliveryDocId);
 
     return true;
   } catch (error) {
