@@ -25,11 +25,12 @@ export const saveDocumentToModule = async (document: {
       fileName: document.name,
       metadata: {
         documentCategory: document.type === 'delivery_note' ? 'shipping' : 'invoice',
-        reference: document.reference,
+        reference: document.reference || '',
         archiveStatus: 'active',
         visibility: 'visible',
         sourceModule: 'freight',
-        subModule: 'shipping_docs'
+        subModule: 'shipping_docs',
+        creationContext: 'payment_confirmation'
       },
       createdBy: 'system',
       createdAt: document.createdAt,

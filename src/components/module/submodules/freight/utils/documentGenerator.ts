@@ -21,9 +21,12 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     const timestamp = new Date().toISOString();
     const trackingUrl = `${window.location.origin}/modules/freight/tracking/${paymentData.trackingCode}`;
+    
+    // Generate QR code asynchronously
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl);
+    console.log('QR code generated for tracking URL:', trackingUrl);
 
-    // Generate invoice PDF
+    // ----- Generate invoice PDF -----
     const invoicePdf = new jsPDF();
     
     // Add company header
@@ -46,8 +49,8 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     // Add invoice details
     invoicePdf.setFontSize(12);
     invoicePdf.text([
-      `N° Facture: ${invoice.invoiceNumber}`,
-      `Date: ${new Date().toLocaleDateString()}`,
+      `N° Facture: ${invoice.invoiceNumber || 'N/A'}`,
+      `Date: ${new Date().toLocaleDateString('fr-FR')}`,
       `Client: ${invoice.clientName}`,
       `Montant: ${invoice.amount} ${invoice.currency || "EUR"}`,
       `Référence: ${invoice.shipmentReference || invoice.containerNumber || "N/A"}`
@@ -55,6 +58,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     // Add items table if available
     if (invoice.items && invoice.items.length > 0) {
+      // @ts-ignore - jspdf-autotable types
       invoicePdf.autoTable({
         startY: 120,
         head: [['Description', 'Quantité', 'Prix unitaire', 'Total']],
@@ -65,6 +69,21 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
           `${item.quantity * item.unitPrice} ${invoice.currency || "EUR"}`
         ])
       });
+    } else {
+      // If no items, add a simple line item
+      // @ts-ignore - jspdf-autotable types
+      invoicePdf.autoTable({
+        startY: 120,
+        head: [['Description', 'Quantité', 'Prix unitaire', 'Total']],
+        body: [
+          [
+            `Transport - ${invoice.shipmentReference || invoice.containerNumber || "Général"}`,
+            '1',
+            `${invoice.amount} ${invoice.currency || "EUR"}`,
+            `${invoice.amount} ${invoice.currency || "EUR"}`
+          ]
+        ]
+      });
     }
     
     // Add QR code
@@ -73,10 +92,11 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     invoicePdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
     // Save invoice PDF
-    const invoicePdfBlob = new Blob([invoicePdf.output('blob')], { type: 'application/pdf' });
+    const invoicePdfData = invoicePdf.output('blob');
+    const invoicePdfBlob = new Blob([invoicePdfData], { type: 'application/pdf' });
     const invoicePdfUrl = URL.createObjectURL(invoicePdfBlob);
     
-    console.log('Invoice PDF generated, saving to Firestore...');
+    console.log('Invoice PDF generated, preparing to save to Firestore...');
     
     const invoiceDocId = await saveDocumentToModule({
       name: `Facture ${invoice.invoiceNumber || 'Sans numéro'}`,
@@ -88,7 +108,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     console.log('Invoice document saved with ID:', invoiceDocId);
 
-    // Generate delivery note PDF
+    // ----- Generate delivery note PDF -----
     const deliveryPdf = new jsPDF();
     
     // Add company header
@@ -110,9 +130,9 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     // Add delivery details
     deliveryPdf.setFontSize(12);
     deliveryPdf.text([
-      `Référence: ${invoice.shipmentReference || "N/A"}`,
+      `Référence: ${invoice.shipmentReference || invoice.invoiceNumber || "N/A"}`,
       `Client: ${invoice.clientName}`,
-      `Date: ${new Date().toLocaleDateString()}`
+      `Date: ${new Date().toLocaleDateString('fr-FR')}`
     ], 20, 80);
 
     if (invoice.containerNumber) {
@@ -121,6 +141,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     // Add items table if available
     if (invoice.items && invoice.items.length > 0) {
+      // @ts-ignore - jspdf-autotable types
       deliveryPdf.autoTable({
         startY: 120,
         head: [['Description', 'Quantité', 'Poids', 'Remarques']],
@@ -131,6 +152,20 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
           item.notes || ''
         ])
       });
+    } else {
+      // If no items, add a simple line item
+      // @ts-ignore - jspdf-autotable types
+      deliveryPdf.autoTable({
+        startY: 120,
+        head: [['Description', 'Quantité', 'Référence']],
+        body: [
+          [
+            `Transport - ${invoice.shipmentReference || invoice.containerNumber || "Général"}`,
+            '1',
+            invoice.invoiceNumber || 'N/A'
+          ]
+        ]
+      });
     }
     
     // Add QR code
@@ -139,10 +174,11 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     deliveryPdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
     // Save delivery note PDF
-    const deliveryPdfBlob = new Blob([deliveryPdf.output('blob')], { type: 'application/pdf' });
+    const deliveryPdfData = deliveryPdf.output('blob');
+    const deliveryPdfBlob = new Blob([deliveryPdfData], { type: 'application/pdf' });
     const deliveryPdfUrl = URL.createObjectURL(deliveryPdfBlob);
     
-    console.log('Delivery note PDF generated, saving to Firestore...');
+    console.log('Delivery note PDF generated, preparing to save to Firestore...');
     
     const deliveryDocId = await saveDocumentToModule({
       name: `Bon de livraison ${invoice.invoiceNumber || 'Sans numéro'}`,

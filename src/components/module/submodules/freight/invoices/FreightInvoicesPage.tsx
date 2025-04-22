@@ -27,6 +27,7 @@ const FreightInvoicesPage = () => {
       if (!selectedInvoice) return;
 
       console.log('Processing payment for invoice:', selectedInvoice.id);
+      toast.info('Traitement du paiement en cours...');
       
       // Update invoice status to paid
       await updateInvoice(selectedInvoice.id, {
@@ -38,7 +39,11 @@ const FreightInvoicesPage = () => {
 
       // Generate and save documents
       console.log('Generating documents for invoice:', selectedInvoice.invoiceNumber);
-      await generateDocuments(selectedInvoice, paymentData);
+      toast.info('Génération des documents en cours...');
+      
+      const { invoiceDocId, deliveryDocId } = await generateDocuments(selectedInvoice, paymentData);
+      
+      console.log('Documents generated successfully with IDs:', { invoiceDocId, deliveryDocId });
       
       // Refresh the invoices list and show success message
       await refetchInvoices();
@@ -46,7 +51,7 @@ const FreightInvoicesPage = () => {
       setShowPayDialog(false);
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Erreur lors du traitement du paiement');
+      toast.error('Erreur lors du traitement du paiement ou de la génération des documents');
     }
   };
 
