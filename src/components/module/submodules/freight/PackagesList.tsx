@@ -24,6 +24,16 @@ interface PackagesListProps {
 const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false }) => {
   const [selectedPackage, setSelectedPackage] = React.useState<Shipment | null>(null);
   
+  // Fonction sécurisée pour formater les dates
+  const safeFormatDate = (dateString: string) => {
+    try {
+      return dateString ? format(new Date(dateString), 'dd MMM yyyy', { locale: fr }) : '-';
+    } catch (error) {
+      console.warning('Invalid date:', dateString);
+      return '-';
+    }
+  };
+  
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
     switch (status) {
       case 'delivered':
@@ -72,6 +82,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
             {packages.length > 0 ? (
               packages.map((pkg) => {
                 const statusInfo = getStatusInfo(pkg.status);
+                console.log('Rendering package:', pkg.id, 'with customer name:', pkg.customerName);
                 return (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">{pkg.reference}</TableCell>
@@ -88,7 +99,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
                       }
                     </TableCell>
                     <TableCell>
-                      {format(new Date(pkg.createdAt), 'dd MMM yyyy', { locale: fr })}
+                      {safeFormatDate(pkg.createdAt)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={statusInfo.type}>

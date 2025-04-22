@@ -18,9 +18,9 @@ export const useFreightClients = () => {
   const { data: clients = [], isLoading, error, refetch } = useQuery({
     queryKey: ['freight', 'clients'],
     queryFn: async () => {
+      console.log('Fetching freight clients...');
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.CLIENTS));
-      // Ensure we only return proper client objects with the expected structure
-      return querySnapshot.docs.map(doc => {
+      const clientsData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -32,6 +32,8 @@ export const useFreightClients = () => {
           createdAt: data.createdAt || null
         } as FreightClient;
       });
+      console.log('Freight clients loaded:', clientsData.length, clientsData);
+      return clientsData;
     }
   });
 
