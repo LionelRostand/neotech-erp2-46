@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -19,9 +18,9 @@ import { formatCurrency } from '../utils/formatting';
 interface InvoicesTableProps {
   invoices: Invoice[];
   isLoading: boolean;
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onView?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export const InvoicesTable: React.FC<InvoicesTableProps> = ({
@@ -59,17 +58,8 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
             <Skeleton className="h-4 w-[150px]" />
             <Skeleton className="h-4 w-[100px]" />
             <Skeleton className="h-4 w-[80px]" />
-            <Skeleton className="h-4 w-[120px]" />
           </div>
         ))}
-      </div>
-    );
-  }
-
-  if (!invoices || invoices.length === 0) {
-    return (
-      <div className="py-8 text-center">
-        <p className="text-muted-foreground">Aucune facture trouvée.</p>
       </div>
     );
   }
@@ -79,65 +69,53 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
       <TableCaption>Liste des factures</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead>Facture #</TableHead>
+          <TableHead>N° Facture</TableHead>
           <TableHead>Conteneur</TableHead>
           <TableHead>Expédition</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Date</TableHead>
-          <TableHead>Coût Conteneur</TableHead>
-          <TableHead>Total</TableHead>
+          <TableHead>Montant</TableHead>
           <TableHead>Statut</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {invoices.map((invoice) => (
           <TableRow key={invoice.id}>
-            <TableCell className="font-medium">{invoice.invoiceNumber || invoice.number}</TableCell>
+            <TableCell>{invoice.number || invoice.invoiceNumber}</TableCell>
             <TableCell>
-              {invoice.containerReference ? (
+              {invoice.containerReference && (
                 <Badge variant="outline">{invoice.containerReference}</Badge>
-              ) : (
-                <span className="text-muted-foreground text-sm">-</span>
               )}
             </TableCell>
             <TableCell>
-              {invoice.shipmentReference ? (
-                <Badge variant="outline" className="bg-blue-50">
-                  {invoice.shipmentReference}
-                  {invoice.shipmentStatus && (
-                    <span className="ml-2 text-xs text-gray-500">({invoice.shipmentStatus})</span>
-                  )}
-                </Badge>
-              ) : (
-                <span className="text-muted-foreground text-sm">-</span>
+              {invoice.shipmentReference && (
+                <Badge variant="outline">{invoice.shipmentReference}</Badge>
               )}
             </TableCell>
             <TableCell>{invoice.clientName}</TableCell>
             <TableCell>{invoice.issueDate}</TableCell>
-            <TableCell>
-              {invoice.containerCost ? (
-                formatCurrency(invoice.containerCost, invoice.currency)
-              ) : (
-                <span className="text-muted-foreground text-sm">-</span>
-              )}
-            </TableCell>
             <TableCell>{formatCurrency(invoice.total, invoice.currency)}</TableCell>
-            <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" size="icon" onClick={() => onView(invoice.id)}>
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">Voir</span>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onEdit(invoice.id)}>
-                  <Edit className="h-4 w-4" />
-                  <span className="sr-only">Modifier</span>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onDelete(invoice.id)}>
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Supprimer</span>
-                </Button>
+            <TableCell>
+              <Badge>{invoice.status}</Badge>
+            </TableCell>
+            <TableCell>
+              <div className="flex space-x-2">
+                {onView && (
+                  <Button variant="ghost" size="sm" onClick={() => onView(invoice.id)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                {onEdit && (
+                  <Button variant="ghost" size="sm" onClick={() => onEdit(invoice.id)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button variant="ghost" size="sm" onClick={() => onDelete(invoice.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>

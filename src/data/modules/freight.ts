@@ -29,8 +29,7 @@ export const freightModule: AppModule = {
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
     { id: "freight-accounting", name: "Comptabilité", href: "/modules/freight/accounting", icon: createIcon(CreditCard) },
     { id: "freight-documents", name: "Documents", href: "/modules/freight/documents", icon: createIcon(FileText) },
-    { id: "freight-client-portal", name: "Portail client", href: "/modules/freight/client-portal", icon: createIcon(Users) },
-    { id: "freight-routes-main", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
+    { id: "freight-routes", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
     { id: "freight-settings", name: "Paramètres", href: "/modules/freight/settings", icon: createIcon(Settings) }
   ]
 };

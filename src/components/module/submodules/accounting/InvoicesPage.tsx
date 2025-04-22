@@ -28,6 +28,18 @@ export const InvoicesPage = () => {
     }
   };
 
+  const handleViewInvoice = (id: string) => {
+    console.log('View invoice:', id);
+  };
+
+  const handleEditInvoice = (id: string) => {
+    console.log('Edit invoice:', id);
+  };
+
+  const handleDeleteInvoice = (id: string) => {
+    console.log('Delete invoice:', id);
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -38,7 +50,13 @@ export const InvoicesPage = () => {
         </Button>
       </div>
 
-      <InvoicesTable invoices={invoices} isLoading={isLoading} />
+      <InvoicesTable 
+        invoices={invoices} 
+        isLoading={isLoading} 
+        onView={handleViewInvoice}
+        onEdit={handleEditInvoice}
+        onDelete={handleDeleteInvoice}
+      />
 
       <CreateInvoiceDialog 
         open={showCreateDialog}
