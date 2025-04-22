@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import type { Container, Shipment } from '@/types/freight';
+import { Container, Shipment } from '@/types/freight';
 
 interface CreateInvoiceDialogProps {
   open: boolean;
@@ -23,7 +23,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
   const [amount, setAmount] = useState<number>(0);
 
   // Fetch containers
-  const { data: containers = [] } = useQuery({
+  const { data: containers = [], isLoading: containersLoading } = useQuery({
     queryKey: ['containers'],
     queryFn: async () => {
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.CONTAINERS));
@@ -32,7 +32,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
   });
 
   // Fetch shipments
-  const { data: shipments = [] } = useQuery({
+  const { data: shipments = [], isLoading: shipmentsLoading } = useQuery({
     queryKey: ['shipments'],
     queryFn: async () => {
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.SHIPMENTS));
@@ -62,6 +62,11 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
     onOpenChange(false);
   };
 
+  // Helper function to ensure we never have empty values for SelectItem
+  const ensureValidValue = (value: string | undefined | null): string => {
+    return value ? value : `no-value-${Math.random().toString(36).substring(2, 9)}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -77,14 +82,20 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
                 <SelectValue placeholder="Sélectionner un conteneur" />
               </SelectTrigger>
               <SelectContent>
-                {containers.map(container => (
-                  <SelectItem
-                    key={container.id}
-                    value={container.number}
-                  >
-                    {container.number} ({container.client})
-                  </SelectItem>
-                ))}
+                {containersLoading ? (
+                  <SelectItem value="loading">Chargement...</SelectItem>
+                ) : containers.length === 0 ? (
+                  <SelectItem value="no-containers">Aucun conteneur disponible</SelectItem>
+                ) : (
+                  containers.map(container => (
+                    <SelectItem
+                      key={container.id}
+                      value={ensureValidValue(container.number)}
+                    >
+                      {container.number || 'Sans numéro'} ({container.client || 'Sans client'})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -96,14 +107,20 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
                 <SelectValue placeholder="Sélectionner une expédition" />
               </SelectTrigger>
               <SelectContent>
-                {shipments.map(shipment => (
-                  <SelectItem
-                    key={shipment.id}
-                    value={shipment.reference}
-                  >
-                    {shipment.reference} ({shipment.customer})
-                  </SelectItem>
-                ))}
+                {shipmentsLoading ? (
+                  <SelectItem value="loading">Chargement...</SelectItem>
+                ) : shipments.length === 0 ? (
+                  <SelectItem value="no-shipments">Aucune expédition disponible</SelectItem>
+                ) : (
+                  shipments.map(shipment => (
+                    <SelectItem
+                      key={shipment.id}
+                      value={ensureValidValue(shipment.reference)}
+                    >
+                      {shipment.reference || 'Sans référence'} ({shipment.customer || 'Sans client'})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
