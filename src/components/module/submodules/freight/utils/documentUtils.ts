@@ -14,8 +14,10 @@ export const saveDocumentToModule = async (document: {
     const docRef = await addDoc(collection(db, COLLECTIONS.DOCUMENTS.FILES), {
       ...document,
       module: 'freight',
-      category: 'invoice',
-      status: 'active'
+      category: document.type === 'delivery_note' ? 'delivery_note' : 'invoice',
+      status: 'active',
+      shipment: document.reference,
+      creator: 'Système'
     });
     
     return docRef.id;
