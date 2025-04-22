@@ -22,6 +22,7 @@ import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { Invoice } from '../types/accounting-types';
+import { Container, Shipment } from '@/types/freight';
 
 interface CreateInvoiceDialogProps {
   open: boolean;
@@ -35,11 +36,13 @@ export const CreateInvoiceDialog = ({
   onSubmit
 }: CreateInvoiceDialogProps) => {
   const [selectedContainer, setSelectedContainer] = useState<string>('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-  const [invoiceData, setInvoiceData] = useState<Partial<Invoice>>({});
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card'); // Default value to prevent empty selection
+  const [invoiceData, setInvoiceData] = useState<Partial<Invoice>>({
+    paymentMethod: 'card' // Set default payment method
+  });
 
   const { containers, isLoading: containersLoading } = useContainersData();
-  const { data: shipments, isLoading: shipmentsLoading } = useCollectionData(
+  const { data: shipments, isLoading: shipmentsLoading } = useCollectionData<Shipment>(
     COLLECTIONS.FREIGHT.SHIPMENTS
   );
 
@@ -49,18 +52,21 @@ export const CreateInvoiceDialog = ({
       const shipment = shipments.find(s => s.reference === container?.number);
       
       if (container) {
+        // Safely access costs with optional chaining and provide fallbacks
+        const containerCost = container.costs?.[0]?.amount || 0;
+        
         setInvoiceData({
           containerReference: container.number,
-          containerCost: container.costs?.[0]?.amount || 0,
+          containerCost: containerCost,
           clientName: container.client,
           shipmentReference: shipment?.reference || '',
           shipmentStatus: shipment?.status || '',
-          total: container.costs?.[0]?.amount || 0,
+          total: containerCost,
           currency: 'EUR',
           status: 'pending',
           issueDate: new Date().toISOString().split('T')[0],
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          paymentMethod: selectedPaymentMethod || 'card'
+          paymentMethod: selectedPaymentMethod
         });
       }
     }
@@ -98,8 +104,11 @@ export const CreateInvoiceDialog = ({
               </SelectTrigger>
               <SelectContent>
                 {containers?.map((container) => (
-                  <SelectItem key={container.number} value={container.number || 'no-number'}>
-                    {container.number} - {container.client}
+                  <SelectItem 
+                    key={container.number} 
+                    value={container.number || 'container-undefined'}
+                  >
+                    {container.number || 'Sans numéro'} - {container.client}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -110,17 +119,17 @@ export const CreateInvoiceDialog = ({
             <>
               <div className="space-y-2">
                 <Label>Client</Label>
-                <Input value={invoiceData.clientName} readOnly />
+                <Input value={invoiceData.clientName || ''} readOnly />
               </div>
               
               <div className="space-y-2">
                 <Label>Coût</Label>
-                <Input value={invoiceData.containerCost} readOnly />
+                <Input value={invoiceData.containerCost || 0} readOnly />
               </div>
 
               <div className="space-y-2">
                 <Label>Référence expédition</Label>
-                <Input value={invoiceData.shipmentReference} readOnly />
+                <Input value={invoiceData.shipmentReference || ''} readOnly />
               </div>
 
               <div className="space-y-2">
