@@ -1,220 +1,160 @@
 
 import React, { useState } from 'react';
-import { useFreightData } from '@/hooks/modules/useFreightData';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Filter, Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useInvoicesData } from '@/components/module/submodules/accounting/hooks/useInvoicesData';
 import { InvoicesTable } from '@/components/module/submodules/accounting/components/InvoicesTable';
-import { useAccountingData } from '@/hooks/modules/useAccountingData';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { CreateFreightInvoiceDialog } from './CreateFreightInvoiceDialog';
-import { ViewFreightInvoiceDialog } from './ViewFreightInvoiceDialog';
-import { EditFreightInvoiceDialog } from './EditFreightInvoiceDialog';
-import { DeleteFreightInvoiceDialog } from './DeleteFreightInvoiceDialog';
-import { PayFreightInvoiceDialog } from './PayFreightInvoiceDialog';
-import { toast } from 'sonner';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import FreightAccountingSummaryDialog from '../FreightAccountingSummaryDialog';
+import { usePaymentsData } from '@/components/module/submodules/accounting/hooks/usePaymentsData';
+import PaymentFormDialog from '@/components/module/submodules/accounting/components/PaymentFormDialog';
+import { toast } from '@/hooks/use-toast';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Payment } from '@/components/module/submodules/accounting/types/accounting-types';
 
 const FreightAccountingPage = () => {
-  const { containers, shipments, clients } = useFreightData();
-  const { invoices, isLoading } = useAccountingData();
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
-  const [showViewDialog, setShowViewDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showPayDialog, setShowPayDialog] = useState(false);
+  const { invoices, isLoading: isLoadingInvoices } = useInvoicesData();
+  const { payments, isLoading: isLoadingPayments } = usePaymentsData();
+  const [activeTab, setActiveTab] = useState('invoices');
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [showAddPaymentDialog, setShowAddPaymentDialog] = useState(false);
 
-  // Filter and format invoices to include container and shipment info
-  const enrichedInvoices = React.useMemo(() => {
-    if (!invoices || !Array.isArray(invoices)) {
-      console.log("No invoices data available:", invoices);
-      return [];
-    }
-    
-    return invoices.map(invoice => {
-      const container = containers?.find(c => c.number === invoice.containerReference);
-      const shipment = shipments?.find(s => s.reference === invoice.shipmentReference);
-      const client = clients?.find(c => c.id === invoice.clientId);
+  // Ensure that all data is properly handled for each Select component
+  const ensureValidValue = (value: string | undefined): string => {
+    return value || "default-value"; // Provide a default non-empty value
+  };
 
-      return {
-        ...invoice,
-        clientName: client?.name || invoice.clientName || container?.client || shipment?.customer || 'Inconnu',
-        containerCost: container?.costs?.[0]?.amount || 0,
-        shipmentStatus: shipment?.status || ''
-      };
-    });
-  }, [invoices, containers, shipments, clients]);
-
-  const handleCreateInvoice = async (data: any) => {
+  const handleAddPayment = async (data: Partial<Payment>) => {
     try {
-      const invoiceData = {
+      const paymentCollection = collection(db, COLLECTIONS.ACCOUNTING.PAYMENTS);
+      await addDoc(paymentCollection, {
         ...data,
+        date: new Date().toISOString(),
         createdAt: new Date().toISOString(),
-        status: 'pending',
-        invoiceNumber: `FT-${Date.now()}`,
-      };
-
-      await addDoc(collection(db, 'freight_billing'), invoiceData);
-      toast.success('Facture créée avec succès');
-      setShowCreateDialog(false);
-    } catch (error) {
-      console.error('Error creating invoice:', error);
-      toast.error('Erreur lors de la création de la facture');
-    }
-  };
-
-  const handleViewInvoice = (id: string) => {
-    const invoice = enrichedInvoices.find(inv => inv.id === id);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setShowViewDialog(true);
-    }
-  };
-
-  const handleEditInvoice = (id: string) => {
-    const invoice = enrichedInvoices.find(inv => inv.id === id);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setShowEditDialog(true);
-    }
-  };
-
-  const handleUpdateInvoice = async (updatedData: any) => {
-    try {
-      if (!selectedInvoice?.id) return;
-      
-      const invoiceRef = doc(db, 'freight_billing', selectedInvoice.id);
-      await updateDoc(invoiceRef, updatedData);
-      
-      toast.success('Facture mise à jour avec succès');
-      setShowEditDialog(false);
-    } catch (error) {
-      console.error('Error updating invoice:', error);
-      toast.error('Erreur lors de la mise à jour de la facture');
-    }
-  };
-
-  const handleDeleteInvoice = (id: string) => {
-    const invoice = enrichedInvoices.find(inv => inv.id === id);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setShowDeleteDialog(true);
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      if (!selectedInvoice?.id) return;
-      
-      await deleteDoc(doc(db, 'freight_billing', selectedInvoice.id));
-      
-      toast.success('Facture supprimée avec succès');
-      setShowDeleteDialog(false);
-    } catch (error) {
-      console.error('Error deleting invoice:', error);
-      toast.error('Erreur lors de la suppression de la facture');
-    }
-  };
-
-  const handlePayInvoice = (id: string) => {
-    const invoice = enrichedInvoices.find(inv => inv.id === id);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setShowPayDialog(true);
-    }
-  };
-
-  const handleProcessPayment = async (paymentData: any) => {
-    try {
-      if (!selectedInvoice?.id) return;
-      
-      // Update invoice status to paid
-      const invoiceRef = doc(db, 'freight_billing', selectedInvoice.id);
-      await updateDoc(invoiceRef, {
-        status: 'paid',
-        paymentMethod: paymentData.method,
-        paymentDate: new Date().toISOString(),
-        paymentReference: paymentData.reference || ''
+        updatedAt: new Date().toISOString(),
       });
-      
-      toast.success('Paiement enregistré avec succès');
-      setShowPayDialog(false);
+      toast({
+        title: "Paiement ajouté",
+        description: "Le paiement a été ajouté avec succès",
+      });
     } catch (error) {
-      console.error('Error processing payment:', error);
-      toast.error('Erreur lors du traitement du paiement');
+      console.error("Error adding payment:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'ajout du paiement",
+        variant: "destructive",
+      });
     }
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Factures Transport</h1>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Facture
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="text-center py-8">
-          <p>Chargement des factures...</p>
-        </div>
-      ) : enrichedInvoices.length === 0 ? (
-        <div className="text-center py-8 border rounded-lg bg-gray-50">
-          <h3 className="text-lg font-medium mb-2">Aucune facture trouvée</h3>
-          <p className="text-gray-500 mb-4">Créez une nouvelle facture pour commencer</p>
-          <Button variant="outline" onClick={() => setShowCreateDialog(true)}>
+        <h1 className="text-2xl font-bold">Comptabilité Transport</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowSummaryDialog(true)}>
+            <Filter className="h-4 w-4 mr-2" />
+            Récapitulatif
+          </Button>
+          <Button onClick={() => setShowAddPaymentDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Facture
+            Nouveau Paiement
           </Button>
         </div>
-      ) : (
-        <InvoicesTable 
-          invoices={enrichedInvoices}
-          isLoading={isLoading}
-          onView={handleViewInvoice}
-          onEdit={handleEditInvoice}
-          onDelete={handleDeleteInvoice}
-          onPay={handlePayInvoice}
-        />
-      )}
+      </div>
 
-      <CreateFreightInvoiceDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onSubmit={handleCreateInvoice}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="invoices">Factures</TabsTrigger>
+              <TabsTrigger value="payments">Paiements</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="invoices">
+              <InvoicesTable 
+                invoices={invoices} 
+                isLoading={isLoadingInvoices}
+                onView={(id) => console.log("View invoice", id)}
+                onEdit={(id) => console.log("Edit invoice", id)}
+                onDelete={(id) => console.log("Delete invoice", id)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="payments">
+              {isLoadingPayments ? (
+                <div className="flex justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
+                </div>
+              ) : payments?.length === 0 ? (
+                <div className="text-center p-8 text-gray-500">
+                  Aucun paiement trouvé
+                </div>
+              ) : (
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left p-3 font-medium">Facture</th>
+                        <th className="text-left p-3 font-medium">Client</th>
+                        <th className="text-left p-3 font-medium">Date</th>
+                        <th className="text-left p-3 font-medium">Montant</th>
+                        <th className="text-left p-3 font-medium">Statut</th>
+                        <th className="text-left p-3 font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments?.map((payment) => (
+                        <tr key={payment.id} className="border-t">
+                          <td className="p-3">{payment.invoiceNumber}</td>
+                          <td className="p-3">{payment.clientName}</td>
+                          <td className="p-3">{new Date(payment.date).toLocaleDateString()}</td>
+                          <td className="p-3">{payment.amount.toLocaleString('fr-FR', { style: 'currency', currency: payment.currency || 'EUR' })}</td>
+                          <td className="p-3">
+                            <span className={`rounded-full px-2 py-1 text-xs 
+                              ${payment.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-red-100 text-red-800'}`}>
+                              {payment.status === 'completed' ? 'Complété' : 
+                               payment.status === 'pending' ? 'En attente' : 'Échoué'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <Button variant="ghost" size="sm" onClick={() => console.log('View payment', payment.id)}>
+                              Voir
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Dialogs */}
+      <FreightAccountingSummaryDialog 
+        open={showSummaryDialog} 
+        onOpenChange={setShowSummaryDialog}
+        shipments={[]} 
+        clients={[]} 
+        containers={[]}
       />
-      
-      {selectedInvoice && (
-        <>
-          <ViewFreightInvoiceDialog
-            open={showViewDialog}
-            onOpenChange={setShowViewDialog}
-            invoice={selectedInvoice}
-          />
-          
-          <EditFreightInvoiceDialog
-            open={showEditDialog}
-            onOpenChange={setShowEditDialog}
-            invoice={selectedInvoice}
-            onSubmit={handleUpdateInvoice}
-          />
-          
-          <DeleteFreightInvoiceDialog
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
-            invoice={selectedInvoice}
-            onConfirmDelete={handleConfirmDelete}
-          />
-          
-          <PayFreightInvoiceDialog
-            open={showPayDialog}
-            onOpenChange={setShowPayDialog}
-            invoice={selectedInvoice}
-            onSubmit={handleProcessPayment}
-          />
-        </>
-      )}
+
+      <PaymentFormDialog
+        open={showAddPaymentDialog}
+        onOpenChange={setShowAddPaymentDialog}
+        onSubmit={handleAddPayment}
+      />
     </div>
   );
 };

@@ -49,6 +49,11 @@ const PaymentFormDialog: React.FC<PaymentFormDialogProps> = ({
     onOpenChange(false);
   };
 
+  // Ensure value is never an empty string
+  const ensureValidValue = (value: string | undefined): string => {
+    return value || "default-value";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -113,7 +118,7 @@ const PaymentFormDialog: React.FC<PaymentFormDialogProps> = ({
                     <FormLabel>Devise</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      defaultValue={field.value || "EUR"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -140,7 +145,7 @@ const PaymentFormDialog: React.FC<PaymentFormDialogProps> = ({
                   <FormLabel>Méthode de paiement</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    defaultValue={field.value || "card"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -152,6 +157,32 @@ const PaymentFormDialog: React.FC<PaymentFormDialogProps> = ({
                       <SelectItem value="transfer">Virement</SelectItem>
                       <SelectItem value="cash">Espèces</SelectItem>
                       <SelectItem value="check">Chèque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Statut</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value || "pending"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un statut" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="pending">En attente</SelectItem>
+                      <SelectItem value="completed">Complété</SelectItem>
+                      <SelectItem value="failed">Échoué</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
