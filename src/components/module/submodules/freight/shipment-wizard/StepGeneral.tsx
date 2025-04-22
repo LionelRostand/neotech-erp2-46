@@ -29,7 +29,7 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.reference || !form.customer || !form.origin || !form.destination) {
+    if (!form.reference || !form.customer || !form.transporteur) {
       alert("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -48,70 +48,67 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
     }
   };
 
-  // Parse dates from ISO strings
   const scheduledDate = form.scheduledDate ? new Date(form.scheduledDate) : new Date();
   const estimatedDeliveryDate = form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : new Date();
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
         <div>
-          <label className="font-medium mb-1 block">Référence</label>
-          <Input
-            value={form.reference}
-            onChange={(e) => updateForm({ reference: e.target.value })}
-            placeholder="Référence de l'expédition"
-            required
-          />
+          <label className="text-sm font-medium mb-1 block">Référence</label>
+          <div className="flex gap-2">
+            <Input
+              value={form.reference}
+              onChange={(e) => updateForm({ reference: e.target.value })}
+              placeholder="Référence de l'expédition"
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {/* TODO: Implémenter la génération de référence */}}
+            >
+              Générer
+            </Button>
+          </div>
         </div>
+        
         <div>
-          <label className="font-medium mb-1 block">Client</label>
-          <Input
+          <label className="text-sm font-medium mb-1 block">Client</label>
+          <Select
             value={form.customer}
-            onChange={(e) => updateForm({ customer: e.target.value })}
-            placeholder="Nom du client"
-            required
-          />
+            onValueChange={(value) => updateForm({ customer: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un client" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="client1">Client 1</SelectItem>
+              <SelectItem value="client2">Client 2</SelectItem>
+              <SelectItem value="client3">Client 3</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
-          <label className="font-medium mb-1 block">Origine</label>
-          <Input
-            value={form.origin}
-            onChange={(e) => updateForm({ origin: e.target.value })}
-            placeholder="Adresse d'origine"
-            required
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Destination</label>
-          <Input
-            value={form.destination}
-            onChange={(e) => updateForm({ destination: e.target.value })}
-            placeholder="Adresse de destination"
-            required
-          />
+          <label className="text-sm font-medium mb-1 block">Transporteur</label>
+          <Select
+            value={form.transporteur}
+            onValueChange={(value) => updateForm({ transporteur: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un transporteur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="transport1">Transporteur 1</SelectItem>
+              <SelectItem value="transport2">Transporteur 2</SelectItem>
+              <SelectItem value="transport3">Transporteur 3</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
-          <label className="font-medium mb-1 block">Date d'envoi</label>
-          <DatePicker
-            date={scheduledDate}
-            onSelect={handleScheduledDateChange}
-            placeholder="Sélectionner une date"
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Date de livraison estimée</label>
-          <DatePicker
-            date={estimatedDeliveryDate}
-            onSelect={handleEstimatedDeliveryDateChange}
-            placeholder="Sélectionner une date"
-          />
-        </div>
-
-        <div>
-          <label className="font-medium mb-1 block">Type d'expédition</label>
+          <label className="text-sm font-medium mb-1 block">Type d'expédition</label>
           <Select
             value={form.shipmentType}
             onValueChange={(value) => updateForm({ shipmentType: value })}
@@ -128,9 +125,27 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Date d'envoi</label>
+          <DatePicker
+            date={scheduledDate}
+            onSelect={handleScheduledDateChange}
+            placeholder="Sélectionner une date"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Date de livraison estimée</label>
+          <DatePicker
+            date={estimatedDeliveryDate}
+            onSelect={handleEstimatedDeliveryDateChange}
+            placeholder="Sélectionner une date"
+          />
+        </div>
       </div>
 
-      <div className="flex gap-2 pt-4 justify-end">
+      <div className="flex gap-2 justify-end pt-4">
         <Button type="button" variant="ghost" onClick={close} disabled={submitting}>
           Annuler
         </Button>
