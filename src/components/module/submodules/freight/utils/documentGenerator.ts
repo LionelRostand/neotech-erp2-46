@@ -1,3 +1,4 @@
+
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
@@ -74,7 +75,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     const invoicePdfUrl = URL.createObjectURL(invoicePdfBlob);
     
     await saveDocumentToModule({
-      name: `Facture ${invoice.invoiceNumber}`,
+      name: `Facture ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'invoice',
       url: invoicePdfUrl,
       reference: invoice.invoiceNumber,
@@ -136,7 +137,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     const deliveryPdfUrl = URL.createObjectURL(deliveryPdfBlob);
     
     await saveDocumentToModule({
-      name: `Bon de livraison ${invoice.invoiceNumber}`,
+      name: `Bon de livraison ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'delivery_note',
       url: deliveryPdfUrl,
       reference: invoice.invoiceNumber,

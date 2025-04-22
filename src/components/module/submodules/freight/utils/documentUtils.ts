@@ -17,7 +17,13 @@ export const saveDocumentToModule = async (document: {
       category: document.type === 'delivery_note' ? 'delivery_note' : 'invoice',
       status: 'active',
       shipment: document.reference,
-      creator: 'Système'
+      creator: 'Système',
+      section: 'freight_documents', // Ajout de la section pour le filtrage
+      documentType: 'invoice', // Pour identifier les documents de facturation
+      metadata: {
+        documentCategory: 'billing',
+        invoiceReference: document.reference
+      }
     });
     
     return docRef.id;
@@ -26,3 +32,4 @@ export const saveDocumentToModule = async (document: {
     throw error;
   }
 };
+
