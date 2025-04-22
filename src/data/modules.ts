@@ -25,7 +25,7 @@ export const modules = [
   crmModule,
   healthModule,
   documentsModule,
-  vehicleRentalsModule, // Updated to use vehicleRentalsModule instead of rentalsModule
+  vehicleRentalsModule,
   transportModule,
   garageModule,
   websiteModule,

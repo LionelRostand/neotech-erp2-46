@@ -16,7 +16,7 @@ import { AppModule, createIcon } from '../types/modules';
 
 export const freightModule: AppModule = {
   id: 2,
-  name: "Freight Management",
+  name: "Gestion des Colis", // Updated from "Gestion des Expéditions"
   description: "Gestion logistique, expéditions, suivi des conteneurs et transport de marchandises",
   href: "/modules/freight",
   icon: createIcon(Truck),
