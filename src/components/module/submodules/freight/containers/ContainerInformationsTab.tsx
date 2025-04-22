@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 interface Props {
   values: any;
   onChange: (field: string, value: any) => void;
-  transporteurs: { id: string; name: string }[];
-  clients: { id: string; name: string }[];
-  routes: { id: string; name: string; origin: string; destination: string }[];
-  types: { type: string; size: string }[];
+  transporteurs?: { id: string; name: string }[];
+  clients?: { id: string; name: string }[];
+  routes?: { id: string; name: string; origin: string; destination: string }[];
+  types?: { type: string; size: string }[];
 }
 
 // Liste des statuts classiques pour un conteneur
@@ -31,10 +31,10 @@ function generateReferenceCT() {
 const ContainerInformationsTab: React.FC<Props> = ({
   values,
   onChange,
-  transporteurs,
-  clients,
-  routes,
-  types,
+  transporteurs = [],
+  clients = [],
+  routes = [],
+  types = [],
 }) => {
   // Génère la référence au montage si elle est vide et commence par "CT"
   useEffect(() => {
