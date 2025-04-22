@@ -32,7 +32,10 @@ export const useFreightClients = () => {
           createdAt: data.createdAt || null
         } as FreightClient;
       });
-      console.log('Freight clients loaded:', clientsData.length, clientsData);
+      console.log('Freight clients loaded:', clientsData.length, 'clients');
+      clientsData.forEach(client => {
+        console.log('Client ID:', client.id, 'Name:', client.name);
+      });
       return clientsData;
     }
   });

@@ -9,7 +9,7 @@ export interface Shipment {
   id: string;
   reference: string;
   customerId: string;
-  customerName?: string; // Nom du client
+  customerName?: string;
   status: string;
   weight: number;
   weightUnit: string;
@@ -22,28 +22,26 @@ export interface Shipment {
 }
 
 export const useFreightShipments = () => {
-  const { clients } = useFreightClients();
+  const { clients, isLoading: clientsLoading } = useFreightClients();
 
   const { data: shipments = [], isLoading, error } = useQuery({
-    queryKey: ['freight', 'shipments'],
+    queryKey: ['freight', 'shipments', clients],
     queryFn: async () => {
+      console.log('Fetching shipments with clients:', clients.length);
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.SHIPMENTS));
-      
-      // Ajoutons des logs pour déboguer
-      console.log('Clients disponibles:', clients);
       
       return querySnapshot.docs.map(doc => {
         const data = doc.data();
-        const customer = clients.find(c => c.id === data.customerId);
+        const customerId = data.customerId || '';
+        const customer = clients.find(c => c.id === customerId);
         
-        // Ajoutons un log pour chaque shipment
-        console.log('Shipment data:', data.customerId, 'Customer found:', customer?.name || 'None');
+        console.log('Shipment:', doc.id, 'customerId:', customerId, 'customerName:', customer?.name || 'Not found');
         
         return {
           id: doc.id,
           reference: data.reference || '',
-          customerId: data.customerId || '',
-          customerName: customer?.name || '', // Utiliser une chaîne vide si aucun nom trouvé
+          customerId: customerId,
+          customerName: customer?.name || '',
           status: data.status || '',
           weight: data.weight || 0,
           weightUnit: data.weightUnit || 'kg',
@@ -56,8 +54,12 @@ export const useFreightShipments = () => {
         } as Shipment;
       });
     },
-    enabled: clients.length > 0 // Seulement exécuter la requête après que les clients sont chargés
+    enabled: !clientsLoading && clients.length > 0
   });
 
-  return { shipments, isLoading, error };
+  return { 
+    shipments, 
+    isLoading: isLoading || clientsLoading,
+    error 
+  };
 };
