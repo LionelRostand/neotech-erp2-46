@@ -12,14 +12,17 @@ import { toast } from "sonner";
 const defaultForm = {
   reference: "",
   customer: "",
-  carrier: "", // New field
-  carrierName: "", // New field
+  carrier: "",
+  carrierName: "",
+  origin: "", // S'assurer que origin est initialisé
+  destination: "", // S'assurer que destination est initialisé
   totalWeight: 0,
   scheduledDate: new Date().toISOString(),
+  estimatedDeliveryDate: new Date().toISOString(),
   shipmentType: "import",
   status: "draft",
   lines: [
-    { id: Date.now().toString(), productName: "", quantity: 1, weight: 0, packageType: "box" }
+    { id: Date.now().toString(), productName: "", quantity: 1, weight: 0, cost: 0, packageType: "box" }
   ],
   pricing: {
     basePrice: 10,
@@ -82,6 +85,14 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
   const handleCreate = async () => {
     setSubmitting(true);
     try {
+      // Vérifier que origin et destination ne sont pas undefined
+      if (!form.origin || !form.destination) {
+        toast.error("L'origine et la destination sont requises.");
+        setSubmitting(false);
+        setCurrentStep("general");
+        return;
+      }
+      
       // Prepare the data for Firebase
       const shipmentData = {
         reference: form.reference,
@@ -95,12 +106,14 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
         trackingNumber: form.tracking.trackingNumber,
         createdAt: new Date().toISOString(),
         scheduledDate: form.scheduledDate,
-        estimatedDeliveryDate: new Date(Date.now() + (form.tracking.estimatedTime * 60 * 60 * 1000)).toISOString(),
-        carrier: "default",
-        carrierName: "Transport Standard",
+        estimatedDeliveryDate: form.estimatedDeliveryDate || new Date(Date.now() + (form.tracking.estimatedTime * 60 * 60 * 1000)).toISOString(),
+        carrier: form.carrier || "default",
+        carrierName: form.carrierName || "Transport Standard",
         notes: "Créé via l'assistant d'expédition",
         totalPrice: getTotalPrice(),
       };
+      
+      console.log("Données d'expédition à envoyer:", shipmentData);
       
       // Save to Firebase
       await createShipment(shipmentData);

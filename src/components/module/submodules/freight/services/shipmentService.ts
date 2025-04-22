@@ -21,6 +21,7 @@ export interface CreateShipmentData {
   carrier: string;
   carrierName: string;
   notes?: string;
+  totalPrice?: number;
 }
 
 /**
@@ -28,14 +29,25 @@ export interface CreateShipmentData {
  */
 export const createShipment = async (shipmentData: CreateShipmentData): Promise<string> => {
   try {
+    // Validation des champs obligatoires
+    if (!shipmentData.origin || !shipmentData.destination) {
+      throw new Error('Les champs origine et destination sont obligatoires');
+    }
+    
     // Reference to the shipments collection
     const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
     
-    // Add document with server timestamp
-    const docRef = await addDoc(shipmentsRef, {
+    // Conversion des dates ISO en Timestamp Firestore si nécessaire
+    const firebaseData = {
       ...shipmentData,
       createdAt: serverTimestamp(),
-    });
+      updatedAt: serverTimestamp(),
+    };
+    
+    console.log('Envoi des données vers Firebase:', firebaseData);
+    
+    // Add document with server timestamp
+    const docRef = await addDoc(shipmentsRef, firebaseData);
     
     console.log('Shipment created with ID:', docRef.id);
     return docRef.id;
