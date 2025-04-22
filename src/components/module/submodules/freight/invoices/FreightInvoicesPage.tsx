@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, FileInvoice } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import CreateFreightInvoiceDialog from './CreateFreightInvoiceDialog';
 import { DataTable } from '@/components/ui/data-table';
 import { useFreightInvoices, FreightInvoice } from '@/hooks/modules/useFreightInvoices';
@@ -73,7 +73,7 @@ const FreightInvoicesPage = () => {
       <div className="bg-white p-4 rounded-md shadow-sm">
         {!isLoading && invoices.length === 0 ? (
           <div className="text-center py-10">
-            <FileInvoice className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-3" />
             <h3 className="text-lg font-medium text-gray-900">Aucune facture</h3>
             <p className="mt-1 text-sm text-gray-500">
               Commencez par créer une nouvelle facture.
