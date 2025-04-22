@@ -55,6 +55,8 @@ export function DataTable<T>({
     return null;
   };
 
+  console.log("DataTable rendering with data:", data);
+
   return (
     <div className="w-full overflow-hidden rounded-md border border-gray-200">
       <div className="overflow-x-auto">
@@ -74,7 +76,7 @@ export function DataTable<T>({
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
             {data.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr key={rowIndex || `row-${rowIndex}`}>
                 {columns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {renderCellContent(column, row)}

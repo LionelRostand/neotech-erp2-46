@@ -1,25 +1,26 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { ViewInvoiceDialog } from './ViewInvoiceDialog';
-import { EditInvoiceDialog } from './EditInvoiceDialog';
-import { DeleteInvoiceDialog } from './DeleteInvoiceDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface InvoicesTableProps {
   invoices: FreightInvoice[];
-  onUpdate: (id: string, data: Partial<FreightInvoice>) => Promise<boolean>;
-  onDelete: (id: string) => Promise<void>;
+  isLoading?: boolean;
+  onView: (invoice: FreightInvoice) => void;
+  onEdit: (invoice: FreightInvoice) => void;
+  onDelete: (invoice: FreightInvoice) => void;
 }
 
-export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTableProps) => {
-  const [selectedInvoice, setSelectedInvoice] = useState<FreightInvoice | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
+export const InvoicesTable = ({ 
+  invoices, 
+  isLoading = false, 
+  onView, 
+  onEdit, 
+  onDelete 
+}: InvoicesTableProps) => {
   const columns = [
     {
       accessorKey: 'clientName',
@@ -46,8 +47,14 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
       )
     },
     {
-      accessorKey: 'date',
-      header: 'DATE'
+      accessorKey: 'createdAt',
+      header: 'DATE',
+      cell: ({ row }: any) => {
+        const date = row.original.createdAt 
+          ? new Date(row.original.createdAt).toLocaleDateString('fr-FR') 
+          : 'N/A';
+        return date;
+      }
     },
     {
       accessorKey: 'actions',
@@ -57,30 +64,21 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setSelectedInvoice(row.original);
-              setViewDialogOpen(true);
-            }}
+            onClick={() => onView(row.original)}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setSelectedInvoice(row.original);
-              setEditDialogOpen(true);
-            }}
+            onClick={() => onEdit(row.original)}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setSelectedInvoice(row.original);
-              setDeleteDialogOpen(true);
-            }}
+            onClick={() => onDelete(row.original)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -89,40 +87,22 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
     }
   ];
 
-  const handleDelete = async () => {
-    if (selectedInvoice) {
-      await onDelete(selectedInvoice.id);
-      setDeleteDialogOpen(false);
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {Array(5).fill(0).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <>
-      <DataTable columns={columns} data={invoices} />
-
-      {selectedInvoice && (
-        <>
-          <ViewInvoiceDialog
-            open={viewDialogOpen}
-            onOpenChange={setViewDialogOpen}
-            invoice={selectedInvoice}
-          />
-          
-          <EditInvoiceDialog
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            invoice={selectedInvoice}
-            onUpdate={onUpdate}
-          />
-          
-          <DeleteInvoiceDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            onConfirm={handleDelete}
-            invoiceNumber={selectedInvoice.invoiceNumber || selectedInvoice.id}
-          />
-        </>
-      )}
-    </>
+    <DataTable 
+      columns={columns} 
+      data={invoices} 
+      isLoading={isLoading}
+      emptyMessage="Aucune facture disponible" 
+    />
   );
 };

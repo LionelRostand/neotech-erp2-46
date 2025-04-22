@@ -1,12 +1,10 @@
 
-import { ReactNode } from 'react';
+import React from 'react';
 
 export interface Column {
   accessorKey?: string;
   header: string;
-  cell?: (props: { row: { original: any } }) => ReactNode;
-  enableSorting?: boolean;
-  enableHiding?: boolean;
+  cell?: (props: { row: { original: any } }) => React.ReactNode;
 }
 
 export interface DataTableProps<T> {

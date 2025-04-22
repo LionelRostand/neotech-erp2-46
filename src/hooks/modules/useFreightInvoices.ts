@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, orderBy, Timestamp, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -18,6 +19,7 @@ export interface FreightInvoice {
   paymentReference?: string;
   invoiceNumber?: string;
   currency?: string;
+  date?: string;
 }
 
 export const useFreightInvoices = () => {
@@ -35,10 +37,15 @@ export const useFreightInvoices = () => {
       const q = query(invoicesRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
-      const invoicesData: FreightInvoice[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as FreightInvoice));
+      const invoicesData: FreightInvoice[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Add date for compatibility if it doesn't exist
+          date: data.date || new Date(data.createdAt).toLocaleDateString('fr-FR')
+        } as FreightInvoice;
+      });
       
       console.log(`Retrieved ${invoicesData.length} freight invoices`);
       setInvoices(invoicesData);
