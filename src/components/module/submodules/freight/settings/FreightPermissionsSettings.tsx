@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -18,7 +17,7 @@ const FreightPermissionsSettings: React.FC = () => {
       admin: 'write',
       manager: 'write',
       user: 'read',
-      viewer: 'read'
+      viewer: 'none_access'
     },
     conteneurs: {
       admin: 'write',
