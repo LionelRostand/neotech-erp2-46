@@ -34,6 +34,10 @@ export const FreightInvoicesPage = () => {
     }
   };
 
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-6">Factures</h1>

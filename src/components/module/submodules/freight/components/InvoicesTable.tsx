@@ -53,42 +53,51 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
     },
     {
       header: 'ACTIONS',
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-2">
-          {row.original.status === 'paid' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setSelectedInvoice(row.original);
-                setViewDialogOpen(true);
-              }}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSelectedInvoice(row.original);
-              setEditDialogOpen(true);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSelectedInvoice(row.original);
-              setDeleteDialogOpen(true);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )
+      cell: ({ row }: any) => {
+        const invoice = row.original as FreightInvoice;
+        const isPaid = invoice.status === 'paid';
+        
+        return (
+          <div className="flex items-center gap-2">
+            {isPaid && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedInvoice(invoice);
+                  setViewDialogOpen(true);
+                }}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
+            {isPaid && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoice(invoice);
+                    setEditDialogOpen(true);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoice(invoice);
+                    setDeleteDialogOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      }
     }
   ];
 
