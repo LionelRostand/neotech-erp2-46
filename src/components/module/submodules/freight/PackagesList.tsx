@@ -18,9 +18,10 @@ import PackageDetailsDialog from './packages/PackageDetailsDialog';
 
 interface PackagesListProps {
   packages: Package[];
+  isLoading?: boolean; // Add optional loading prop
 }
 
-const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
+const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false }) => {
   const [selectedPackage, setSelectedPackage] = React.useState<Package | null>(null);
   
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
@@ -42,6 +43,14 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        Chargement des colis...
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="rounded-md border">
@@ -49,6 +58,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Référence</TableHead>
+              <TableHead>Client</TableHead> {/* New column for client */}
               <TableHead>Description</TableHead>
               <TableHead>Poids</TableHead>
               <TableHead>Transporteur</TableHead>
@@ -65,6 +75,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
                 return (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">{pkg.reference}</TableCell>
+                    <TableCell>{pkg.customer || '-'}</TableCell> {/* Display customer name */}
                     <TableCell>{pkg.description || '-'}</TableCell>
                     <TableCell>{pkg.weight} {pkg.weightUnit}</TableCell>
                     <TableCell>{pkg.carrierName || '-'}</TableCell>
@@ -98,7 +109,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
                             <Printer className="h-4 w-4" />
                           </Button>
                         )}
-                        {pkg.documents.length > 0 && (
+                        {pkg.documents && pkg.documents.length > 0 && (
                           <Button variant="ghost" size="sm">
                             <FileText className="h-4 w-4" />
                           </Button>
@@ -110,7 +121,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6 text-gray-500">
+                <TableCell colSpan={9} className="text-center py-6 text-gray-500">
                   Aucun colis trouvé
                 </TableCell>
               </TableRow>
