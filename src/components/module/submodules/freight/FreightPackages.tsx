@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Search } from 'lucide-react';
 import PackagesList from './packages/PackagesList';
-import PackageCreateDialog from './packages/PackageCreateDialog';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useFreightShipments } from '@/hooks/freight/useFreightShipments';
+import ShipmentWizardDialog from './ShipmentWizardDialog';
 
 const FreightPackages: React.FC = () => {
   const navigate = useNavigate();
@@ -15,10 +14,6 @@ const FreightPackages: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFilter, setCurrentFilter] = useState<string>('all');
   const { shipments, isLoading } = useFreightShipments();
-
-  const handleCreateShipment = () => {
-    navigate('/modules/freight/create-shipment');
-  };
 
   const filteredShipments = shipments.filter(pkg => {
     const matchesSearch = !searchQuery || 
@@ -51,7 +46,7 @@ const FreightPackages: React.FC = () => {
           />
         </div>
         
-        <Button onClick={handleCreateShipment}>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau colis
         </Button>
@@ -92,8 +87,8 @@ const FreightPackages: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      <PackageCreateDialog
-        open={isCreateDialogOpen}
+      <ShipmentWizardDialog 
+        open={isCreateDialogOpen} 
         onOpenChange={setIsCreateDialogOpen}
       />
     </div>
