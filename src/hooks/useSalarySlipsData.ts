@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/formatters";
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface SalarySlip {
