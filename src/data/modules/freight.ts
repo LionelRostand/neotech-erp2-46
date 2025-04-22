@@ -16,20 +16,20 @@ import { AppModule, createIcon } from '../types/modules';
 
 export const freightModule: AppModule = {
   id: 2,
-  name: "Gestion des Colis",
-  description: "Gestion logistique, expéditions, suivi des conteneurs et transport de marchandises",
+  name: "Freight Management", // Updated name
+  description: "Logistics management, shipments, container tracking, and goods transportation",
   href: "/modules/freight",
   icon: createIcon(Truck),
   category: 'services',
   submodules: [
-    { id: "freight-dashboard", name: "Tableau de bord", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
-    { id: "freight-shipments", name: "Colis", href: "/modules/freight/shipments", icon: createIcon(PackageIcon) },
-    { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(LucideContainerIcon) },
-    { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
-    { id: "freight-invoices", name: "Factures", href: "/modules/freight/invoices", icon: createIcon(Receipt) },
+    { id: "freight-dashboard", name: "Dashboard", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
+    { id: "freight-shipments", name: "Shipments", href: "/modules/freight/shipments", icon: createIcon(PackageIcon) },
+    { id: "freight-containers", name: "Containers", href: "/modules/freight/containers", icon: createIcon(LucideContainerIcon) },
+    { id: "freight-tracking", name: "Tracking", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
+    { id: "freight-invoices", name: "Invoices", href: "/modules/freight/invoices", icon: createIcon(Receipt) },
     { id: "freight-documents", name: "Documents", href: "/modules/freight/documents", icon: createIcon(FileText) },
     { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-routes", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
-    { id: "freight-settings", name: "Paramètres", href: "/modules/freight/settings", icon: createIcon(Settings) }
+    { id: "freight-settings", name: "Settings", href: "/modules/freight/settings", icon: createIcon(Settings) }
   ]
 };
