@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
@@ -18,11 +17,12 @@ const COMPANY_INFO = {
 export const generateDocuments = async (invoice: FreightInvoice, paymentData: any) => {
   try {
     console.log('Starting document generation for invoice:', invoice.invoiceNumber);
+    
+    const timestamp = new Date().toISOString();
     const trackingUrl = `${window.location.origin}/modules/freight/tracking/${paymentData.trackingCode}`;
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl);
-    const timestamp = new Date().toISOString();
 
-    // Generate invoice PDF
+    // Générer la facture PDF
     const invoicePdf = new jsPDF();
     
     // Add company header
@@ -71,13 +71,12 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     invoicePdf.setFontSize(10);
     invoicePdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
-    // Save invoice PDF
+    // Sauvegarde de la facture
     const invoicePdfBlob = new Blob([invoicePdf.output('blob')], { type: 'application/pdf' });
     const invoicePdfUrl = URL.createObjectURL(invoicePdfBlob);
     
     console.log('Invoice PDF generated, saving to Firestore...');
     
-    // Sauvegarder la facture avec metadata complète
     const invoiceDocId = await saveDocumentToModule({
       name: `Facture ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'invoice',
@@ -88,7 +87,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     console.log('Invoice document saved with ID:', invoiceDocId);
 
-    // Generate delivery note
+    // Générer le bon de livraison
     const deliveryPdf = new jsPDF();
     
     // Add company header
@@ -138,13 +137,12 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     deliveryPdf.setFontSize(10);
     deliveryPdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
-    // Save delivery note
+    // Sauvegarde du bon de livraison
     const deliveryPdfBlob = new Blob([deliveryPdf.output('blob')], { type: 'application/pdf' });
     const deliveryPdfUrl = URL.createObjectURL(deliveryPdfBlob);
     
-    console.log('Delivery PDF generated, saving to Firestore...');
+    console.log('Delivery note PDF generated, saving to Firestore...');
     
-    // Sauvegarder le bon de livraison avec metadata complète
     const deliveryDocId = await saveDocumentToModule({
       name: `Bon de livraison ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'delivery_note',
@@ -155,7 +153,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     console.log('Delivery note document saved with ID:', deliveryDocId);
 
-    return true;
+    return { invoiceDocId, deliveryDocId };
   } catch (error) {
     console.error("Error generating documents:", error);
     throw error;

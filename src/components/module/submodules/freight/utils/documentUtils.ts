@@ -14,25 +14,31 @@ export const saveDocumentToModule = async (document: {
     console.log('Saving document to Firestore:', document);
     console.log('Collection path:', COLLECTIONS.FREIGHT.DOCUMENTS);
     
-    // Structurer les données du document avec les métadonnées nécessaires
+    // Structure du document avec toutes les métadonnées requises
     const documentData = {
       ...document,
       module: 'freight',
-      category: document.type === 'delivery_note' ? 'delivery_note' : 'invoice',
+      category: 'freight_documents',
       status: 'active',
-      section: 'freight_documents',
-      documentType: document.type === 'delivery_note' ? 'delivery_note' : 'invoice',
+      section: 'shipping_docs',
+      documentType: document.type,
+      fileUrl: document.url,
+      fileName: document.name,
       metadata: {
         documentCategory: document.type === 'delivery_note' ? 'shipping' : 'billing',
         reference: document.reference,
         archiveStatus: 'active',
-        visibility: 'visible'
+        visibility: 'visible',
+        sourceModule: 'freight',
+        subModule: 'invoices'
       },
-      // Ajouter des informations de traçabilité
+      // Informations de traçabilité
       createdBy: 'system',
       createdAt: document.createdAt,
       lastModified: new Date().toISOString(),
     };
+    
+    console.log('Attempting to save document with data:', documentData);
     
     // Sauvegarder dans la collection freight_documents
     const docRef = await addDoc(collection(db, COLLECTIONS.FREIGHT.DOCUMENTS), documentData);
