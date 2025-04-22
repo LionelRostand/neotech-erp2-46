@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, CreditCard } from "lucide-react";
@@ -15,7 +16,7 @@ const FreightInvoicesPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showPayDialog, setShowPayDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<FreightInvoice | null>(null);
-  const { invoices, isLoading, refetchInvoices } = useFreightInvoices();
+  const { invoices, isLoading, refetchInvoices, updateInvoice } = useFreightInvoices();
   const { generateInvoicePdf, generateDeliveryNotePdf } = useFreightDocumentGenerator();
 
   const handlePayInvoice = (invoice: FreightInvoice) => {
@@ -25,17 +26,23 @@ const FreightInvoicesPage = () => {
 
   const handlePaymentSubmit = async (paymentData: any) => {
     try {
-      // In a real app, this would make an API call to record the payment
+      if (!selectedInvoice) return;
+
+      // Update invoice status to paid
+      await updateInvoice(selectedInvoice.id, {
+        ...selectedInvoice,
+        status: 'paid',
+        paidAt: new Date().toISOString(),
+        paymentMethod: paymentData.method,
+        paymentReference: paymentData.reference
+      });
+
+      // Generate documents if needed
+      await generateDocuments(selectedInvoice, paymentData);
+      
+      // Refresh the invoices list and show success message
+      await refetchInvoices();
       toast.success('Paiement enregistré avec succès');
-      
-      // Generate invoice and delivery note PDFs with QR codes
-      if (selectedInvoice) {
-        await generateDocuments(selectedInvoice, paymentData);
-        toast.success('Documents générés avec succès');
-      }
-      
-      // Refresh the invoices list
-      refetchInvoices();
       setShowPayDialog(false);
     } catch (error) {
       console.error('Payment error:', error);

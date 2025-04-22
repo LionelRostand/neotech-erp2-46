@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, orderBy, Timestamp, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -56,7 +55,6 @@ export const useFreightInvoices = () => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  // Function to update an invoice
   const updateInvoice = useCallback(async (id: string, data: Partial<FreightInvoice>) => {
     try {
       const invoiceRef = doc(db, COLLECTIONS.FREIGHT.BILLING, id);
@@ -67,7 +65,6 @@ export const useFreightInvoices = () => {
       
       // Refresh the invoice list
       await fetchInvoices();
-      
       return true;
     } catch (err) {
       console.error("Error updating freight invoice:", err);
