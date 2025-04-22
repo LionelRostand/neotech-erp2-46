@@ -1,14 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import useFreightInvoices from '@/hooks/modules/useFreightInvoices';
 import { InvoicesTable } from './components/InvoicesTable';
 import { toast } from 'sonner';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { CreateFreightInvoiceDialog } from './invoices/CreateFreightInvoiceDialog';
 
 export const FreightInvoicesPage = () => {
   const { invoices, isLoading, updateInvoice, refetchInvoices } = useFreightInvoices();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const handleUpdate = async (id: string, data: any) => {
     try {
@@ -40,12 +44,23 @@ export const FreightInvoicesPage = () => {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">Factures</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Factures</h1>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle Facture
+        </Button>
+      </div>
       
       <InvoicesTable
         invoices={invoices}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
+      />
+
+      <CreateFreightInvoiceDialog 
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
       />
     </div>
   );
