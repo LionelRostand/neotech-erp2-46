@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Table,
@@ -24,21 +25,9 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
       productName: '',
       quantity: 1,
       weight: 0,
-      cost: 0,
       packageType: 'box'
     }
   ]);
-
-  const packageTypes = [
-    { value: 'box', label: 'Carton' },
-    { value: 'pallet', label: 'Palette' },
-    { value: 'crate', label: 'Caisse' },
-    { value: 'bag', label: 'Sac' },
-    { value: 'drum', label: 'Fût' },
-    { value: 'tube', label: 'Tube' },
-    { value: 'roll', label: 'Rouleau' },
-    { value: 'other', label: 'Autre' }
-  ];
 
   const addLine = () => {
     const newLine: ShipmentLine = {
@@ -46,7 +35,6 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
       productName: '',
       quantity: 1,
       weight: 0,
-      cost: 0,
       packageType: 'box'
     };
     const updatedLines = [...lines, newLine];
@@ -76,19 +64,26 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
     }
   };
 
-  const calculateTotalCost = () => {
-    return lines.reduce((sum, line) => sum + (line.cost * line.quantity), 0);
-  };
-
-  const totalWeight = lines.reduce((sum, line) => sum + (line.weight * line.quantity), 0);
-  const totalItems = lines.reduce((sum, line) => sum + line.quantity, 0);
-  const totalCost = calculateTotalCost();
-
+  // Notifier le parent des changements de lignes
   useEffect(() => {
     if (onLinesUpdate) {
       onLinesUpdate(lines);
     }
   }, [lines, onLinesUpdate]);
+
+  const packageTypes = [
+    { value: 'box', label: 'Carton' },
+    { value: 'pallet', label: 'Palette' },
+    { value: 'crate', label: 'Caisse' },
+    { value: 'bag', label: 'Sac' },
+    { value: 'drum', label: 'Fût' },
+    { value: 'tube', label: 'Tube' },
+    { value: 'roll', label: 'Rouleau' },
+    { value: 'other', label: 'Autre' }
+  ];
+
+  const totalWeight = lines.reduce((sum, line) => sum + (line.weight * line.quantity), 0);
+  const totalItems = lines.reduce((sum, line) => sum + line.quantity, 0);
 
   return (
     <div className="space-y-4">
@@ -99,9 +94,8 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
               <TableHead>Article</TableHead>
               <TableHead>Quantité</TableHead>
               <TableHead>Poids (kg)</TableHead>
-              <TableHead>Coût unitaire (€)</TableHead>
               <TableHead>Type d'emballage</TableHead>
-              <TableHead>Coût total</TableHead>
+              <TableHead>Poids total</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -133,15 +127,6 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
                   />
                 </TableCell>
                 <TableCell>
-                  <Input 
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.cost} 
-                    onChange={(e) => updateLine(line.id, 'cost', parseFloat(e.target.value) || 0)}
-                  />
-                </TableCell>
-                <TableCell>
                   <Select 
                     value={line.packageType}
                     onValueChange={(value) => updateLine(line.id, 'packageType', value)}
@@ -159,7 +144,7 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
                   </Select>
                 </TableCell>
                 <TableCell>
-                  {(line.cost * line.quantity).toFixed(2)} €
+                  {(line.weight * line.quantity).toFixed(2)} kg
                 </TableCell>
                 <TableCell>
                   <Button 
@@ -183,10 +168,9 @@ const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) 
           Ajouter une ligne
         </Button>
         
-        <div className="text-sm text-right space-y-1">
+        <div className="text-sm text-right">
           <p><strong>Total articles:</strong> {totalItems}</p>
           <p><strong>Poids total:</strong> {totalWeight.toFixed(2)} kg</p>
-          <p><strong>Coût total:</strong> {totalCost.toFixed(2)} €</p>
         </div>
       </div>
     </div>

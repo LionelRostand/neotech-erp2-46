@@ -1,222 +1,204 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { useFreightClients } from "../hooks/useFreightClients";
+import { useCarriers } from "../hooks/useCarriers";
 import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useFreightData } from "@/hooks/modules/useFreightData";
 
-interface StepGeneralProps {
-  generalInfo: any;
-  updateGeneralInfo: (values: any) => void;
-  onNext: () => void;
+function generateReference() {
+  return "EXP" + Math.floor(100000 + Math.random() * 900000);
 }
 
-const shipmentTypes = [
-  { value: "import", label: "Import" },
-  { value: "export", label: "Export" },
-  { value: "local", label: "Local" },
-  { value: "international", label: "International" },
-];
-
 const StepGeneral = ({
-  generalInfo,
-  updateGeneralInfo,
-  onNext,
-}: StepGeneralProps) => {
-  const { carriers, clients } = useFreightData();
+  form,
+  updateForm,
+  next,
+  close,
+  submitting,
+}: {
+  form: any;
+  updateForm: (fields: any) => void;
+  next: () => void;
+  close: () => void;
+  submitting: boolean;
+}) => {
+  const { clients, isLoading: clientsLoading } = useFreightClients();
+  const { carriers, isLoading: carriersLoading } = useCarriers();
 
-  // Function to generate random reference if empty
-  const generateReference = () => {
-    const prefix = "SHP";
-    const timestamp = new Date().getTime().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    updateGeneralInfo({
-      ...generalInfo,
-      reference: `${prefix}-${timestamp}-${random}`,
-    });
-  };
+  // Auto-générer une référence si le champ est vide au chargement
+  useEffect(() => {
+    if (!form.reference) {
+      updateForm({ reference: generateReference() });
+    }
+  }, []);
 
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) => {
+      onSubmit={e => {
         e.preventDefault();
-        onNext();
+        next();
       }}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Champ Référence avec bouton de génération */}
         <div>
-          <label className="font-medium mb-1 block">Référence</label>
+          <label className="block font-medium mb-1">Référence</label>
           <div className="flex gap-2">
             <Input
-              value={generalInfo.reference || ''}
-              onChange={(e) =>
-                updateGeneralInfo({ ...generalInfo, reference: e.target.value })
-              }
-              placeholder="Référence de l'expédition"
-              className="flex-1"
+              required
+              name="reference"
+              placeholder="Référence"
+              value={form.reference}
+              onChange={e => updateForm({ reference: e.target.value })}
             />
             <Button
               type="button"
-              variant="outline"
-              onClick={generateReference}
-              className="whitespace-nowrap"
+              size="sm"
+              className="shrink-0"
+              title="Générer une nouvelle référence"
+              onClick={() => updateForm({ reference: generateReference() })}
             >
               Générer
             </Button>
           </div>
         </div>
+
+        {/* Client expéditeur */}
         <div>
-          <label className="font-medium mb-1 block">Client</label>
+          <label className="block font-medium mb-1">Client</label>
           <select
-            className="w-full border rounded p-2"
-            value={generalInfo.client || ''}
-            onChange={(e) =>
-              updateGeneralInfo({ ...generalInfo, client: e.target.value })
-            }
+            required
+            name="customer"
+            value={form.customer}
+            onChange={e => updateForm({ customer: e.target.value })}
+            className="w-full rounded-md border px-3 py-2 text-sm bg-white"
+            disabled={clientsLoading}
           >
             <option value="">Sélectionner un client</option>
-            {clients &&
+            {clientsLoading ? (
+              <option disabled>Chargement...</option>
+            ) : clients && clients.length > 0 ? (
               clients.map((client: any) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
+                <option key={client.id} value={client.name}>
+                  {client.name} {client.email ? `(${client.email})` : ""}
                 </option>
-              ))}
+              ))
+            ) : (
+              <option disabled>Aucun client trouvé</option>
+            )}
           </select>
         </div>
-        <div>
-          <label className="font-medium mb-1 block">Transporteur</label>
+
+        {/* Transporteur */}
+        <div className="col-span-2">
+          <label className="block font-medium mb-1">Transporteur</label>
           <select
-            className="w-full border rounded p-2"
-            value={generalInfo.carrier || ''}
-            onChange={(e) =>
-              updateGeneralInfo({
-                ...generalInfo,
-                carrier: e.target.value,
-                carrierName: carriers?.find((c: any) => c.id === e.target.value)?.name || '',
-              })
-            }
+            required
+            name="carrier"
+            value={form.carrier}
+            onChange={e => updateForm({
+              carrier: e.target.value,
+              carrierName: carriers.find((c: any) => c.id === e.target.value)?.name || ''
+            })}
+            className="w-full rounded-md border px-3 py-2 text-sm bg-white"
+            disabled={carriersLoading}
           >
             <option value="">Sélectionner un transporteur</option>
-            {carriers &&
+            {carriersLoading ? (
+              <option disabled>Chargement...</option>
+            ) : carriers && carriers.length > 0 ? (
               carriers.map((carrier: any) => (
                 <option key={carrier.id} value={carrier.id}>
-                  {carrier.name}
+                  {carrier.name} - {carrier.type}
                 </option>
-              ))}
+              ))
+            ) : (
+              <option disabled>Aucun transporteur trouvé</option>
+            )}
           </select>
         </div>
+
+        {/* Date d'envoi */}
         <div>
-          <label className="font-medium mb-1 block">Type d'expédition</label>
-          <select
-            className="w-full border rounded p-2"
-            value={generalInfo.shipmentType || ''}
-            onChange={(e) =>
-              updateGeneralInfo({
-                ...generalInfo,
-                shipmentType: e.target.value,
-              })
-            }
-          >
-            <option value="">Sélectionner un type</option>
-            {shipmentTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Date d'envoi</label>
+          <label className="block font-medium mb-1">Date d'envoi</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant={"outline"}
+                variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !generalInfo.scheduledDate && "text-muted-foreground"
+                  !form.scheduledDate && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {generalInfo.scheduledDate ? (
-                  format(new Date(generalInfo.scheduledDate), "PPP")
+                {form.scheduledDate ? (
+                  format(new Date(form.scheduledDate), "dd MMMM yyyy", { locale: fr })
                 ) : (
                   <span>Sélectionner une date</span>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={
-                  generalInfo.scheduledDate
-                    ? new Date(generalInfo.scheduledDate)
-                    : undefined
-                }
-                onSelect={(date) =>
-                  updateGeneralInfo({
-                    ...generalInfo,
-                    scheduledDate: date ? date.toISOString() : "",
-                  })
-                }
+                selected={form.scheduledDate ? new Date(form.scheduledDate) : undefined}
+                onSelect={(date) => updateForm({ scheduledDate: date?.toISOString() })}
                 initialFocus
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
         </div>
+
+        {/* Date de livraison estimée */}
         <div>
-          <label className="font-medium mb-1 block">
-            Date de livraison estimée
-          </label>
+          <label className="block font-medium mb-1">Date de livraison estimée</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant={"outline"}
+                variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !generalInfo.estimatedDeliveryDate && "text-muted-foreground"
+                  !form.estimatedDeliveryDate && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {generalInfo.estimatedDeliveryDate ? (
-                  format(
-                    new Date(generalInfo.estimatedDeliveryDate),
-                    "PPP"
-                  )
+                {form.estimatedDeliveryDate ? (
+                  format(new Date(form.estimatedDeliveryDate), "dd MMMM yyyy", { locale: fr })
                 ) : (
                   <span>Sélectionner une date</span>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={
-                  generalInfo.estimatedDeliveryDate
-                    ? new Date(generalInfo.estimatedDeliveryDate)
-                    : undefined
-                }
-                onSelect={(date) =>
-                  updateGeneralInfo({
-                    ...generalInfo,
-                    estimatedDeliveryDate: date ? date.toISOString() : "",
-                  })
-                }
+                selected={form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : undefined}
+                onSelect={(date) => updateForm({ estimatedDeliveryDate: date?.toISOString() })}
                 initialFocus
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+      <div className="flex justify-end gap-2 pt-2">
+        <Button variant="outline" type="button" onClick={close}>
+          Annuler
+        </Button>
+        <Button type="submit" disabled={submitting}>
           Suivant
         </Button>
       </div>
