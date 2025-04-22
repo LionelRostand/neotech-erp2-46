@@ -11,15 +11,15 @@ export const saveDocumentToModule = async (document: {
   createdAt: string;
 }) => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTIONS.DOCUMENTS.FILES), {
+    const docRef = await addDoc(collection(db, COLLECTIONS.FREIGHT.DOCUMENTS), {
       ...document,
       module: 'freight',
       category: document.type === 'delivery_note' ? 'delivery_note' : 'invoice',
       status: 'active',
       shipment: document.reference,
       creator: 'Système',
-      section: 'freight_documents', // Ajout de la section pour le filtrage
-      documentType: 'invoice', // Pour identifier les documents de facturation
+      section: 'freight_documents',
+      documentType: 'invoice',
       metadata: {
         documentCategory: 'billing',
         invoiceReference: document.reference
@@ -32,4 +32,3 @@ export const saveDocumentToModule = async (document: {
     throw error;
   }
 };
-
