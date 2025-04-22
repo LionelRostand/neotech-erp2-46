@@ -15,7 +15,12 @@ export interface Container {
   departure?: string;
   arrival?: string;
   articles?: any[];
-  costs?: any[];
+  costs?: Array<{
+    amount: number;
+    description?: string;
+    currency?: string;
+    type?: string;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }

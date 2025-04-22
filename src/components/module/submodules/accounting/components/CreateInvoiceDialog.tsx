@@ -58,7 +58,7 @@ export const CreateInvoiceDialog = ({
         setInvoiceData({
           containerReference: container.number,
           containerCost: containerCost,
-          clientName: container.client,
+          clientName: container.client || 'Client non spécifié',
           shipmentReference: shipment?.reference || '',
           shipmentStatus: shipment?.status || '',
           total: containerCost,
@@ -112,7 +112,7 @@ export const CreateInvoiceDialog = ({
               <SelectContent>
                 {containers?.map((container) => (
                   <SelectItem 
-                    key={container.id || container.number} 
+                    key={container.id || container.number || `container-${Math.random()}`} 
                     value={getSafeContainerValue(container)}
                   >
                     {container.number || 'Sans numéro'} - {container.client || 'Client inconnu'}
