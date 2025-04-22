@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { useFreightClients } from "@/hooks/freight/useFreightClients";
 import { useCarriers } from "@/components/module/submodules/freight/hooks/useCarriers";
+import { useRoutes } from "@/components/module/submodules/freight/hooks/useRoutes";
 
 const shipmentTypeOptions = [
   { value: "import", label: "Import" },
@@ -31,6 +31,7 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
 }) => {
   const { clients = [], isLoading: loadingClients } = useFreightClients();
   const { carriers = [], isLoading: loadingCarriers } = useCarriers();
+  const { routes = [], isLoading: loadingRoutes } = useRoutes();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +43,6 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
   };
 
   const generateReference = () => {
-    // Génération d'une référence basée sur la date et un numéro aléatoire
     const date = new Date();
     const prefix = "EXP";
     const dateStr = date.getFullYear().toString().slice(-2) +
@@ -51,6 +51,19 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     const reference = `${prefix}${dateStr}-${random}`;
     updateForm({ reference });
+  };
+
+  const handleRouteChange = (routeId: string) => {
+    if (!routeId) return;
+    const selectedRoute = routes.find(r => r.id === routeId);
+    if (selectedRoute) {
+      updateForm({
+        ...form,
+        routeId,
+        origin: selectedRoute.origin,
+        destination: selectedRoute.destination
+      });
+    }
   };
 
   const handleScheduledDateChange = (date: Date | undefined) => {
@@ -162,6 +175,43 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
             date={estimatedDeliveryDate}
             onSelect={handleEstimatedDeliveryDateChange}
             placeholder="Sélectionner une date"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Route</label>
+          <Select 
+            value={form.routeId || ''} 
+            onValueChange={handleRouteChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une route" />
+            </SelectTrigger>
+            <SelectContent>
+              {routes.map((route) => (
+                <SelectItem key={route.id} value={route.id}>
+                  {route.name} ({route.origin} → {route.destination})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Origine</label>
+          <Input
+            value={form.origin || ''}
+            onChange={(e) => updateForm({ ...form, origin: e.target.value })}
+            placeholder="Ville d'origine"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block">Destination</label>
+          <Input
+            value={form.destination || ''}
+            onChange={(e) => updateForm({ ...form, destination: e.target.value })}
+            placeholder="Ville de destination"
           />
         </div>
       </div>
