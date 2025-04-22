@@ -59,6 +59,23 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
     }
   };
 
+  // Format the date safely, checking if it's valid first
+  const formatDocumentDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Date inconnue';
+    
+    try {
+      const dateObj = new Date(dateString);
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return 'Date invalide';
+      }
+      return format(dateObj, 'dd MMMM yyyy', { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date invalide';
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px]">
@@ -68,7 +85,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
             <DialogTitle>{document.name}</DialogTitle>
           </div>
           <DialogDescription>
-            {getDocumentTypeLabel(document.type)} • Créé le {format(new Date(document.date), 'dd MMMM yyyy', { locale: fr })}
+            {getDocumentTypeLabel(document.type)} • Créé le {formatDocumentDate(document.createdAt)}
           </DialogDescription>
         </DialogHeader>
         
@@ -78,7 +95,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
               <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold mb-2">{document.name}</h3>
               <p className="text-gray-500 mb-4">
-                {document.format.toUpperCase()} • {document.size}
+                {document.format ? document.format.toUpperCase() : 'PDF'} • {document.size || 'N/A'}
               </p>
               <p className="text-sm text-gray-500 max-w-md">
                 Aperçu du document. Pour une meilleure visualisation, téléchargez ou imprimez le document.
@@ -101,11 +118,11 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
             <h3 className="text-sm font-medium text-gray-500">Expédition associée</h3>
-            <p className="mt-1">{document.shipment}</p>
+            <p className="mt-1">{document.shipment || 'Non spécifié'}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-gray-500">Créateur</h3>
-            <p className="mt-1">{document.creator}</p>
+            <p className="mt-1">{document.creator || 'Système'}</p>
           </div>
         </div>
         
