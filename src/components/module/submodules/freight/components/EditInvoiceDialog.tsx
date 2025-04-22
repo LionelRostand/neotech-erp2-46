@@ -14,7 +14,7 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel
+  FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
@@ -53,6 +53,8 @@ export const EditInvoiceDialog = ({
       if (success) {
         toast.success('Facture mise à jour avec succès');
         onOpenChange(false);
+      } else {
+        toast.error('Erreur lors de la mise à jour de la facture');
       }
     } catch (error) {
       toast.error('Erreur lors de la mise à jour de la facture');

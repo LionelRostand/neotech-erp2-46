@@ -22,10 +22,6 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
 
   const columns = [
     {
-      accessorKey: 'invoiceNumber',
-      header: 'N° Facture'
-    },
-    {
       accessorKey: 'clientName',
       header: 'Client'
     },
@@ -33,6 +29,10 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
       accessorKey: 'amount',
       header: 'Montant',
       cell: ({ row }: any) => `${row.original.amount.toLocaleString('fr-FR')} €`
+    },
+    {
+      accessorKey: 'invoiceNumber',
+      header: 'Référence'
     },
     {
       accessorKey: 'status',

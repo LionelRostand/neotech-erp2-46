@@ -3,6 +3,9 @@ import React from 'react';
 import useFreightInvoices from '@/hooks/modules/useFreightInvoices';
 import { InvoicesTable } from './components/InvoicesTable';
 import { toast } from 'sonner';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const FreightInvoicesPage = () => {
   const { invoices, isLoading, updateInvoice, refetchInvoices } = useFreightInvoices();
@@ -20,8 +23,8 @@ export const FreightInvoicesPage = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      // Call your delete API here
-      console.log('Deleting invoice:', id);
+      const docRef = doc(db, COLLECTIONS.FREIGHT.BILLING, id);
+      await deleteDoc(docRef);
       await refetchInvoices();
       toast.success('Facture supprimée avec succès');
     } catch (error) {
