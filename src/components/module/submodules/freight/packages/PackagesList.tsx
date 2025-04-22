@@ -43,6 +43,24 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
     }
   };
 
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString: string | undefined): string => {
+    if (!dateString) return '-';
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid before formatting
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date:', dateString);
+        return '-';
+      }
+      return format(date, 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-6 text-gray-500">
@@ -87,7 +105,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
                       }
                     </TableCell>
                     <TableCell>
-                      {format(new Date(pkg.createdAt), 'dd MMM yyyy', { locale: fr })}
+                      {safeFormatDate(pkg.createdAt)}
                     </TableCell>
                     <TableCell>
                       {pkg.totalPrice ? `${pkg.totalPrice.toFixed(2)} €` : '-'}
