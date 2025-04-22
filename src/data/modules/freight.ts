@@ -9,7 +9,7 @@ import {
   Settings,
   Container as LucideContainerIcon,
   Route as LucideRouteIcon,
-  FileInvoice
+  Receipt
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -25,7 +25,7 @@ export const freightModule: AppModule = {
     { id: "freight-shipments", name: "Expéditions", href: "/modules/freight/shipments", icon: createIcon(Ship) },
     { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(LucideContainerIcon) },
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
-    { id: "freight-invoices", name: "Factures", href: "/modules/freight/invoices", icon: createIcon(FileInvoice) },
+    { id: "freight-invoices", name: "Factures", href: "/modules/freight/invoices", icon: createIcon(Receipt) },
     { id: "freight-documents", name: "Documents", href: "/modules/freight/documents", icon: createIcon(FileText) },
     { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-routes", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
