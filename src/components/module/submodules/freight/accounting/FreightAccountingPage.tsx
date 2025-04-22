@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CreateFreightInvoiceDialog } from './CreateFreightInvoiceDialog';
 import { toast } from 'sonner';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const FreightAccountingPage = () => {
   const { containers, shipments, clients } = useFreightData();
@@ -34,9 +36,22 @@ const FreightAccountingPage = () => {
     });
   }, [invoices, containers, shipments, clients]);
 
-  const handleCreateInvoice = (data: any) => {
-    console.log('Creating invoice with data:', data);
-    toast.success('Facture créée avec succès');
+  const handleCreateInvoice = async (data: any) => {
+    try {
+      const invoiceData = {
+        ...data,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        invoiceNumber: `FT-${Date.now()}`,
+      };
+
+      await addDoc(collection(db, 'freight_billing'), invoiceData);
+      toast.success('Facture créée avec succès');
+      setShowCreateDialog(false);
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast.error('Erreur lors de la création de la facture');
+    }
   };
 
   return (
