@@ -61,10 +61,8 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
     onOpenChange(false);
   };
 
-  // Helper function to ensure we never have empty values for SelectItem
-  const ensureValidValue = (value: string | undefined | null): string => {
-    return value ? value : `no-value-${Math.random().toString(36).substring(2, 9)}`;
-  };
+  // Generate a unique placeholder value for empty values
+  const getPlaceholderValue = (prefix: string) => `${prefix}-${Math.random().toString(36).substring(2, 9)}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,18 +80,21 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
               </SelectTrigger>
               <SelectContent>
                 {containersLoading ? (
-                  <SelectItem value="loading">Chargement...</SelectItem>
+                  <SelectItem value="loading-placeholder">Chargement...</SelectItem>
                 ) : containers.length === 0 ? (
-                  <SelectItem value="no-containers">Aucun conteneur disponible</SelectItem>
+                  <SelectItem value="no-containers-placeholder">Aucun conteneur disponible</SelectItem>
                 ) : (
-                  containers.map(container => (
-                    <SelectItem
-                      key={container.id}
-                      value={ensureValidValue(container.number)}
-                    >
-                      {container.number || 'Sans numéro'} ({container.client || 'Sans client'})
-                    </SelectItem>
-                  ))
+                  <>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    {containers.map(container => (
+                      <SelectItem
+                        key={container.id}
+                        value={container.number || getPlaceholderValue(`container-${container.id}`)}
+                      >
+                        {container.number || 'Sans numéro'} ({container.client || 'Sans client'})
+                      </SelectItem>
+                    ))}
+                  </>
                 )}
               </SelectContent>
             </Select>
@@ -107,18 +108,21 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
               </SelectTrigger>
               <SelectContent>
                 {shipmentsLoading ? (
-                  <SelectItem value="loading">Chargement...</SelectItem>
+                  <SelectItem value="loading-shipments-placeholder">Chargement...</SelectItem>
                 ) : shipments.length === 0 ? (
-                  <SelectItem value="no-shipments">Aucune expédition disponible</SelectItem>
+                  <SelectItem value="no-shipments-placeholder">Aucune expédition disponible</SelectItem>
                 ) : (
-                  shipments.map(shipment => (
-                    <SelectItem
-                      key={shipment.id}
-                      value={ensureValidValue(shipment.reference)}
-                    >
-                      {shipment.reference || 'Sans référence'} ({shipment.customer || 'Sans client'})
-                    </SelectItem>
-                  ))
+                  <>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    {shipments.map(shipment => (
+                      <SelectItem
+                        key={shipment.id}
+                        value={shipment.reference || getPlaceholderValue(`shipment-${shipment.id}`)}
+                      >
+                        {shipment.reference || 'Sans référence'} ({shipment.customer || 'Sans client'})
+                      </SelectItem>
+                    ))}
+                  </>
                 )}
               </SelectContent>
             </Select>

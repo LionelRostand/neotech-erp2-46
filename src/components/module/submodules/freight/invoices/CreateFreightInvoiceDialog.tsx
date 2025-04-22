@@ -97,7 +97,7 @@ const CreateFreightInvoiceDialog = ({
                 <SelectValue placeholder="Sélectionner une expédition" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucune</SelectItem>
+                <SelectItem value="none">Aucune</SelectItem>
                 {shipments.map(shipment => (
                   <SelectItem key={shipment.id} value={shipment.reference}>
                     {shipment.reference} ({shipment.customer})
@@ -117,7 +117,7 @@ const CreateFreightInvoiceDialog = ({
                 <SelectValue placeholder="Sélectionner un conteneur" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun</SelectItem>
+                <SelectItem value="none">Aucun</SelectItem>
                 {containers.map(container => (
                   <SelectItem key={container.id} value={container.number}>
                     {container.number} ({container.client})
