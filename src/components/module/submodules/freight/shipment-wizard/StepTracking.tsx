@@ -1,202 +1,97 @@
+
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useFreightData } from "@/hooks/modules/useFreightData";
-import { Route } from "@/types/freight";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRoutes } from "../hooks/useRoutes";
 
-const statusOptions = [
-  { value: "draft", label: "Brouillon" },
-  { value: "confirmed", label: "Confirmée" },
-  { value: "in_transit", label: "En transit" },
-  { value: "delivered", label: "Livrée" },
-  { value: "cancelled", label: "Annulée" },
-  { value: "delayed", label: "Retard" },
-];
-
-const typeOptions = [
-  { value: "road", label: "Route" },
-  { value: "sea", label: "Mer" },
-  { value: "air", label: "Air" },
-  { value: "rail", label: "Rail" },
-  { value: "multimodal", label: "Multimodal" },
-];
-
-const StepTracking = ({
-  form,
-  updateTracking,
-  create,
-  prev,
-  close,
-  submitting,
-}: {
-  form: any;
-  updateTracking: (tracking: any) => void;
-  create: () => void;
+interface StepTrackingProps {
+  form: {
+    trackingNumber?: string;
+    routeId?: string;
+    [key: string]: any;
+  };
+  updateForm: (data: any) => void;
   prev: () => void;
+  next: () => void;
   close: () => void;
-  submitting: boolean;
-}) => {
-  const { tracking } = form;
-  const { routes, loading } = useFreightData();
-  const [selectedRouteId, setSelectedRouteId] = useState<string>("");
+}
 
+const StepTracking: React.FC<StepTrackingProps> = ({ form, updateForm, prev, next, close }) => {
+  const { routes, isLoading } = useRoutes();
+  const [selectedRoute, setSelectedRoute] = useState<{ id: string; name: string; origin: string; destination: string } | null>(null);
+
+  // Set selected route when form.routeId changes or routes are loaded
   useEffect(() => {
-    if (selectedRouteId && Array.isArray(routes)) {
-      const route = routes.find((r: Route) => r.id === selectedRouteId);
+    if (form.routeId && routes?.length) {
+      const route = routes.find(r => r.id === form.routeId);
       if (route) {
-        updateTracking({
-          ...tracking,
-          route: route.name,
-          transportType: route.transportType || "road",
-          distance: route.distance || 0,
-          origin: route.origin,
-          destination: route.destination
-        });
+        setSelectedRoute(route);
       }
     }
-  }, [selectedRouteId]);
-
-  useEffect(() => {
-    if (
-      tracking.route &&
-      routes &&
-      !selectedRouteId &&
-      routes.some((r: any) => r.name === tracking.route)
-    ) {
-      const route = routes.find((r: any) => r.name === tracking.route);
-      if (route) setSelectedRouteId(route.id);
-    }
-  }, [tracking.route, routes]);
+  }, [form.routeId, routes]);
 
   return (
-    <form className="space-y-4" onSubmit={e => {
-      e.preventDefault();
-      create();
-    }}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4">
         <div>
-          <label className="font-medium mb-1 block">Numéro de suivi</label>
-          <div className="flex items-center gap-2">
-            <Input value={tracking.trackingNumber} readOnly className="bg-gray-100" />
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => {
-                navigator.clipboard.writeText(tracking.trackingNumber);
-              }}
-              variant="outline"
-            >Copier</Button>
+          <label className="block text-sm font-medium mb-1">Numéro de suivi</label>
+          <Input
+            value={form.trackingNumber || ""}
+            onChange={(e) => updateForm({ trackingNumber: e.target.value })}
+            placeholder="TRACK-12345"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Route</label>
+        {isLoading ? (
+          <div className="text-sm text-gray-500">Chargement des routes...</div>
+        ) : (
+          <Select 
+            value={form.routeId || ""} 
+            onValueChange={(value) => updateForm({ routeId: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une route" />
+            </SelectTrigger>
+            <SelectContent>
+              {routes && routes.map((route) => (
+                <SelectItem key={route.id} value={route.id}>
+                  {route.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {selectedRoute && (
+        <div className="bg-gray-50 p-4 rounded-md">
+          <h3 className="font-medium mb-2">Détails de la route</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium">Origine</p>
+              <p className="text-sm">{selectedRoute.origin}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Destination</p>
+              <p className="text-sm">{selectedRoute.destination}</p>
+            </div>
           </div>
         </div>
-        <div>
-          <label className="font-medium mb-1 block">Statut</label>
-          <select
-            value={tracking.status || form.status}
-            onChange={e => updateTracking({ ...tracking, status: e.target.value })}
-            className="rounded-md border px-3 py-2 bg-white w-full"
-          >
-            {statusOptions.map(opt => (
-              <option value={opt.value} key={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Route</label>
-          <select
-            value={selectedRouteId}
-            onChange={e => setSelectedRouteId(e.target.value)}
-            className="rounded-md border px-3 py-2 bg-white w-full"
-            disabled={loading}
-          >
-            <option value="">Sélectionner une route</option>
-            {loading ? (
-              <option disabled>Chargement...</option>
-            ) : (
-              Array.isArray(routes) && routes.length > 0 &&
-              routes.map((route: any) => (
-                <option key={route.id} value={route.id}>
-                  {route.name} ({route.origin} → {route.destination})
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Origine</label>
-          <Input
-            value={tracking.origin || ''}
-            onChange={e => updateTracking({ ...tracking, origin: e.target.value })}
-            placeholder="Lieu d'origine"
-            readOnly={!!selectedRouteId}
-            className={selectedRouteId ? "bg-gray-100" : ""}
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Destination</label>
-          <Input
-            value={tracking.destination || ''}
-            onChange={e => updateTracking({ ...tracking, destination: e.target.value })}
-            placeholder="Lieu de destination"
-            readOnly={!!selectedRouteId}
-            className={selectedRouteId ? "bg-gray-100" : ""}
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Type de transport</label>
-          <select
-            value={tracking.transportType}
-            disabled={!!selectedRouteId}
-            onChange={e => updateTracking({ ...tracking, transportType: e.target.value })}
-            className="rounded-md border px-3 py-2 bg-white w-full"
-          >
-            {typeOptions.map(opt => (
-              <option value={opt.value} key={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Délai de transit (heures)</label>
-          <Input
-            type="number"
-            min="0"
-            value={tracking.estimatedTime}
-            onChange={e => updateTracking({ ...tracking, estimatedTime: parseInt(e.target.value) || 0 })}
-            placeholder="Délai de transit (heures)"
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Distance (km)</label>
-          <Input
-            type="number"
-            min="0"
-            value={tracking.distance}
-            disabled={!!selectedRouteId}
-            onChange={e => updateTracking({ ...tracking, distance: parseFloat(e.target.value) || 0 })}
-            placeholder="Distance (km)"
-          />
-        </div>
-      </div>
-      <div className="bg-blue-50 border-l-4 border-blue-500 rounded-md px-4 py-3 text-blue-800 mt-2 text-xs">
-        <strong>Suivi en temps réel</strong> <br />
-        Un lien de suivi sera généré automatiquement après la création de l&apos;expédition.
-        Les clients pourront accéder au suivi en temps réel via le code de suivi.
-      </div>
-      <div className="flex gap-2 pt-4 justify-end">
-        <Button type="button" variant="outline" onClick={prev}>
+      )}
+
+      <div className="flex justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={prev}>
           Précédent
         </Button>
-        <Button type="button" variant="ghost" onClick={close}>
-          Annuler
-        </Button>
-        <Button type="submit" className="bg-emerald-600 text-white px-6" disabled={submitting}>
-          Créer l&apos;expédition
+        <Button onClick={next}>
+          Suivant
         </Button>
       </div>
-    </form>
+    </div>
   );
 };
 
