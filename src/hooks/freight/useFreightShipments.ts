@@ -15,7 +15,7 @@ export interface Shipment {
   weightUnit: string;
   carrierName: string;
   trackingNumber: string;
-  createdAt: string;
+  createdAt: any; // Can be a Firebase timestamp or string
   labelGenerated: boolean;
   documents: any[];
   description: string;
@@ -54,7 +54,7 @@ export const useFreightShipments = () => {
         } as Shipment;
       });
     },
-    enabled: !clientsLoading && clients.length > 0
+    enabled: !clientsLoading
   });
 
   return { 
