@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useFreightClients } from "@/hooks/freight/useFreightClients";
+import { useCarriers } from "@/components/module/submodules/freight/hooks/useCarriers";
 
 const shipmentTypeOptions = [
   { value: "import", label: "Import" },
@@ -27,13 +29,28 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
   close,
   submitting,
 }) => {
+  const { clients = [], isLoading: loadingClients } = useFreightClients();
+  const { carriers = [], isLoading: loadingCarriers } = useCarriers();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.reference || !form.customer || !form.transporteur) {
+    if (!form.reference || !form.customer || !form.carrier) {
       alert("Veuillez remplir tous les champs obligatoires");
       return;
     }
     next();
+  };
+
+  const generateReference = () => {
+    // Génération d'une référence basée sur la date et un numéro aléatoire
+    const date = new Date();
+    const prefix = "EXP";
+    const dateStr = date.getFullYear().toString().slice(-2) +
+      String(date.getMonth() + 1).padStart(2, '0') +
+      String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const reference = `${prefix}${dateStr}-${random}`;
+    updateForm({ reference });
   };
 
   const handleScheduledDateChange = (date: Date | undefined) => {
@@ -58,7 +75,7 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
           <label className="text-sm font-medium mb-1 block">Référence</label>
           <div className="flex gap-2">
             <Input
-              value={form.reference}
+              value={form.reference || ''}
               onChange={(e) => updateForm({ reference: e.target.value })}
               placeholder="Référence de l'expédition"
               className="flex-1"
@@ -66,7 +83,7 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => {/* TODO: Implémenter la génération de référence */}}
+              onClick={generateReference}
             >
               Générer
             </Button>
@@ -76,16 +93,18 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
         <div>
           <label className="text-sm font-medium mb-1 block">Client</label>
           <Select
-            value={form.customer}
+            value={form.customer || ''}
             onValueChange={(value) => updateForm({ customer: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un client" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="client1">Client 1</SelectItem>
-              <SelectItem value="client2">Client 2</SelectItem>
-              <SelectItem value="client3">Client 3</SelectItem>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -93,16 +112,18 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
         <div>
           <label className="text-sm font-medium mb-1 block">Transporteur</label>
           <Select
-            value={form.transporteur}
-            onValueChange={(value) => updateForm({ transporteur: value })}
+            value={form.carrier || ''}
+            onValueChange={(value) => updateForm({ carrier: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un transporteur" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="transport1">Transporteur 1</SelectItem>
-              <SelectItem value="transport2">Transporteur 2</SelectItem>
-              <SelectItem value="transport3">Transporteur 3</SelectItem>
+              {carriers.map((carrier) => (
+                <SelectItem key={carrier.id} value={carrier.id}>
+                  {carrier.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -110,7 +131,7 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
         <div>
           <label className="text-sm font-medium mb-1 block">Type d'expédition</label>
           <Select
-            value={form.shipmentType}
+            value={form.shipmentType || ''}
             onValueChange={(value) => updateForm({ shipmentType: value })}
           >
             <SelectTrigger>
