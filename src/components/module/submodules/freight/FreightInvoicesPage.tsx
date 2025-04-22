@@ -13,10 +13,11 @@ export const FreightInvoicesPage = () => {
   const handleUpdate = async (id: string, data: any) => {
     try {
       await updateInvoice(id, data);
-      await refetchInvoices();
+      toast.success('Facture mise à jour avec succès');
       return true;
     } catch (error) {
       console.error('Error updating invoice:', error);
+      toast.error('Erreur lors de la mise à jour de la facture');
       return false;
     }
   };

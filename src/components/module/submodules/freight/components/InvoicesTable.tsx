@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { ViewInvoiceDialog } from './ViewInvoiceDialog';
 import { EditInvoiceDialog } from './EditInvoiceDialog';
 import { DeleteInvoiceDialog } from './DeleteInvoiceDialog';
@@ -41,29 +41,32 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
           row.original.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
         }`}>
-          {row.original.status === 'paid' ? 'Payée' : row.original.status}
+          {row.original.status === 'paid' ? 'Payée' : 
+           row.original.status === 'pending' ? 'En attente' : 'Annulée'}
         </span>
       )
     },
     {
-      accessorKey: 'date',
-      header: 'DATE'
+      accessorKey: 'createdAt',
+      header: 'DATE',
+      cell: ({ row }: any) => new Date(row.original.createdAt).toLocaleDateString('fr-FR')
     },
     {
-      accessorKey: 'actions',
       header: 'ACTIONS',
       cell: ({ row }: any) => (
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setSelectedInvoice(row.original);
-              setViewDialogOpen(true);
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+          {row.original.status === 'paid' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setSelectedInvoice(row.original);
+                setViewDialogOpen(true);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -89,13 +92,6 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
     }
   ];
 
-  const handleDelete = async () => {
-    if (selectedInvoice) {
-      await onDelete(selectedInvoice.id);
-      setDeleteDialogOpen(false);
-    }
-  };
-
   return (
     <>
       <DataTable columns={columns} data={invoices} />
@@ -118,8 +114,8 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
           <DeleteInvoiceDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
-            onConfirm={handleDelete}
             invoiceNumber={selectedInvoice.invoiceNumber || selectedInvoice.id}
+            onConfirm={() => onDelete(selectedInvoice.id)}
           />
         </>
       )}

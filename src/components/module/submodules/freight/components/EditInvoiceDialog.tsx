@@ -1,24 +1,11 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
-import { toast } from 'sonner';
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FreightInvoice } from "@/hooks/modules/useFreightInvoices";
+import { useState } from "react";
 
 interface EditInvoiceDialogProps {
   open: boolean;
@@ -27,122 +14,105 @@ interface EditInvoiceDialogProps {
   onUpdate: (id: string, data: Partial<FreightInvoice>) => Promise<boolean>;
 }
 
-export const EditInvoiceDialog = ({
-  open,
-  onOpenChange,
-  invoice,
-  onUpdate
-}: EditInvoiceDialogProps) => {
-  const form = useForm({
-    defaultValues: {
-      invoiceNumber: invoice.invoiceNumber || '',
-      clientName: invoice.clientName,
-      amount: invoice.amount.toString(),
-      containerNumber: invoice.containerNumber || '',
-      shipmentReference: invoice.shipmentReference || '',
-    }
+export const EditInvoiceDialog = ({ open, onOpenChange, invoice, onUpdate }: EditInvoiceDialogProps) => {
+  const [formData, setFormData] = useState<Partial<FreightInvoice>>({
+    clientName: invoice.clientName,
+    amount: invoice.amount,
+    status: invoice.status,
+    invoiceNumber: invoice.invoiceNumber,
+    containerNumber: invoice.containerNumber,
+    shipmentReference: invoice.shipmentReference,
   });
 
-  const onSubmit = async (data: any) => {
-    try {
-      const success = await onUpdate(invoice.id, {
-        ...data,
-        amount: parseFloat(data.amount)
-      });
-      
-      if (success) {
-        toast.success('Facture mise à jour avec succès');
-        onOpenChange(false);
-      } else {
-        toast.error('Erreur lors de la mise à jour de la facture');
-      }
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour de la facture');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await onUpdate(invoice.id, formData);
+    if (success) {
+      onOpenChange(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Modifier la facture</DialogTitle>
         </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="invoiceNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>N° Facture</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="clientName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Montant</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="number" step="0.01" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="containerNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>N° Conteneur</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="shipmentReference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Réf. Expédition</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Annuler
-              </Button>
-              <Button type="submit">Enregistrer</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="clientName">Client</Label>
+                <Input
+                  id="clientName"
+                  value={formData.clientName}
+                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="amount">Montant</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="invoiceNumber">Référence</Label>
+                <Input
+                  id="invoiceNumber"
+                  value={formData.invoiceNumber}
+                  onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="status">Statut</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: 'pending' | 'paid' | 'cancelled') => 
+                    setFormData({ ...formData, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">En attente</SelectItem>
+                    <SelectItem value="paid">Payée</SelectItem>
+                    <SelectItem value="cancelled">Annulée</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="containerNumber">N° Conteneur</Label>
+                <Input
+                  id="containerNumber"
+                  value={formData.containerNumber}
+                  onChange={(e) => setFormData({ ...formData, containerNumber: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="shipmentReference">Réf. Expédition</Label>
+                <Input
+                  id="shipmentReference"
+                  value={formData.shipmentReference}
+                  onChange={(e) => setFormData({ ...formData, shipmentReference: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
