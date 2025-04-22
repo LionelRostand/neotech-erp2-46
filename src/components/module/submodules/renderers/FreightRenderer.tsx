@@ -1,7 +1,7 @@
 
 import React from 'react';
 import FreightDashboard from '../freight/FreightDashboard';
-import FreightShipments from '../FreightShipments';
+import FreightShipmentsPage from '../freight/FreightShipmentsPage';
 import FreightRoutes from '../freight/FreightRoutes';
 import FreightCarriers from '../freight/carriers/FreightCarriersList';
 import FreightDocuments from '../freight/FreightDocuments';
@@ -19,7 +19,7 @@ export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId
     case 'freight-dashboard':
       return <FreightDashboard />;
     case 'freight-shipments':
-      return <FreightShipments />;
+      return <FreightShipmentsPage />;
     case 'freight-accounting':
       return <FreightAccountingPage />;
     case 'freight-routes-main':
