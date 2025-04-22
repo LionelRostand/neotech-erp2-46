@@ -87,9 +87,16 @@ export const CreateInvoiceDialog = ({
 
   // Function to generate a safe container value
   const getSafeContainerValue = (container: Container) => {
-    return container.number && container.number.trim() !== '' 
-      ? container.number 
-      : `container-${container.id || new Date().getTime()}`;
+    if (container.number && container.number.trim() !== '') {
+      return container.number;
+    }
+    // Si le conteneur n'a pas de numéro, utiliser son ID ou générer un ID unique
+    return `container-${container.id || new Date().getTime().toString()}`;
+  };
+
+  // Fonction pour générer une clé unique pour chaque conteneur
+  const getContainerKey = (container: Container): string => {
+    return container.id || container.number || `container-${Math.random().toString(36).substring(2, 11)}`;
   };
 
   return (
@@ -112,7 +119,7 @@ export const CreateInvoiceDialog = ({
               <SelectContent>
                 {containers?.map((container) => (
                   <SelectItem 
-                    key={container.id || container.number || `container-${Math.random()}`} 
+                    key={getContainerKey(container)} 
                     value={getSafeContainerValue(container)}
                   >
                     {container.number || 'Sans numéro'} - {container.client || 'Client inconnu'}
@@ -131,7 +138,7 @@ export const CreateInvoiceDialog = ({
               
               <div className="space-y-2">
                 <Label>Coût</Label>
-                <Input value={invoiceData.containerCost || 0} readOnly />
+                <Input value={invoiceData.containerCost?.toString() || '0'} readOnly />
               </div>
 
               <div className="space-y-2">
