@@ -85,6 +85,13 @@ export const CreateInvoiceDialog = ({
     onOpenChange(false);
   };
 
+  // Function to generate a safe container value
+  const getSafeContainerValue = (container: Container) => {
+    return container.number && container.number.trim() !== '' 
+      ? container.number 
+      : `container-${container.id || new Date().getTime()}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -105,10 +112,10 @@ export const CreateInvoiceDialog = ({
               <SelectContent>
                 {containers?.map((container) => (
                   <SelectItem 
-                    key={container.number} 
-                    value={container.number || 'container-undefined'}
+                    key={container.id || container.number} 
+                    value={getSafeContainerValue(container)}
                   >
-                    {container.number || 'Sans numéro'} - {container.client}
+                    {container.number || 'Sans numéro'} - {container.client || 'Client inconnu'}
                   </SelectItem>
                 ))}
               </SelectContent>

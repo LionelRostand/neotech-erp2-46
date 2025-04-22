@@ -15,7 +15,7 @@ const PaymentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isNewPaymentDialogOpen, setIsNewPaymentDialogOpen] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('all_statuses');
+  const [filterStatus, setFilterStatus] = useState('all');
   const { payments, isLoading, error, reload } = usePaymentsData();
 
   const handleCreatePayment = async (data: Partial<Payment>) => {
@@ -30,10 +30,19 @@ const PaymentsPage = () => {
     }
   };
 
-  const filteredPayments = payments.filter(payment => 
-    payment.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPayments = payments.filter(payment => {
+    // Apply search filter
+    const matchesSearch = 
+      payment.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Apply status filter
+    const matchesStatus = 
+      filterStatus === 'all' || 
+      payment.status === filterStatus;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -65,7 +74,7 @@ const PaymentsPage = () => {
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all_statuses">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="completed">Terminé</SelectItem>
                 <SelectItem value="pending">En attente</SelectItem>
                 <SelectItem value="failed">Échoué</SelectItem>
