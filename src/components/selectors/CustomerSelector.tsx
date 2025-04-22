@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Select,
   SelectContent,
@@ -7,50 +7,40 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useFreightClients } from "@/hooks/freight/useFreightClients";
 
 interface CustomerSelectorProps {
   value: string;
   onChange: (value: string, name: string) => void;
 }
 
-// Mock data for customers - in a real application, this would come from an API or database
-const mockCustomers = [
-  { id: "cust-1", name: "Entreprise Martin" },
-  { id: "cust-2", name: "Logistique Express" },
-  { id: "cust-3", name: "Transport International" },
-  { id: "cust-4", name: "Cargo Systems" },
-  { id: "cust-5", name: "Global Freight Solutions" },
-];
-
 export const CustomerSelector: React.FC<CustomerSelectorProps> = ({ value, onChange }) => {
-  // Find the customer name for display when value is already set
+  const { clients, isLoading } = useFreightClients();
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
-  
+
   useEffect(() => {
-    if (value) {
-      const customer = mockCustomers.find(c => c.id === value);
-      if (customer) {
-        setSelectedCustomerName(customer.name);
-      }
+    if (value && clients.length > 0) {
+      const customer = clients.find(c => c.id === value);
+      if (customer) setSelectedCustomerName(customer.name || "");
     }
-  }, [value]);
+  }, [value, clients]);
 
   const handleValueChange = (newValue: string) => {
-    const customer = mockCustomers.find(c => c.id === newValue);
+    const customer = clients.find(c => c.id === newValue);
     if (customer) {
-      onChange(newValue, customer.name);
+      onChange(newValue, customer.name || "");
     }
   };
 
   return (
-    <Select value={value} onValueChange={handleValueChange}>
+    <Select value={value} onValueChange={handleValueChange} disabled={isLoading}>
       <SelectTrigger>
         <SelectValue placeholder="Sélectionner un client">
           {selectedCustomerName || "Sélectionner un client"}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {mockCustomers.map((customer) => (
+        {clients.map((customer) => (
           <SelectItem key={customer.id} value={customer.id}>
             {customer.name}
           </SelectItem>
