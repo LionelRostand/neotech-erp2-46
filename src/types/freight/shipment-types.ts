@@ -11,6 +11,7 @@ export interface ShipmentLine {
   };
   value?: number;
   packageType?: string;
+  cost: number;
 }
 
 export interface Shipment {

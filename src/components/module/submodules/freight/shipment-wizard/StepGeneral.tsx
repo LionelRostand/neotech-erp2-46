@@ -1,203 +1,118 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { generateShipmentReference } from "../utils/shipmentUtils";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CustomerSelector } from "@/components/selectors/CustomerSelector";
+import { CarrierSelector } from "@/components/selectors/CarrierSelector";
 
-// Define the form type
-type GeneralForm = {
-  reference: string;
-  customer: string;
-  carrier: string;
-  carrierName: string;
-  origin: string;
-  destination: string;
-  shipmentType: string;
-  status: string;
-  scheduledDate: string;
-};
-
-type StepGeneralProps = {
+interface StepGeneralProps {
   form: any;
-  updateForm: (fields: Partial<GeneralForm>) => void;
+  updateForm: (data: any) => void;
+  prev: () => void;
   next: () => void;
   close: () => void;
-  submitting: boolean;
-};
-
-// Types for shipment and status
-const shipmentTypes = [
-  { value: "import", label: "Import" },
-  { value: "export", label: "Export" },
-  { value: "local", label: "National" },
-  { value: "international", label: "International" },
-];
-
-const statusOptions = [
-  { value: "draft", label: "Brouillon" },
-  { value: "confirmed", label: "Confirmé" },
-  { value: "in_transit", label: "En transit" },
-  { value: "delivered", label: "Livré" },
-  { value: "cancelled", label: "Annulé" },
-  { value: "delayed", label: "Retardé" },
-];
+}
 
 const StepGeneral: React.FC<StepGeneralProps> = ({
   form,
   updateForm,
+  prev,
   next,
-  close,
-  submitting,
+  close
 }) => {
-  // Validation to enable/disable the next button
-  const isValid = form.reference && form.customer && form.origin && form.destination;
-
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isValid) {
-      next();
+  // Auto-generate reference on component mount if not already set
+  useEffect(() => {
+    if (!form.reference) {
+      const newReference = generateShipmentReference();
+      updateForm({ reference: newReference });
     }
-  };
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
-      {/* Référence & Client */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="font-medium mb-1 block">
-            Référence <span className="text-red-500">*</span>
-          </label>
+          <label className="block text-sm font-medium mb-1">Référence</label>
           <Input
             value={form.reference}
             onChange={(e) => updateForm({ reference: e.target.value })}
-            placeholder="EXP-2023-001"
-            required
+            placeholder="EXP-2023-1234"
           />
         </div>
         <div>
-          <label className="font-medium mb-1 block">
-            Client <span className="text-red-500">*</span>
-          </label>
-          <Input
-            value={form.customer}
-            onChange={(e) => updateForm({ customer: e.target.value })}
-            placeholder="Nom du client"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Origin & Destination */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="font-medium mb-1 block">
-            Origine <span className="text-red-500">*</span>
-          </label>
-          <Input
-            value={form.origin}
-            onChange={(e) => updateForm({ origin: e.target.value })}
-            placeholder="Ville d'origine"
-            required
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">
-            Destination <span className="text-red-500">*</span>
-          </label>
-          <Input
-            value={form.destination}
-            onChange={(e) => updateForm({ destination: e.target.value })}
-            placeholder="Ville de destination"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Transporteur */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="font-medium mb-1 block">Transporteur</label>
-          <Input
-            value={form.carrier}
-            onChange={(e) => updateForm({ carrier: e.target.value })}
-            placeholder="Code du transporteur"
-          />
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Nom du transporteur</label>
-          <Input
-            value={form.carrierName}
-            onChange={(e) => updateForm({ carrierName: e.target.value })}
-            placeholder="Nom complet"
-          />
-        </div>
-      </div>
-
-      {/* Type & Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="font-medium mb-1 block">Type d'expédition</label>
-          <select
+          <label className="block text-sm font-medium mb-1">Type d'expédition</label>
+          <Select
             value={form.shipmentType}
-            onChange={(e) => updateForm({ shipmentType: e.target.value })}
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            onValueChange={(value) => updateForm({ shipmentType: value })}
           >
-            {shipmentTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="font-medium mb-1 block">Statut initial</label>
-          <select
-            value={form.status}
-            onChange={(e) => updateForm({ status: e.target.value })}
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
-          >
-            {statusOptions.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="export">Export</SelectItem>
+              <SelectItem value="import">Import</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Date d'expédition */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Client</label>
+          <CustomerSelector
+            value={form.customer}
+            onChange={(value, name) => updateForm({ customer: value, customerName: name })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Transporteur</label>
+          <CarrierSelector
+            value={form.carrier}
+            onChange={(value, name) => updateForm({ carrier: value, carrierName: name })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Date d'envoi</label>
+          <Input
+            type="date"
+            value={form.scheduledDate}
+            onChange={(e) => updateForm({ scheduledDate: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Date de livraison estimée</label>
+          <Input
+            type="date"
+            value={form.estimatedDeliveryDate}
+            onChange={(e) => updateForm({ estimatedDeliveryDate: e.target.value })}
+          />
+        </div>
+      </div>
+
       <div>
-        <label className="font-medium mb-1 block">Date d'expédition</label>
-        <Input
-          type="date"
-          value={form.scheduledDate ? form.scheduledDate.substring(0, 10) : ""}
-          onChange={(e) => 
-            updateForm({ 
-              scheduledDate: e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString() 
-            })
-          }
+        <label className="block text-sm font-medium mb-1">Notes</label>
+        <Textarea
+          value={form.notes}
+          onChange={(e) => updateForm({ notes: e.target.value })}
+          placeholder="Informations supplémentaires sur l'expédition..."
+          rows={4}
         />
       </div>
 
-      {/* Validation warning */}
-      {!isValid && (
-        <div className="text-amber-600 text-sm">
-          Veuillez remplir tous les champs obligatoires (*)
-        </div>
-      )}
-
-      {/* Action buttons */}
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="ghost" onClick={close}>
+        <Button variant="outline" onClick={close}>
           Annuler
         </Button>
-        <Button type="submit" disabled={!isValid || submitting}>
-          {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button onClick={next}>
           Suivant
         </Button>
       </div>
-    </form>
+    </div>
   );
 };
 
