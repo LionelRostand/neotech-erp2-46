@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFreightData } from "@/hooks/modules/useFreightData";
+import { Route } from "@/types/freight";
 
 const statusOptions = [
   { value: "draft", label: "Brouillon" },
@@ -41,22 +41,21 @@ const StepTracking = ({
   const [selectedRouteId, setSelectedRouteId] = useState<string>("");
 
   useEffect(() => {
-    // Si une route est sélectionnée, auto-fill type+distance
     if (selectedRouteId && Array.isArray(routes)) {
-      const route = routes.find((r: any) => r.id === selectedRouteId);
+      const route = routes.find((r: Route) => r.id === selectedRouteId);
       if (route) {
         updateTracking({
           ...tracking,
           route: route.name,
           transportType: route.transportType || "road",
           distance: route.distance || 0,
+          origin: route.origin,
+          destination: route.destination
         });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRouteId]);
 
-  // On met à jour le champ route si la valeur texte a changé
   useEffect(() => {
     if (
       tracking.route &&
@@ -67,17 +66,13 @@ const StepTracking = ({
       const route = routes.find((r: any) => r.name === tracking.route);
       if (route) setSelectedRouteId(route.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracking.route, routes]);
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={e => {
-        e.preventDefault();
-        create();
-      }}
-    >
+    <form className="space-y-4" onSubmit={e => {
+      e.preventDefault();
+      create();
+    }}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="font-medium mb-1 block">Numéro de suivi</label>
@@ -107,7 +102,6 @@ const StepTracking = ({
             ))}
           </select>
         </div>
-        {/* ROUTE : Select */}
         <div>
           <label className="font-medium mb-1 block">Route</label>
           <select
@@ -123,11 +117,31 @@ const StepTracking = ({
               Array.isArray(routes) && routes.length > 0 &&
               routes.map((route: any) => (
                 <option key={route.id} value={route.id}>
-                  {route.name} ({route.origin} → {route.destination}, {route.distance}km, {route.transportType})
+                  {route.name} ({route.origin} → {route.destination})
                 </option>
               ))
             )}
           </select>
+        </div>
+        <div>
+          <label className="font-medium mb-1 block">Origine</label>
+          <Input
+            value={tracking.origin || ''}
+            onChange={e => updateTracking({ ...tracking, origin: e.target.value })}
+            placeholder="Lieu d'origine"
+            readOnly={!!selectedRouteId}
+            className={selectedRouteId ? "bg-gray-100" : ""}
+          />
+        </div>
+        <div>
+          <label className="font-medium mb-1 block">Destination</label>
+          <Input
+            value={tracking.destination || ''}
+            onChange={e => updateTracking({ ...tracking, destination: e.target.value })}
+            placeholder="Lieu de destination"
+            readOnly={!!selectedRouteId}
+            className={selectedRouteId ? "bg-gray-100" : ""}
+          />
         </div>
         <div>
           <label className="font-medium mb-1 block">Type de transport</label>
@@ -185,4 +199,5 @@ const StepTracking = ({
     </form>
   );
 };
+
 export default StepTracking;
