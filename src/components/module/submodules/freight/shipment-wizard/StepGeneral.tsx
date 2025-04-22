@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 
-// Options pour les types d'expédition
 const shipmentTypeOptions = [
   { value: "import", label: "Import" },
   { value: "export", label: "Export" },
@@ -30,7 +29,6 @@ const StepGeneral: React.FC<StepGeneralProps> = ({
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Validation basique
     if (!form.reference || !form.customer || !form.origin || !form.destination) {
       alert("Veuillez remplir tous les champs obligatoires");
       return;
