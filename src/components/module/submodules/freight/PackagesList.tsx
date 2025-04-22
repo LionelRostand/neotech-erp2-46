@@ -9,27 +9,31 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Printer, FileText } from 'lucide-react';
+import { Eye, Printer, FileText, Trash } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import { Shipment } from '@/hooks/freight/useFreightShipments';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PackageDetailsDialog from './packages/PackageDetailsDialog';
+import DeletePackageDialog from './packages/DeletePackageDialog';
+import { toast } from 'sonner';
 
 interface PackagesListProps {
   packages: Shipment[];
   isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false }) => {
+const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false, onRefresh }) => {
   const [selectedPackage, setSelectedPackage] = React.useState<Shipment | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   
   // Fonction sécurisée pour formater les dates
   const safeFormatDate = (dateString: string) => {
     try {
       return dateString ? format(new Date(dateString), 'dd MMM yyyy', { locale: fr }) : '-';
     } catch (error) {
-      console.warning('Invalid date:', dateString);
+      console.error('Invalid date:', dateString);
       return '-';
     }
   };
@@ -51,6 +55,18 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
       default:
         return { type: 'danger', text: status };
     }
+  };
+
+  const handlePackageDeleted = () => {
+    toast.success("Colis supprimé avec succès");
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
+  const handleDeleteClick = (pkg: Shipment) => {
+    setSelectedPackage(pkg);
+    setIsDeleteDialogOpen(true);
   };
 
   if (isLoading) {
@@ -125,6 +141,13 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
                             <FileText className="h-4 w-4" />
                           </Button>
                         )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteClick(pkg)}
+                        >
+                          <Trash className="h-4 w-4 text-red-500" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -142,11 +165,20 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
       </div>
 
       {selectedPackage && (
-        <PackageDetailsDialog
-          open={!!selectedPackage}
-          onOpenChange={(open) => !open && setSelectedPackage(null)}
-          packageData={selectedPackage}
-        />
+        <>
+          <PackageDetailsDialog
+            open={!!selectedPackage && !isDeleteDialogOpen}
+            onOpenChange={(open) => !open && setSelectedPackage(null)}
+            packageData={selectedPackage}
+          />
+          
+          <DeletePackageDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            shipment={selectedPackage}
+            onDeleted={handlePackageDeleted}
+          />
+        </>
       )}
     </>
   );

@@ -1,15 +1,18 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Search } from 'lucide-react';
-import PackagesList from './packages/PackagesList';
+import PackagesList from './PackagesList';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useFreightShipments } from '@/hooks/freight/useFreightShipments';
 import ShipmentWizardDialog from './ShipmentWizardDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 const FreightPackages: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFilter, setCurrentFilter] = useState<string>('all');
@@ -17,8 +20,8 @@ const FreightPackages: React.FC = () => {
 
   const filteredShipments = shipments.filter(pkg => {
     const matchesSearch = !searchQuery || 
-      pkg.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pkg.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pkg.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pkg.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.carrierName?.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -31,6 +34,11 @@ const FreightPackages: React.FC = () => {
       
     return matchesSearch && matchesStatus;
   });
+
+  const handleRefreshData = () => {
+    // Invalidate shipments query to force a refresh
+    queryClient.invalidateQueries({ queryKey: ['freight', 'shipments'] });
+  };
 
   return (
     <div className="space-y-6">
@@ -63,27 +71,27 @@ const FreightPackages: React.FC = () => {
         </TabsList>
 
         <TabsContent value="all">
-          <PackagesList packages={filteredShipments} isLoading={isLoading} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} onRefresh={handleRefreshData} />
         </TabsContent>
 
         <TabsContent value="draft">
-          <PackagesList packages={filteredShipments} isLoading={isLoading} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} onRefresh={handleRefreshData} />
         </TabsContent>
 
         <TabsContent value="ready">
-          <PackagesList packages={filteredShipments} isLoading={isLoading} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} onRefresh={handleRefreshData} />
         </TabsContent>
 
         <TabsContent value="in_transit">
-          <PackagesList packages={filteredShipments} isLoading={isLoading} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} onRefresh={handleRefreshData} />
         </TabsContent>
 
         <TabsContent value="delivered">
-          <PackagesList packages={filteredShipments} isLoading={isLoading} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} onRefresh={handleRefreshData} />
         </TabsContent>
 
         <TabsContent value="others">
-          <PackagesList packages={filteredShipments} isLoading={isLoading} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} onRefresh={handleRefreshData} />
         </TabsContent>
       </Tabs>
 
