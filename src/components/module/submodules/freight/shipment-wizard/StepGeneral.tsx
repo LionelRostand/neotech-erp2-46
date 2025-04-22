@@ -3,8 +3,17 @@ import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFreightClients } from "../hooks/useFreightClients";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCarriers } from "../hooks/useCarriers";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 function generateReference() {
   return "EXP" + Math.floor(100000 + Math.random() * 900000);
@@ -73,7 +82,7 @@ const StepGeneral = ({
             name="customer"
             value={form.customer}
             onChange={e => updateForm({ customer: e.target.value })}
-            className="w-full rounded-md border px-3 py-2 text-sm bg-white z-10"
+            className="w-full rounded-md border px-3 py-2 text-sm bg-white"
             disabled={clientsLoading}
           >
             <option value="">Sélectionner un client</option>
@@ -91,18 +100,18 @@ const StepGeneral = ({
           </select>
         </div>
 
-        {/* Nouveau champ Transporteur */}
+        {/* Transporteur */}
         <div className="col-span-2">
           <label className="block font-medium mb-1">Transporteur</label>
           <select
             required
             name="carrier"
             value={form.carrier}
-            onChange={e => updateForm({ 
+            onChange={e => updateForm({
               carrier: e.target.value,
               carrierName: carriers.find((c: any) => c.id === e.target.value)?.name || ''
             })}
-            className="w-full rounded-md border px-3 py-2 text-sm bg-white z-10"
+            className="w-full rounded-md border px-3 py-2 text-sm bg-white"
             disabled={carriersLoading}
           >
             <option value="">Sélectionner un transporteur</option>
@@ -118,6 +127,70 @@ const StepGeneral = ({
               <option disabled>Aucun transporteur trouvé</option>
             )}
           </select>
+        </div>
+
+        {/* Date d'envoi */}
+        <div>
+          <label className="block font-medium mb-1">Date d'envoi</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !form.scheduledDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {form.scheduledDate ? (
+                  format(new Date(form.scheduledDate), "dd MMMM yyyy", { locale: fr })
+                ) : (
+                  <span>Sélectionner une date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={form.scheduledDate ? new Date(form.scheduledDate) : undefined}
+                onSelect={(date) => updateForm({ scheduledDate: date?.toISOString() })}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Date de livraison estimée */}
+        <div>
+          <label className="block font-medium mb-1">Date de livraison estimée</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !form.estimatedDeliveryDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {form.estimatedDeliveryDate ? (
+                  format(new Date(form.estimatedDeliveryDate), "dd MMMM yyyy", { locale: fr })
+                ) : (
+                  <span>Sélectionner une date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={form.estimatedDeliveryDate ? new Date(form.estimatedDeliveryDate) : undefined}
+                onSelect={(date) => updateForm({ estimatedDeliveryDate: date?.toISOString() })}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
