@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, Trash2, Eye, CreditCard } from 'lucide-react';
 import { Invoice } from '../types/accounting-types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '../utils/formatting';
@@ -21,6 +22,7 @@ interface InvoicesTableProps {
   onView?: (id: string) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onPay?: (id: string) => void;
 }
 
 export const InvoicesTable: React.FC<InvoicesTableProps> = ({
@@ -28,7 +30,8 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
   isLoading,
   onView,
   onEdit,
-  onDelete
+  onDelete,
+  onPay
 }) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -70,8 +73,8 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
       <TableHeader>
         <TableRow>
           <TableHead>N° Facture</TableHead>
-          <TableHead>Conteneur</TableHead>
-          <TableHead>Expédition</TableHead>
+          <TableHead>N° Conteneur</TableHead>
+          <TableHead>Réf. Expédition</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Montant</TableHead>
@@ -82,7 +85,7 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
       <TableBody>
         {invoices.map((invoice) => (
           <TableRow key={invoice.id}>
-            <TableCell>{invoice.number || invoice.invoiceNumber}</TableCell>
+            <TableCell>{invoice.number}</TableCell>
             <TableCell>
               {invoice.containerReference && (
                 <Badge variant="outline">{invoice.containerReference}</Badge>
@@ -97,13 +100,18 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
             <TableCell>{invoice.issueDate}</TableCell>
             <TableCell>{formatCurrency(invoice.total, invoice.currency)}</TableCell>
             <TableCell>
-              <Badge>{invoice.status}</Badge>
+              {getStatusBadge(invoice.status)}
             </TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 {onView && (
                   <Button variant="ghost" size="sm" onClick={() => onView(invoice.id)}>
                     <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                {onPay && invoice.status !== 'paid' && (
+                  <Button variant="ghost" size="sm" onClick={() => onPay(invoice.id)}>
+                    <CreditCard className="h-4 w-4" />
                   </Button>
                 )}
                 {onEdit && (

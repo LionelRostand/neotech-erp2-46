@@ -23,12 +23,11 @@ export const freightModule: AppModule = {
   submodules: [
     { id: "freight-dashboard", name: "Tableau de bord", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "freight-shipments", name: "Expéditions", href: "/modules/freight/shipments", icon: createIcon(Ship) },
-    { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-containers", name: "Conteneurs", href: "/modules/freight/containers", icon: createIcon(LucideContainerIcon) },
-    { id: "freight-carriers", name: "Transporteurs", href: "/modules/freight/carriers", icon: createIcon(Truck) },
     { id: "freight-tracking", name: "Suivi", href: "/modules/freight/tracking", icon: createIcon(MapPin) },
     { id: "freight-accounting", name: "Comptabilité", href: "/modules/freight/accounting", icon: createIcon(CreditCard) },
     { id: "freight-documents", name: "Documents", href: "/modules/freight/documents", icon: createIcon(FileText) },
+    { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-routes", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
     { id: "freight-settings", name: "Paramètres", href: "/modules/freight/settings", icon: createIcon(Settings) }
   ]

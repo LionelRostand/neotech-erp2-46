@@ -40,12 +40,11 @@ export interface InvoiceItem {
 
 export interface Payment {
   id: string;
-  invoiceNumber: string;
-  clientName: string;
+  invoiceId: string;
   amount: number;
   date: string;
-  paymentMethod: 'card' | 'transfer' | 'paypal' | 'cash';
-  notes?: string;
+  method: 'card' | 'transfer' | 'paypal' | 'cash';
   status: 'pending' | 'completed' | 'failed';
-  currency?: string;
+  transactionId?: string;
+  notes?: string;
 }
