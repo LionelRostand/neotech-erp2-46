@@ -1,50 +1,44 @@
 
+export interface Payment {
+  id: string;
+  date: string;
+  invoiceNumber: string;
+  clientName: string;
+  amount: number;
+  status: 'completed' | 'pending' | 'failed';
+  reference?: string;
+  currency: string;
+  shipmentReference?: string;
+  containerNumber?: string;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
-  number?: string;
+  number: string;
   clientName: string;
   clientId: string;
-  clientEmail?: string;
+  clientEmail: string;
   issueDate: string;
   dueDate: string;
   total: number;
-  status: 'pending' | 'draft' | 'paid' | 'overdue' | 'cancelled';
-  currency?: string;
-  items: InvoiceItem[];
-  subtotal?: number;
-  tax?: number;
-  taxRate?: number;
-  taxAmount?: number;
-  discountAmount?: number;
-  discountRate?: number;
-  notes?: string;
-  termsAndConditions?: string;
-  containerReference?: string;
-  containerCost?: number;
-  shipmentReference?: string;
-  shipmentStatus?: string;
-  paymentMethod?: 'card' | 'transfer' | 'paypal' | 'cash';
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
-}
-
-export interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-export interface Payment {
-  id: string;
-  invoiceId: string;
-  amount: number;
-  date: string;
-  method: 'card' | 'transfer' | 'paypal' | 'cash';
-  status: 'pending' | 'completed' | 'failed';
-  transactionId?: string;
-  notes?: string;
+  status: string;
+  currency: string;
+  items: any[];
+  subtotal: number;
+  tax: number;
+  taxRate: number;
+  taxAmount: number;
+  discountAmount: number;
+  discountRate: number;
+  notes: string;
+  termsAndConditions: string;
+  shipmentReference: string;
+  containerReference: string;
+  containerCost: number;
+  shipmentStatus: string;
+  paymentMethod: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
 }

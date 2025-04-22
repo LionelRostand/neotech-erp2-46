@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PlusCircle, Search, Filter, Download } from 'lucide-react';
 import { usePaymentsData } from './hooks/usePaymentsData';
 import PaymentViewDialog from './components/PaymentViewDialog';
-import PaymentFormDialog from './components/PaymentFormDialog';
+import CreateInvoiceDialog from './components/CreateInvoiceDialog';
 import { Payment } from './types/accounting-types';
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -146,6 +146,18 @@ const PaymentsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <PaymentViewDialog
+        payment={selectedPayment}
+        open={!!selectedPayment}
+        onOpenChange={() => setSelectedPayment(null)}
+      />
+
+      <CreateInvoiceDialog
+        open={isNewPaymentDialogOpen}
+        onOpenChange={setIsNewPaymentDialogOpen}
+        onSubmit={handleCreatePayment}
+      />
     </div>
   );
 };

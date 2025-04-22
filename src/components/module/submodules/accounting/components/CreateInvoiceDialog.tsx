@@ -20,7 +20,6 @@ import {
 import { useContainersData } from '@/hooks/modules/useContainersData';
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Container, Shipment } from '@/types/freight';
 import { toast } from 'sonner';
 import { Invoice } from '../types/accounting-types';
 
@@ -45,9 +44,9 @@ export const CreateInvoiceDialog = ({
   );
 
   useEffect(() => {
-    if (selectedContainer && containers) {
+    if (selectedContainer && containers && shipments) {
       const container = containers.find(c => c.number === selectedContainer);
-      const shipment = shipments?.find(s => s.reference === container?.number);
+      const shipment = shipments.find(s => s.reference === container?.number);
       
       if (container) {
         setInvoiceData({
@@ -61,7 +60,7 @@ export const CreateInvoiceDialog = ({
           status: 'pending',
           issueDate: new Date().toISOString().split('T')[0],
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          paymentMethod: selectedPaymentMethod as any || undefined
+          paymentMethod: selectedPaymentMethod
         });
       }
     }
