@@ -11,18 +11,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Eye, Printer, FileText } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
-import { Package } from '@/types/freight';
+import { Shipment } from '@/hooks/freight/useFreightShipments';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PackageDetailsDialog from './packages/PackageDetailsDialog';
 
 interface PackagesListProps {
-  packages: Package[];
-  isLoading?: boolean; // Add optional loading prop
+  packages: Shipment[];
+  isLoading?: boolean;
 }
 
 const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false }) => {
-  const [selectedPackage, setSelectedPackage] = React.useState<Package | null>(null);
+  const [selectedPackage, setSelectedPackage] = React.useState<Shipment | null>(null);
   
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
     switch (status) {
@@ -30,7 +30,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
         return { type: 'success', text: 'Livré' };
       case 'shipped':
         return { type: 'warning', text: 'Expédié' };
-      case 'ready':
+      case 'confirmed':
         return { type: 'warning', text: 'Prêt' };
       case 'draft':
         return { type: 'danger', text: 'Brouillon' };
@@ -58,7 +58,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
           <TableHeader>
             <TableRow>
               <TableHead>Référence</TableHead>
-              <TableHead>Client</TableHead> {/* New column for client */}
+              <TableHead>Client</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Poids</TableHead>
               <TableHead>Transporteur</TableHead>
@@ -75,7 +75,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading = false
                 return (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">{pkg.reference}</TableCell>
-                    <TableCell>{pkg.customer || '-'}</TableCell> {/* Display customer name */}
+                    <TableCell>{pkg.customerName || '-'}</TableCell>
                     <TableCell>{pkg.description || '-'}</TableCell>
                     <TableCell>{pkg.weight} {pkg.weightUnit}</TableCell>
                     <TableCell>{pkg.carrierName || '-'}</TableCell>
