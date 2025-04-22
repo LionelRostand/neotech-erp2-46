@@ -7,7 +7,7 @@ import CreateShipmentPage from "@/components/module/submodules/freight/CreateShi
 import FreightClientsPage from "@/components/module/submodules/freight/clients/FreightClientsPage";
 import FreightRoutesPage from "@/components/module/submodules/freight/FreightRoutesPage";
 import ContainerListPage from "@/components/module/submodules/freight/containers/ContainerListPage";
-import { FreightInvoicesPage } from "@/components/module/submodules/freight/FreightInvoicesPage";
+import FreightInvoicesPage from "@/components/module/submodules/freight/invoices/FreightInvoicesPage";
 
 export const FreightRoutes = (
   <Route key="freight" path="/modules/freight" element={<ModuleLayout moduleId={2} />}>
