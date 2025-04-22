@@ -85,19 +85,22 @@ export const CreateInvoiceDialog = ({
     onOpenChange(false);
   };
 
-  // Function to generate a safe container value
-  const getSafeContainerValue = (container: Container) => {
+  // Function to generate a safe container value that is never empty
+  const getSafeContainerValue = (container: Container): string => {
     if (container.number && container.number.trim() !== '') {
       return container.number;
     }
-    // Si le conteneur n'a pas de numéro, utiliser son ID ou générer un ID unique
-    return `container-${container.id || new Date().getTime().toString()}`;
+    // Fallback to ID or generated ID, ensuring it's never an empty string
+    return `container-${container.id || Date.now().toString()}`;
   };
 
-  // Fonction pour générer une clé unique pour chaque conteneur
+  // Function to generate a unique key for each container
   const getContainerKey = (container: Container): string => {
     return container.id || container.number || `container-${Math.random().toString(36).substring(2, 11)}`;
   };
+
+  // Check if containers are available before rendering SelectItems
+  const hasValidContainers = containers && containers.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,14 +120,18 @@ export const CreateInvoiceDialog = ({
                 <SelectValue placeholder="Sélectionner un conteneur" />
               </SelectTrigger>
               <SelectContent>
-                {containers?.map((container) => (
-                  <SelectItem 
-                    key={getContainerKey(container)} 
-                    value={getSafeContainerValue(container)}
-                  >
-                    {container.number || 'Sans numéro'} - {container.client || 'Client inconnu'}
-                  </SelectItem>
-                ))}
+                {hasValidContainers ? (
+                  containers.map((container) => (
+                    <SelectItem 
+                      key={getContainerKey(container)} 
+                      value={getSafeContainerValue(container)}
+                    >
+                      {container.number || 'Sans numéro'} - {container.client || 'Client inconnu'}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-containers">Aucun conteneur disponible</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
