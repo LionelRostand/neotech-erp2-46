@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -121,7 +122,7 @@ const ShipmentWizardDialog = ({ open, onOpenChange }: { open: boolean; onOpenCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Nouvelle Expédition</DialogTitle>
+          <DialogTitle>Nouveau Colis</DialogTitle>
         </DialogHeader>
         <Tabs value={currentStep} onValueChange={val => setCurrentStep(val as any)} className="mt-2">
           <TabsList>
