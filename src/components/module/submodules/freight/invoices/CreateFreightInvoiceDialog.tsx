@@ -42,6 +42,16 @@ const CreateFreightInvoiceDialog = ({
     }
   }, [selectedShipment, selectedContainer, shipments, containers]);
 
+  useEffect(() => {
+    if (!open) {
+      // Reset form when dialog closes
+      setSelectedShipment('');
+      setSelectedContainer('');
+      setClientName('');
+      setAmount(0);
+    }
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -53,8 +63,8 @@ const CreateFreightInvoiceDialog = ({
       const invoiceData = {
         clientName,
         amount,
-        shipmentReference: selectedShipment,
-        containerNumber: selectedContainer,
+        shipmentReference: selectedShipment || null,
+        containerNumber: selectedContainer || null,
         status: 'pending',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -79,11 +89,15 @@ const CreateFreightInvoiceDialog = ({
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label>Référence expédition</Label>
-            <Select value={selectedShipment} onValueChange={setSelectedShipment}>
+            <Select value={selectedShipment} onValueChange={(value) => {
+              setSelectedShipment(value);
+              setSelectedContainer(''); // Clear container when shipment is selected
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une expédition" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Aucune</SelectItem>
                 {shipments.map(shipment => (
                   <SelectItem key={shipment.id} value={shipment.reference}>
                     {shipment.reference} ({shipment.customer})
@@ -95,11 +109,15 @@ const CreateFreightInvoiceDialog = ({
 
           <div className="space-y-2">
             <Label>Numéro de conteneur</Label>
-            <Select value={selectedContainer} onValueChange={setSelectedContainer}>
+            <Select value={selectedContainer} onValueChange={(value) => {
+              setSelectedContainer(value);
+              setSelectedShipment(''); // Clear shipment when container is selected
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un conteneur" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Aucun</SelectItem>
                 {containers.map(container => (
                   <SelectItem key={container.id} value={container.number}>
                     {container.number} ({container.client})
@@ -111,7 +129,10 @@ const CreateFreightInvoiceDialog = ({
 
           <div className="space-y-2">
             <Label>Client</Label>
-            <Input value={clientName} disabled />
+            <Input 
+              value={clientName} 
+              onChange={(e) => setClientName(e.target.value)} 
+            />
           </div>
 
           <div className="space-y-2">
