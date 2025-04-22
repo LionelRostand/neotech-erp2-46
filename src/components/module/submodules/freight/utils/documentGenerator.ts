@@ -77,6 +77,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     console.log('Invoice PDF generated, saving to Firestore...');
     
+    // Sauvegarder la facture avec metadata complète
     const invoiceDocId = await saveDocumentToModule({
       name: `Facture ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'invoice',
@@ -143,6 +144,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     console.log('Delivery PDF generated, saving to Firestore...');
     
+    // Sauvegarder le bon de livraison avec metadata complète
     const deliveryDocId = await saveDocumentToModule({
       name: `Bon de livraison ${invoice.invoiceNumber || 'Sans numéro'}`,
       type: 'delivery_note',
