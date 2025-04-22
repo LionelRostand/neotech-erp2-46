@@ -60,19 +60,17 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
         return (
           <div className="flex items-center gap-2">
             {isPaid && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setSelectedInvoice(invoice);
-                  setViewDialogOpen(true);
-                }}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            )}
-            {isPaid && (
               <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedInvoice(invoice);
+                    setViewDialogOpen(true);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -103,7 +101,12 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
 
   return (
     <>
-      <DataTable columns={columns} data={invoices} />
+      <DataTable 
+        columns={columns} 
+        data={invoices} 
+        isLoading={false}
+        emptyMessage="Aucune facture trouvée"
+      />
 
       {selectedInvoice && (
         <>

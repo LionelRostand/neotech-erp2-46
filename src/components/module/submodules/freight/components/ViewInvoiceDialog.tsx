@@ -25,17 +25,19 @@ export const ViewInvoiceDialog = ({ open, onOpenChange, invoice }: ViewInvoiceDi
             </div>
             <div>
               <p className="font-semibold">Montant</p>
-              <p>{invoice.amount} €</p>
+              <p>{invoice.amount.toLocaleString('fr-FR')} €</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="font-semibold">Référence</p>
-              <p>{invoice.invoiceNumber}</p>
+              <p>{invoice.invoiceNumber || '-'}</p>
             </div>
             <div>
               <p className="font-semibold">Statut</p>
-              <p>{invoice.status}</p>
+              <p className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Payée
+              </p>
             </div>
           </div>
           {invoice.containerNumber && (
