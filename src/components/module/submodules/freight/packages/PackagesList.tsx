@@ -90,13 +90,14 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
             <TableHead>TRANSPORTEUR</TableHead>
             <TableHead>N° SUIVI</TableHead>
             <TableHead>DATE</TableHead>
+            <TableHead>STATUT</TableHead>
             <TableHead>ACTIONS</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {packages.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">Aucun colis trouvé</TableCell>
+              <TableCell colSpan={8} className="text-center text-muted-foreground">Aucun colis trouvé</TableCell>
             </TableRow>
           ) : (
             packages.map((pkg) => (
@@ -107,6 +108,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
                 <TableCell>{pkg.carrierName || "-"}</TableCell>
                 <TableCell>{pkg.trackingNumber || "-"}</TableCell>
                 <TableCell>{formatDate(pkg.createdAt)}</TableCell>
+                <TableCell>{getStatusBadge(pkg.status)}</TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleViewDetails(pkg)}>
@@ -136,4 +138,3 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
 };
 
 export default PackagesList;
-
