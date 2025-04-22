@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
+import { createShipment } from "../services/shipmentService";
 
 const StepRecap = ({
   form,
@@ -14,19 +15,49 @@ const StepRecap = ({
   onSuccess: () => void;
   close: () => void;
 }) => {
-  const handleSubmit = () => {
-    // Generate a unique ID for this shipment
-    const shipmentId = uuidv4();
-    
-    // In a real app, this would save to a database
-    // For now, we'll just simulate success
-    console.log("Submitting shipment:", { id: shipmentId, ...form });
-    
-    // Call the success handler from parent
-    onSuccess();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      // Appeler le service pour enregistrer dans la collection "freight_shipments"
+      await createShipment({
+        reference: form.reference,
+        customer: form.customer,
+        origin: form.origin,
+        destination: form.destination,
+        totalWeight: form.totalWeight,
+        shipmentType: form.shipmentType,
+        status: form.status,
+        lines: form.lines,
+        trackingNumber: form.trackingNumber,
+        createdAt: form.createdAt ?? new Date().toISOString(),
+        scheduledDate: form.scheduledDate,
+        estimatedDeliveryDate: form.estimatedDeliveryDate,
+        carrier: form.carrier,
+        carrierName: form.carrierName,
+        notes: form.notes,
+        totalPrice: typeof form.pricing?.basePrice === "number"
+          ? (
+            (form.pricing.basePrice ?? 0) +
+            (form.totalWeight ?? 0) * 0.1 +
+            (form.pricing.distance ?? 0) * 0.1 +
+            (form.pricing.extraFees ?? 0)
+          )
+          : undefined,
+        routeId: form.routeId || undefined,
+      });
+      toast.success("Expédition créée avec succès !");
+      onSuccess();
+    } catch (error) {
+      toast.error("Erreur lors de l'enregistrement de l'expédition !");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Calculate totals
+  // Calculs des totaux comme avant
   const totalItems = form.lines ? form.lines.reduce((sum: number, line: any) => sum + Number(line.quantity), 0) : 0;
   const totalWeight = form.totalWeight || 0;
   const totalPrice = form.pricing ? (
@@ -52,7 +83,6 @@ const StepRecap = ({
             <p><span className="font-medium">Date de livraison estimée:</span> {form.estimatedDeliveryDate}</p>
           </div>
         </div>
-
         {/* Informations de suivi et prix */}
         <div className="space-y-4 border rounded-lg p-4 bg-gray-50">
           <h3 className="font-bold text-lg">Suivi & Prix</h3>
@@ -68,7 +98,6 @@ const StepRecap = ({
           </div>
         </div>
       </div>
-
       {/* Articles */}
       {form.lines && form.lines.length > 0 && (
         <div className="border rounded-lg p-4 bg-gray-50">
@@ -97,7 +126,6 @@ const StepRecap = ({
           </div>
         </div>
       )}
-
       {/* Notes */}
       {form.notes && (
         <div className="border rounded-lg p-4 bg-gray-50">
@@ -105,12 +133,13 @@ const StepRecap = ({
           <p className="text-sm whitespace-pre-line">{form.notes}</p>
         </div>
       )}
-
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={prev}>Précédent</Button>
-        <Button onClick={handleSubmit}>Valider l'expédition</Button>
-        <Button variant="ghost" onClick={close}>Annuler</Button>
+        <Button variant="outline" onClick={prev} disabled={isSubmitting}>Précédent</Button>
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? "Enregistrement..." : "Valider l'expédition"}
+        </Button>
+        <Button variant="ghost" onClick={close} disabled={isSubmitting}>Annuler</Button>
       </div>
     </div>
   );
