@@ -1,26 +1,14 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { useFreightClients } from "@/hooks/freight/useFreightClients";
-import { cn } from "@/lib/utils";
-import { useFreightData } from "@/hooks/modules/useFreightData";
+import { Button } from "@/components/ui/button";
+import { generateShipmentReference } from "../utils/shipmentUtils";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CustomerSelector } from "@/components/selectors/CustomerSelector";
+import { CarrierSelector } from "@/components/selectors/CarrierSelector";
 
 interface StepGeneralProps {
-  form: {
-    reference?: string;
-    customer?: string;
-    customerName?: string;
-    carrier?: string;
-    carrierName?: string;
-    shipmentType?: string;
-    scheduledDate?: string;
-    estimatedDeliveryDate?: string;
-  };
+  form: any;
   updateForm: (data: any) => void;
   prev: () => void;
   next: () => void;
@@ -28,220 +16,100 @@ interface StepGeneralProps {
 }
 
 const StepGeneral: React.FC<StepGeneralProps> = ({
-  form = {}, // Provide default empty object
+  form,
   updateForm,
   prev,
   next,
-  close,
+  close
 }) => {
-  // Destructure with default values to prevent undefined errors
-  const {
-    reference = '',
-    customer = '',
-    customerName = '',
-    carrier = '',
-    carrierName = '',
-    shipmentType = 'export',
-    scheduledDate = '',
-    estimatedDeliveryDate = ''
-  } = form;
-
-  // Load clients for select
-  const { clients, isLoading: clientsLoading } = useFreightClients();
-  
-  // Load carriers
-  const { carriers, loading: carriersLoading } = useFreightData();
-
-  // Local state for dates
-  const [scheduledDateOpen, setScheduledDateOpen] = useState(false);
-  const [estimatedDateOpen, setEstimatedDateOpen] = useState(false);
-
-  // Handle date selection
-  const handleScheduledDateSelect = (date: Date) => {
-    updateForm({ ...form, scheduledDate: date.toISOString() });
-    setScheduledDateOpen(false);
-  };
-
-  const handleEstimatedDateSelect = (date: Date) => {
-    updateForm({ ...form, estimatedDeliveryDate: date.toISOString() });
-    setEstimatedDateOpen(false);
-  };
-
-  // Handle customer selection
-  const handleCustomerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedClientId = e.target.value;
-    const selectedClient = clients.find((c) => c.id === selectedClientId);
-    
-    updateForm({
-      ...form,
-      customer: selectedClientId,
-      customerName: selectedClient ? selectedClient.name : ''
-    });
-  };
-
-  // Handle carrier selection
-  const handleCarrierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedCarrierId = e.target.value;
-    const selectedCarrier = carriers.find((c) => c.id === selectedCarrierId);
-    
-    updateForm({
-      ...form,
-      carrier: selectedCarrierId,
-      carrierName: selectedCarrier ? selectedCarrier.name : ''
-    });
-  };
-
-  const canContinue = !!reference && !!customer && !!carrier && 
-    !!shipmentType && !!scheduledDate && !!estimatedDeliveryDate;
+  // Auto-generate reference on component mount if not already set
+  useEffect(() => {
+    if (!form.reference) {
+      const newReference = generateShipmentReference();
+      updateForm({ reference: newReference });
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Reference */}
-        <div className="space-y-2">
-          <label htmlFor="reference" className="block text-sm font-medium">
-            Référence
-          </label>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Référence</label>
           <Input
-            id="reference"
-            value={reference}
-            onChange={(e) => updateForm({ ...form, reference: e.target.value })}
-            placeholder="Référence de l'expédition"
+            value={form.reference}
+            onChange={(e) => updateForm({ reference: e.target.value })}
+            placeholder="EXP-2023-1234"
           />
         </div>
-
-        {/* Client */}
-        <div className="space-y-2">
-          <label htmlFor="customer" className="block text-sm font-medium">
-            Client
-          </label>
-          <select
-            id="customer"
-            value={customer}
-            onChange={handleCustomerChange}
-            className="w-full rounded-md border border-input px-3 py-2"
+        <div>
+          <label className="block text-sm font-medium mb-1">Type d'expédition</label>
+          <Select
+            value={form.shipmentType}
+            onValueChange={(value) => updateForm({ shipmentType: value })}
           >
-            <option value="">Sélectionner un client</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Carrier */}
-        <div className="space-y-2">
-          <label htmlFor="carrier" className="block text-sm font-medium">
-            Transporteur
-          </label>
-          <select
-            id="carrier"
-            value={carrier}
-            onChange={handleCarrierChange}
-            className="w-full rounded-md border border-input px-3 py-2"
-          >
-            <option value="">Sélectionner un transporteur</option>
-            {carriers && carriers.map((carrier) => (
-              <option key={carrier.id} value={carrier.id}>
-                {carrier.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Shipment Type */}
-        <div className="space-y-2">
-          <label htmlFor="shipmentType" className="block text-sm font-medium">
-            Type d'expédition
-          </label>
-          <select
-            id="shipmentType"
-            value={shipmentType}
-            onChange={(e) => updateForm({ ...form, shipmentType: e.target.value })}
-            className="w-full rounded-md border border-input px-3 py-2"
-          >
-            <option value="export">Export</option>
-            <option value="import">Import</option>
-            <option value="local">Local</option>
-            <option value="international">International</option>
-          </select>
-        </div>
-
-        {/* Scheduled Date */}
-        <div className="space-y-2">
-          <label htmlFor="scheduledDate" className="block text-sm font-medium">
-            Date d'envoi
-          </label>
-          <Popover open={scheduledDateOpen} onOpenChange={setScheduledDateOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !scheduledDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {scheduledDate ? format(new Date(scheduledDate), "PPP") : "Sélectionner une date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={scheduledDate ? new Date(scheduledDate) : undefined}
-                onSelect={handleScheduledDateSelect}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Estimated Delivery Date */}
-        <div className="space-y-2">
-          <label htmlFor="estimatedDeliveryDate" className="block text-sm font-medium">
-            Date de livraison estimée
-          </label>
-          <Popover open={estimatedDateOpen} onOpenChange={setEstimatedDateOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !estimatedDeliveryDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {estimatedDeliveryDate
-                  ? format(new Date(estimatedDeliveryDate), "PPP")
-                  : "Sélectionner une date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={estimatedDeliveryDate ? new Date(estimatedDeliveryDate) : undefined}
-                onSelect={handleEstimatedDateSelect}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="export">Export</SelectItem>
+              <SelectItem value="import">Import</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-6">
-        <Button type="button" variant="outline" onClick={prev} disabled>
-          Précédent
-        </Button>
-        <Button
-          type="button"
-          onClick={next}
-          disabled={!canContinue}
-        >
-          Suivant
-        </Button>
-        <Button type="button" variant="ghost" onClick={close}>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Client</label>
+          <CustomerSelector
+            value={form.customer}
+            onChange={(value, name) => updateForm({ customer: value, customerName: name })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Transporteur</label>
+          <CarrierSelector
+            value={form.carrier}
+            onChange={(value, name) => updateForm({ carrier: value, carrierName: name })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Date d'envoi</label>
+          <Input
+            type="date"
+            value={form.scheduledDate}
+            onChange={(e) => updateForm({ scheduledDate: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Date de livraison estimée</label>
+          <Input
+            type="date"
+            value={form.estimatedDeliveryDate}
+            onChange={(e) => updateForm({ estimatedDeliveryDate: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Notes</label>
+        <Textarea
+          value={form.notes}
+          onChange={(e) => updateForm({ notes: e.target.value })}
+          placeholder="Informations supplémentaires sur l'expédition..."
+          rows={4}
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={close}>
           Annuler
+        </Button>
+        <Button onClick={next}>
+          Suivant
         </Button>
       </div>
     </div>
