@@ -22,6 +22,7 @@ import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Container, Shipment } from '@/types/freight';
 import { toast } from 'sonner';
+import { Invoice } from '../types/accounting-types';
 
 interface CreateInvoiceDialogProps {
   open: boolean;

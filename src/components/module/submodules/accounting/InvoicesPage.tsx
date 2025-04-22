@@ -38,7 +38,7 @@ export const InvoicesPage = () => {
         </Button>
       </div>
 
-      <InvoicesTable data={invoices} isLoading={isLoading} />
+      <InvoicesTable invoices={invoices} isLoading={isLoading} />
 
       <CreateInvoiceDialog 
         open={showCreateDialog}
