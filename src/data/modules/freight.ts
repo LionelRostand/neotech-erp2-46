@@ -10,7 +10,8 @@ import {
   Container as LucideContainerIcon,
   Route as LucideRouteIcon,
   Receipt,
-  Package as PackageIcon
+  Package as PackageIcon,
+  CarFront // ajout de l'icône Transports
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -30,6 +31,8 @@ export const freightModule: AppModule = {
     { id: "freight-documents", name: "Documents", href: "/modules/freight/documents", icon: createIcon(FileText) },
     { id: "freight-clients", name: "Clients", href: "/modules/freight/clients", icon: createIcon(Users) },
     { id: "freight-routes", name: "Routes", href: "/modules/freight/routes", icon: createIcon(LucideRouteIcon) },
+    // ----------- NOUVEAU SOUS-MENU --------------
+    { id: "freight-transports", name: "Transports", href: "/modules/freight/transports", icon: createIcon(CarFront) },
     { id: "freight-settings", name: "Settings", href: "/modules/freight/settings", icon: createIcon(Settings) }
   ]
 };

@@ -8,6 +8,7 @@ import FreightClientsPage from "@/components/module/submodules/freight/clients/F
 import FreightRoutesPage from "@/components/module/submodules/freight/FreightRoutesPage";
 import ContainerListPage from "@/components/module/submodules/freight/containers/ContainerListPage";
 import FreightInvoicesPage from "@/components/module/submodules/freight/FreightInvoicesPage";
+import FreightTransportsPage from "@/components/module/submodules/freight/FreightTransportsPage"; // NOUVEAU
 
 export const FreightRoutes = (
   <Route key="freight" path="/modules/freight" element={<ModuleLayout moduleId={2} />}>
@@ -17,6 +18,7 @@ export const FreightRoutes = (
     <Route path="create-shipment" element={<CreateShipmentPage />} />
     <Route path="routes" element={<FreightRoutesPage />} />
     <Route path="containers" element={<ContainerListPage />} />
+    <Route path="transports" element={<FreightTransportsPage />} /> {/* NOUVELLE ROUTE */}
     <Route path="tracking" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
     <Route path="tracking/:trackingCode" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
     <Route path="invoices" element={<FreightInvoicesPage />} />
