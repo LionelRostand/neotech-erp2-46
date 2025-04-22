@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, CreditCard } from "lucide-react";
@@ -10,11 +9,14 @@ import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { generateDocuments } from '../utils/documentGenerator';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const FreightInvoicesPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showPayDialog, setShowPayDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<FreightInvoice | null>(null);
+  const [generatedDocs, setGeneratedDocs] = useState<{ invoiceUrl?: string; deliveryUrl?: string }>({});
+  const [showDocsDialog, setShowDocsDialog] = useState(false);
   const { invoices, isLoading, refetchInvoices, updateInvoice } = useFreightInvoices();
 
   const handlePayInvoice = (invoice: FreightInvoice) => {
@@ -39,11 +41,14 @@ const FreightInvoicesPage = () => {
 
       // Generate and save documents
       console.log('Generating documents for invoice:', selectedInvoice.invoiceNumber);
-      toast.info('Génération des documents en cours...');
-      
       const { invoiceDocId, deliveryDocId } = await generateDocuments(selectedInvoice, paymentData);
       
-      console.log('Documents generated successfully with IDs:', { invoiceDocId, deliveryDocId });
+      // Get document URLs and show dialog
+      setGeneratedDocs({
+        invoiceUrl: `data:application/pdf;base64,${invoiceDocId}`,
+        deliveryUrl: `data:application/pdf;base64,${deliveryDocId}`
+      });
+      setShowDocsDialog(true);
       
       // Refresh the invoices list and show success message
       await refetchInvoices();
@@ -168,6 +173,33 @@ const FreightInvoicesPage = () => {
           onSubmit={handlePaymentSubmit}
         />
       )}
+
+      <Dialog open={showDocsDialog} onOpenChange={setShowDocsDialog}>
+        <DialogContent className="max-w-4xl">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-semibold mb-2">Facture</h3>
+              {generatedDocs.invoiceUrl && (
+                <iframe 
+                  src={generatedDocs.invoiceUrl}
+                  className="w-full h-[600px]"
+                  title="Facture PDF"
+                />
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Bon de livraison</h3>
+              {generatedDocs.deliveryUrl && (
+                <iframe 
+                  src={generatedDocs.deliveryUrl}
+                  className="w-full h-[600px]"
+                  title="Bon de livraison PDF"
+                />
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
