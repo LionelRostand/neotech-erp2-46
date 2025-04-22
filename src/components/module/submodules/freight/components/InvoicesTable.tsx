@@ -23,24 +23,35 @@ export const InvoicesTable = ({ invoices, onUpdate, onDelete }: InvoicesTablePro
   const columns = [
     {
       accessorKey: 'clientName',
-      header: 'Client'
+      header: 'CLIENT'
     },
     {
       accessorKey: 'amount',
-      header: 'Montant',
+      header: 'MONTANT',
       cell: ({ row }: any) => `${row.original.amount.toLocaleString('fr-FR')} €`
     },
     {
       accessorKey: 'invoiceNumber',
-      header: 'Référence'
+      header: 'RÉFÉRENCE'
     },
     {
       accessorKey: 'status',
-      header: 'Statut'
+      header: 'STATUT',
+      cell: ({ row }: any) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          row.original.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+          {row.original.status === 'paid' ? 'Payée' : row.original.status}
+        </span>
+      )
+    },
+    {
+      accessorKey: 'date',
+      header: 'DATE'
     },
     {
       accessorKey: 'actions',
-      header: 'Actions',
+      header: 'ACTIONS',
       cell: ({ row }: any) => (
         <div className="flex items-center gap-2">
           <Button
