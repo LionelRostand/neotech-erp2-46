@@ -7,11 +7,17 @@ import PackagesList from './packages/PackagesList';
 import PackageCreateDialog from './packages/PackageCreateDialog';
 import { mockPackages } from './mockPackages';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 
 const FreightPackages: React.FC = () => {
+  const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFilter, setCurrentFilter] = useState<string>('all');
+
+  const handleCreateShipment = () => {
+    navigate('/modules/freight/create-shipment');
+  };
 
   const filteredPackages = mockPackages.filter(pkg => {
     const matchesSearch = !searchQuery || 
@@ -44,7 +50,7 @@ const FreightPackages: React.FC = () => {
           />
         </div>
         
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={handleCreateShipment}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau colis
         </Button>
