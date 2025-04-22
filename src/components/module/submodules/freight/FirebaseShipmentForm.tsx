@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -5,6 +6,8 @@ import { ShipmentLine } from '@/types/freight';
 import { useNavigate } from 'react-router-dom';
 import { createShipment } from './services/shipmentService';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface ShipmentData {
   reference: string;
@@ -34,9 +37,18 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
   onSuccess 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    // Validation des champs obligatoires
+    if (!shipmentData.origin || !shipmentData.destination) {
+      setValidationError("Les champs origine et destination sont obligatoires");
+      toast.error("Les champs origine et destination sont obligatoires");
+      return;
+    }
+    
+    setValidationError(null);
     setIsSubmitting(true);
     
     try {
@@ -70,7 +82,8 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
       }
     } catch (err) {
       console.error('Error creating shipment:', err);
-      toast.error("Une erreur est survenue lors de la création de l'expédition.");
+      setValidationError(err instanceof Error ? err.message : "Une erreur est survenue lors de la création de l'expédition.");
+      toast.error(err instanceof Error ? err.message : "Une erreur est survenue lors de la création de l'expédition.");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,6 +91,13 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
 
   return (
     <div className="mt-4">
+      {validationError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{validationError}</AlertDescription>
+        </Alert>
+      )}
+      
       <Button 
         onClick={handleSubmit}
         disabled={isSubmitting}

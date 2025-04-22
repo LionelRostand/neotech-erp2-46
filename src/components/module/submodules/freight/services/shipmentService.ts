@@ -30,8 +30,12 @@ export interface CreateShipmentData {
 export const createShipment = async (shipmentData: CreateShipmentData): Promise<string> => {
   try {
     // Validation des champs obligatoires
-    if (!shipmentData.origin || !shipmentData.destination) {
-      throw new Error('Les champs origine et destination sont obligatoires');
+    if (!shipmentData.origin || !shipmentData.origin.trim() === '') {
+      throw new Error('Le champ origine est obligatoire');
+    }
+    
+    if (!shipmentData.destination || shipmentData.destination.trim() === '') {
+      throw new Error('Le champ destination est obligatoire');
     }
     
     // Reference to the shipments collection
