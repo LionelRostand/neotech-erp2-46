@@ -11,36 +11,45 @@ import {
 import { Button } from '@/components/ui/button';
 import { Eye, Printer, FileText } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
-import { Package } from '@/types/freight';
+import { Package, Shipment } from '@/types/freight';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PackageDetailsDialog from './PackageDetailsDialog';
 
 interface PackagesListProps {
-  packages: Package[];
+  packages: Shipment[];
+  isLoading?: boolean;
 }
 
-const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
+const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading }) => {
   const [selectedPackage, setSelectedPackage] = React.useState<Package | null>(null);
   
   const getStatusInfo = (status: string): { type: "success" | "warning" | "danger", text: string } => {
     switch (status) {
       case 'delivered':
         return { type: 'success', text: 'Livré' };
-      case 'shipped':
+      case 'in_transit':
         return { type: 'warning', text: 'Expédié' };
-      case 'ready':
+      case 'confirmed':
         return { type: 'warning', text: 'Prêt' };
       case 'draft':
         return { type: 'danger', text: 'Brouillon' };
-      case 'returned':
-        return { type: 'danger', text: 'Retourné' };
-      case 'lost':
-        return { type: 'danger', text: 'Perdu' };
+      case 'cancelled':
+        return { type: 'danger', text: 'Annulé' };
+      case 'delayed':
+        return { type: 'danger', text: 'Retardé' };
       default:
         return { type: 'danger', text: status };
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-6 text-gray-500">
+        Chargement des colis...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -65,15 +74,15 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
                 return (
                   <TableRow key={pkg.id}>
                     <TableCell className="font-medium">{pkg.reference}</TableCell>
-                    <TableCell>{pkg.description || '-'}</TableCell>
-                    <TableCell>{pkg.weight} {pkg.weightUnit}</TableCell>
+                    <TableCell>{pkg.lines[0]?.productName || '-'}</TableCell>
+                    <TableCell>{pkg.totalWeight} kg</TableCell>
                     <TableCell>{pkg.carrierName || '-'}</TableCell>
                     <TableCell>
                       {pkg.trackingNumber ? 
                         <span className="text-blue-600 hover:underline cursor-pointer">
                           {pkg.trackingNumber}
-                        </span> : 
-                        '-'
+                        </span> 
+                        : '-'
                       }
                     </TableCell>
                     <TableCell>
@@ -89,16 +98,16 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => setSelectedPackage(pkg)}
+                          onClick={() => setSelectedPackage(pkg as unknown as Package)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {pkg.labelGenerated && (
+                        {pkg.trackingNumber && (
                           <Button variant="ghost" size="sm">
                             <Printer className="h-4 w-4" />
                           </Button>
                         )}
-                        {pkg.documents.length > 0 && (
+                        {pkg.lines?.length > 0 && (
                           <Button variant="ghost" size="sm">
                             <FileText className="h-4 w-4" />
                           </Button>
@@ -131,4 +140,3 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
 };
 
 export default PackagesList;
-

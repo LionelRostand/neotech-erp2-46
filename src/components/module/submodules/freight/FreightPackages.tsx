@@ -5,33 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Plus, Search } from 'lucide-react';
 import PackagesList from './packages/PackagesList';
 import PackageCreateDialog from './packages/PackageCreateDialog';
-import { mockPackages } from './mockPackages';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
+import { useFreightShipments } from '@/hooks/freight/useFreightShipments';
 
 const FreightPackages: React.FC = () => {
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFilter, setCurrentFilter] = useState<string>('all');
+  const { shipments, isLoading } = useFreightShipments();
 
   const handleCreateShipment = () => {
     navigate('/modules/freight/create-shipment');
   };
 
-  const filteredPackages = mockPackages.filter(pkg => {
+  const filteredShipments = shipments.filter(pkg => {
     const matchesSearch = !searchQuery || 
       pkg.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pkg.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pkg.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pkg.carrierName?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = currentFilter === 'all' || 
       (currentFilter === 'draft' && pkg.status === 'draft') ||
-      (currentFilter === 'ready' && pkg.status === 'ready') ||
-      (currentFilter === 'in_transit' && pkg.status === 'shipped') ||
+      (currentFilter === 'ready' && pkg.status === 'confirmed') ||
+      (currentFilter === 'in_transit' && pkg.status === 'in_transit') ||
       (currentFilter === 'delivered' && pkg.status === 'delivered') ||
-      (currentFilter === 'others' && ['returned', 'lost'].includes(pkg.status));
+      (currentFilter === 'others' && ['cancelled', 'delayed'].includes(pkg.status));
       
     return matchesSearch && matchesStatus;
   });
@@ -67,27 +68,27 @@ const FreightPackages: React.FC = () => {
         </TabsList>
 
         <TabsContent value="all">
-          <PackagesList packages={filteredPackages} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} />
         </TabsContent>
 
         <TabsContent value="draft">
-          <PackagesList packages={filteredPackages} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} />
         </TabsContent>
 
         <TabsContent value="ready">
-          <PackagesList packages={filteredPackages} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} />
         </TabsContent>
 
         <TabsContent value="in_transit">
-          <PackagesList packages={filteredPackages} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} />
         </TabsContent>
 
         <TabsContent value="delivered">
-          <PackagesList packages={filteredPackages} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} />
         </TabsContent>
 
         <TabsContent value="others">
-          <PackagesList packages={filteredPackages} />
+          <PackagesList packages={filteredShipments} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
 
