@@ -22,7 +22,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     const trackingUrl = `${window.location.origin}/modules/freight/tracking/${paymentData.trackingCode}`;
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl);
 
-    // Générer la facture PDF
+    // Generate invoice PDF
     const invoicePdf = new jsPDF();
     
     // Add company header
@@ -71,7 +71,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     invoicePdf.setFontSize(10);
     invoicePdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
-    // Sauvegarde de la facture
+    // Save invoice PDF
     const invoicePdfBlob = new Blob([invoicePdf.output('blob')], { type: 'application/pdf' });
     const invoicePdfUrl = URL.createObjectURL(invoicePdfBlob);
     
@@ -87,7 +87,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     
     console.log('Invoice document saved with ID:', invoiceDocId);
 
-    // Générer le bon de livraison
+    // Generate delivery note PDF
     const deliveryPdf = new jsPDF();
     
     // Add company header
@@ -137,7 +137,7 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
     deliveryPdf.setFontSize(10);
     deliveryPdf.text("Scanner pour suivre", 170, 75, { align: "center" });
     
-    // Sauvegarde du bon de livraison
+    // Save delivery note PDF
     const deliveryPdfBlob = new Blob([deliveryPdf.output('blob')], { type: 'application/pdf' });
     const deliveryPdfUrl = URL.createObjectURL(deliveryPdfBlob);
     
