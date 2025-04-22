@@ -24,13 +24,13 @@ const FreightPermissionsSettings: React.FC = () => {
       admin: 'write',
       manager: 'write',
       user: 'read',
-      viewer: 'none'
+      viewer: 'none_access'
     },
     tarification: {
       admin: 'write',
       manager: 'write',
       user: 'read',
-      viewer: 'none'
+      viewer: 'none_access'
     },
     documents: {
       admin: 'write',
@@ -41,14 +41,14 @@ const FreightPermissionsSettings: React.FC = () => {
     clientPortal: {
       admin: 'write',
       manager: 'write',
-      user: 'none',
-      viewer: 'none'
+      user: 'none_access',
+      viewer: 'none_access'
     },
     parametres: {
       admin: 'write',
       manager: 'read',
-      user: 'none',
-      viewer: 'none'
+      user: 'none_access',
+      viewer: 'none_access'
     }
   });
   
@@ -139,7 +139,7 @@ const FreightPermissionsSettings: React.FC = () => {
                           <SelectContent>
                             <SelectItem value="write">Lecture/Écriture</SelectItem>
                             <SelectItem value="read">Lecture seule</SelectItem>
-                            <SelectItem value="none">Aucun accès</SelectItem>
+                            <SelectItem value="none_access">Aucun accès</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>

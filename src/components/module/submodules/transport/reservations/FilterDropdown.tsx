@@ -22,12 +22,12 @@ const FilterDropdown = () => {
         
         <div className="space-y-2">
           <Label htmlFor="status">Statut</Label>
-          <Select defaultValue="all">
+          <Select defaultValue="all_statuses">
             <SelectTrigger id="status">
               <SelectValue placeholder="Tous les statuts" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="all_statuses">Tous</SelectItem>
               <SelectItem value="confirmed">Confirmé</SelectItem>
               <SelectItem value="pending">En attente</SelectItem>
               <SelectItem value="completed">Terminé</SelectItem>
@@ -48,12 +48,12 @@ const FilterDropdown = () => {
         
         <div className="space-y-2">
           <Label htmlFor="payment">Paiement</Label>
-          <Select defaultValue="all">
+          <Select defaultValue="all_payment_statuses">
             <SelectTrigger id="payment">
               <SelectValue placeholder="Tous les paiements" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="all_payment_statuses">Tous</SelectItem>
               <SelectItem value="paid">Payé</SelectItem>
               <SelectItem value="pending">En attente</SelectItem>
               <SelectItem value="unpaid">Non payé</SelectItem>
