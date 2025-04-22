@@ -60,7 +60,7 @@ export const CreateInvoiceDialog = ({
           status: 'pending',
           issueDate: new Date().toISOString().split('T')[0],
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          paymentMethod: selectedPaymentMethod
+          paymentMethod: selectedPaymentMethod || 'card'
         });
       }
     }
@@ -71,7 +71,7 @@ export const CreateInvoiceDialog = ({
       toast.error('Veuillez sélectionner un conteneur');
       return;
     }
-    if (!invoiceData.paymentMethod) {
+    if (!selectedPaymentMethod) {
       toast.error('Veuillez sélectionner une méthode de paiement');
       return;
     }
@@ -98,7 +98,7 @@ export const CreateInvoiceDialog = ({
               </SelectTrigger>
               <SelectContent>
                 {containers?.map((container) => (
-                  <SelectItem key={container.number} value={container.number}>
+                  <SelectItem key={container.number} value={container.number || 'no-number'}>
                     {container.number} - {container.client}
                   </SelectItem>
                 ))}
