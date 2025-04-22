@@ -47,7 +47,6 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
     
     if (container) {
       setClientName(container.client || '');
-      // Si le conteneur a des coûts, utiliser le premier
       const containerCost = container.costs?.[0]?.amount || 0;
       setAmount(containerCost);
     } else if (shipment) {
