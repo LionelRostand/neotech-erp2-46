@@ -9,7 +9,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Printer, FileText, Truck, Trash2 } from 'lucide-react';
+import { Eye, Printer, FileText } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import { Package } from '@/types/freight';
 import { format } from 'date-fns';
@@ -42,10 +42,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
     }
   };
 
-  const openDetails = (pkg: Package) => {
-    setSelectedPackage(pkg);
-  };
-
   return (
     <>
       <div className="rounded-md border">
@@ -74,7 +70,9 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
                     <TableCell>{pkg.carrierName || '-'}</TableCell>
                     <TableCell>
                       {pkg.trackingNumber ? 
-                        <span className="text-blue-600 hover:underline cursor-pointer">{pkg.trackingNumber}</span> : 
+                        <span className="text-blue-600 hover:underline cursor-pointer">
+                          {pkg.trackingNumber}
+                        </span> : 
                         '-'
                       }
                     </TableCell>
@@ -91,7 +89,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => openDetails(pkg)}
+                          onClick={() => setSelectedPackage(pkg)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -133,3 +131,4 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages }) => {
 };
 
 export default PackagesList;
+
