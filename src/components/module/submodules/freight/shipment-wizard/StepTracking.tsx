@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRoutes } from "../hooks/useRoutes";
+import { useFreightRoutes } from "@/hooks/freight/useFreightRoutes";
+import { generateShipmentReference } from "../utils/shipmentUtils";
 
 interface StepTrackingProps {
   form: {
@@ -18,16 +19,28 @@ interface StepTrackingProps {
 }
 
 const StepTracking: React.FC<StepTrackingProps> = ({ form, updateForm, prev, next, close }) => {
-  const { routes, isLoading } = useRoutes();
+  const { routes, isLoading } = useFreightRoutes();
   const [selectedRoute, setSelectedRoute] = useState<{ id: string; name: string; origin: string; destination: string } | null>(null);
 
-  // Set selected route when form.routeId changes or routes are loaded
+  // Génère automatiquement le numéro de suivi s'il n'est pas déjà rempli
+  useEffect(() => {
+    if (!form.trackingNumber) {
+      updateForm({ trackingNumber: generateShipmentReference() });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Set selected route details when le champ routeId change ou lors du chargement des routes
   useEffect(() => {
     if (form.routeId && routes?.length) {
       const route = routes.find(r => r.id === form.routeId);
       if (route) {
         setSelectedRoute(route);
+      } else {
+        setSelectedRoute(null);
       }
+    } else {
+      setSelectedRoute(null);
     }
   }, [form.routeId, routes]);
 
@@ -40,6 +53,7 @@ const StepTracking: React.FC<StepTrackingProps> = ({ form, updateForm, prev, nex
             value={form.trackingNumber || ""}
             onChange={(e) => updateForm({ trackingNumber: e.target.value })}
             placeholder="TRACK-12345"
+            disabled
           />
         </div>
       </div>
