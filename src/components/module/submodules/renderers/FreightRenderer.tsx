@@ -12,6 +12,7 @@ import UnifiedTrackingPage from '../freight/tracking/UnifiedTrackingPage';
 import FreightRoutesPage from '../freight/FreightRoutesPage';
 import FreightAccountingPage from '../freight/FreightAccountingPage';
 import ContainerManagerPage from '../freight/containers/ContainerManagerPage';
+import FreightInvoicesPage from '../freight/invoices/FreightInvoicesPage';
 
 export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId }) => {
   switch (submoduleId) {
@@ -35,6 +36,8 @@ export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId
       return <FreightSettings />;
     case 'freight-containers':
       return <ContainerManagerPage />;
+    case 'freight-invoices':
+      return <FreightInvoicesPage />;
     default:
       return <div>Submodule {submoduleId} not found in FreightRenderer</div>;
   }
