@@ -1,83 +1,174 @@
 
 export const COLLECTIONS = {
-  GARAGE: 'garages',
-  CLIENTS: 'clients',
-  VEHICLES: 'vehicles',
-  APPOINTMENTS: 'appointments',
-  REPAIRS: 'repairs',
-  INVOICES: 'invoices',
-  SUPPLIERS: 'suppliers',
-  INVENTORY: 'inventory',
-  LOYALTY_PROGRAM: 'loyalty-program',
-  SETTINGS: 'settings',
-  EMPLOYEES: 'employees',
-  DOCUMENTS: 'documents',
-  DOCUMENT_COLLECTIONS: {
-    DOCUMENTS: 'documents',
-    VERSIONS: 'document-versions',
-    ARCHIVES: 'document-archives'
-  },
-  MESSAGES: {
-    INBOX: 'messages-inbox',
-    SENT: 'messages-sent',
-    DRAFTS: 'messages-drafts',
-    SCHEDULED: 'messages-scheduled',
-    ARCHIVE: 'messages-archive', 
-    CONTACTS: 'messages-contacts'
-  },
-  FREIGHT: {
-    SHIPMENTS: 'shipments',
-    VEHICLES: 'freight-vehicles',
-    DRIVERS: 'freight-drivers',
-    PACKAGES: 'freight-packages',
-    TRACKING_EVENTS: 'freight-tracking-events'
-  },
-  PROJECTS: 'projects',
+  // Accounting
   ACCOUNTING: {
-    INVOICES: 'accounting-invoices',
-    EXPENSES: 'accounting-expenses',
-    REPORTS: 'accounting-reports'
+    CLIENTS: 'accounting_clients',
+    EXPENSES: 'accounting_expenses',
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    PERMISSIONS: 'accounting_permissions',
+    REPORTS: 'accounting_reports',
+    SETTINGS: 'accounting_settings',
+    SUPPLIERS: 'accounting_suppliers',
+    TAXES: 'accounting_taxes',
+    TRANSACTIONS: 'accounting_transactions'
   },
-  HR: {
-    EMPLOYEES: 'hr-employees',
-    PAYSLIPS: 'hr-payslips',
-    CONTRACTS: 'hr-contracts',
-    DEPARTMENTS: 'hr-departments',
-    LEAVE_REQUESTS: 'hr-leave-requests',
-    ATTENDANCE: 'hr-attendance',
-    ABSENCE_REQUESTS: 'hr-absence-requests',
-    DOCUMENTS: 'hr-documents',
-    TIMESHEET: 'hr-timesheet',
-    EVALUATIONS: 'hr-evaluations',
-    TRAININGS: 'hr-trainings',
-    REPORTS: 'hr-reports',
-    ALERTS: 'hr-alerts'
+
+  // Analytics
+  ANALYTICS: {
+    STATS: 'analyticsStats',
+    MONTHLY: 'monthlyAnalytics',
+    PERFORMANCE: 'monthlyPerformance',
+    PERFORMANCE_STATS: 'performanceStats'
   },
+
+  // Companies
   COMPANIES: 'companies',
+
+  // CRM
   CRM: {
-    CONTACTS: 'crm-contacts',
-    LEADS: 'crm-leads',
-    OPPORTUNITIES: 'crm-opportunities',
-    SETTINGS: 'crm-settings'
+    ACTIVITIES: 'crm_activities',
+    CAMPAIGNS: 'crm_campaigns',
+    CLIENTS: 'crm_clients',
+    CONTACTS: 'crm_contacts',
+    DEALS: 'crm_deals',
+    LEADS: 'crm_leads',
+    OPPORTUNITIES: 'crm_opportunities',
+    PROSPECTS: 'crm_prospects',
+    REMINDERS: 'crm_reminders',
+    SETTINGS: 'crm_settings',
+    TASKS: 'crm_tasks'
   },
+
+  // Documents
+  DOCUMENTS: {
+    SETTINGS: 'document_settings',
+    TEMPLATES: 'document_templates',
+    DOCUMENTS: 'documents'
+  },
+
+  // Freight
+  FREIGHT: {
+    BILLING: 'freight_billing',
+    CARRIERS: 'freight_carriers',
+    CLIENTS: 'freight_clients',
+    CONTAINERS: 'freight_containers',
+    DOCUMENTS: 'freight_documents',
+    PACKAGE_TYPES: 'freight_package_types',
+    PACKAGES: 'freight_packages',
+    PRICING: 'freight_pricing',
+    QUOTES: 'freight_quotes',
+    ROUTES: 'freight_routes',
+    SETTINGS: 'freight_settings',
+    SHIPMENTS: 'freight_shipments',
+    TRACKING: 'freight_tracking',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    USERS: 'freight_users'
+  },
+
+  // Garage
+  GARAGE: {
+    APPOINTMENTS: 'garage_appointments',
+    CLIENTS: 'garage_clients',
+    INVOICES: 'garage_invoices',
+    PARTS: 'garage_parts',
+    SERVICES: 'garage_services',
+    VEHICLES: 'garage_vehicles'
+  },
+
+  // Health
   HEALTH: {
-    EMPLOYEES: 'health-employees',
-    RECORDS: 'health-records',
-    INSURANCE: 'health-insurance'
+    APPOINTMENTS: 'health_appointments',
+    BILLING: 'health_billing',
+    CONSULTATIONS: 'health_consultations',
+    DOCTORS: 'health_doctors',
+    INSURANCE: 'health_insurance',
+    INVENTORY: 'health_inventory',
+    LABORATORY: 'health_laboratory',
+    MEDICAL_RECORDS: 'health_medical_records',
+    PATIENTS: 'health_patients',
+    PERMISSIONS: 'health_permissions',
+    PRESCRIPTIONS: 'health_prescriptions',
+    SETTINGS: 'health_settings',
+    STAFF: 'health_staff'
   },
-  VEHICLE_RENTALS: {
-    VEHICLES: 'rentals-vehicles',
-    CUSTOMERS: 'rentals-customers',
-    RENTALS: 'rentals-rentals',
-    PRICING: 'rentals-pricing'
+
+  // HR
+  HR: {
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    ALERTS: 'hr_alerts',
+    ATTENDANCE: 'hr_attendance',
+    BADGES: 'hr_badges',
+    CONTRACTS: 'hr_contracts',
+    DEPARTMENTS: 'hr_departments',
+    DOCUMENTS: 'hr_documents',
+    EMPLOYEES: 'hr_employees',
+    EVALUATIONS: 'hr_evaluations',
+    LEAVE_REQUESTS: 'hr_leave_requests',
+    LEAVES: 'hr_leaves',
+    MANAGERS: 'hr_managers',
+    PAYSLIPS: 'hr_payslips',
+    PERMISSIONS: 'hr_permissions',
+    RECRUITMENT: 'hr_recruitment',
+    SALARIES: 'hr_salaries',
+    SETTINGS: 'hr_settings',
+    TIMESHEET: 'hr_timesheet',
+    TRAININGS: 'hr_trainings'
   },
+
+  // Library
+  LIBRARY: {
+    AUTHORS: 'library_authors',
+    BOOKS: 'library_books',
+    CATEGORIES: 'library_categories',
+    LOANS: 'library_loans',
+    MEMBERS: 'library_members',
+    PUBLISHERS: 'library_publishers',
+    RETURNS: 'library_returns',
+    SETTINGS: 'library_settings',
+    STATS: 'library_stats'
+  },
+
+  // Messages
+  MESSAGES: {
+    ARCHIVE: 'messages_archive',
+    CONTACTS: 'messages_contacts',
+    DRAFTS: 'messages_drafts',
+    INBOX: 'messages_inbox',
+    METRICS: 'messages_metrics',
+    SCHEDULED: 'messages_scheduled',
+    SENT: 'messages_sent',
+    SETTINGS: 'messages_settings',
+    TEMPLATES: 'messages_templates'
+  },
+
+  // Projects
+  PROJECTS: {
+    MAIN: 'projects',
+    NOTIFICATIONS: 'project_notifications'
+  },
+
+  // SMTP
+  SMTP: {
+    CONFIG: 'smtp_config'
+  },
+
+  // Tasks & Teams
+  TASKS: 'tasks',
+  TEAMS: 'teams',
+
+  // Transport
   TRANSPORT: {
-    VEHICLES: 'transport-vehicles',
-    DRIVERS: 'transport-drivers',
-    ROUTES: 'transport-routes',
-    MAINTENANCE: 'transport-maintenance'
+    CLIENTS: 'transport_clients',
+    DRIVERS: 'transport_drivers',
+    RESERVATIONS: 'transport_reservations',
+    ROUTES: 'transport_routes',
+    SETTINGS: 'transport_settings',
+    VEHICLES: 'transport_vehicles'
   },
-  GARAGE_SETTINGS: 'garage-settings',
-  USER_PERMISSIONS: 'user-permissions',
+
+  // Users & Permissions
+  USER_PERMISSIONS: 'user_permissions',
   USERS: 'users'
 };
+
