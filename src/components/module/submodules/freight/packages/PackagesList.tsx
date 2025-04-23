@@ -31,8 +31,13 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
     return "0 €";
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (status: string | undefined) => {
+    // Add a null check to handle undefined status values
+    if (!status) {
+      return <Badge variant="outline">Inconnu</Badge>;
+    }
+    
+    switch (status.toLowerCase()) {
       case 'draft':
         return <Badge variant="outline">Brouillon</Badge>;
       case 'confirmed':

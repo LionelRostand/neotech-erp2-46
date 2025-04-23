@@ -10,7 +10,7 @@ export interface Shipment {
   reference: string;
   customer: string;
   customerName?: string;
-  status: string;
+  status?: string; // Make status optional to avoid undefined errors
   totalWeight?: number;
   carrierName: string;
   trackingNumber?: string;
@@ -26,7 +26,7 @@ export interface Shipment {
   notes?: string;
   totalPrice?: number;
   pricing?: any;
-  // Permet d’inclure tous champs additionnels
+  // Permet d'inclure tous champs additionnels
   [key: string]: any;
 }
 
@@ -45,14 +45,18 @@ export const useFreightShipments = () => {
           const found = clients.find(c => c.id === data.customer);
           if (found) customerName = found.name;
         }
+        
+        // Ensure all expected fields are defined to prevent runtime errors
         return {
           id: doc.id,
           ...data,
           customerName,
+          status: data.status || 'draft', // Provide a default status when missing
+          carrierName: data.carrierName || data.carrier || "-", // Handle missing carrier info
         } as Shipment;
       });
     },
-    enabled: true
+    enabled: !clientsLoading // Only run this query when clients are loaded
   });
 
   return {

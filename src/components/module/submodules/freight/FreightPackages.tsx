@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Search } from 'lucide-react';
-import PackagesList from './PackagesList';
+import PackagesList from './packages/PackagesList';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useFreightShipments } from '@/hooks/freight/useFreightShipments';
@@ -19,18 +19,28 @@ const FreightPackages: React.FC = () => {
   const { shipments, isLoading } = useFreightShipments();
 
   const filteredShipments = shipments.filter(pkg => {
+    // Add defensive checks to handle potentially undefined values
+    const searchRef = pkg.reference?.toLowerCase() || '';
+    const searchCustomer = pkg.customerName?.toLowerCase() || '';
+    const searchTracking = pkg.trackingNumber?.toLowerCase() || '';
+    const searchCarrier = pkg.carrierName?.toLowerCase() || '';
+    const searchLower = searchQuery.toLowerCase();
+
     const matchesSearch = !searchQuery || 
-      pkg.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pkg.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pkg.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pkg.carrierName?.toLowerCase().includes(searchQuery.toLowerCase());
+      searchRef.includes(searchLower) ||
+      searchCustomer.includes(searchLower) ||
+      searchTracking.includes(searchLower) ||
+      searchCarrier.includes(searchLower);
+    
+    // Use a more robust check for status
+    const status = pkg.status?.toLowerCase() || 'unknown';
     
     const matchesStatus = currentFilter === 'all' || 
-      (currentFilter === 'draft' && pkg.status === 'draft') ||
-      (currentFilter === 'ready' && pkg.status === 'confirmed') ||
-      (currentFilter === 'in_transit' && pkg.status === 'in_transit') ||
-      (currentFilter === 'delivered' && pkg.status === 'delivered') ||
-      (currentFilter === 'others' && ['cancelled', 'delayed'].includes(pkg.status));
+      (currentFilter === 'draft' && status === 'draft') ||
+      (currentFilter === 'ready' && status === 'confirmed') ||
+      (currentFilter === 'in_transit' && status === 'in_transit') ||
+      (currentFilter === 'delivered' && status === 'delivered') ||
+      (currentFilter === 'others' && ['cancelled', 'delayed'].includes(status));
       
     return matchesSearch && matchesStatus;
   });
