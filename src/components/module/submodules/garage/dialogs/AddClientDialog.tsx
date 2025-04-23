@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -13,11 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import { Client } from '../types/garage-types';
+import { useGarageClients } from '@/hooks/garage/useGarageClients';
 
 interface AddClientDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onClientAdded: (client: Client) => void;
+  onClientAdded: () => void;
 }
 
 const AddClientDialog: React.FC<AddClientDialogProps> = ({
@@ -25,6 +25,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
   onClose,
   onClientAdded
 }) => {
+  const { addClient } = useGarageClients();
   const { toast } = useToast();
   const [formData, setFormData] = React.useState({
     firstName: '',
@@ -40,46 +41,15 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      toast({
-        title: "Champs requis",
-        description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive"
-      });
-      return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      await addClient(formData);
+      onClientAdded();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du client:', error);
     }
-
-    const newClient: Client = {
-      id: `CL${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      vehicles: [],
-      lastVisit: new Date().toISOString().split('T')[0],
-      totalSpent: 0,
-      notes: formData.notes,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-
-    onClientAdded(newClient);
-    toast({
-      title: "Client ajouté",
-      description: "Le nouveau client a été ajouté avec succès."
-    });
-
-    // Reset form and close dialog
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      address: '',
-      notes: ''
-    });
-    onClose();
   };
 
   return (

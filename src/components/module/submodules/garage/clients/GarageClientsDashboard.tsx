@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Plus, Users, UserX, Clock } from "lucide-react";
-import StatCard from '@/components/StatCard';
-import { useGarageData } from '@/hooks/garage/useGarageData';
+import { useGarageClients } from '@/hooks/garage/useGarageClients';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -13,26 +12,39 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import AddClientDialog from './AddClientDialog';
+import { AddClientDialog } from './AddClientDialog';
+import { useQuery } from '@tanstack/react-query';
+import StatCard from '@/components/StatCard';
 
 const GarageClientsDashboard = () => {
+  const { addClient, fetchClients } = useGarageClients();
   const [showAddDialog, setShowAddDialog] = React.useState(false);
-  const { clients, vehicles, isLoading } = useGarageData();
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
-  }
+  const { data: clients = [], isLoading, refetch } = useQuery({
+    queryKey: ['garage', 'clients'],
+    queryFn: fetchClients
+  });
 
   const stats = {
     total: clients.length,
     active: clients.filter(c => c.status === 'active').length,
     inactive: clients.filter(c => c.status === 'inactive').length,
     newThisMonth: clients.filter(c => {
-      const thisMonth = new Date();
-      const clientDate = c.lastVisit ? new Date(c.lastVisit) : null;
-      return clientDate && clientDate.getMonth() === thisMonth.getMonth();
+      const createdDate = new Date(c.createdAt);
+      const now = new Date();
+      return createdDate.getMonth() === now.getMonth() &&
+             createdDate.getFullYear() === now.getFullYear();
     }).length
   };
+
+  const handleClientAdded = async () => {
+    await refetch();
+    setShowAddDialog(false);
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">Chargement...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -49,29 +61,25 @@ const GarageClientsDashboard = () => {
           title="Total Clients"
           value={stats.total.toString()}
           description="Tous les clients"
-          icon={<Users className="h-4 w-4 text-purple-500" />}
-          className="bg-purple-50 hover:bg-purple-100"
+          trend="up"
         />
         <StatCard
           title="Clients Actifs"
           value={stats.active.toString()}
           description="En activité"
-          icon={<Users className="h-4 w-4 text-emerald-500" />}
-          className="bg-emerald-50 hover:bg-emerald-100"
+          trend="up"
         />
         <StatCard
           title="Clients Inactifs"
           value={stats.inactive.toString()}
           description="Sans activité"
-          icon={<UserX className="h-4 w-4 text-red-500" />}
-          className="bg-red-50 hover:bg-red-100"
+          trend="down"
         />
         <StatCard
           title="Nouveaux Clients"
           value={stats.newThisMonth.toString()}
           description="Ce mois-ci"
-          icon={<Clock className="h-4 w-4 text-blue-500" />}
-          className="bg-blue-50 hover:bg-blue-100"
+          trend="up"
         />
       </div>
 
@@ -94,8 +102,8 @@ const GarageClientsDashboard = () => {
                 <TableCell>{client.email}</TableCell>
                 <TableCell>{client.phone}</TableCell>
                 <TableCell>
-                  <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">
-                    {vehicles.filter(v => v.clientId === client.id).length}
+                  <Badge variant="secondary">
+                    {client.vehicles.length}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -103,11 +111,7 @@ const GarageClientsDashboard = () => {
                 </TableCell>
                 <TableCell>
                   <Badge 
-                    className={
-                      client.status === 'active' 
-                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }
+                    variant={client.status === 'active' ? 'default' : 'secondary'}
                   >
                     {client.status === 'active' ? 'Actif' : 'Inactif'}
                   </Badge>
@@ -118,13 +122,10 @@ const GarageClientsDashboard = () => {
         </Table>
       </div>
 
-      <AddClientDialog
-        open={showAddDialog}
-        onOpenChange={setShowAddDialog}
-        onSave={(newClient) => {
-          console.log('Save client:', newClient);
-          setShowAddDialog(false);
-        }}
+      <AddClientDialog 
+        isOpen={showAddDialog} 
+        onClose={() => setShowAddDialog(false)}
+        onClientAdded={handleClientAdded}
       />
     </div>
   );
