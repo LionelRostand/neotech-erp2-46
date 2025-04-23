@@ -34,6 +34,11 @@ const ContainerListPage: React.FC = () => {
     setEditingContainer(container);
   };
 
+  // Correction : à la fermeture du dialog, effacer l'objet en cours d'édition pour forcer le refresh auto après édition
+  const handleEditDialogClose = () => {
+    setEditingContainer(null);
+  };
+
   return (
     <div className="container space-y-6 py-6">
       <SubmoduleHeader 
@@ -59,7 +64,7 @@ const ContainerListPage: React.FC = () => {
       {editingContainer && (
         <ContainerEditDialog 
           open={!!editingContainer} 
-          onClose={() => setEditingContainer(null)} 
+          onClose={handleEditDialogClose} 
           container={editingContainer}
         />
       )}
@@ -68,3 +73,4 @@ const ContainerListPage: React.FC = () => {
 };
 
 export default ContainerListPage;
+
