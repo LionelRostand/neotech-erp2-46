@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FreightPackages from './FreightPackages';
+import FreightShipmentsDashboard from "./FreightShipmentsDashboard";
 
 const FreightShipmentsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,9 +19,10 @@ const FreightShipmentsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight">Gestion des Colis</h1>
           <p className="text-muted-foreground">Gérez tous vos colis et suivez leur statut</p>
         </div>
-        {/* Removed duplicate button */}
       </div>
-      
+
+      <FreightShipmentsDashboard />
+
       <FreightPackages />
     </div>
   );
