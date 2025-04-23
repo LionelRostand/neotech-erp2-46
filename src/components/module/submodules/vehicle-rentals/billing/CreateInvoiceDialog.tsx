@@ -35,7 +35,11 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
   open, 
   onOpenChange 
 }) => {
-  const form = useForm<CreateInvoiceFormData>();
+  const form = useForm<CreateInvoiceFormData>({
+    defaultValues: {
+      reservationId: 'no-selection', // Use a non-empty default value
+    }
+  });
   
   const { data: reservations = [] } = useQuery({
     queryKey: ['rentals', 'reservations'],
@@ -54,6 +58,12 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
 
   const onSubmit = async (data: CreateInvoiceFormData) => {
     try {
+      // Prevent empty reservationId
+      if (!data.reservationId || data.reservationId === 'no-selection') {
+        toast.error('Veuillez sélectionner une réservation');
+        return;
+      }
+
       const reservation = reservations.find(r => r.id === data.reservationId);
       if (!reservation) {
         toast.error('Réservation non trouvée');
@@ -82,7 +92,11 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
       
       toast.success('Facture créée avec succès');
       onOpenChange(false);
-      form.reset();
+      form.reset({
+        reservationId: 'no-selection', // Reset to non-empty default
+        amount: 0,
+        notes: ''
+      });
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast.error('Erreur lors de la création de la facture');
