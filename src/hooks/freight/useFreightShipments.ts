@@ -8,19 +8,26 @@ import { useFreightClients } from './useFreightClients';
 export interface Shipment {
   id: string;
   reference: string;
-  customerId: string;
+  customer: string;
   customerName?: string;
   status: string;
-  weight: number;
-  weightUnit: string;
+  totalWeight?: number;
   carrierName: string;
-  trackingNumber: string;
-  createdAt: any; // Can be a Firebase timestamp or string
-  labelGenerated: boolean;
-  documents: any[];
-  description: string;
+  trackingNumber?: string;
+  createdAt: any;
   origin?: string;
   destination?: string;
+  carrier?: string;
+  scheduledDate?: string;
+  estimatedDeliveryDate?: string;
+  actualDeliveryDate?: string;
+  routeId?: string;
+  lines?: any[];
+  notes?: string;
+  totalPrice?: number;
+  pricing?: any;
+  // Permet d’inclure tous champs additionnels
+  [key: string]: any;
 }
 
 export const useFreightShipments = () => {
@@ -29,41 +36,28 @@ export const useFreightShipments = () => {
   const { data: shipments = [], isLoading, error } = useQuery({
     queryKey: ['freight', 'shipments', clients],
     queryFn: async () => {
-      console.log('Fetching shipments with clients:', clients.length);
       const querySnapshot = await getDocs(collection(db, COLLECTIONS.FREIGHT.SHIPMENTS));
-      
       return querySnapshot.docs.map(doc => {
         const data = doc.data();
-        const customerId = data.customerId || '';
-        const customer = clients.find(c => c.id === customerId);
-        
-        console.log('Shipment:', doc.id, 'customerId:', customerId, 'customerName:', customer?.name || 'Not found');
-        
+        // Recherche nom client prioritairement dans le doc, sinon via clients list
+        let customerName = data.customerName || "";
+        if (!customerName && data.customer) {
+          const found = clients.find(c => c.id === data.customer);
+          if (found) customerName = found.name;
+        }
         return {
           id: doc.id,
-          reference: data.reference || '',
-          customerId: customerId,
-          customerName: customer?.name || '',
-          status: data.status || '',
-          weight: data.weight || 0,
-          weightUnit: data.weightUnit || 'kg',
-          carrierName: data.carrierName || '',
-          trackingNumber: data.trackingNumber || '',
-          createdAt: data.createdAt || '',
-          labelGenerated: data.labelGenerated || false,
-          documents: data.documents || [],
-          description: data.description || '',
-          origin: data.origin || '',
-          destination: data.destination || ''
+          ...data,
+          customerName,
         } as Shipment;
       });
     },
-    enabled: true // Always enabled, the query will wait for clients internally
+    enabled: true
   });
 
-  return { 
-    shipments, 
+  return {
+    shipments,
     isLoading: isLoading || clientsLoading,
-    error 
+    error
   };
 };

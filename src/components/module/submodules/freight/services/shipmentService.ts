@@ -1,10 +1,9 @@
 
-import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Shipment, ShipmentLine } from '@/types/freight';
 
-// Nouvelle définition de type pour pricing
 export interface ShipmentPricing {
   basePrice: number;
   geoZone: string;
@@ -13,7 +12,6 @@ export interface ShipmentPricing {
   extraFees: number;
 }
 
-// Type definition for shipment creation
 export interface CreateShipmentData {
   reference: string;
   customer: string;
@@ -24,7 +22,7 @@ export interface CreateShipmentData {
   status: 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed';
   lines: ShipmentLine[];
   trackingNumber?: string;
-  createdAt?: string; // autorisé en entrée
+  createdAt?: string;
   scheduledDate: string;
   estimatedDeliveryDate: string;
   actualDeliveryDate?: string;
@@ -32,10 +30,11 @@ export interface CreateShipmentData {
   carrierName: string;
   notes?: string;
   totalPrice?: number;
-  pricing?: ShipmentPricing; // Ajouté pour stocker les réglages de tarification
+  pricing?: ShipmentPricing;
   routeId?: string;
   customerName?: string;
-  // Ajouter d'autres champs éventuels ici
+  // Permet de stocker toute donnée additionnelle reçue du wizard
+  [key: string]: any;
 }
 
 /**
@@ -43,25 +42,22 @@ export interface CreateShipmentData {
  */
 export const createShipment = async (shipmentData: CreateShipmentData): Promise<string> => {
   try {
-    // Validation des champs obligatoires
+    // Validation champs requis
     if (!shipmentData.origin || !shipmentData.origin.trim()) {
       throw new Error('Le champ origine est obligatoire');
     }
     if (!shipmentData.destination || !shipmentData.destination.trim()) {
       throw new Error('Le champ destination est obligatoire');
     }
-    // Reference to the shipments collection
-    const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
 
-    // Conversion des dates ISO en Timestamp Firestore si nécessaire
+    // Stocker TOUS les champs reçus, pour ne rien perdre du wizard
     const firebaseData = {
       ...shipmentData,
       createdAt: shipmentData.createdAt || serverTimestamp(),
       updatedAt: serverTimestamp()
     };
+    const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
     console.log('Envoi des données vers Firebase:', firebaseData);
-
-    // Add document with server timestamp
     const docRef = await addDoc(shipmentsRef, firebaseData);
 
     console.log('Shipment created with ID:', docRef.id);
@@ -72,9 +68,6 @@ export const createShipment = async (shipmentData: CreateShipmentData): Promise<
   }
 };
 
-/**
- * Update an existing shipment
- */
 export const updateShipment = async (shipmentId: string, shipmentData: Partial<Shipment>): Promise<void> => {
   try {
     const shipmentRef = doc(db, COLLECTIONS.FREIGHT.SHIPMENTS, shipmentId);
@@ -89,9 +82,6 @@ export const updateShipment = async (shipmentId: string, shipmentData: Partial<S
   }
 };
 
-/**
- * Delete a shipment
- */
 export const deleteShipment = async (shipmentId: string): Promise<void> => {
   try {
     const shipmentRef = doc(db, COLLECTIONS.FREIGHT.SHIPMENTS, shipmentId);
@@ -102,4 +92,3 @@ export const deleteShipment = async (shipmentId: string): Promise<void> => {
     throw error;
   }
 };
-

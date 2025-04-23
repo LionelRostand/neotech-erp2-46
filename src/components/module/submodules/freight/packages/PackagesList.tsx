@@ -21,12 +21,12 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
 
   // Calcule le coût total d'un colis (somme des coûts de chaque ligne)
   const getTotalCost = (pkg: Shipment) => {
-    if (Array.isArray((pkg as any).lines) && (pkg as any).lines.length > 0) {
-      const sum = (pkg as any).lines.reduce((total: number, line: any) => total + ((line.cost ?? 0) * (line.quantity ?? 1)), 0);
+    if (Array.isArray(pkg.lines) && pkg.lines.length > 0) {
+      const sum = pkg.lines.reduce((total: number, line: any) => total + ((line.cost ?? 0) * (line.quantity ?? 1)), 0);
       return `${sum.toFixed(2)} €`;
     }
-    if (typeof (pkg as any).cost === "number") {
-      return `${((pkg as any).cost).toFixed(2)} €`;
+    if (typeof pkg.totalPrice === "number") {
+      return `${(pkg.totalPrice).toFixed(2)} €`;
     }
     return "0 €";
   };
@@ -89,7 +89,7 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
             <TableHead>COÛT</TableHead>
             <TableHead>TRANSPORTEUR</TableHead>
             <TableHead>N° SUIVI</TableHead>
-            <TableHead>DATE</TableHead>
+            <TableHead>CRÉÉ LE</TableHead>
             <TableHead>STATUT</TableHead>
             <TableHead>ACTIONS</TableHead>
           </TableRow>
@@ -127,7 +127,6 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
           )}
         </TableBody>
       </Table>
-
       <PackageDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
