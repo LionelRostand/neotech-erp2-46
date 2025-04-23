@@ -29,39 +29,32 @@ const PackagesTrackingSection: React.FC = () => {
         isLoading={isLoading || loading}
         lastQuery={searchQuery} 
       />
-
       <div className="bg-slate-50 border border-slate-200 rounded-lg min-h-[400px] flex items-center justify-center relative">
-        {/* État initial ou chargement */}
-        {(!searchDone || displayLoading) && (
-          <div className="absolute inset-0 flex items-center justify-center flex-col">
-            {displayLoading ? (
-              <>
-                <Loader2 className="h-8 w-8 text-blue-500 mb-2 animate-spin" />
-                <span className="text-gray-700 text-sm">
-                  Chargement en cours...
-                </span>
-              </>
-            ) : (
-              <>
-                <MapPin className="h-8 w-8 text-gray-400 mb-2" />
-                <span className="text-gray-500 text-sm">
-                  Saisissez une référence pour démarrer le suivi sur la carte.
-                </span>
-              </>
-            )}
+        {/* Afficher TOUJOURS la carte (même avec une liste vide) */}
+        <div className="w-full h-[400px]">
+          <UnifiedTrackingMap items={searchDone && foundItems.length > 0 ? foundItems : []} />
+        </div>
+        {/* Superposer l’état de chargement */}
+        {(displayLoading) && (
+          <div className="absolute inset-0 flex items-center justify-center flex-col bg-white/80 z-20 rounded-lg">
+            <Loader2 className="h-8 w-8 text-blue-500 mb-2 animate-spin" />
+            <span className="text-gray-700 text-sm">
+              Chargement en cours...
+            </span>
           </div>
         )}
-
-        {/* Résultats trouvés */}
-        {searchDone && !displayLoading && foundItems.length > 0 && (
-          <div className="w-full h-[400px]">
-            <UnifiedTrackingMap items={foundItems} />
+        {/* État initial d’invitation à rechercher */}
+        {!searchDone && !displayLoading && (
+          <div className="absolute inset-0 flex items-center justify-center flex-col z-10">
+            <MapPin className="h-8 w-8 text-gray-400 mb-2" />
+            <span className="text-gray-500 text-sm">
+              Saisissez une référence pour démarrer le suivi sur la carte.
+            </span>
           </div>
         )}
-
         {/* Aucun résultat */}
         {searchDone && !displayLoading && foundItems.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
             <MapPin className="h-8 w-8 text-red-400 mb-2" />
             <span className="text-red-700 text-sm font-medium">
               Aucun colis ou conteneur trouvé avec cette référence.
