@@ -1,34 +1,49 @@
 
 import React from "react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface ContainerStatusSelectProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-const STATUSES = [
-  { value: "vide", label: "Vide" },
-  { value: "chargement", label: "En chargement" },
-  { value: "plein", label: "Plein" },
-  { value: "en transit", label: "En transit" },
-  { value: "livré", label: "Livré" },
-];
+const ContainerStatusSelect: React.FC<ContainerStatusSelectProps> = ({ value, onChange }) => {
+  // Liste standardisée des statuts
+  const statuses = [
+    { value: "En chargement", label: "En chargement" },
+    { value: "Prêt", label: "Prêt" },
+    { value: "En transit", label: "En transit" },
+    { value: "En douane", label: "En douane" },
+    { value: "Livré", label: "Livré" }
+  ];
 
-const ContainerStatusSelect: React.FC<ContainerStatusSelectProps> = ({
-  value,
-  onChange,
-}) => (
-  <select
-    className="border rounded px-2 py-2 w-full"
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-  >
-    {STATUSES.map((status) => (
-      <option key={status.value} value={status.value}>
-        {status.label}
-      </option>
-    ))}
-  </select>
-);
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="status">Statut</Label>
+      <Select 
+        value={value} 
+        onValueChange={onChange}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Sélectionner un statut" />
+        </SelectTrigger>
+        <SelectContent>
+          {statuses.map((status) => (
+            <SelectItem key={status.value} value={status.value}>
+              {status.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 export default ContainerStatusSelect;

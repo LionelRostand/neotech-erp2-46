@@ -7,6 +7,23 @@ import { Container } from "@/types/freight";
 import { useContainersData } from "@/hooks/modules/useContainersData";
 import ContainerDeleteDialog from "./ContainerDeleteDialog";
 import ContainerViewDialog from "./ContainerViewDialog";
+import { Badge } from "@/components/ui/badge";
+
+// Correspondance entre les statuts et leurs couleurs
+const STATUS_COLORS: Record<string, string> = {
+  delivered: "bg-green-500 hover:bg-green-600",
+  in_transit: "bg-blue-500 hover:bg-blue-600",
+  loading: "bg-yellow-500 hover:bg-yellow-600",
+  ready: "bg-gray-500 hover:bg-gray-600",
+  customs: "bg-indigo-500 hover:bg-indigo-600",
+  // Statuts en français
+  "Livré": "bg-green-500 hover:bg-green-600",
+  "En transit": "bg-blue-500 hover:bg-blue-600",
+  "En chargement": "bg-yellow-500 hover:bg-yellow-600",
+  "Prêt": "bg-gray-500 hover:bg-gray-600",
+  "En douane": "bg-indigo-500 hover:bg-indigo-600",
+  "chargement": "bg-yellow-500 hover:bg-yellow-600"
+};
 
 interface Props {
   onEditContainer: (container: Container) => void;
@@ -20,6 +37,22 @@ const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
 
   const calculateTotalCost = (costs: any[] = []) => {
     return costs.reduce((total, cost) => total + Number(cost.amount), 0);
+  };
+
+  // Formatage du statut pour l'affichage
+  const formatStatus = (status: string) => {
+    if (!status) return "Non défini";
+    
+    // Mapper les statuts anglais vers le français si nécessaire
+    const statusMap: Record<string, string> = {
+      delivered: "Livré",
+      in_transit: "En transit",
+      loading: "En chargement",
+      ready: "Prêt",
+      customs: "En douane"
+    };
+    
+    return statusMap[status] || status;
   };
 
   if (isLoading) {
@@ -50,7 +83,11 @@ const ContainersListWithCreate: React.FC<Props> = ({ onEditContainer }) => {
               <TableCell>{container.number}</TableCell>
               <TableCell>{container.type}</TableCell>
               <TableCell>{container.client}</TableCell>
-              <TableCell>{container.status}</TableCell>
+              <TableCell>
+                <Badge className={STATUS_COLORS[container.status] || "bg-gray-500"}>
+                  {formatStatus(container.status)}
+                </Badge>
+              </TableCell>
               <TableCell>{container.destination}</TableCell>
               <TableCell>
                 {container.costs && container.costs.length > 0 
