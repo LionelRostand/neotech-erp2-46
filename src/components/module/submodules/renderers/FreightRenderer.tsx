@@ -42,4 +42,10 @@ export const FreightRenderer: React.FC<{ submoduleId: string }> = ({ submoduleId
       return <div>Submodule {submoduleId} not found in FreightRenderer</div>;
   }
 };
+
 export default FreightRenderer;
+
+// For backward compatibility, add this function that returns the component output
+export const renderFreightSubmodule = (submoduleId: string, submodule: any) => {
+  return <FreightRenderer submoduleId={submoduleId} />;
+};
