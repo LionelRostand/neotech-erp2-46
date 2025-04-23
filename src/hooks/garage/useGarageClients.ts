@@ -3,6 +3,7 @@ import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { GarageClient } from '@/components/module/submodules/garage/types/garage-types';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 export const useGarageClients = () => {
   const { add, getAll, loading, error } = useFirestore(COLLECTIONS.GARAGE.CLIENTS);
@@ -27,19 +28,24 @@ export const useGarageClients = () => {
     }
   };
 
-  const fetchClients = async () => {
-    try {
-      return await getAll() as GarageClient[];
-    } catch (err) {
-      console.error('Erreur lors de la récupération des clients:', err);
-      toast.error('Erreur lors de la récupération des clients');
-      return [];
+  const { data: clients = [], refetch } = useQuery({
+    queryKey: ['garage', 'clients'],
+    queryFn: async () => {
+      try {
+        const result = await getAll() as GarageClient[];
+        return result;
+      } catch (err) {
+        console.error('Erreur lors de la récupération des clients:', err);
+        toast.error('Erreur lors de la récupération des clients');
+        return [];
+      }
     }
-  };
+  });
 
   return {
+    clients,
     addClient,
-    fetchClients,
+    refetchClients: refetch,
     loading,
     error
   };

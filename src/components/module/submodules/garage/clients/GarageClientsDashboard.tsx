@@ -2,7 +2,7 @@
 import React from 'react';
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -12,18 +12,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AddClientDialog } from './AddClientDialog';
-import { useQuery } from '@tanstack/react-query';
+import AddClientDialog from './AddClientDialog';
 import StatCard from '@/components/StatCard';
 
 const GarageClientsDashboard = () => {
-  const { addClient, fetchClients } = useGarageClients();
+  const { clients, loading, refetchClients } = useGarageClients();
   const [showAddDialog, setShowAddDialog] = React.useState(false);
-
-  const { data: clients = [], isLoading, refetch } = useQuery({
-    queryKey: ['garage', 'clients'],
-    queryFn: fetchClients
-  });
 
   const stats = {
     total: clients.length,
@@ -38,11 +32,11 @@ const GarageClientsDashboard = () => {
   };
 
   const handleClientAdded = async () => {
-    await refetch();
+    await refetchClients();
     setShowAddDialog(false);
   };
 
-  if (isLoading) {
+  if (loading) {
     return <div className="flex items-center justify-center h-64">Chargement...</div>;
   }
 
@@ -51,7 +45,7 @@ const GarageClientsDashboard = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Clients</h1>
         <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <UserPlus className="h-4 w-4 mr-2" />
           Nouveau client
         </Button>
       </div>
@@ -124,7 +118,7 @@ const GarageClientsDashboard = () => {
 
       <AddClientDialog 
         isOpen={showAddDialog} 
-        onClose={() => setShowAddDialog(false)}
+        onOpenChange={setShowAddDialog}
         onClientAdded={handleClientAdded}
       />
     </div>
