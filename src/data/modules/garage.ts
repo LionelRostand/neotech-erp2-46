@@ -1,5 +1,4 @@
-
-import { Car, LayoutDashboard, Wrench, Receipt, Truck, Package, BadgePercent, Settings } from 'lucide-react';
+import { Car, LayoutDashboard, Users, Wrench, Receipt, Truck, Package, BadgePercent, Settings } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const garageModule: AppModule = {
@@ -11,6 +10,7 @@ export const garageModule: AppModule = {
   category: 'services',
   submodules: [
     { id: "garage-dashboard", name: "Tableau de bord", href: "/modules/garage/dashboard", icon: createIcon(LayoutDashboard) },
+    { id: "garage-clients", name: "Clients", href: "/modules/garage/clients", icon: createIcon(Users) },
     { id: "garage-vehicles", name: "Véhicules", href: "/modules/garage/vehicles", icon: createIcon(Car) },
     { id: "garage-appointments", name: "Rendez-vous", href: "/modules/garage/appointments", icon: createIcon(Wrench) },
     { id: "garage-repairs", name: "Réparations", href: "/modules/garage/repairs", icon: createIcon(Wrench) },

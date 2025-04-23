@@ -1,125 +1,93 @@
 
 import React from 'react';
+import { Button } from "@/components/ui/button";
+import { Plus, Users } from "lucide-react";
+import { DataTable } from "@/components/ui/data-table";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { Button } from '@/components/ui/button';
-import { Plus, UserPlus } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import AddClientDialog from './AddClientDialog';
+import { Card } from '@/components/ui/card';
 import StatCard from '@/components/StatCard';
+import AddClientDialog from '../dialogs/AddClientDialog';
 
 const GarageClientsDashboard = () => {
-  const { clients, loading, refetchClients } = useGarageClients();
   const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const { clients, isLoading } = useGarageClients();
 
-  const stats = {
-    total: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    inactive: clients.filter(c => c.status === 'inactive').length,
-    newThisMonth: clients.filter(c => {
-      const createdDate = new Date(c.createdAt);
-      const now = new Date();
-      return createdDate.getMonth() === now.getMonth() &&
-             createdDate.getFullYear() === now.getFullYear();
-    }).length
-  };
-
-  const handleClientAdded = async () => {
-    await refetchClients();
-    setShowAddDialog(false);
-  };
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-64">Chargement...</div>;
-  }
+  const columns = [
+    {
+      header: "Nom",
+      accessorKey: "lastName",
+      cell: ({ row }) => (
+        <div>
+          {row.original.firstName} {row.original.lastName}
+        </div>
+      ),
+    },
+    {
+      header: "Email",
+      accessorKey: "email",
+    },
+    {
+      header: "Téléphone",
+      accessorKey: "phone",
+    },
+    {
+      header: "Véhicules",
+      accessorKey: "vehicles",
+      cell: ({ row }) => (
+        <div>{row.original.vehicles?.length || 0}</div>
+      ),
+    },
+  ];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Clients</h1>
         <Button onClick={() => setShowAddDialog(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" />
           Nouveau client
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           title="Total Clients"
-          value={stats.total.toString()}
-          description="Tous les clients"
+          value={clients.length}
+          description="Nombre total de clients"
+          icon={<Users className="h-4 w-4" />}
           trend="up"
         />
         <StatCard
           title="Clients Actifs"
-          value={stats.active.toString()}
-          description="En activité"
+          value={clients.filter(c => c.status === 'active').length}
+          description="Clients avec véhicules actifs"
+          icon={<Users className="h-4 w-4" />}
           trend="up"
-        />
-        <StatCard
-          title="Clients Inactifs"
-          value={stats.inactive.toString()}
-          description="Sans activité"
-          trend="down"
         />
         <StatCard
           title="Nouveaux Clients"
-          value={stats.newThisMonth.toString()}
+          value={clients.filter(c => {
+            const date = new Date(c.createdAt);
+            const now = new Date();
+            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+          }).length}
           description="Ce mois-ci"
+          icon={<Users className="h-4 w-4" />}
           trend="up"
         />
       </div>
 
-      <div className="bg-background rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead>Véhicules</TableHead>
-              <TableHead>Dernière visite</TableHead>
-              <TableHead>Statut</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clients.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell>{client.firstName} {client.lastName}</TableCell>
-                <TableCell>{client.email}</TableCell>
-                <TableCell>{client.phone}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    {client.vehicles.length}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {client.lastVisit ? new Date(client.lastVisit).toLocaleDateString() : 'Jamais'}
-                </TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={client.status === 'active' ? 'default' : 'secondary'}
-                  >
-                    {client.status === 'active' ? 'Actif' : 'Inactif'}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <Card>
+        <DataTable
+          columns={columns}
+          data={clients}
+          isLoading={isLoading}
+        />
+      </Card>
 
-      <AddClientDialog 
-        isOpen={showAddDialog} 
+      <AddClientDialog
+        open={showAddDialog}
         onOpenChange={setShowAddDialog}
-        onClientAdded={handleClientAdded}
       />
     </div>
   );

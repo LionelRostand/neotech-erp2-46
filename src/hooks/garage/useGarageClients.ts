@@ -6,13 +6,14 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
 export const useGarageClients = () => {
-  const { add, getAll, loading, error } = useFirestore(COLLECTIONS.GARAGE.CLIENTS);
+  const { add, getAll } = useFirestore(COLLECTIONS.GARAGE.CLIENTS);
 
-  const addClient = async (clientData: Omit<GarageClient, 'id' | 'createdAt'>) => {
+  const addClient = async (clientData: Omit<GarageClient, 'id' | 'createdAt' | 'updatedAt' | 'vehicles' | 'totalSpent'>) => {
     try {
       const newClient = {
         ...clientData,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         vehicles: [],
         totalSpent: 0,
         status: 'active' as const
@@ -28,7 +29,7 @@ export const useGarageClients = () => {
     }
   };
 
-  const { data: clients = [], refetch } = useQuery({
+  const { data: clients = [], isLoading, error, refetch } = useQuery({
     queryKey: ['garage', 'clients'],
     queryFn: async () => {
       try {
@@ -46,7 +47,7 @@ export const useGarageClients = () => {
     clients,
     addClient,
     refetchClients: refetch,
-    loading,
+    isLoading,
     error
   };
 };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -8,139 +9,102 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useToast } from '@/hooks/use-toast';
-import { Client } from '../types/garage-types';
+import { Textarea } from "@/components/ui/textarea";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
+import { useForm } from 'react-hook-form';
 
 interface AddClientDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onClientAdded: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const AddClientDialog: React.FC<AddClientDialogProps> = ({
-  isOpen,
-  onClose,
-  onClientAdded
-}) => {
+const AddClientDialog = ({ open, onOpenChange }: AddClientDialogProps) => {
   const { addClient } = useGarageClients();
-  const { toast } = useToast();
-  const [formData, setFormData] = React.useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    notes: ''
-  });
+  const { register, handleSubmit, reset } = useForm();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const onSubmit = async (data: any) => {
     try {
-      await addClient(formData);
-      onClientAdded();
+      await addClient(data);
+      reset();
+      onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du client:', error);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau client</DialogTitle>
+          <DialogTitle>Nouveau Client</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid grid-cols-2 gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">Prénom *</Label>
-            <Input
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              placeholder="Prénom"
-              required
-            />
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName">Prénom</Label>
+              <Input
+                id="firstName"
+                {...register('firstName')}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Nom</Label>
+              <Input
+                id="lastName"
+                {...register('lastName')}
+                required
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Nom *</Label>
-            <Input
-              id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              placeholder="Nom"
-              required
-            />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register('email')}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input
+                id="phone"
+                {...register('phone')}
+                required
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="email@exemple.com"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone *</Label>
-            <Input
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              placeholder="06 12 34 56 78"
-              required
-            />
-          </div>
-          
-          <div className="col-span-2 space-y-2">
+
+          <div>
             <Label htmlFor="address">Adresse</Label>
             <Input
               id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              placeholder="Adresse complète"
+              {...register('address')}
             />
           </div>
-          
-          <div className="col-span-2 space-y-2">
+
+          <div>
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              placeholder="Informations complémentaires sur le client"
-              rows={3}
+              {...register('notes')}
             />
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit}>
-            Ajouter
-          </Button>
-        </DialogFooter>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">
+              Ajouter le client
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
