@@ -46,7 +46,6 @@ export function InvoicePaymentDialog({
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    // Ensure we never set an empty string as value
     const safeValue = value || 'card';
     setFormData((prev) => ({
       ...prev,
@@ -58,15 +57,13 @@ export function InvoicePaymentDialog({
     e.preventDefault();
     
     try {
-      // Update the invoice with payment information
       const paymentData = {
-        paymentMethod: formData.paymentMethod || 'card', // Provide default if empty
+        paymentMethod: formData.paymentMethod || 'card',
         paymentReference: formData.paymentReference,
         paidAt: new Date().toISOString(),
         status: 'paid',
       };
 
-      // Generate PDF documents (invoice and delivery note)
       await generateDocuments(invoice, paymentData);
       
       if (onSuccess && invoice.id) {
@@ -91,7 +88,7 @@ export function InvoicePaymentDialog({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Invoice</Label>
+                <Label>Facture</Label>
                 <div className="p-2 border rounded bg-gray-50">
                   {invoice.invoiceNumber || 'N/A'}
                 </div>
@@ -112,7 +109,7 @@ export function InvoicePaymentDialog({
             <div>
               <Label htmlFor="paymentMethod">Méthode de paiement</Label>
               <Select
-                value={formData.paymentMethod || 'card'} // Ensure we never have an empty value
+                value={formData.paymentMethod || 'card'}
                 onValueChange={(value) => handleSelectChange('paymentMethod', value)}
               >
                 <SelectTrigger className="w-full">

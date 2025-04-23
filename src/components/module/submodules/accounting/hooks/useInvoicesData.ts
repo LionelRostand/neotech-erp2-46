@@ -5,13 +5,14 @@ import { useContainersData } from '@/hooks/modules/useContainersData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Invoice } from '../types/accounting-types';
 import { orderBy, where, QueryConstraint } from 'firebase/firestore';
+// On va importer également les Shipments, utile pour affichage/référence colis
 import { Container, Shipment } from '@/types/freight';
 
 export const useInvoicesData = (filterStatus?: string) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Récupérer les conteneurs et expéditions
+  // Récupérer les conteneurs et expéditions (colis)
   const { containers, isLoading: containersLoading } = useContainersData();
   const { data: shipments, isLoading: shipmentsLoading } = useCollectionData(
     COLLECTIONS.FREIGHT.SHIPMENTS,
@@ -33,17 +34,19 @@ export const useInvoicesData = (filterStatus?: string) => {
   useEffect(() => {
     if (!dataLoading && !containersLoading && !shipmentsLoading && data) {
       const formattedInvoices: Invoice[] = data.map((doc: any) => {
-        // Chercher le conteneur correspondant
         let containerInfo: Container | undefined;
         let shipmentInfo: Shipment | undefined;
         
         if (doc.containerReference) {
           containerInfo = containers?.find(c => c.number === doc.containerReference);
-          // Chercher l'expédition correspondante au conteneur
           shipmentInfo = shipments?.find(s => s.reference === containerInfo?.number);
         }
-
+        // Ajout manuel : on cherche la Shipment selectionnée pour la facture, pour en afficher la référence
+        if (!shipmentInfo && doc.shipmentReference) {
+          shipmentInfo = shipments?.find(s => s.reference === doc.shipmentReference);
+        }
         return {
+          ...doc,
           id: doc.id,
           invoiceNumber: doc.invoiceNumber || '',
           number: doc.invoiceNumber || doc.number || '',
@@ -66,7 +69,7 @@ export const useInvoicesData = (filterStatus?: string) => {
           termsAndConditions: doc.termsAndConditions || '',
           containerReference: doc.containerReference || containerInfo?.number || '',
           containerCost: containerInfo?.costs?.[0]?.amount || 0,
-          shipmentReference: shipmentInfo?.reference || '',
+          shipmentReference: shipmentInfo?.reference || doc.shipmentReference || '',
           shipmentStatus: shipmentInfo?.status || '',
           paymentMethod: doc.paymentMethod || '',
           createdAt: doc.createdAt || '',

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, query, orderBy, Timestamp, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ export interface FreightInvoice {
   paymentReference?: string;
   invoiceNumber?: string;
   currency?: string;
+  containerCost?: number;
 }
 
 export const useFreightInvoices = () => {
@@ -63,8 +64,6 @@ export const useFreightInvoices = () => {
         ...data,
         updatedAt: new Date().toISOString()
       });
-      
-      // Refresh the invoice list
       await fetchInvoices();
       return true;
     } catch (err) {

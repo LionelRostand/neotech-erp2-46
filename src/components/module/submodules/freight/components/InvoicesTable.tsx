@@ -22,9 +22,7 @@ interface InvoicesTableProps {
 }
 
 const getStatusBadge = (status: string | undefined) => {
-  // Ensure we have a valid status to prevent issues
   const safeStatus = status || 'pending';
-  
   switch (safeStatus.toLowerCase()) {
     case 'pending':
       return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">En attente</Badge>;
@@ -48,11 +46,11 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
       <TableCaption>Liste des factures</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead>N° Facture</TableHead>
+          <TableHead>Réf. Colis</TableHead>
+          <TableHead>Réf. Conteneur</TableHead>
           <TableHead>Client</TableHead>
-          <TableHead>Colis (Expédition)</TableHead>
-          <TableHead>Conteneur</TableHead>
-          <TableHead className="text-right">Montant</TableHead>
+          <TableHead>Coût colis (€)</TableHead>
+          <TableHead>Coût conteneur (€)</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead>Date</TableHead>
           <TableHead className="text-right">Actions</TableHead>
@@ -66,12 +64,14 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
         ) : (
           invoices.map((invoice) => (
             <TableRow key={invoice.id}>
-              <TableCell>{invoice.invoiceNumber || "-"}</TableCell>
-              <TableCell>{invoice.clientName}</TableCell>
               <TableCell>{invoice.shipmentReference || "-"}</TableCell>
               <TableCell>{invoice.containerNumber || "-"}</TableCell>
-              <TableCell className="text-right">
+              <TableCell>{invoice.clientName}</TableCell>
+              <TableCell>
                 {invoice.amount ? invoice.amount.toLocaleString('fr-FR') : "0"} {invoice.currency || "EUR"}
+              </TableCell>
+              <TableCell>
+                {invoice.containerCost ? invoice.containerCost.toLocaleString('fr-FR') : "0"} {invoice.currency || "EUR"}
               </TableCell>
               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
               <TableCell>{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString('fr-FR') : "-"}</TableCell>
