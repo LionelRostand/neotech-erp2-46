@@ -26,8 +26,8 @@ export const generateDocuments = async (invoice: FreightInvoice, paymentData: an
       head: [['Description', 'Montant']],
       body: [
         ['Prestation', `${invoice.amount.toLocaleString('fr-FR')} €`],
-        ['Mode de paiement', paymentData.method],
-        ['Référence', paymentData.reference || '-']
+        ['Mode de paiement', paymentData.paymentMethod],
+        ['Référence', paymentData.paymentReference || '-']
       ],
     });
     

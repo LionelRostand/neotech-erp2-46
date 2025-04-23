@@ -9,29 +9,14 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CreateFreightInvoiceDialog } from './invoices/CreateFreightInvoiceDialog';
+import { InvoicePaymentDialog } from './invoices/InvoicePaymentDialog';
+import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 
 export const FreightInvoicesPage = () => {
   const { invoices, isLoading, updateInvoice, refetchInvoices } = useFreightInvoices();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-
-  const handleUpdate = async (id: string, data: any) => {
-    try {
-      await updateInvoice(id, data);
-      
-      // Show specific toast message for payment
-      if (data.status === 'paid') {
-        toast.success('Facture marquée comme payée');
-      } else {
-        toast.success('Facture mise à jour avec succès');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error updating invoice:', error);
-      toast.error('Erreur lors de la mise à jour de la facture');
-      return false;
-    }
-  };
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<FreightInvoice | null>(null);
 
   const handleDelete = async (id: string) => {
     try {
@@ -43,6 +28,16 @@ export const FreightInvoicesPage = () => {
       console.error('Error deleting invoice:', error);
       toast.error('Erreur lors de la suppression de la facture');
     }
+  };
+
+  const handleViewInvoice = (invoice: FreightInvoice) => {
+    // Here you would handle viewing an invoice
+    console.log('View invoice:', invoice);
+  };
+
+  const handlePayInvoice = (invoice: FreightInvoice) => {
+    setSelectedInvoice(invoice);
+    setShowPaymentDialog(true);
   };
 
   if (isLoading) {
@@ -61,13 +56,20 @@ export const FreightInvoicesPage = () => {
       
       <InvoicesTable
         invoices={invoices}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
+        onViewInvoice={handleViewInvoice}
+        onPayInvoice={handlePayInvoice}
+        onDeleteInvoice={handleDelete}
       />
 
       <CreateFreightInvoiceDialog 
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
+      />
+
+      <InvoicePaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        invoice={selectedInvoice}
       />
     </div>
   );
