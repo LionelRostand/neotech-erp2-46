@@ -46,9 +46,11 @@ export function InvoicePaymentDialog({
   };
 
   const handleSelectChange = (name: string, value: string) => {
+    // Ensure we never set an empty string as value
+    const safeValue = value || 'card';
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: safeValue,
     }));
   };
 
@@ -58,7 +60,7 @@ export function InvoicePaymentDialog({
     try {
       // Update the invoice with payment information
       const paymentData = {
-        paymentMethod: formData.paymentMethod,
+        paymentMethod: formData.paymentMethod || 'card', // Provide default if empty
         paymentReference: formData.paymentReference,
         paidAt: new Date().toISOString(),
         status: 'paid',
@@ -110,7 +112,7 @@ export function InvoicePaymentDialog({
             <div>
               <Label htmlFor="paymentMethod">Méthode de paiement</Label>
               <Select
-                value={formData.paymentMethod}
+                value={formData.paymentMethod || 'card'} // Ensure we never have an empty value
                 onValueChange={(value) => handleSelectChange('paymentMethod', value)}
               >
                 <SelectTrigger className="w-full">

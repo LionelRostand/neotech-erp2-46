@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Table, 
@@ -21,9 +22,10 @@ interface InvoicesTableProps {
 }
 
 const getStatusBadge = (status: string | undefined) => {
-  if (!status) return <Badge variant="outline">Inconnu</Badge>;
+  // Ensure we have a valid status to prevent issues
+  const safeStatus = status || 'pending';
   
-  switch (status.toLowerCase()) {
+  switch (safeStatus.toLowerCase()) {
     case 'pending':
       return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">En attente</Badge>;
     case 'paid':
