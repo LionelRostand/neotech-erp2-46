@@ -5,6 +5,7 @@ import { InvoicesTable } from './components/InvoicesTable';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import CreateInvoiceDialog from './components/CreateInvoiceDialog';
+import AccountingInvoicesDashboard from './components/AccountingInvoicesDashboard';
 
 export const InvoicesPage = () => {
   const { invoices, isLoading, error } = useInvoicesData();
@@ -31,6 +32,8 @@ export const InvoicesPage = () => {
           Nouvelle Facture
         </Button>
       </div>
+      {/* Tableau de bord ajouté ici */}
+      <AccountingInvoicesDashboard invoices={invoices} isLoading={isLoading} />
 
       <InvoicesTable 
         invoices={invoices} 
