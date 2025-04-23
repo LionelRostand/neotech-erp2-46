@@ -12,6 +12,7 @@ import { AlertTriangle } from 'lucide-react';
 interface ShipmentData {
   reference: string;
   customer: string;
+  customerName?: string;
   shipmentType: string;
   origin: string;
   destination: string;
@@ -22,9 +23,18 @@ interface ShipmentData {
   status: string;
   totalWeight: number;
   totalPrice?: number;
+  pricing?: {
+    basePrice: number;
+    geoZone: string;
+    shipmentKind: string;
+    distance: number;
+    extraFees: number;
+  };
   trackingNumber?: string;
   notes?: string;
+  routeId?: string;
   lines: ShipmentLine[];
+  actualDeliveryDate?: string;
 }
 
 interface FirebaseShipmentFormProps {
@@ -41,7 +51,6 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    // Validation des champs obligatoires
     if (!shipmentData.origin || !shipmentData.destination) {
       setValidationError("Les champs origine et destination sont obligatoires");
       toast.error("Les champs origine et destination sont obligatoires");
@@ -53,13 +62,14 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     
     try {
       console.log('Submitting shipment data:', shipmentData);
-      
-      // Use the service to create the shipment
+
+      // Ajout : passage de TOUS les champs du wizard au service, y compris pricing, totalPrice, etc.
       await createShipment({
         reference: shipmentData.reference,
         origin: shipmentData.origin,
         destination: shipmentData.destination,
         customer: shipmentData.customer,
+        customerName: shipmentData.customerName,
         carrier: shipmentData.carrier,
         carrierName: shipmentData.carrierName,
         shipmentType: shipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
@@ -67,16 +77,18 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
         trackingNumber: shipmentData.trackingNumber,
         scheduledDate: shipmentData.scheduledDate,
         estimatedDeliveryDate: shipmentData.estimatedDeliveryDate,
+        actualDeliveryDate: shipmentData.actualDeliveryDate,
+        routeId: shipmentData.routeId,
         lines: shipmentData.lines,
         totalWeight: shipmentData.totalWeight,
-        notes: shipmentData.notes
+        notes: shipmentData.notes,
+        totalPrice: shipmentData.totalPrice,
+        pricing: shipmentData.pricing
       });
       
-      // If a success callback is provided, call it
       if (onSuccess) {
         onSuccess();
       } else {
-        // Otherwise, redirect to the shipments list
         toast.success(`Expédition ${shipmentData.reference} créée avec succès`);
         navigate('/modules/freight/shipments');
       }
