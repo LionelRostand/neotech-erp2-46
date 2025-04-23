@@ -96,8 +96,10 @@ const FreightTransportsPage: React.FC = () => {
                       </code>
                     </TableCell>
                     <TableCell>
-                      <Badge className={cn("font-medium", getTypeColor(carrier.type))}>
-                        {carrier.type.charAt(0).toUpperCase() + carrier.type.slice(1)}
+                      <Badge className={cn("font-medium", getTypeColor(carrier.type || ''))}>
+                        {carrier.type ? 
+                          carrier.type.charAt(0).toUpperCase() + carrier.type.slice(1)
+                          : 'Non spécifié'}
                       </Badge>
                     </TableCell>
                     <TableCell>
