@@ -38,10 +38,12 @@ const GarageSettings = () => {
 
   // Si toujours en chargement, afficher un loader
   if (isLoading) {
-    return <div className="flex items-center justify-center h-96">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      <span className="ml-3">Chargement...</span>
-    </div>;
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <span className="ml-3">Chargement...</span>
+      </div>
+    );
   }
 
   return (
@@ -57,10 +59,12 @@ const GarageSettings = () => {
             <Settings className="h-4 w-4" />
             Général
           </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Droits d'accès
-          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="permissions" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Droits d'accès
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="general">
@@ -111,9 +115,11 @@ const GarageSettings = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="permissions">
-          <GaragePermissionsTab />
-        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="permissions">
+            <GaragePermissionsTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

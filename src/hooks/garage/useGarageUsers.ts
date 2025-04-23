@@ -29,39 +29,28 @@ export const useGarageUsers = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        // Récupérer tous les utilisateurs
         const usersRef = collection(db, COLLECTIONS.USERS);
         const snapshot = await getDocs(usersRef);
         
-        const usersData: GarageUser[] = [];
-        
-        // Pour chaque utilisateur, récupérer également ses permissions
-        for (const userDoc of snapshot.docs) {
+        const usersData = await Promise.all(snapshot.docs.map(async (userDoc) => {
           const userData = userDoc.data();
           const userId = userDoc.id;
           
-          // Récupérer les permissions de l'utilisateur
-          let userPermissions = {};
-          try {
-            const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
-            const permissionsSnap = await getDoc(permissionsRef);
-            
-            if (permissionsSnap.exists()) {
-              userPermissions = permissionsSnap.data().permissions || {};
-            }
-          } catch (error) {
-            console.error(`Erreur lors de la récupération des permissions pour l'utilisateur ${userId}:`, error);
-          }
+          // Fetch user permissions
+          const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
+          const permissionsSnap = await getDoc(permissionsRef);
           
-          usersData.push({
+          const permissions = permissionsSnap.exists() ? permissionsSnap.data().permissions || {} : {};
+          
+          return {
             id: userId,
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
             email: userData.email || '',
             role: userData.role || 'Utilisateur',
-            permissions: userPermissions
-          });
-        }
+            permissions
+          };
+        }));
         
         setUsers(usersData);
       } catch (error) {
@@ -75,5 +64,24 @@ export const useGarageUsers = () => {
     fetchUsers();
   }, []);
 
-  return { users, loading };
+  const updateUserPermissions = async (userId: string, permissions: any) => {
+    try {
+      const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
+      await updateDoc(permissionsRef, { permissions });
+      
+      // Update local state
+      setUsers(prev => prev.map(user => 
+        user.id === userId 
+          ? { ...user, permissions }
+          : user
+      ));
+      
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des permissions:", error);
+      throw error;
+    }
+  };
+
+  return { users, loading, updateUserPermissions };
 };
