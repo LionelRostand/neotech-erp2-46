@@ -1,3 +1,4 @@
+
 export const COLLECTIONS = {
   GARAGE: 'garages',
   CLIENTS: 'clients',
@@ -33,6 +34,21 @@ export const COLLECTIONS = {
     EMPLOYEES: 'health-employees',
     RECORDS: 'health-records',
     INSURANCE: 'health-insurance'
+  },
+  HR: {
+    EMPLOYEES: 'hr-employees',
+    PAYSLIPS: 'hr-payslips',
+    CONTRACTS: 'hr-contracts',
+    DEPARTMENTS: 'hr-departments',
+    LEAVE_REQUESTS: 'hr-leave-requests',
+    ATTENDANCE: 'hr-attendance',
+    ABSENCE_REQUESTS: 'hr-absence-requests',
+    DOCUMENTS: 'hr-documents',
+    TIMESHEET: 'hr-timesheet',
+    EVALUATIONS: 'hr-evaluations',
+    TRAININGS: 'hr-trainings',
+    REPORTS: 'hr-reports',
+    ALERTS: 'hr-alerts'
   },
   DOCUMENTS: 'documents',
   VEHICLE_RENTALS: {
