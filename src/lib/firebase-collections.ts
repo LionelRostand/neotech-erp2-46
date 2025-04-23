@@ -1,3 +1,4 @@
+
 // Firebase collections paths for the application
 
 export const COLLECTIONS = {
@@ -52,7 +53,12 @@ export const COLLECTIONS = {
     APPOINTMENTS: "garage_appointments",
     SERVICES: "garage_services",
     PARTS: "garage_parts",
-    INVOICES: "garage_invoices"
+    INVOICES: "garage_invoices",
+    REPAIRS: "garage_repairs",
+    INVENTORY: "garage_inventory",
+    LOYALTY: "garage_loyalty",
+    SETTINGS: "garage_settings",
+    SUPPLIERS: "garage_suppliers"
   },
   
   ACCOUNTING: {

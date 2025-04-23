@@ -6,7 +6,15 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
 export const useGarageClients = () => {
-  const { add, getAll, loading, error } = useFirestore(COLLECTIONS.GARAGE.CLIENTS);
+  // Make sure we're using a valid collection path
+  const collectionPath = COLLECTIONS.GARAGE.CLIENTS;
+  
+  // Check if collectionPath is defined before using it
+  if (!collectionPath) {
+    console.error('Collection path for garage clients is undefined or empty');
+  }
+  
+  const { add, getAll, loading, error } = useFirestore(collectionPath || 'garage_clients');
 
   const addClient = async (clientData: Omit<GarageClient, 'id'>) => {
     try {
@@ -24,6 +32,11 @@ export const useGarageClients = () => {
     queryKey: ['garage', 'clients'],
     queryFn: async () => {
       try {
+        if (!collectionPath) {
+          console.error('Cannot fetch clients: Collection path is empty');
+          return [];
+        }
+        
         const result = await getAll() as GarageClient[];
         return result;
       } catch (err) {
