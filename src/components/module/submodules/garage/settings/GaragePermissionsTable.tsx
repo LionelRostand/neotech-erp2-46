@@ -15,8 +15,8 @@ const GaragePermissionsTable = ({ users, updatePermission }: GaragePermissionsTa
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[200px]">Utilisateur</TableHead>
-          <TableHead>Sous-menu</TableHead>
+          <TableHead className="w-[250px]">Utilisateur</TableHead>
+          <TableHead className="w-[200px]">Sous-menu</TableHead>
           <TableHead className="text-center">Visualiser</TableHead>
           <TableHead className="text-center">Créer</TableHead>
           <TableHead className="text-center">Modifier</TableHead>
@@ -30,44 +30,52 @@ const GaragePermissionsTable = ({ users, updatePermission }: GaragePermissionsTa
               <TableRow key={`${user.id}-${submodule.id}`} className={moduleIndex === 0 ? 'border-t-2' : ''}>
                 {moduleIndex === 0 && (
                   <TableCell rowSpan={garageModule.submodules.length} className="align-top border-r">
-                    <div>
+                    <div className="space-y-1">
                       <p className="font-medium">{user.firstName} {user.lastName}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </TableCell>
                 )}
-                <TableCell>{submodule.name}</TableCell>
+                <TableCell className="font-medium">{submodule.name}</TableCell>
                 <TableCell className="text-center">
-                  <Checkbox
-                    checked={user.permissions?.[submodule.id]?.view || false}
-                    onCheckedChange={(checked) => 
-                      updatePermission(user.id, submodule.id, 'view', !!checked)
-                    }
-                  />
+                  <div className="flex justify-center">
+                    <Checkbox
+                      checked={user.permissions?.[submodule.id]?.view || false}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, submodule.id, 'view', !!checked)
+                      }
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Checkbox
-                    checked={user.permissions?.[submodule.id]?.create || false}
-                    onCheckedChange={(checked) => 
-                      updatePermission(user.id, submodule.id, 'create', !!checked)
-                    }
-                  />
+                  <div className="flex justify-center">
+                    <Checkbox
+                      checked={user.permissions?.[submodule.id]?.create || false}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, submodule.id, 'create', !!checked)
+                      }
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Checkbox
-                    checked={user.permissions?.[submodule.id]?.edit || false}
-                    onCheckedChange={(checked) => 
-                      updatePermission(user.id, submodule.id, 'edit', !!checked)
-                    }
-                  />
+                  <div className="flex justify-center">
+                    <Checkbox
+                      checked={user.permissions?.[submodule.id]?.edit || false}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, submodule.id, 'edit', !!checked)
+                      }
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Checkbox
-                    checked={user.permissions?.[submodule.id]?.delete || false}
-                    onCheckedChange={(checked) => 
-                      updatePermission(user.id, submodule.id, 'delete', !!checked)
-                    }
-                  />
+                  <div className="flex justify-center">
+                    <Checkbox
+                      checked={user.permissions?.[submodule.id]?.delete || false}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, submodule.id, 'delete', !!checked)
+                      }
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

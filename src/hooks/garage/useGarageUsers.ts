@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
 
 export interface GarageUser {
   id: string;
@@ -27,8 +26,8 @@ export const useGarageUsers = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
         const usersRef = collection(db, COLLECTIONS.USERS);
         const snapshot = await getDocs(usersRef);
         
@@ -39,7 +38,6 @@ export const useGarageUsers = () => {
           // Récupérer les permissions de l'utilisateur
           const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
           const permissionsSnap = await getDoc(permissionsRef);
-          
           const permissions = permissionsSnap.exists() ? permissionsSnap.data().permissions || {} : {};
           
           return {
@@ -55,7 +53,6 @@ export const useGarageUsers = () => {
         setUsers(usersData);
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
-        toast.error("Erreur lors du chargement des utilisateurs");
       } finally {
         setLoading(false);
       }
@@ -64,15 +61,28 @@ export const useGarageUsers = () => {
     fetchUsers();
   }, []);
 
-  const updateUserPermissions = async (userId: string, permissions: any) => {
+  const updateUserPermissions = async (userId: string, moduleId: string, permissions: { [key: string]: boolean }) => {
     try {
-      const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
-      await updateDoc(permissionsRef, { permissions });
+      const permissionPath = `permissions.garage-${moduleId}`;
+      const userPermRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
       
-      // Mettre à jour l'état local
-      setUsers(prev => prev.map(user => 
-        user.id === userId 
-          ? { ...user, permissions }
+      await updateDoc(userPermRef, {
+        [permissionPath]: permissions
+      });
+      
+      // Mise à jour de l'état local
+      setUsers(prevUsers => prevUsers.map(user => 
+        user.id === userId
+          ? {
+              ...user,
+              permissions: {
+                ...user.permissions,
+                [moduleId]: {
+                  ...user.permissions?.[moduleId],
+                  ...permissions
+                }
+              }
+            }
           : user
       ));
       
