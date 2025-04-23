@@ -30,10 +30,14 @@ const transportIcons: Record<string, React.ReactNode> = {
   multimodal: <ChartPie className="h-5 w-5 text-green-700" />
 };
 
-const FreightRoutesDashboard: React.FC = () => {
-  const { routes, isLoading } = useFreightRoutes();
+const FreightRoutesDashboard: React.FC<{ reloadFlag?: boolean }> = ({ reloadFlag }) => {
+  const { routes, isLoading, refetchRoutes } = useFreightRoutes();
 
-  // Pour l'exemple, mock des types 'Route' complets sinon fallback champ par champ
+  React.useEffect(() => {
+    if (reloadFlag !== undefined) refetchRoutes();
+    // eslint-disable-next-line
+  }, [reloadFlag]);
+
   const totalRoutes = routes.length;
   const activeRoutes = routes.filter((r: any) => r.active !== false).length;
 
@@ -81,3 +85,4 @@ const FreightRoutesDashboard: React.FC = () => {
 };
 
 export default FreightRoutesDashboard;
+
