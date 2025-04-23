@@ -26,9 +26,9 @@ const GarageInvoicesDashboard = () => {
 
   const stats = {
     total: invoices.length,
-    draft: invoices.filter(i => i.status === 'draft').length,
-    unpaid: invoices.filter(i => ['sent', 'overdue'].includes(i.status)).length,
-    paid: invoices.filter(i => i.status === 'paid').length,
+    draft: invoices.filter(i => i?.status === 'draft').length,
+    unpaid: invoices.filter(i => ['sent', 'overdue'].includes(i?.status || '')).length,
+    paid: invoices.filter(i => i?.status === 'paid').length,
   };
 
   const handleSaveInvoice = (invoice: Partial<Invoice>) => {
@@ -56,21 +56,21 @@ const GarageInvoicesDashboard = () => {
         />
         <StatCard
           title="En attente"
-          value={invoices.filter(i => i.status === 'pending').length.toString()}
+          value={invoices.filter(i => i?.status === 'pending').length.toString()}
           icon={<Receipt className="h-4 w-4 text-amber-500" />}
           description="Factures non payées"
           className="bg-amber-50 hover:bg-amber-100"
         />
         <StatCard
           title="En retard"
-          value={invoices.filter(i => i.status === 'overdue').length.toString()}
+          value={invoices.filter(i => i?.status === 'overdue').length.toString()}
           icon={<Receipt className="h-4 w-4 text-red-500" />}
           description="Paiements en retard"
           className="bg-red-50 hover:bg-red-100"
         />
         <StatCard
           title="Payées"
-          value={invoices.filter(i => i.status === 'paid').length.toString()}
+          value={invoices.filter(i => i?.status === 'paid').length.toString()}
           icon={<Receipt className="h-4 w-4 text-emerald-500" />}
           description="Factures réglées"
           className="bg-emerald-50 hover:bg-emerald-100"
@@ -90,26 +90,34 @@ const GarageInvoicesDashboard = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell>{invoice.id}</TableCell>
-                <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                <TableCell>{invoice.clientName}</TableCell>
-                <TableCell>{invoice.vehicleName}</TableCell>
-                <TableCell>{invoice.total.toFixed(2)} €</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium
-                    ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-                    invoice.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                    invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'}`}>
-                    {invoice.status === 'paid' ? 'Payée' :
-                     invoice.status === 'overdue' ? 'En retard' :
-                     invoice.status === 'sent' ? 'Envoyée' : 'Brouillon'}
-                  </span>
+            {invoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Aucune facture trouvée. Cliquez sur "Nouvelle facture" pour en ajouter.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              invoices.map((invoice) => (
+                <TableRow key={invoice?.id}>
+                  <TableCell>{invoice?.id || 'N/A'}</TableCell>
+                  <TableCell>{invoice?.date ? new Date(invoice.date).toLocaleDateString() : 'N/A'}</TableCell>
+                  <TableCell>{invoice?.clientName || 'N/A'}</TableCell>
+                  <TableCell>{invoice?.vehicleName || 'N/A'}</TableCell>
+                  <TableCell>{invoice?.total !== undefined ? invoice.total.toFixed(2) : '0.00'} €</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium
+                      ${invoice?.status === 'paid' ? 'bg-green-100 text-green-800' :
+                      invoice?.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                      invoice?.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'}`}>
+                      {invoice?.status === 'paid' ? 'Payée' :
+                       invoice?.status === 'overdue' ? 'En retard' :
+                       invoice?.status === 'sent' ? 'Envoyée' : 'Brouillon'}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -119,8 +127,8 @@ const GarageInvoicesDashboard = () => {
         onOpenChange={setShowAddDialog}
         onSave={handleSaveInvoice}
         repairs={repairs}
-        clientsMap={Object.fromEntries(clients.map(c => [c.id, `${c.firstName} ${c.lastName}`]))}
-        vehiclesMap={Object.fromEntries(vehicles.map(v => [v.id, `${v.make} ${v.model}`]))}
+        clientsMap={Object.fromEntries(clients.map(c => [c?.id || '', `${c?.firstName || ''} ${c?.lastName || ''}`]))}
+        vehiclesMap={Object.fromEntries(vehicles.map(v => [v?.id || '', `${v?.make || ''} ${v?.model || ''}`]))}
       />
     </div>
   );
