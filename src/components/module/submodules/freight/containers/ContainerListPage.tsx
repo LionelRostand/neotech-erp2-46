@@ -6,6 +6,7 @@ import ContainersListWithCreate from "./ContainersListWithCreate";
 import ContainerCreateDialog from "./ContainerCreateDialog";
 import ContainerEditDialog from "./ContainerEditDialog";
 import { Container as ContainerType } from "@/types/freight";
+import ContainersDashboard from "./ContainersDashboard";
 
 // Import SubmoduleHeader directly instead of relying on module structure
 const SubmoduleHeader: React.FC<{
@@ -45,6 +46,8 @@ const ContainerListPage: React.FC = () => {
           </Button>
         }
       />
+
+      <ContainersDashboard />
 
       <ContainersListWithCreate onEditContainer={handleEditContainer} />
 
