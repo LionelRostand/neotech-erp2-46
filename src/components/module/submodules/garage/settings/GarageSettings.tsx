@@ -6,18 +6,42 @@ import { Settings, Shield } from 'lucide-react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import GaragePermissionsTab from './GaragePermissionsTab';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Button } from '@/components/ui/button';
 
 const GarageSettings = () => {
   const { settings, isLoading } = useGarageData();
   const [activeTab, setActiveTab] = useState('general');
   const { isAdmin } = usePermissions();
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
-  }
+  const DefaultSettings = {
+    notifications: {
+      email: false,
+      push: false,
+      frequency: "quotidien"
+    },
+    workingHours: {
+      lundi: { start: "08:00", end: "18:00" },
+      mardi: { start: "08:00", end: "18:00" },
+      mercredi: { start: "08:00", end: "18:00" },
+      jeudi: { start: "08:00", end: "18:00" },
+      vendredi: { start: "08:00", end: "18:00" },
+      samedi: { start: "09:00", end: "13:00" },
+      dimanche: { start: "Fermé", end: "Fermé" }
+    },
+    defaultSettings: {
+      autoNotifications: false,
+      requireConfirmation: true
+    }
+  };
 
-  if (!settings) {
-    return <div className="flex items-center justify-center h-96">Aucun paramètre trouvé</div>;
+  const settingsData = settings || DefaultSettings;
+
+  // Si toujours en chargement, afficher un loader
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <span className="ml-3">Chargement...</span>
+    </div>;
   }
 
   return (
@@ -47,9 +71,9 @@ const GarageSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p>Email: {settings.notifications?.email ? 'Activé' : 'Désactivé'}</p>
-                  <p>Push: {settings.notifications?.push ? 'Activé' : 'Désactivé'}</p>
-                  <p>Fréquence: {settings.notifications?.frequency}</p>
+                  <p>Email: {settingsData.notifications?.email ? 'Activé' : 'Désactivé'}</p>
+                  <p>Push: {settingsData.notifications?.push ? 'Activé' : 'Désactivé'}</p>
+                  <p>Fréquence: {settingsData.notifications?.frequency}</p>
                 </div>
               </CardContent>
             </Card>
@@ -60,7 +84,7 @@ const GarageSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {settings.workingHours && Object.entries(settings.workingHours).map(([day, hours]) => (
+                  {settingsData.workingHours && Object.entries(settingsData.workingHours).map(([day, hours]) => (
                     <p key={day} className="flex justify-between">
                       <span className="capitalize">{day}</span>
                       <span>{hours.start} - {hours.end}</span>
@@ -76,8 +100,11 @@ const GarageSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p>Notifications automatiques: {settings.defaultSettings?.autoNotifications ? 'Activé' : 'Désactivé'}</p>
-                  <p>Confirmation requise: {settings.defaultSettings?.requireConfirmation ? 'Activé' : 'Désactivé'}</p>
+                  <p>Notifications automatiques: {settingsData.defaultSettings?.autoNotifications ? 'Activé' : 'Désactivé'}</p>
+                  <p>Confirmation requise: {settingsData.defaultSettings?.requireConfirmation ? 'Activé' : 'Désactivé'}</p>
+                </div>
+                <div className="mt-4">
+                  <Button>Modifier les paramètres</Button>
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -11,6 +11,14 @@ export interface GarageUser {
   lastName: string;
   email: string;
   role?: string;
+  permissions?: {
+    [moduleId: string]: {
+      view: boolean;
+      create: boolean;
+      edit: boolean;
+      delete: boolean;
+    };
+  };
 }
 
 export const useGarageUsers = () => {
@@ -25,15 +33,35 @@ export const useGarageUsers = () => {
         const usersRef = collection(db, COLLECTIONS.USERS);
         const snapshot = await getDocs(usersRef);
         
-        // Convertir les données des documents
-        const usersData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          firstName: doc.data().firstName || '',
-          lastName: doc.data().lastName || '',
-          email: doc.data().email || '',
-          role: doc.data().role || 'Utilisateur'
-        })) as GarageUser[];
+        const usersData: GarageUser[] = [];
+        
+        // Pour chaque utilisateur, récupérer également ses permissions
+        for (const userDoc of snapshot.docs) {
+          const userData = userDoc.data();
+          const userId = userDoc.id;
+          
+          // Récupérer les permissions de l'utilisateur
+          let userPermissions = {};
+          try {
+            const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
+            const permissionsSnap = await getDoc(permissionsRef);
+            
+            if (permissionsSnap.exists()) {
+              userPermissions = permissionsSnap.data().permissions || {};
+            }
+          } catch (error) {
+            console.error(`Erreur lors de la récupération des permissions pour l'utilisateur ${userId}:`, error);
+          }
+          
+          usersData.push({
+            id: userId,
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            role: userData.role || 'Utilisateur',
+            permissions: userPermissions
+          });
+        }
         
         setUsers(usersData);
       } catch (error) {
