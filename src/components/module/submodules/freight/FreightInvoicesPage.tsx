@@ -40,6 +40,11 @@ export const FreightInvoicesPage = () => {
     setShowPaymentDialog(true);
   };
 
+  const handleOpenCreateDialog = () => {
+    console.log('Opening create invoice dialog');
+    setShowCreateDialog(true);
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
@@ -48,7 +53,7 @@ export const FreightInvoicesPage = () => {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Factures</h1>
-        <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={handleOpenCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle Facture
         </Button>
@@ -70,6 +75,11 @@ export const FreightInvoicesPage = () => {
         open={showPaymentDialog}
         onOpenChange={setShowPaymentDialog}
         invoice={selectedInvoice}
+        onSuccess={async (invoiceId, data) => {
+          await updateInvoice(invoiceId, data);
+          setShowPaymentDialog(false);
+          toast.success('Paiement enregistré avec succès');
+        }}
       />
     </div>
   );

@@ -26,7 +26,7 @@ const CreateInvoiceDialog = ({
   vehiclesMap,
 }: CreateInvoiceDialogProps) => {
   const [items, setItems] = React.useState<InvoiceItem[]>([]);
-  const [selectedRepair, setSelectedRepair] = React.useState('');
+  const [selectedRepair, setSelectedRepair] = React.useState('no-repair');
 
   const handleAddItem = () => {
     setItems([...items, {
@@ -68,7 +68,7 @@ const CreateInvoiceDialog = ({
             <div>
               <Label>Réparation associée</Label>
               <Select 
-                value={selectedRepair || 'no-repair'} 
+                value={selectedRepair} 
                 onValueChange={setSelectedRepair}
               >
                 <SelectTrigger>
