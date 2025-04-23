@@ -12,6 +12,7 @@ import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from "sonner";
+import ClientsDashboard from "./ClientsDashboard";
 
 const FreightClientsPage: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
@@ -84,6 +85,10 @@ const FreightClientsPage: React.FC = () => {
           Nouveau client
         </Button>
       </div>
+
+      {/* Tableau de bord clients ici */}
+      <ClientsDashboard clients={clients} isLoading={isLoading} />
+
       <FreightClientsTable
         clients={clients}
         isLoading={isLoading}
