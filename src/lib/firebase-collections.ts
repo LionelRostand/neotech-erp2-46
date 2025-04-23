@@ -1,4 +1,3 @@
-
 export const COLLECTIONS = {
   // Accounting
   ACCOUNTING: {
@@ -129,7 +128,68 @@ export const COLLECTIONS = {
     STATS: 'library_stats'
   },
 
-  // Messages
+  // Documents
+  DOCUMENT_COLLECTIONS: {
+    SETTINGS: 'document_settings',
+    DOCUMENTS: 'documents',
+    TEMPLATES: 'document_templates',
+    PERMISSIONS: 'document_permissions'
+  },
+
+  // Health
+  HEALTH: {
+    APPOINTMENTS: 'health_appointments',
+    BILLING: 'health_billing',
+    CONSULTATIONS: 'health_consultations',
+    DOCTORS: 'health_doctors',
+    INSURANCE: 'health_insurance',
+    INVENTORY: 'health_inventory',
+    LABORATORY: 'health_laboratory',
+    MEDICAL_RECORDS: 'health_medical_records',
+    PATIENTS: 'health_patients',
+    PERMISSIONS: 'health_permissions',
+    PRESCRIPTIONS: 'health_prescriptions',
+    SETTINGS: 'health_settings',
+    STAFF: 'health_staff'
+  },
+
+  // HR
+  HR: {
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    ALERTS: 'hr_alerts',
+    ATTENDANCE: 'hr_attendance',
+    BADGES: 'hr_badges',
+    CONTRACTS: 'hr_contracts',
+    DEPARTMENTS: 'hr_departments',
+    DOCUMENTS: 'hr_documents',
+    EMPLOYEES: 'hr_employees',
+    EVALUATIONS: 'hr_evaluations',
+    LEAVE_REQUESTS: 'hr_leave_requests',
+    LEAVES: 'hr_leaves',
+    MANAGERS: 'hr_managers',
+    PAYSLIPS: 'hr_payslips',
+    PERMISSIONS: 'hr_permissions',
+    RECRUITMENT: 'hr_recruitment',
+    SALARIES: 'hr_salaries',
+    SETTINGS: 'hr_settings',
+    TIMESHEET: 'hr_timesheet',
+    TRAININGS: 'hr_trainings'
+  },
+
+  // Library
+  LIBRARY: {
+    AUTHORS: 'library_authors',
+    BOOKS: 'library_books',
+    CATEGORIES: 'library_categories',
+    LOANS: 'library_loans',
+    MEMBERS: 'library_members',
+    PUBLISHERS: 'library_publishers',
+    RETURNS: 'library_returns',
+    SETTINGS: 'library_settings',
+    STATS: 'library_stats'
+  },
+
+  // Messages collections
   MESSAGES: {
     ARCHIVE: 'messages_archive',
     CONTACTS: 'messages_contacts',
@@ -139,7 +199,8 @@ export const COLLECTIONS = {
     SCHEDULED: 'messages_scheduled',
     SENT: 'messages_sent',
     SETTINGS: 'messages_settings',
-    TEMPLATES: 'messages_templates'
+    TEMPLATES: 'messages_templates',
+    MESSAGES: 'messages' // Added the missing MESSAGES collection
   },
 
   // Projects
@@ -171,4 +232,3 @@ export const COLLECTIONS = {
   USER_PERMISSIONS: 'user_permissions',
   USERS: 'users'
 };
-
