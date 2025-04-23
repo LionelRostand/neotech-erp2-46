@@ -46,10 +46,12 @@ export function InvoicePaymentDialog({
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    const safeValue = value || 'card';
+    if (!value) {
+      value = 'card'; // Prevent empty string
+    }
     setFormData((prev) => ({
       ...prev,
-      [name]: safeValue,
+      [name]: value,
     }));
   };
 

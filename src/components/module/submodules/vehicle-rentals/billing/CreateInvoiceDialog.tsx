@@ -92,7 +92,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
   const getReservationLabel = (reservation: Reservation) => {
     const client = clients.find(c => c.id === reservation.clientId);
     const vehicle = vehicles.find(v => v.id === reservation.vehicleId);
-    return `${client?.firstName} ${client?.lastName} - ${vehicle?.name} (${reservation.startDate} au ${reservation.endDate})`;
+    return `${client?.firstName || 'Client'} ${client?.lastName || ''} - ${vehicle?.name || 'Véhicule'} (${reservation.startDate} au ${reservation.endDate})`;
   };
 
   return (
@@ -106,7 +106,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
           <div className="space-y-2">
             <label htmlFor="reservationId">Réservation</label>
             <select {...form.register('reservationId')} className="w-full border rounded p-2">
-              <option value="">Sélectionner une réservation</option>
+              <option value="no-selection">Sélectionner une réservation</option>
               {reservations
                 .filter(res => res.status !== 'cancelled')
                 .map((reservation) => (

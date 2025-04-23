@@ -54,6 +54,9 @@ const CreateInvoiceDialog = ({
     onSave(invoice);
   };
 
+  // If repairs is empty, provide a default non-empty value
+  const hasRepairs = repairs && repairs.length > 0;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -64,16 +67,23 @@ const CreateInvoiceDialog = ({
           <div className="space-y-4">
             <div>
               <Label>Réparation associée</Label>
-              <Select value={selectedRepair} onValueChange={setSelectedRepair}>
+              <Select 
+                value={selectedRepair || 'no-repair'} 
+                onValueChange={setSelectedRepair}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une réparation" />
                 </SelectTrigger>
                 <SelectContent>
-                  {repairs.map((repair) => (
-                    <SelectItem key={repair.id} value={repair.id}>
-                      {repair.description} - {repair.vehicleName}
-                    </SelectItem>
-                  ))}
+                  {!hasRepairs ? (
+                    <SelectItem value="no-repair">Aucune réparation disponible</SelectItem>
+                  ) : (
+                    repairs.map((repair) => (
+                      <SelectItem key={repair.id} value={repair.id}>
+                        {repair.description} - {repair.vehicleName}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -110,7 +120,7 @@ const CreateInvoiceDialog = ({
                   </div>
                   <div className="col-span-3">
                     <Select 
-                      value={item.type}
+                      defaultValue={item.type || 'part'}
                       name={`items[${index}].type`}
                     >
                       <SelectTrigger>

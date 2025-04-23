@@ -65,7 +65,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange }: CreateInvoiceDialogProps) =
     onOpenChange(false);
   };
 
-  // Generate a unique placeholder value for empty values
+  // Generate a unique placeholder value for empty values that's NOT an empty string
   const getPlaceholderValue = (prefix: string) => `${prefix}-${Math.random().toString(36).substring(2, 9)}`;
 
   return (
