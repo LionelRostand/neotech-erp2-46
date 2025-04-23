@@ -1,17 +1,14 @@
+
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
 import { renderAccountingSubmodule } from './renderers/AccountingRenderer';
-import { FreightRenderer } from './renderers/FreightRenderer';
+import { renderFreightSubmodule } from './renderers/FreightRenderer';
 import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
 import { renderHealthSubmodule } from './renderers/HealthRenderer';
-import { renderVehicleRentalsSubmodule } from './renderers/VehicleRentalsRenderer';
-import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
+import { renderDocumentsSubmodule } from './renderers/DocumentsRenderer';
+import { renderGarageSubmodule } from './renderers/GarageRenderer';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
-import FreightCarriersList from "./freight/carriers/FreightCarriersList";
-import ContainersListWithCreate from "./freight/containers/ContainersListWithCreate";
-import ContainerManagerPage from "./freight/containers/ContainerManagerPage";
-import UnifiedTrackingPage from './freight/tracking/UnifiedTrackingPage';
 
 interface SubmoduleRenderProps {
   submoduleId: string;
@@ -21,35 +18,25 @@ interface SubmoduleRenderProps {
 export function renderSubmoduleContent({ submoduleId, submodule }: SubmoduleRenderProps) {
   console.log('SubmoduleRenderer - Rendering submodule:', submoduleId);
   
+  // Determine the parent module of the submodule
   const modulePrefix = submoduleId.split('-')[0];
   
-  if (submoduleId === "freight-carriers") {
-    return <FreightCarriersList />;
-  }
-  
-  if (submoduleId === "freight-containers-management") {
-    return <ContainerManagerPage />;
-  }
-
-  if (submoduleId === "freight-tracking") {
-    return <UnifiedTrackingPage />;
-  }
-
+  // Select the appropriate renderer based on the module
   switch (modulePrefix) {
     case 'employees':
       return renderEmployeesSubmodule(submoduleId, submodule);
     case 'accounting':
       return renderAccountingSubmodule(submoduleId, submodule);
     case 'freight':
-      return <FreightRenderer submoduleId={submoduleId} />;
+      return renderFreightSubmodule(submoduleId, submodule);
     case 'projects':
       return renderProjectsSubmodule(submoduleId, submodule);
     case 'health':
       return renderHealthSubmodule(submoduleId, submodule);
-    case 'rentals':
-      return renderVehicleRentalsSubmodule(submoduleId, submodule);
-    case 'messages':
-      return renderMessagesSubmodule(submoduleId, submodule);
+    case 'documents':
+      return renderDocumentsSubmodule(submoduleId, submodule);
+    case 'garage':
+      return renderGarageSubmodule(submoduleId, submodule);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
