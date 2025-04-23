@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Table, 
@@ -49,8 +48,8 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
         <TableRow>
           <TableHead>N° Facture</TableHead>
           <TableHead>Client</TableHead>
-          <TableHead>Référence Expédition</TableHead>
-          <TableHead>Référence Conteneur</TableHead>
+          <TableHead>Colis (Expédition)</TableHead>
+          <TableHead>Conteneur</TableHead>
           <TableHead className="text-right">Montant</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead>Date</TableHead>
@@ -70,10 +69,10 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
               <TableCell>{invoice.shipmentReference || "-"}</TableCell>
               <TableCell>{invoice.containerNumber || "-"}</TableCell>
               <TableCell className="text-right">
-                {invoice.amount.toLocaleString('fr-FR')} {invoice.currency || "EUR"}
+                {invoice.amount ? invoice.amount.toLocaleString('fr-FR') : "0"} {invoice.currency || "EUR"}
               </TableCell>
               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-              <TableCell>{new Date(invoice.createdAt).toLocaleDateString('fr-FR')}</TableCell>
+              <TableCell>{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString('fr-FR') : "-"}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button 
@@ -83,8 +82,7 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     title="Voir la facture"
                   >
                     <EyeIcon className="h-4 w-4" />
-                  </Button>
-                  
+                  </Button>                
                   {invoice.status !== 'paid' && (
                     <Button 
                       variant="outline" 
@@ -94,8 +92,7 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     >
                       <CreditCard className="h-4 w-4" />
                     </Button>
-                  )}
-                  
+                  )}                
                   <Button 
                     variant="outline" 
                     size="icon"
