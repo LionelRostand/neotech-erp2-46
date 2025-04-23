@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Shield } from 'lucide-react';
+import { Settings, Shield, Bell, Clock } from 'lucide-react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import GaragePermissionsTab from './GaragePermissionsTab';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -58,6 +58,14 @@ const GarageSettings = () => {
             <Settings className="h-4 w-4" />
             Général
           </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="horaires" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Horaires
+          </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="permissions" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -67,51 +75,50 @@ const GarageSettings = () => {
         </TabsList>
 
         <TabsContent value="general">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notifications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p>Email: {settingsData.notifications?.email ? 'Activé' : 'Désactivé'}</p>
-                  <p>Push: {settingsData.notifications?.push ? 'Activé' : 'Désactivé'}</p>
-                  <p>Fréquence: {settingsData.notifications?.frequency}</p>
-                </div>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Paramètres par Défaut</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <p>Notifications automatiques: {settingsData.defaultSettings?.autoNotifications ? 'Activé' : 'Désactivé'}</p>
+                <p>Confirmation requise: {settingsData.defaultSettings?.requireConfirmation ? 'Activé' : 'Désactivé'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Horaires d'Ouverture</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {settingsData.workingHours && Object.entries(settingsData.workingHours).map(([day, hours]) => (
-                    <p key={day} className="flex justify-between">
-                      <span className="capitalize">{day}</span>
-                      <span>{hours.start} - {hours.end}</span>
-                    </p>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <p>Email: {settingsData.notifications?.email ? 'Activé' : 'Désactivé'}</p>
+                <p>Push: {settingsData.notifications?.push ? 'Activé' : 'Désactivé'}</p>
+                <p>Fréquence: {settingsData.notifications?.frequency}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Paramètres par Défaut</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p>Notifications automatiques: {settingsData.defaultSettings?.autoNotifications ? 'Activé' : 'Désactivé'}</p>
-                  <p>Confirmation requise: {settingsData.defaultSettings?.requireConfirmation ? 'Activé' : 'Désactivé'}</p>
-                </div>
-                <div className="mt-4">
-                  <Button>Modifier les paramètres</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="horaires">
+          <Card>
+            <CardHeader>
+              <CardTitle>Horaires d'Ouverture</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {settingsData.workingHours && Object.entries(settingsData.workingHours).map(([day, hours]) => (
+                  <p key={day} className="flex justify-between">
+                    <span className="capitalize">{day}</span>
+                    <span>{hours.start} - {hours.end}</span>
+                  </p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {isAdmin && (
