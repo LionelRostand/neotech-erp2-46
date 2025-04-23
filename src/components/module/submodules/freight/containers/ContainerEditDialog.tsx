@@ -14,6 +14,8 @@ import ContainerInformationsTab from "./ContainerInformationsTab";
 import ContainerArticlesTab from "./ContainerArticlesTab";
 import { toast } from "sonner";
 import useFreightData from "@/hooks/modules/useFreightData";
+import { useUpdateContainer } from "@/hooks/modules/useContainersFirestore";
+import { Loader2 } from "lucide-react";
 
 interface ContainerEditDialogProps {
   container: Container | null;
@@ -28,7 +30,9 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
 }) => {
   const [tab, setTab] = useState("info");
   const [values, setValues] = useState<Partial<Container>>(container || {});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { carriers, clients, routes } = useFreightData();
+  const updateContainer = useUpdateContainer();
 
   // Update values when container changes
   useEffect(() => {
@@ -38,13 +42,30 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
   }, [container]);
 
   const handleSubmit = async () => {
+    if (!container || !container.id) {
+      toast.error("ID du conteneur manquant");
+      return;
+    }
+
     try {
-      // Implement update logic here
+      setIsSubmitting(true);
+
+      // Mise à jour du conteneur avec les nouvelles valeurs
+      await updateContainer.mutateAsync({
+        id: container.id,
+        data: {
+          ...values,
+          updatedAt: new Date().toISOString()
+        }
+      });
+
       toast.success("Conteneur mis à jour avec succès");
       onClose();
     } catch (error) {
       console.error("Erreur lors de la mise à jour du conteneur:", error);
       toast.error("Erreur lors de la mise à jour du conteneur");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,7 +127,10 @@ const ContainerEditDialog: React.FC<ContainerEditDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit}>Enregistrer</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enregistrer
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
