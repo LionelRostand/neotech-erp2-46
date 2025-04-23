@@ -1,17 +1,17 @@
 
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, CreditCard, FileText } from 'lucide-react';
+import { EyeIcon, XCircle, CreditCard } from 'lucide-react';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 
 interface InvoicesTableProps {
@@ -21,89 +21,88 @@ interface InvoicesTableProps {
   onDeleteInvoice: (id: string) => void;
 }
 
-export const InvoicesTable: React.FC<InvoicesTableProps> = ({
-  invoices,
-  onViewInvoice,
-  onPayInvoice,
-  onDeleteInvoice
+const getStatusBadge = (status: string | undefined) => {
+  if (!status) return <Badge variant="outline">Inconnu</Badge>;
+  
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">En attente</Badge>;
+    case 'paid':
+      return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200">Payée</Badge>;
+    case 'cancelled':
+      return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-200">Annulée</Badge>;
+    default:
+      return <Badge variant="outline">Inconnu</Badge>;
+  }
+};
+
+export const InvoicesTable: React.FC<InvoicesTableProps> = ({ 
+  invoices, 
+  onViewInvoice, 
+  onPayInvoice, 
+  onDeleteInvoice 
 }) => {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge className="bg-green-500">Payée</Badge>;
-      case 'pending':
-        return <Badge variant="outline">En attente</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Annulée</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const renderReference = (invoice: FreightInvoice) => {
-    if (invoice.shipmentReference) {
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium">Colis:</span>
-          <Badge variant="outline">{invoice.shipmentReference}</Badge>
-        </div>
-      );
-    }
-    if (invoice.containerNumber) {
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium">Conteneur:</span>
-          <Badge variant="outline">{invoice.containerNumber}</Badge>
-        </div>
-      );
-    }
-    return <span className="text-muted-foreground">-</span>;
-  };
-
   return (
     <Table>
       <TableCaption>Liste des factures</TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead>N° Facture</TableHead>
-          <TableHead>Référence</TableHead>
           <TableHead>Client</TableHead>
-          <TableHead>Montant</TableHead>
-          <TableHead>Date</TableHead>
+          <TableHead>Référence Expédition</TableHead>
+          <TableHead>Référence Conteneur</TableHead>
+          <TableHead className="text-right">Montant</TableHead>
           <TableHead>Statut</TableHead>
+          <TableHead>Date</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {invoices.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-              Aucune facture trouvée
-            </TableCell>
+            <TableCell colSpan={8} className="text-center">Aucune facture trouvée</TableCell>
           </TableRow>
         ) : (
           invoices.map((invoice) => (
             <TableRow key={invoice.id}>
-              <TableCell>{invoice.invoiceNumber || invoice.id.substring(0, 8)}</TableCell>
-              <TableCell>{renderReference(invoice)}</TableCell>
+              <TableCell>{invoice.invoiceNumber || "-"}</TableCell>
               <TableCell>{invoice.clientName}</TableCell>
-              <TableCell>{invoice.amount.toLocaleString('fr-FR')} €</TableCell>
-              <TableCell>{new Date(invoice.createdAt).toLocaleDateString('fr-FR')}</TableCell>
+              <TableCell>{invoice.shipmentReference || "-"}</TableCell>
+              <TableCell>{invoice.containerNumber || "-"}</TableCell>
+              <TableCell className="text-right">
+                {invoice.amount.toLocaleString('fr-FR')} {invoice.currency || "EUR"}
+              </TableCell>
               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-              <TableCell>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => onViewInvoice(invoice)}>
-                    <Eye className="h-4 w-4" />
+              <TableCell>{new Date(invoice.createdAt).toLocaleDateString('fr-FR')}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => onViewInvoice(invoice)}
+                    title="Voir la facture"
+                  >
+                    <EyeIcon className="h-4 w-4" />
                   </Button>
                   
                   {invoice.status !== 'paid' && (
-                    <Button variant="ghost" size="icon" onClick={() => onPayInvoice(invoice)}>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => onPayInvoice(invoice)}
+                      title="Enregistrer un paiement"
+                    >
                       <CreditCard className="h-4 w-4" />
                     </Button>
                   )}
                   
-                  <Button variant="ghost" size="icon" onClick={() => onDeleteInvoice(invoice.id)}>
-                    <Trash2 className="h-4 w-4" />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => onDeleteInvoice(invoice.id)}
+                    title="Supprimer la facture"
+                  >
+                    <XCircle className="h-4 w-4" />
                   </Button>
                 </div>
               </TableCell>
