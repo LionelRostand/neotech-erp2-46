@@ -1,5 +1,5 @@
 
-import { Car, LayoutDashboard, Users, CalendarCheck, Wrench, Receipt, Truck, Package, BadgePercent, Settings } from 'lucide-react';
+import { Car, LayoutDashboard, Wrench, Receipt, Truck, Package, BadgePercent, Settings } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const garageModule: AppModule = {
@@ -8,12 +8,11 @@ export const garageModule: AppModule = {
   description: "Gestion complète pour ateliers de réparation et services automobiles",
   href: "/modules/garage",
   icon: createIcon(Car),
-  category: 'services', // Added the category property
+  category: 'services',
   submodules: [
     { id: "garage-dashboard", name: "Tableau de bord", href: "/modules/garage/dashboard", icon: createIcon(LayoutDashboard) },
-    { id: "garage-clients", name: "Clients", href: "/modules/garage/clients", icon: createIcon(Users) },
     { id: "garage-vehicles", name: "Véhicules", href: "/modules/garage/vehicles", icon: createIcon(Car) },
-    { id: "garage-appointments", name: "Rendez-vous", href: "/modules/garage/appointments", icon: createIcon(CalendarCheck) },
+    { id: "garage-appointments", name: "Rendez-vous", href: "/modules/garage/appointments", icon: createIcon(Wrench) },
     { id: "garage-repairs", name: "Réparations", href: "/modules/garage/repairs", icon: createIcon(Wrench) },
     { id: "garage-invoices", name: "Factures", href: "/modules/garage/invoices", icon: createIcon(Receipt) },
     { id: "garage-suppliers", name: "Fournisseurs", href: "/modules/garage/suppliers", icon: createIcon(Truck) },
