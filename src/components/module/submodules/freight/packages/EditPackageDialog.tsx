@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Shipment } from "@/types/freight";
+import { Shipment } from "@/hooks/freight/useFreightShipments";
 import { updateShipment } from "../services/shipmentService";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -12,18 +12,19 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   packageData: Shipment | null;
+  onSuccess?: () => void;
 }
 
 const shipmentStatusOptions = [
   { value: "draft", label: "Brouillon" },
-  { value: "confirmed", label: "Prêt" },
+  { value: "confirmed", label: "Confirmé" },
   { value: "in_transit", label: "En transit" },
   { value: "delivered", label: "Livré" },
   { value: "cancelled", label: "Annulé" },
   { value: "delayed", label: "Retardé" },
 ];
 
-const EditPackageDialog: React.FC<Props> = ({ open, onOpenChange, packageData }) => {
+const EditPackageDialog: React.FC<Props> = ({ open, onOpenChange, packageData, onSuccess }) => {
   const [form, setForm] = useState<Shipment | null>(packageData);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,12 +47,12 @@ const EditPackageDialog: React.FC<Props> = ({ open, onOpenChange, packageData })
       if (!form.id) throw new Error("Aucun ID de colis");
       await updateShipment(form.id, {
         ...form,
-        // Les opérations de type partielle dans le service, donc on envoie tout.
       });
       toast.success("Colis mis à jour avec succès");
       onOpenChange(false);
+      onSuccess?.();
     } catch (err) {
-      toast.error("Erreur lors de la mise à jour : " + (err instanceof Error ? err.message : ""));
+      toast.error("Erreur lors de la mise à jour");
     } finally {
       setIsLoading(false);
     }
@@ -69,19 +70,17 @@ const EditPackageDialog: React.FC<Props> = ({ open, onOpenChange, packageData })
           </DialogHeader>
           <div className="space-y-2 py-2">
             <Input
-              label="Client"
-              name="customer"
-              value={form.customer}
+              name="customerName"
+              value={form.customerName || ""}
               onChange={handleChange}
               placeholder="Client"
               required
             />
             <Input
-              label="Numéro de suivi"
               name="trackingNumber"
               value={form.trackingNumber || ""}
               onChange={handleChange}
-              placeholder="TRACK-123"
+              placeholder="Numéro de suivi"
             />
             <div>
               <label className="block text-xs font-medium mb-1">Statut</label>
@@ -97,44 +96,34 @@ const EditPackageDialog: React.FC<Props> = ({ open, onOpenChange, packageData })
               </select>
             </div>
             <Input
-              label="Origine"
               name="origin"
-              value={form.origin}
+              value={form.origin || ""}
               onChange={handleChange}
               placeholder="Origine"
               required
             />
             <Input
-              label="Destination"
               name="destination"
-              value={form.destination}
+              value={form.destination || ""}
               onChange={handleChange}
               placeholder="Destination"
               required
             />
             <Input
-              label="Date prévue"
-              name="scheduledDate"
-              value={form.scheduledDate}
-              onChange={handleChange}
-              type="date"
-            />
-            <Input
-              label="Poids total (kg)"
               name="totalWeight"
-              value={form.totalWeight}
+              value={form.totalWeight || ""}
               onChange={handleChange}
               type="number"
+              placeholder="Poids total"
             />
             <Input
-              label="Prix total (€)"
               name="totalPrice"
               value={form.totalPrice || ""}
               onChange={handleChange}
               type="number"
+              placeholder="Prix total (€)"
             />
             <Input
-              label="Notes"
               name="notes"
               value={form.notes || ""}
               onChange={handleChange}

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Shipment } from "@/hooks/freight/useFreightShipments";
@@ -8,6 +7,34 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import PackageDetailsDialog from "./PackageDetailsDialog";
+import EditPackageDialog from "./EditPackageDialog";
+import { deleteShipment } from "../services/shipmentService";
+import { toast } from "sonner";
+
+const ConfirmDeleteDialog: React.FC<{
+  open: boolean,
+  onOpenChange: (v: boolean) => void,
+  onConfirm: () => void,
+  isLoading: boolean,
+  reference?: string
+}> = ({ open, onOpenChange, onConfirm, isLoading, reference }) => (
+  <div className={open ? "fixed inset-0 z-50 flex items-center justify-center bg-black/40" : "hidden"}>
+    <div className="bg-white rounded p-6 max-w-md w-full">
+      <div className="font-semibold text-lg mb-2">Confirmer la suppression</div>
+      <div className="mb-4">
+        Êtes-vous sûr de vouloir supprimer le colis <span className="font-bold">{reference}</span> ? Cette action est irréversible.
+      </div>
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          Annuler
+        </Button>
+        <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+          {isLoading ? "Suppression..." : "Supprimer"}
+        </Button>
+      </div>
+    </div>
+  </div>
+);
 
 interface PackagesListProps {
   packages: Shipment[];
@@ -18,8 +45,13 @@ interface PackagesListProps {
 const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefresh }) => {
   const [selectedPackage, setSelectedPackage] = React.useState<Shipment | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [editPackage, setEditPackage] = React.useState<Shipment | null>(null);
 
-  // Calcule le coût total d'un colis (somme des coûts de chaque ligne)
+  const [deletePackage, setDeletePackage] = React.useState<Shipment | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   const getTotalCost = (pkg: Shipment) => {
     if (Array.isArray(pkg.lines) && pkg.lines.length > 0) {
       const sum = pkg.lines.reduce((total: number, line: any) => total + ((line.cost ?? 0) * (line.quantity ?? 1)), 0);
@@ -32,26 +64,15 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
   };
 
   const getStatusBadge = (status: string | undefined) => {
-    // Add a null check to handle undefined status values
-    if (!status) {
-      return <Badge variant="outline">Inconnu</Badge>;
-    }
-    
+    if (!status) return <Badge variant="outline">Inconnu</Badge>;
     switch (status.toLowerCase()) {
-      case 'draft':
-        return <Badge variant="outline">Brouillon</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-blue-500">Confirmé</Badge>;
-      case 'in_transit':
-        return <Badge className="bg-yellow-500">En transit</Badge>;
-      case 'delivered':
-        return <Badge className="bg-green-500">Livré</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Annulé</Badge>;
-      case 'delayed':
-        return <Badge className="bg-orange-500">Retardé</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+      case 'draft': return <Badge variant="outline">Brouillon</Badge>;
+      case 'confirmed': return <Badge className="bg-blue-500">Confirmé</Badge>;
+      case 'in_transit': return <Badge className="bg-yellow-500">En transit</Badge>;
+      case 'delivered': return <Badge className="bg-green-500">Livré</Badge>;
+      case 'cancelled': return <Badge className="bg-red-500">Annulé</Badge>;
+      case 'delayed': return <Badge className="bg-orange-500">Retardé</Badge>;
+      default: return <Badge>{status}</Badge>;
     }
   };
 
@@ -78,6 +99,32 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
   const handleViewDetails = (pkg: Shipment) => {
     setSelectedPackage(pkg);
     setIsDetailsOpen(true);
+  };
+
+  const handleEdit = (pkg: Shipment) => {
+    setEditPackage(pkg);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = (pkg: Shipment) => {
+    setDeletePackage(pkg);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletePackage) return;
+    setIsDeleting(true);
+    try {
+      await deleteShipment(deletePackage.id);
+      toast.success("Colis supprimé avec succès");
+      setIsDeleteDialogOpen(false);
+      setDeletePackage(null);
+      onRefresh?.();
+    } catch (err) {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -119,10 +166,10 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
                     <Button variant="ghost" size="sm" onClick={() => handleViewDetails(pkg)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(pkg)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(pkg)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -132,10 +179,32 @@ const PackagesList: React.FC<PackagesListProps> = ({ packages, isLoading, onRefr
           )}
         </TableBody>
       </Table>
+
       <PackageDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         packageData={selectedPackage}
+      />
+
+      <EditPackageDialog
+        open={isEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) setEditPackage(null);
+        }}
+        packageData={editPackage}
+        onSuccess={onRefresh}
+      />
+
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) setDeletePackage(null);
+        }}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        reference={deletePackage?.reference}
       />
     </div>
   );
