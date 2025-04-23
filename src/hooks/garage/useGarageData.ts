@@ -9,6 +9,8 @@ export const useGarageData = () => {
   const queryConfig = {
     refetchInterval: 30000, // Rafraîchir toutes les 30 secondes
     refetchIntervalInBackground: true, // Continuer le rafraîchissement même si l'onglet est en arrière-plan
+    refetchOnWindowFocus: true, // Rafraîchir quand l'utilisateur revient sur l'onglet
+    staleTime: 10000, // Considérer les données comme périmées après 10 secondes
   };
 
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({

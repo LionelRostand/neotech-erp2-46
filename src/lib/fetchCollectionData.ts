@@ -28,10 +28,13 @@ export async function fetchCollectionData<T>(
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => ({ 
+    const result = querySnapshot.docs.map(doc => ({ 
       id: doc.id, 
       ...doc.data() 
     })) as T[];
+    
+    console.log(`Fetched ${result.length} documents from ${collectionPath}`);
+    return result;
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
