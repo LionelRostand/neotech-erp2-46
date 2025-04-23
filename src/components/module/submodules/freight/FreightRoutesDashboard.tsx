@@ -41,7 +41,6 @@ const FreightRoutesDashboard: React.FC<{ reloadFlag?: boolean }> = ({ reloadFlag
   const totalRoutes = routes.length;
   const activeRoutes = routes.filter((r: any) => r.active !== false).length;
 
-  // Comptage par type de transport
   const transportCounts: Record<string, number> = {
     road: 0,
     sea: 0,
@@ -62,13 +61,14 @@ const FreightRoutesDashboard: React.FC<{ reloadFlag?: boolean }> = ({ reloadFlag
         value={isLoading ? "..." : totalRoutes.toString()}
         icon={<LayoutDashboard className="h-6 w-6 text-primary" />}
         description="Toutes les routes enregistrées"
+        className="bg-soft-purple text-dark-purple"
       />
       <StatCard
         title="Routes actives"
         value={isLoading ? "..." : activeRoutes.toString()}
         icon={<ChartLine className="h-6 w-6 text-green-600" />}
         description="Nombre de routes actives"
-        className="bg-green-50"
+        className="bg-soft-green text-green-800"
       />
       {Object.keys(transportCounts).map((type) =>
         <StatCard
@@ -77,7 +77,11 @@ const FreightRoutesDashboard: React.FC<{ reloadFlag?: boolean }> = ({ reloadFlag
           value={isLoading ? "..." : transportCounts[type].toString()}
           icon={transportIcons[type]}
           description={`Routes ${transportLabels[type].toLowerCase()}`}
-          className={transportCounts[type] > 0 ? `${transportColors[type]}` : "bg-card"}
+          className={
+            transportCounts[type] > 0 
+            ? `${transportColors[type]} hover:bg-opacity-80` 
+            : "bg-gray-100 text-gray-500"
+          }
         />
       )}
     </div>
@@ -85,4 +89,3 @@ const FreightRoutesDashboard: React.FC<{ reloadFlag?: boolean }> = ({ reloadFlag
 };
 
 export default FreightRoutesDashboard;
-
