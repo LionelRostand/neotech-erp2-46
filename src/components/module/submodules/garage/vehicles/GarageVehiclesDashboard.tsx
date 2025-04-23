@@ -47,7 +47,7 @@ const GarageVehiclesDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {vehicles.filter(v => v.status === 'maintenance').length}
+              {vehicles.filter(v => v?.status === 'maintenance').length}
             </div>
           </CardContent>
         </Card>
@@ -58,7 +58,7 @@ const GarageVehiclesDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {vehicles.filter(v => v.status === 'available').length}
+              {vehicles.filter(v => v?.status === 'available').length}
             </div>
           </CardContent>
         </Card>
@@ -80,25 +80,33 @@ const GarageVehiclesDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell>
-                    {vehicle.make} {vehicle.model} ({vehicle.year})
-                  </TableCell>
-                  <TableCell>{vehicle.licensePlate}</TableCell>
-                  <TableCell>{vehicle.mileage.toLocaleString()} km</TableCell>
-                  <TableCell>
-                    {vehicle.lastCheckDate ? new Date(vehicle.lastCheckDate).toLocaleDateString() : 'Non renseigné'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={vehicle.status === 'available' ? 'default' : 'secondary'}
-                    >
-                      {vehicle.status === 'available' ? 'Disponible' : 'En maintenance'}
-                    </Badge>
+              {vehicles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    Aucun véhicule trouvé. Cliquez sur "Nouveau véhicule" pour en ajouter.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                vehicles.map((vehicle) => (
+                  <TableRow key={vehicle?.id}>
+                    <TableCell>
+                      {vehicle?.make} {vehicle?.model} ({vehicle?.year})
+                    </TableCell>
+                    <TableCell>{vehicle?.licensePlate}</TableCell>
+                    <TableCell>{vehicle?.mileage ? vehicle.mileage.toLocaleString() : '0'} km</TableCell>
+                    <TableCell>
+                      {vehicle?.lastCheckDate ? new Date(vehicle.lastCheckDate).toLocaleDateString() : 'Non renseigné'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={vehicle?.status === 'available' ? 'default' : 'secondary'}
+                      >
+                        {vehicle?.status === 'available' ? 'Disponible' : 'En maintenance'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
