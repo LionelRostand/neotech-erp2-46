@@ -2,6 +2,7 @@
 import { collection, getDocs, query, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/usePermissions';
 
 /**
  * Utility function to fetch data from any Firestore collection
@@ -40,4 +41,31 @@ export async function fetchCollectionData<T>(
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
     return [];
   }
+}
+
+/**
+ * Hook to check if user has permission to access a specific module and action
+ * @param moduleId Module ID to check
+ * @param action Action to check (view, create, edit, delete)
+ * @returns Boolean indicating if user has permission
+ */
+export function useHasPermission(moduleId: string, action: 'view' | 'create' | 'edit' | 'delete'): boolean {
+  const { checkPermission, isAdmin, hasPermission } = usePermissions(moduleId);
+  
+  // Si l'utilisateur est admin, il a toutes les permissions
+  if (isAdmin) return true;
+  
+  // Vérifier la permission spécifique
+  const permissionKey = `${moduleId}.${action}`;
+  return !!hasPermission[permissionKey];
+}
+
+/**
+ * Helper to append module prefix if needed
+ * @param moduleId Module ID
+ * @returns Properly formatted module ID
+ */
+export function formatModuleId(moduleId: string): string {
+  if (moduleId.includes('-')) return moduleId;
+  return `garage-${moduleId}`;
 }

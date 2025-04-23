@@ -3,9 +3,21 @@ import React from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useHasPermission } from '@/lib/fetchCollectionData';
+import { Shield } from 'lucide-react';
 
 const UnpaidInvoices = () => {
   const { invoices } = useGarageData();
+  const hasViewPermission = useHasPermission('garage-invoices', 'view');
+  
+  if (!hasViewPermission) {
+    return (
+      <div className="text-center py-4 border rounded-md">
+        <Shield className="mx-auto mb-2 text-gray-400" />
+        <p className="text-gray-500">Vous n'avez pas les permissions nécessaires</p>
+      </div>
+    );
+  }
   
   // Filtrer les factures impayées ou en retard
   const unpaidInvoices = invoices.filter(invoice => 

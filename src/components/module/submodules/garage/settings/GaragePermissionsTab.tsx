@@ -1,31 +1,82 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus } from "lucide-react";
-import { garageModule } from '@/data/modules/garage';
-import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
+import { useGaragePermissions } from '@/hooks/garage/useGaragePermissions';
+import { useGarageUsers } from '@/hooks/garage/useGarageUsers';
+import { Loader2 } from 'lucide-react';
+import { getUserPermissions } from '@/components/module/submodules/employees/services/permissionService';
 
 const GaragePermissionsTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { permissions, isAdmin } = usePermissions();
-  
-  // Mock users data - in production this would come from your user management system
-  const users = [
-    { id: '1', name: 'Jean Dupont', role: 'Mécanicien', email: 'jean.dupont@garage.com' },
-    { id: '2', name: 'Marie Martin', role: 'Responsable Service', email: 'marie.martin@garage.com' },
-    { id: '3', name: 'Pierre Durant', role: 'Assistant', email: 'pierre.durant@garage.com' },
-  ];
+  const { garageSubmodules, isAdmin, updatePermission } = useGaragePermissions();
+  const { users, loading } = useGarageUsers();
+  const [userPermissions, setUserPermissions] = useState<{[userId: string]: any}>({});
+  const [loadingPermissions, setLoadingPermissions] = useState(true);
 
-  const handlePermissionChange = (userId: string, moduleId: string, permission: string) => {
-    // Ici, vous implementeriez la logique pour mettre à jour les permissions
-    console.log(`Mise à jour des permissions pour l'utilisateur ${userId} sur ${moduleId}: ${permission}`);
-    toast.success("Permissions mises à jour");
+  // Récupérer les permissions de chaque utilisateur
+  useEffect(() => {
+    const fetchAllUserPermissions = async () => {
+      if (users.length === 0) return;
+      
+      setLoadingPermissions(true);
+      const permissions: {[userId: string]: any} = {};
+      
+      for (const user of users) {
+        try {
+          const userPerm = await getUserPermissions(user.id);
+          permissions[user.id] = userPerm?.permissions || {};
+        } catch (error) {
+          console.error(`Erreur lors de la récupération des permissions pour ${user.id}:`, error);
+        }
+      }
+      
+      setUserPermissions(permissions);
+      setLoadingPermissions(false);
+    };
+    
+    fetchAllUserPermissions();
+  }, [users]);
+
+  const handlePermissionChange = async (userId: string, submoduleId: string, action: 'view' | 'create' | 'edit' | 'delete', checked: boolean) => {
+    const success = await updatePermission(userId, submoduleId, action, checked);
+    
+    if (success) {
+      // Mettre à jour l'état local après une mise à jour réussie
+      setUserPermissions(prevState => ({
+        ...prevState,
+        [userId]: {
+          ...prevState[userId],
+          [`garage-${submoduleId}`]: {
+            ...(prevState[userId]?.[`garage-${submoduleId}`] || {}),
+            [action]: checked
+          }
+        }
+      }));
+    }
   };
+
+  if (loading || loadingPermissions) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center p-8">
+          <Loader2 className="animate-spin h-6 w-6 mr-2" />
+          <span>Chargement des utilisateurs et de leurs permissions...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const filteredUsers = users.filter(user => 
+    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Card>
@@ -46,65 +97,84 @@ const GaragePermissionsTab = () => {
           </Button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Utilisateur</TableHead>
-              <TableHead>Rôle</TableHead>
-              <TableHead className="text-center">Lecture</TableHead>
-              <TableHead className="text-center">Écriture</TableHead>
-              <TableHead className="text-center">Suppression</TableHead>
-              <TableHead className="text-center">Administration</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users
-              .filter(user => 
-                user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      onCheckedChange={(checked) => 
-                        handlePermissionChange(user.id, 'garage', 'read')
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      onCheckedChange={(checked) => 
-                        handlePermissionChange(user.id, 'garage', 'write')
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      onCheckedChange={(checked) => 
-                        handlePermissionChange(user.id, 'garage', 'delete')
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      onCheckedChange={(checked) => 
-                        handlePermissionChange(user.id, 'garage', 'admin')
-                      }
-                      disabled={!isAdmin}
-                    />
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[200px]">Utilisateur</TableHead>
+                <TableHead className="w-[120px]">Sous-module</TableHead>
+                <TableHead className="text-center">Visualiser</TableHead>
+                <TableHead className="text-center">Créer</TableHead>
+                <TableHead className="text-center">Modifier</TableHead>
+                <TableHead className="text-center">Supprimer</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Aucun utilisateur trouvé
                   </TableCell>
                 </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredUsers.map((user) => (
+                  garageSubmodules.map((submodule) => (
+                    <TableRow key={`${user.id}-${submodule.id}`}>
+                      {submodule.id === garageSubmodules[0].id && (
+                        <TableCell rowSpan={garageSubmodules.length} className="align-top pt-4">
+                          <div>
+                            <p className="font-medium">{user.firstName} {user.lastName}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{user.role}</p>
+                          </div>
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <span className="text-sm">{submodule.name}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={!!userPermissions[user.id]?.[`garage-${submodule.id}`]?.view}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(user.id, submodule.id, 'view', !!checked)
+                          }
+                          disabled={!isAdmin}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={!!userPermissions[user.id]?.[`garage-${submodule.id}`]?.create}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(user.id, submodule.id, 'create', !!checked)
+                          }
+                          disabled={!isAdmin}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={!!userPermissions[user.id]?.[`garage-${submodule.id}`]?.edit}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(user.id, submodule.id, 'edit', !!checked)
+                          }
+                          disabled={!isAdmin}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={!!userPermissions[user.id]?.[`garage-${submodule.id}`]?.delete}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(user.id, submodule.id, 'delete', !!checked)
+                          }
+                          disabled={!isAdmin}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
