@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -36,7 +36,7 @@ export const useGarageUsers = () => {
           const userData = userDoc.data();
           const userId = userDoc.id;
           
-          // Fetch user permissions
+          // Récupérer les permissions de l'utilisateur
           const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
           const permissionsSnap = await getDoc(permissionsRef);
           
@@ -69,7 +69,7 @@ export const useGarageUsers = () => {
       const permissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
       await updateDoc(permissionsRef, { permissions });
       
-      // Update local state
+      // Mettre à jour l'état local
       setUsers(prev => prev.map(user => 
         user.id === userId 
           ? { ...user, permissions }
