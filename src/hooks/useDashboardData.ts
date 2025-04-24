@@ -86,7 +86,7 @@ export const useDashboardData = (shouldLoad: boolean = true) => {
       return;
     }
     
-    // Simulate data loading
+    // Use mock data instead of Firebase calls to prevent empty path errors
     const timer = setTimeout(() => {
       setStats(defaultStats);
       setTransactions(sampleTransactions);
