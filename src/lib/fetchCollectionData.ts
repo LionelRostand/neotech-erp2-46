@@ -16,8 +16,9 @@ export async function fetchCollectionData<T>(
   try {
     // Check for empty or invalid collection path
     if (!collectionPath || collectionPath.trim() === '') {
-      console.error('Error: Collection path cannot be empty');
-      toast.error(`Erreur lors du chargement des données: Collection path cannot be empty`);
+      const errorMessage = 'Collection path cannot be empty';
+      console.error('Error:', errorMessage);
+      toast.error(`Erreur lors du chargement des données: ${errorMessage}`);
       return [];
     }
     

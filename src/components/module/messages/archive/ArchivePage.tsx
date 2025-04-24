@@ -10,7 +10,9 @@ import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
 const ArchivePage: React.FC = () => {
   // Ensure we use a valid collection path - ARCHIVED not ARCHIVE
-  const archivePath = COLLECTIONS.MESSAGES?.ARCHIVED || 'messages_archived';
+  const archivePath = COLLECTIONS.MESSAGES?.ARCHIVED || 'message_archived';
+  
+  console.log('Archive path:', archivePath); // Debug log
   
   const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(archivePath);
   const [selectedFilter, setSelectedFilter] = useState('all');

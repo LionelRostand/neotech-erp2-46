@@ -16,7 +16,15 @@ export const useGarageEmployees = () => {
   
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData<Mechanic>(mechanicsPath),
+    queryFn: () => {
+      // Double-check path before fetching
+      if (!mechanicsPath || mechanicsPath.trim() === '') {
+        console.error('Mechanics collection path is empty');
+        toast.error('Erreur: Chemin de collection invalide');
+        return [];
+      }
+      return fetchCollectionData<Mechanic>(mechanicsPath);
+    },
   });
 
   return {

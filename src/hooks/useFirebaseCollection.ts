@@ -87,15 +87,20 @@ export const useFirebaseCollection = <T extends Record<string, any>>(
   collectionPath: string | null | undefined,
   queryConstraints: QueryConstraint[] = []
 ) => {
+  // Ensure collection path has a fallback value
+  const safeCollectionPath = collectionPath && collectionPath.trim() !== '' 
+    ? collectionPath 
+    : null;
+    
   // Use the base collection data hook with proper validation
-  const { data, isLoading, error } = useCollectionData(collectionPath, queryConstraints);
+  const { data, isLoading, error } = useCollectionData(safeCollectionPath, queryConstraints);
 
   // Provide more debug information on error
   useEffect(() => {
     if (error) {
-      console.error(`Firebase collection error for "${collectionPath}":`, error);
+      console.error(`Firebase collection error for "${safeCollectionPath}":`, error);
     }
-  }, [collectionPath, error]);
+  }, [safeCollectionPath, error]);
 
   // Return type-safe version of the data
   return {
@@ -103,7 +108,7 @@ export const useFirebaseCollection = <T extends Record<string, any>>(
     isLoading,
     error,
     refetch: () => {
-      console.log("Refetch requested for", collectionPath);
+      console.log("Refetch requested for", safeCollectionPath);
       // Real-time listeners don't need manual refetching but we can add functionality here if needed
     }
   };
