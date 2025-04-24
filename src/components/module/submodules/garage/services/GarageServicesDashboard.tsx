@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { CreateServiceDialog } from './CreateServiceDialog';
 import { ViewServiceDialog } from './ViewServiceDialog';
 import { EditServiceDialog } from './EditServiceDialog';
 import { DeleteServiceDialog } from './DeleteServiceDialog';
+import { ServiceStats } from './ServiceStats';
 import { updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
 import { toast } from 'sonner';
 
@@ -121,6 +121,8 @@ const GarageServicesDashboard = () => {
           Nouveau Service
         </Button>
       </div>
+
+      <ServiceStats />
 
       <Card>
         <CardHeader>
