@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Search, RefreshCw, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
@@ -68,12 +68,10 @@ const GarageClientsDashboard = () => {
     }
   ];
 
-  console.log("Clients dans GarageClientsDashboard:", clients);
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Clients</h1>
+        <h1 className="text-2xl font-bold">Liste des clients</h1>
         <div className="flex space-x-2">
           <Button 
             variant="outline" 
@@ -91,21 +89,11 @@ const GarageClientsDashboard = () => {
       </div>
 
       {isOffline && (
-        <Alert variant="warning" className="mb-4">
+        <Alert variant="warning">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Mode hors ligne</AlertTitle>
           <AlertDescription>
-            Vous êtes actuellement hors ligne. Certaines fonctionnalités sont limitées et les données affichées peuvent ne pas être à jour.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Erreur de connexion</AlertTitle>
-          <AlertDescription>
-            Une erreur s'est produite lors du chargement des données. Veuillez réessayer.
+            Vous êtes actuellement hors ligne. Certaines fonctionnalités sont limitées.
           </AlertDescription>
         </Alert>
       )}
