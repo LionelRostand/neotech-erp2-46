@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { Car, Tool, AlertTriangle, Settings } from "lucide-react";
+import { Car, Settings, AlertTriangle } from "lucide-react";
 import { Vehicle } from '@/components/module/submodules/garage/types/garage-types';
 
 interface VehicleStatsCardsProps {
@@ -43,7 +43,7 @@ const VehicleStatsCards: React.FC<VehicleStatsCardsProps> = ({ vehicles }) => {
 
       <Card className="p-6 flex items-center space-x-4 bg-orange-50">
         <div className="p-3 bg-orange-100 rounded-lg">
-          <Tool className="h-6 w-6 text-orange-600" />
+          <Settings className="h-6 w-6 text-orange-600" />
         </div>
         <div>
           <p className="text-sm font-medium text-orange-600">En Maintenance</p>
