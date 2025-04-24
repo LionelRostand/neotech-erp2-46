@@ -5,51 +5,55 @@ import StatCard from '@/components/StatCard';
 import DataTable from '@/components/DataTable';
 import { LineChart, ShoppingBag, Users, Package, ArrowUp, ShoppingCart } from 'lucide-react';
 import { Transaction } from '@/components/DataTable';
-
-const dummyTransactions: Transaction[] = [
-  { 
-    id: '1234', 
-    date: '15 Juin 2023', 
-    client: 'Société ABC', 
-    amount: '€2,500.00', 
-    status: 'success', 
-    statusText: 'Payée' 
-  },
-  { 
-    id: '1235', 
-    date: '14 Juin 2023', 
-    client: 'Entreprise XYZ', 
-    amount: '€1,890.50', 
-    status: 'warning', 
-    statusText: 'En attente' 
-  },
-  { 
-    id: '1236', 
-    date: '13 Juin 2023', 
-    client: 'Groupe 123', 
-    amount: '€3,200.00', 
-    status: 'success', 
-    statusText: 'Payée' 
-  },
-  { 
-    id: '1237', 
-    date: '12 Juin 2023', 
-    client: 'Tech Solutions', 
-    amount: '€650.75', 
-    status: 'danger', 
-    statusText: 'Annulée' 
-  },
-  { 
-    id: '1238', 
-    date: '11 Juin 2023', 
-    client: 'Service Pro', 
-    amount: '€1,450.00', 
-    status: 'success', 
-    statusText: 'Payée' 
-  },
-];
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 const Index = () => {
+  // Use the dashboard data hook with static data only (no Firebase calls)
+  const { stats, transactions, loading } = useDashboardData(false);
+
+  const dummyTransactions: Transaction[] = [
+    { 
+      id: '1234', 
+      date: '15 Juin 2023', 
+      client: 'Société ABC', 
+      amount: '€2,500.00', 
+      status: 'success', 
+      statusText: 'Payée' 
+    },
+    { 
+      id: '1235', 
+      date: '14 Juin 2023', 
+      client: 'Entreprise XYZ', 
+      amount: '€1,890.50', 
+      status: 'warning', 
+      statusText: 'En attente' 
+    },
+    { 
+      id: '1236', 
+      date: '13 Juin 2023', 
+      client: 'Groupe 123', 
+      amount: '€3,200.00', 
+      status: 'success', 
+      statusText: 'Payée' 
+    },
+    { 
+      id: '1237', 
+      date: '12 Juin 2023', 
+      client: 'Tech Solutions', 
+      amount: '€650.75', 
+      status: 'danger', 
+      statusText: 'Annulée' 
+    },
+    { 
+      id: '1238', 
+      date: '11 Juin 2023', 
+      client: 'Service Pro', 
+      amount: '€1,450.00', 
+      status: 'success', 
+      statusText: 'Payée' 
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -60,25 +64,25 @@ const Index = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard 
           title="Chiffre d'affaires" 
-          value="€125,430" 
+          value={loading ? "€--" : "€125,430"} 
           icon={<LineChart className="text-primary" size={20} />} 
           description="+12% par rapport au mois dernier"
         />
         <StatCard 
           title="Commandes" 
-          value="345" 
+          value={loading ? "--" : "345"} 
           icon={<ShoppingBag className="text-primary" size={20} />} 
           description="+8% par rapport au mois dernier"
         />
         <StatCard 
           title="Clients" 
-          value="2,340" 
+          value={loading ? "--" : "2,340"} 
           icon={<Users className="text-primary" size={20} />} 
           description="120 nouveaux ce mois-ci"
         />
         <StatCard 
           title="Produits" 
-          value="650" 
+          value={loading ? "--" : "650"} 
           icon={<Package className="text-primary" size={20} />} 
           description="45 ajoutés ce mois-ci"
         />
