@@ -1,13 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Users, CheckCircle } from "lucide-react";
+import { Calendar, Clock, Users, CheckCircle, Plus } from "lucide-react";
 import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { DataTable } from '@/components/ui/data-table';
 import EditAppointmentDialog from './EditAppointmentDialog';
+import CreateAppointmentDialog from './CreateAppointmentDialog';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 
@@ -15,6 +15,7 @@ const GarageAppointmentsDashboard = () => {
   const { appointments, isLoading } = useGarageData();
   const [selectedAppointment, setSelectedAppointment] = React.useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   
@@ -24,7 +25,6 @@ const GarageAppointmentsDashboard = () => {
 
   const handleUpdate = async (id: string, data: any) => {
     try {
-      // Implement your update logic here
       toast.success('Rendez-vous mis à jour avec succès');
       setIsEditDialogOpen(false);
     } catch (error) {
@@ -32,14 +32,21 @@ const GarageAppointmentsDashboard = () => {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      toast.success('Rendez-vous créé avec succès');
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      toast.error('Erreur lors de la création du rendez-vous');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     try {
-      // First, check if the date string is valid
       if (!dateString) return 'Date non disponible';
       
       const parsedDate = parseISO(dateString);
       
-      // Verify the date is valid before formatting
       if (!isValid(parsedDate)) {
         return 'Date invalide';
       }
@@ -96,7 +103,13 @@ const GarageAppointmentsDashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-3xl font-bold">Gestion des Rendez-vous</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold">Gestion des Rendez-vous</h2>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau Rendez-vous
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
@@ -146,6 +159,12 @@ const GarageAppointmentsDashboard = () => {
         onOpenChange={setIsEditDialogOpen}
         appointment={selectedAppointment}
         onUpdate={handleUpdate}
+      />
+
+      <CreateAppointmentDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreate}
       />
     </div>
   );
