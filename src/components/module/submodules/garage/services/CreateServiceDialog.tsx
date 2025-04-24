@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useGarageServices } from '@/hooks/garage/useGarageServices';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
@@ -28,7 +27,7 @@ const CreateServiceDialog = ({ open, onOpenChange, onSuccess }: CreateServiceDia
         description: data.description,
         duration: parseInt(data.duration),
         price: parseFloat(data.price),
-        type: data.type,
+        type: 'maintenance', // Default type
         createdAt: new Date().toISOString()
       });
       onSuccess();
@@ -59,28 +58,6 @@ const CreateServiceDialog = ({ open, onOpenChange, onSuccess }: CreateServiceDia
                   <FormControl>
                     <Input {...field} placeholder="Nom du service" />
                   </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="repair">Réparation</SelectItem>
-                      <SelectItem value="diagnostic">Diagnostic</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </FormItem>
               )}
             />
