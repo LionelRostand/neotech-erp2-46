@@ -7,7 +7,7 @@ import { Wrench, Plus, Shield } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
 import CreateRepairDialog from './CreateRepairDialog';
-import { useHasPermission } from '@/hooks/usePermissions';
+import { useHasPermission } from '@/hooks/useHasPermission';
 
 const GarageRepairs = () => {
   const { repairs, isLoading, refetchRepairs } = useGarageData();
