@@ -3,6 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Vehicle } from '@/components/module/submodules/garage/types/garage-types';
 import { Badge } from "@/components/ui/badge";
+import { useGarageClients } from '@/hooks/garage/useGarageClients';
 
 interface ViewVehicleDialogProps {
   vehicle: Vehicle | null;
@@ -15,6 +16,9 @@ const ViewVehicleDialog: React.FC<ViewVehicleDialogProps> = ({
   isOpen,
   onClose
 }) => {
+  const { clients } = useGarageClients();
+  const associatedClient = vehicle ? clients.find(client => client.id === vehicle.clientId) : null;
+
   if (!vehicle) return null;
 
   return (
@@ -26,6 +30,12 @@ const ViewVehicleDialog: React.FC<ViewVehicleDialogProps> = ({
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="font-medium">Propriétaire</p>
+              <p className="text-sm text-gray-500">
+                {associatedClient ? `${associatedClient.firstName} ${associatedClient.lastName}` : 'Non assigné'}
+              </p>
+            </div>
             <div>
               <p className="font-medium">Marque</p>
               <p className="text-sm text-gray-500">{vehicle.make}</p>
