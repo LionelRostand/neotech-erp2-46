@@ -4,14 +4,9 @@ import DashboardLayout from '@/components/DashboardLayout';
 import StatCard from '@/components/StatCard';
 import DataTable from '@/components/DataTable';
 import { LineChart, ShoppingBag, Users, Package, ArrowUp, ShoppingCart } from 'lucide-react';
-import { Transaction } from '@/components/DataTable';
-import { useDashboardData } from '@/hooks/useDashboardData';
 
 const Index = () => {
-  // Use the dashboard data hook with static data only (no Firebase calls)
-  const { stats, transactions, loading } = useDashboardData(false);
-
-  const dummyTransactions: Transaction[] = [
+  const dummyTransactions = [
     { 
       id: '1234', 
       date: '15 Juin 2023', 
@@ -64,25 +59,25 @@ const Index = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard 
           title="Chiffre d'affaires" 
-          value={loading ? "€--" : "€125,430"} 
+          value="€125,430" 
           icon={<LineChart className="text-primary" size={20} />} 
           description="+12% par rapport au mois dernier"
         />
         <StatCard 
           title="Commandes" 
-          value={loading ? "--" : "345"} 
+          value="345" 
           icon={<ShoppingBag className="text-primary" size={20} />} 
           description="+8% par rapport au mois dernier"
         />
         <StatCard 
           title="Clients" 
-          value={loading ? "--" : "2,340"} 
+          value="2,340" 
           icon={<Users className="text-primary" size={20} />} 
           description="120 nouveaux ce mois-ci"
         />
         <StatCard 
           title="Produits" 
-          value={loading ? "--" : "650"} 
+          value="650" 
           icon={<Package className="text-primary" size={20} />} 
           description="45 ajoutés ce mois-ci"
         />

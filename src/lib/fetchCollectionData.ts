@@ -16,12 +16,11 @@ export async function fetchCollectionData<T>(
   try {
     // Check for empty or invalid collection path
     if (!collectionPath || collectionPath.trim() === '') {
-      const errorMessage = 'Empty collection path provided';
-      console.error(`Error: ${errorMessage}`);
-      toast.error(`Erreur de chargement: ${errorMessage}`);
+      console.error('Error: Collection path cannot be empty');
+      toast.error(`Erreur lors du chargement des données: Collection path cannot be empty`);
       return [];
     }
-
+    
     // Special case for invalid placeholder to avoid Firebase errors
     if (collectionPath === 'invalid_collection_placeholder') {
       console.warn('Using fallback for invalid collection path');
