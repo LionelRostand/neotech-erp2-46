@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,13 +7,16 @@ import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
 import CreateRepairDialog from './CreateRepairDialog';
 import useHasPermission from '@/hooks/useHasPermission';
+import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
+import { useQueryClient } from '@tanstack/react-query';
 
 const GarageRepairs = () => {
-  const { repairs, isLoading, refetchRepairs } = useGarageData();
+  const { repairs, loading } = useGarageRepairs();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
+  const queryClient = useQueryClient();
 
-  if (isLoading) {
+  if (loading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
@@ -82,9 +84,7 @@ const GarageRepairs = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={() => {
-          if (refetchRepairs) {
-            refetchRepairs();
-          }
+          queryClient.invalidateQueries(['garage', 'repairs']);
         }}
       />
     </div>
