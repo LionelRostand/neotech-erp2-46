@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -12,7 +11,7 @@ export const useGarageData = () => {
 
   const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['garage', 'appointments'],
-    queryFn: () => fetchCollectionData<Appointment>(COLLECTIONS.GARAGE.APPOINTMENTS)
+    queryFn: () => fetchCollectionData<Appointment>('garage_appointments')
   });
 
   const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
