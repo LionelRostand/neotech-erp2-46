@@ -95,6 +95,6 @@ export const useGarageData = () => {
       isLoadingInventory || 
       isLoadingLoyalty || 
       isLoadingSettings ||
-      isLoadingServices // Update isLoading check
+      isLoadingServices
   };
 };
