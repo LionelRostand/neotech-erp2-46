@@ -21,12 +21,10 @@ export const useCollectionData = (
   useEffect(() => {
     // Validate collection path first - early return if invalid
     if (!collectionPath || typeof collectionPath !== 'string' || collectionPath.trim() === '') {
-      const errorMsg = 'Collection path cannot be empty';
-      console.error(`Error: ${errorMsg}`);
-      setError(new Error(errorMsg));
+      console.error('Invalid collection path:', collectionPath);
+      setError(new Error('Collection path cannot be empty'));
       setIsLoading(false);
       setData([]); // Return empty data array
-      toast.error(errorMsg);
       return () => {}; // Return empty cleanup function
     }
 
@@ -57,7 +55,6 @@ export const useCollectionData = (
           setError(err);
           setIsLoading(false);
           setData([]); // Return empty data array on error
-          toast.error(`Erreur de chargement: ${err.message}`);
         }
       );
       
@@ -72,7 +69,6 @@ export const useCollectionData = (
       setError(error);
       setIsLoading(false);
       setData([]); // Return empty data array on error
-      toast.error(`Erreur: ${error.message}`);
       return () => {}; // Return empty cleanup function
     }
   }, [collectionPath, JSON.stringify(queryConstraints)]);
@@ -91,7 +87,6 @@ export const useFirebaseCollection = <T extends Record<string, any>>(
   queryConstraints: QueryConstraint[] = []
 ) => {
   // Ensure collection path has a valid fallback value
-  // Only pass non-empty paths to the collection function
   const safeCollectionPath = collectionPath && typeof collectionPath === 'string' && collectionPath.trim() !== '' 
     ? collectionPath.trim() 
     : null;

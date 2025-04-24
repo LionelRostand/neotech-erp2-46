@@ -12,11 +12,11 @@ import { useNavigate } from 'react-router-dom';
 export function MessagesDashboard() {
   const navigate = useNavigate();
   
-  // Utilisation de nullish coalescing pour les chemins de collection
-  const inboxPath = COLLECTIONS.MESSAGES?.INBOX || 'message_inbox';
-  const sentPath = COLLECTIONS.MESSAGES?.SENT || 'message_sent';
-  const archivedPath = COLLECTIONS.MESSAGES?.ARCHIVED || 'message_archived';
-  const scheduledPath = COLLECTIONS.MESSAGES?.SCHEDULED || 'message_scheduled';
+  // Use non-nullish collection paths
+  const inboxPath = COLLECTIONS.MESSAGES.INBOX;
+  const sentPath = COLLECTIONS.MESSAGES.SENT;
+  const archivedPath = COLLECTIONS.MESSAGES.ARCHIVED;
+  const scheduledPath = COLLECTIONS.MESSAGES.SCHEDULED;
   
   const { data: inbox = [] } = useFirebaseCollection<Message>(inboxPath);
   const { data: sent = [] } = useFirebaseCollection<Message>(sentPath);

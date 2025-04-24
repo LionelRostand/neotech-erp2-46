@@ -13,10 +13,8 @@ export const useMechanicService = () => {
   const [currentMechanic, setCurrentMechanic] = useState<Mechanic | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // Ensure we have a valid collection path with multiple fallbacks
-  const mechanicsPath = 
-    (COLLECTIONS.GARAGE && COLLECTIONS.GARAGE.MECHANICS) || 
-    'garage_mechanics';
+  // Use definite mechanics collection path
+  const mechanicsPath = COLLECTIONS.GARAGE.MECHANICS;
   
   console.log('Mechanics collection path:', mechanicsPath);
   

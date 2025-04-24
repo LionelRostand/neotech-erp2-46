@@ -1,14 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Message } from '../../types/message-types';
 
 export const useScheduledMessagesData = () => {
-  // Ensure we have a valid collection path, with multiple fallbacks
-  const scheduledMessagesPath = 
-    (COLLECTIONS.MESSAGES && COLLECTIONS.MESSAGES.SCHEDULED) || 
-    'message_scheduled';
+  // Use definite path from COLLECTIONS
+  const scheduledMessagesPath = COLLECTIONS.MESSAGES.SCHEDULED;
   
   console.log('scheduledMessagesPath:', scheduledMessagesPath); // Debug log
   
@@ -18,9 +16,7 @@ export const useScheduledMessagesData = () => {
     isLoading, 
     error, 
     refetch 
-  } = useFirebaseCollection<Message>(
-    scheduledMessagesPath
-  );
+  } = useFirebaseCollection<Message>(scheduledMessagesPath);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'upcoming' | 'all'>('all');
