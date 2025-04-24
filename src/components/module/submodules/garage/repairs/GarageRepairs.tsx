@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wrench } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Wrench, Plus } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
+import CreateRepairDialog from './CreateRepairDialog';
 
 const GarageRepairs = () => {
-  const { repairs, isLoading } = useGarageData();
+  const { repairs, isLoading, refetchRepairs } = useGarageData();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -21,6 +24,10 @@ const GarageRepairs = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Réparations</h1>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle réparation
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -51,6 +58,12 @@ const GarageRepairs = () => {
       </div>
 
       <RepairKanban />
+
+      <CreateRepairDialog 
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={refetchRepairs}
+      />
     </div>
   );
 };
