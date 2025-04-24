@@ -15,6 +15,7 @@ export const garageModule: AppModule = {
     { id: "garage-vehicles", name: "Véhicules", href: "/modules/garage/vehicles", icon: createIcon(Car) },
     { id: "garage-appointments", name: "Rendez-vous", href: "/modules/garage/appointments", icon: createIcon(CalendarRange) },
     { id: "garage-repairs", name: "Réparations", href: "/modules/garage/repairs", icon: createIcon(Wrench) },
+    { id: "garage-mechanics", name: "Mécaniciens", href: "/modules/garage/mechanics", icon: createIcon(Users) },
     { id: "garage-services", name: "Services", href: "/modules/garage/services", icon: createIcon(Settings2) },
     { id: "garage-invoices", name: "Factures", href: "/modules/garage/invoices", icon: createIcon(Receipt) },
     { id: "garage-suppliers", name: "Fournisseurs", href: "/modules/garage/suppliers", icon: createIcon(Truck) },
