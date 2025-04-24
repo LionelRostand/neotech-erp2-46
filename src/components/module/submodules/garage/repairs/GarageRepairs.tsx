@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wrench, Plus, Shield } from 'lucide-react';
+import { Plus, Wrench } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
+import { RepairsTable } from './RepairsTable';
 import CreateRepairDialog from './CreateRepairDialog';
 import useHasPermission from '@/hooks/useHasPermission';
 import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
@@ -20,7 +20,6 @@ const GarageRepairs = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  // Handle case where user doesn't have permission
   if (!hasViewPermission) {
     return (
       <div className="container mx-auto p-6">
@@ -36,10 +35,6 @@ const GarageRepairs = () => {
       </div>
     );
   }
-
-  const inProgress = repairs?.filter(r => r.status === 'in_progress') || [];
-  const awaitingParts = repairs?.filter(r => r.status === 'awaiting_parts') || [];
-  const completed = repairs?.filter(r => r.status === 'completed') || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -60,23 +55,27 @@ const GarageRepairs = () => {
         />
         <StatCard
           title="En Cours"
-          value={inProgress.length.toString()}
+          value={repairs?.filter(r => r.status === 'in_progress').length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Réparations actives"
         />
         <StatCard
           title="En Attente de Pièces"
-          value={awaitingParts.length.toString()}
+          value={repairs?.filter(r => r.status === 'awaiting_parts').length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Commandes en cours"
         />
         <StatCard
           title="Terminées"
-          value={completed.length.toString()}
+          value={repairs?.filter(r => r.status === 'completed').length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Total complété"
         />
       </div>
+
+      <Card className="p-6">
+        <RepairsTable />
+      </Card>
 
       <RepairKanban />
 
