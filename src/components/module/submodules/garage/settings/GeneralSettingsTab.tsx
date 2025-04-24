@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useGarageSettings } from '@/hooks/garage/useGarageSettings';
+import { Save } from 'lucide-react';
 
 const GeneralSettingsTab = () => {
   const { settings, loading, saveSettings } = useGarageSettings();
@@ -50,8 +51,8 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="name" 
                 name="name" 
-                defaultValue={settings.name} 
-                placeholder="Nom du garage" 
+                defaultValue={settings.name}
+                placeholder="Nom du garage"
               />
             </div>
             
@@ -62,8 +63,8 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="siret" 
                 name="siret" 
-                defaultValue={settings.siret} 
-                placeholder="XXX XXX XXX XXXXX" 
+                defaultValue={settings.siret}
+                placeholder="XXX XXX XXX XXXXX"
               />
             </div>
           </div>
@@ -75,8 +76,8 @@ const GeneralSettingsTab = () => {
             <Input 
               id="street" 
               name="street" 
-              defaultValue={settings.address.street} 
-              placeholder="Numéro et nom de rue" 
+              defaultValue={settings.address.street}
+              placeholder="Numéro et nom de rue"
             />
           </div>
 
@@ -88,8 +89,8 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="city" 
                 name="city" 
-                defaultValue={settings.address.city} 
-                placeholder="Ville" 
+                defaultValue={settings.address.city}
+                placeholder="Ville"
               />
             </div>
             
@@ -100,8 +101,8 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="postalCode" 
                 name="postalCode" 
-                defaultValue={settings.address.postalCode} 
-                placeholder="Code postal" 
+                defaultValue={settings.address.postalCode}
+                placeholder="Code postal"
               />
             </div>
             
@@ -112,8 +113,8 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="country" 
                 name="country" 
-                defaultValue={settings.address.country} 
-                placeholder="Pays" 
+                defaultValue={settings.address.country}
+                placeholder="Pays"
               />
             </div>
           </div>
@@ -126,8 +127,8 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="phone" 
                 name="phone" 
-                defaultValue={settings.phone} 
-                placeholder="+33 X XX XX XX XX" 
+                defaultValue={settings.phone}
+                placeholder="+33 X XX XX XX XX"
               />
             </div>
             
@@ -138,14 +139,15 @@ const GeneralSettingsTab = () => {
               <Input 
                 id="email" 
                 name="email" 
-                defaultValue={settings.email} 
-                placeholder="contact@garage.com" 
+                defaultValue={settings.email}
+                placeholder="contact@garage.com"
               />
             </div>
           </div>
 
           <div className="flex justify-end">
             <Button type="submit">
+              <Save className="w-4 h-4 mr-2" />
               Enregistrer les modifications
             </Button>
           </div>
