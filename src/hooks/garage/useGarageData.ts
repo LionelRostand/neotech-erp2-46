@@ -14,8 +14,8 @@ export const useGarageData = () => {
   };
 
   // Safety check for collection paths
-  const validateCollectionPath = (path: string, name: string): string => {
-    if (!path) {
+  const validateCollectionPath = (path: string | undefined, name: string): string => {
+    if (!path || path.trim() === '') {
       console.error(`Collection path for ${name} is undefined or empty`);
       // Return a placeholder path that won't be used but prevents Firebase error
       return 'invalid_collection_placeholder';
@@ -26,7 +26,7 @@ export const useGarageData = () => {
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['garage', 'vehicles'],
     queryFn: () => fetchCollectionData<Vehicle>(
-      validateCollectionPath(COLLECTIONS.GARAGE.VEHICLES, 'vehicles')
+      validateCollectionPath(COLLECTIONS.GARAGE?.VEHICLES, 'vehicles')
     ),
     ...queryConfig
   });
@@ -34,7 +34,7 @@ export const useGarageData = () => {
   const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['garage', 'appointments'],
     queryFn: () => fetchCollectionData<Appointment>(
-      validateCollectionPath(COLLECTIONS.GARAGE.APPOINTMENTS, 'appointments')
+      validateCollectionPath(COLLECTIONS.GARAGE?.APPOINTMENTS, 'appointments')
     ),
     ...queryConfig
   });
@@ -42,7 +42,7 @@ export const useGarageData = () => {
   const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
     queryKey: ['garage', 'repairs'],
     queryFn: () => fetchCollectionData<Repair>(
-      validateCollectionPath(COLLECTIONS.GARAGE.REPAIRS, 'repairs')
+      validateCollectionPath(COLLECTIONS.GARAGE?.REPAIRS, 'repairs')
     ),
     ...queryConfig
   });
@@ -50,7 +50,7 @@ export const useGarageData = () => {
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
     queryKey: ['garage', 'invoices'],
     queryFn: () => fetchCollectionData<Invoice>(
-      validateCollectionPath(COLLECTIONS.GARAGE.INVOICES, 'invoices')
+      validateCollectionPath(COLLECTIONS.GARAGE?.INVOICES, 'invoices')
     ),
     ...queryConfig
   });
@@ -58,7 +58,7 @@ export const useGarageData = () => {
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useQuery({
     queryKey: ['garage', 'suppliers'],
     queryFn: () => fetchCollectionData<Supplier>(
-      validateCollectionPath(COLLECTIONS.GARAGE.SUPPLIERS, 'suppliers')
+      validateCollectionPath(COLLECTIONS.GARAGE?.SUPPLIERS, 'suppliers')
     ),
     ...queryConfig
   });
@@ -66,7 +66,7 @@ export const useGarageData = () => {
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['garage', 'clients'],
     queryFn: () => fetchCollectionData<GarageClient>(
-      validateCollectionPath(COLLECTIONS.GARAGE.CLIENTS, 'clients')
+      validateCollectionPath(COLLECTIONS.GARAGE?.CLIENTS, 'clients')
     ),
     ...queryConfig
   });
@@ -74,7 +74,7 @@ export const useGarageData = () => {
   const { data: inventory = [], isLoading: isLoadingInventory } = useQuery({
     queryKey: ['garage', 'inventory'],
     queryFn: () => fetchCollectionData<InventoryItem>(
-      validateCollectionPath(COLLECTIONS.GARAGE.INVENTORY, 'inventory')
+      validateCollectionPath(COLLECTIONS.GARAGE?.INVENTORY, 'inventory')
     ),
     ...queryConfig
   });
@@ -82,7 +82,7 @@ export const useGarageData = () => {
   const { data: loyalty = [], isLoading: isLoadingLoyalty } = useQuery({
     queryKey: ['garage', 'loyalty'],
     queryFn: () => fetchCollectionData<LoyaltyProgram>(
-      validateCollectionPath(COLLECTIONS.GARAGE.LOYALTY, 'loyalty')
+      validateCollectionPath(COLLECTIONS.GARAGE?.LOYALTY, 'loyalty')
     ),
     ...queryConfig
   });
@@ -90,7 +90,7 @@ export const useGarageData = () => {
   const { data: settings = [], isLoading: isLoadingSettings } = useQuery({
     queryKey: ['garage', 'settings'],
     queryFn: () => fetchCollectionData<GarageSettings>(
-      validateCollectionPath(COLLECTIONS.GARAGE.SETTINGS, 'settings')
+      validateCollectionPath(COLLECTIONS.GARAGE?.SETTINGS, 'settings')
     ),
     ...queryConfig
   });
