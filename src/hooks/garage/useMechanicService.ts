@@ -13,23 +13,26 @@ export const useMechanicService = () => {
     phone: string;
   }) => {
     try {
-      if (!COLLECTIONS.GARAGE?.MECHANICS) {
-        console.error('COLLECTIONS.GARAGE.MECHANICS is not defined');
-        toast.error('Erreur de configuration: collection MECHANICS non définie');
-        return false;
+      // Ensure we have a valid collection path
+      const collectionPath = COLLECTIONS.GARAGE?.MECHANICS || 'garage_mechanics';
+      
+      if (!collectionPath || collectionPath.trim() === '') {
+        throw new Error('Collection path for mechanics cannot be empty');
       }
       
-      console.log('Adding mechanic to collection:', COLLECTIONS.GARAGE.MECHANICS);
+      console.log('Adding mechanic to collection:', collectionPath);
       
-      const mechanicsRef = collection(db, COLLECTIONS.GARAGE.MECHANICS);
+      const mechanicsRef = collection(db, collectionPath);
       const newMechanic: Partial<Mechanic> = {
         ...mechanicData,
+        position: 'Mécanicien',
         status: 'active',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
-      await addDoc(mechanicsRef, newMechanic);
+      const docRef = await addDoc(mechanicsRef, newMechanic);
+      console.log('Mechanic added successfully with ID:', docRef.id);
       toast.success('Mécanicien ajouté avec succès');
       return true;
     } catch (error: any) {
