@@ -3,6 +3,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import type { Mechanic } from '@/components/module/submodules/garage/types/garage-types';
 
 export const useMechanicService = () => {
   const addMechanic = async (mechanicData: {
@@ -12,37 +13,28 @@ export const useMechanicService = () => {
     phone: string;
   }) => {
     try {
-      // Check that the collection path exists before attempting to use it
-      if (!COLLECTIONS.GARAGE || !COLLECTIONS.GARAGE.MECHANICS) {
+      if (!COLLECTIONS.GARAGE?.MECHANICS) {
         console.error('COLLECTIONS.GARAGE.MECHANICS is not defined');
-        toast.error('Erreur de configuration: collection GARAGE.MECHANICS non définie');
+        toast.error('Erreur de configuration: collection MECHANICS non définie');
         return false;
       }
       
-      const mechanicsCollectionPath = COLLECTIONS.GARAGE.MECHANICS;
-      console.log('Adding mechanic to collection path:', mechanicsCollectionPath);
+      console.log('Adding mechanic to collection:', COLLECTIONS.GARAGE.MECHANICS);
       
-      if (!mechanicsCollectionPath || mechanicsCollectionPath.trim() === '') {
-        console.error('Empty mechanics collection path');
-        toast.error('Erreur: Impossible d\'ajouter le mécanicien - configuration incorrecte');
-        return false;
-      }
-      
-      const mechanicsRef = collection(db, mechanicsCollectionPath);
-      const newMechanic = {
+      const mechanicsRef = collection(db, COLLECTIONS.GARAGE.MECHANICS);
+      const newMechanic: Partial<Mechanic> = {
         ...mechanicData,
-        position: 'Mécanicien',
         status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       
       await addDoc(mechanicsRef, newMechanic);
       toast.success('Mécanicien ajouté avec succès');
       return true;
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout du mécanicien:', error);
-      toast.error('Erreur lors de l\'ajout du mécanicien');
+    } catch (error: any) {
+      console.error('Error adding mechanic:', error);
+      toast.error('Erreur lors de l\'ajout du mécanicien: ' + error.message);
       return false;
     }
   };

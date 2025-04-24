@@ -3,7 +3,7 @@ export const COLLECTIONS = {
   HR: {
     EMPLOYEES: 'hr_employees',
     TRAININGS: 'hr_trainings',
-    ABSENCE_REQUESTS: 'hr_absence_requests',  // Added for EmployeesAbsences component
+    ABSENCE_REQUESTS: 'hr_absence_requests',
   },
   GARAGE: {
     MECHANICS: 'garage_mechanics',
@@ -24,8 +24,8 @@ export const COLLECTIONS = {
     SENT: 'message_sent',
     ARCHIVED: 'message_archived',
     SCHEDULED: 'message_scheduled',
-    DRAFTS: 'message_drafts',  // Added for useMessageForm
-    MESSAGES: 'messages',       // Added for MessagesDashboard
+    DRAFTS: 'message_drafts',
+    MESSAGES: 'messages',
   },
   DOCUMENT_COLLECTIONS: {
     DOCUMENTS: 'documents',
