@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
@@ -11,17 +12,17 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const MessagesDashboard: React.FC = () => {
   // Paths with fallbacks
-  const inboxPath = COLLECTIONS.MESSAGES.INBOX || 'message_inbox';
-  const sentPath = COLLECTIONS.MESSAGES.SENT || 'message_sent';
-  const archivedPath = COLLECTIONS.MESSAGES.ARCHIVED || 'message_archived';
-  const scheduledPath = COLLECTIONS.MESSAGES.SCHEDULED || 'message_scheduled';
-  const contactsPath = COLLECTIONS.MESSAGES.CONTACTS || 'message_contacts';
+  const inboxPath = COLLECTIONS.MESSAGES?.INBOX || 'message_inbox';
+  const sentPath = COLLECTIONS.MESSAGES?.SENT || 'message_sent';
+  const archivedPath = COLLECTIONS.MESSAGES?.ARCHIVED || 'message_archived';
+  const scheduledPath = COLLECTIONS.MESSAGES?.SCHEDULED || 'message_scheduled';
+  const contactsPath = COLLECTIONS.MESSAGES?.CONTACTS || 'message_contacts';
   
-  const { data: inbox, isLoading: inboxLoading } = useFirebaseCollection(inboxPath);
-  const { data: sent, isLoading: sentLoading } = useFirebaseCollection(sentPath);
-  const { data: archived, isLoading: archivedLoading } = useFirebaseCollection(archivedPath);
-  const { data: scheduled, isLoading: scheduledLoading } = useFirebaseCollection(scheduledPath);
-  const { data: contacts, isLoading: contactsLoading } = useFirebaseCollection(contactsPath);
+  const { data: inbox = [], isLoading: inboxLoading } = useFirebaseCollection(inboxPath);
+  const { data: sent = [], isLoading: sentLoading } = useFirebaseCollection(sentPath);
+  const { data: archived = [], isLoading: archivedLoading } = useFirebaseCollection(archivedPath);
+  const { data: scheduled = [], isLoading: scheduledLoading } = useFirebaseCollection(scheduledPath);
+  const { data: contacts = [], isLoading: contactsLoading } = useFirebaseCollection(contactsPath);
   
   const isLoading = inboxLoading || sentLoading || archivedLoading || scheduledLoading || contactsLoading;
   
