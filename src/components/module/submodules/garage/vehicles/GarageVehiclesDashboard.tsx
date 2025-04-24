@@ -86,7 +86,11 @@ const GarageVehiclesDashboard = () => {
                     {vehicle.make} {vehicle.model} ({vehicle.year})
                   </TableCell>
                   <TableCell>{vehicle.licensePlate}</TableCell>
-                  <TableCell>{vehicle.mileage.toLocaleString()} km</TableCell>
+                  <TableCell>
+                    {vehicle.mileage != null && typeof vehicle.mileage === 'number' 
+                      ? vehicle.mileage.toLocaleString() + ' km'
+                      : 'Non renseigné'}
+                  </TableCell>
                   <TableCell>
                     {vehicle.lastCheckDate ? new Date(vehicle.lastCheckDate).toLocaleDateString() : 'Non renseigné'}
                   </TableCell>
