@@ -6,6 +6,33 @@ import { Wrench } from "lucide-react";
 import { useGarageEmployees } from '@/hooks/garage/useGarageEmployees';
 import StatCard from '@/components/StatCard';
 import { AddMechanicDialog } from './AddMechanicDialog';
+import { Badge } from "@/components/ui/badge";
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'active':
+      return 'bg-green-100 text-green-800';
+    case 'busy':
+      return 'bg-amber-100 text-amber-800';
+    case 'onLeave':
+      return 'bg-purple-100 text-purple-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'active':
+      return 'Disponible';
+    case 'busy':
+      return 'En intervention';
+    case 'onLeave':
+      return 'En congé';
+    default:
+      return status;
+  }
+};
 
 const GarageMechanicsDashboard = () => {
   const { employees, loading } = useGarageEmployees();
@@ -26,7 +53,7 @@ const GarageMechanicsDashboard = () => {
         <AddMechanicDialog />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           title="Mécaniciens Disponibles"
           value={availableMechanics.length.toString()}
@@ -56,20 +83,22 @@ const GarageMechanicsDashboard = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Statut</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Téléphone</TableHead>
+                <TableHead>Statut</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {mechanics.map((mechanic) => (
                 <TableRow key={mechanic.id}>
                   <TableCell>{mechanic.firstName} {mechanic.lastName}</TableCell>
-                  <TableCell>{mechanic.position}</TableCell>
-                  <TableCell>{mechanic.status}</TableCell>
                   <TableCell>{mechanic.email}</TableCell>
                   <TableCell>{mechanic.phone}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(mechanic.status)}>
+                      {getStatusText(mechanic.status)}
+                    </Badge>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
