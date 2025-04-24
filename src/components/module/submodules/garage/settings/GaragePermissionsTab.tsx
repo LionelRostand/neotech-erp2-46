@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useGaragePermissions } from '@/hooks/garage/useGaragePermissions';
+import { Checkbox } from "@/components/ui/checkbox";
 
 const GaragePermissionsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,34 +66,30 @@ const GaragePermissionsTab = () => {
                         </div>
                       </td>
                       <td className="text-center p-4">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={user.permissions?.view || false}
-                          onChange={(e) => updatePermission(user.userId, 'garage', 'view', e.target.checked)}
+                          onCheckedChange={(checked) => updatePermission(user.userId, 'garage', 'view', !!checked)}
                           className="h-4 w-4"
                         />
                       </td>
                       <td className="text-center p-4">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={user.permissions?.create || false}
-                          onChange={(e) => updatePermission(user.userId, 'garage', 'create', e.target.checked)}
+                          onCheckedChange={(checked) => updatePermission(user.userId, 'garage', 'create', !!checked)}
                           className="h-4 w-4"
                         />
                       </td>
                       <td className="text-center p-4">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={user.permissions?.edit || false}
-                          onChange={(e) => updatePermission(user.userId, 'garage', 'edit', e.target.checked)}
+                          onCheckedChange={(checked) => updatePermission(user.userId, 'garage', 'edit', !!checked)}
                           className="h-4 w-4"
                         />
                       </td>
                       <td className="text-center p-4">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={user.permissions?.delete || false}
-                          onChange={(e) => updatePermission(user.userId, 'garage', 'delete', e.target.checked)}
+                          onCheckedChange={(checked) => updatePermission(user.userId, 'garage', 'delete', !!checked)}
                           className="h-4 w-4"
                         />
                       </td>

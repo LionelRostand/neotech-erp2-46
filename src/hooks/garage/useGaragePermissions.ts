@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -25,8 +25,8 @@ export const useGaragePermissions = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        // Simulation de chargement des utilisateurs
-        // TODO: Implémenter la vraie logique de chargement depuis Firestore
+        // Pour le moment, nous utilisons des données simulées
+        // Dans une vraie application, ceci chargerait les utilisateurs depuis Firestore
         setUsers([
           {
             userId: '1',
@@ -39,7 +39,28 @@ export const useGaragePermissions = () => {
               delete: false
             }
           },
-          // Ajoutez d'autres utilisateurs ici
+          {
+            userId: '2',
+            userName: 'Jane Smith',
+            email: 'jane@example.com',
+            permissions: {
+              view: true,
+              create: false,
+              edit: false,
+              delete: false
+            }
+          },
+          {
+            userId: '3',
+            userName: 'Robert Johnson',
+            email: 'robert@example.com',
+            permissions: {
+              view: true,
+              create: true,
+              edit: false,
+              delete: false
+            }
+          }
         ]);
       } catch (error) {
         console.error('Erreur lors du chargement des utilisateurs:', error);

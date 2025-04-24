@@ -3,13 +3,11 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Shield } from 'lucide-react';
-import { usePermissions } from '@/hooks/usePermissions';
 import GaragePermissionsTab from './GaragePermissionsTab';
 import GeneralSettingsTab from './GeneralSettingsTab';
 
 const GarageSettings = () => {
   const [activeTab, setActiveTab] = useState('general');
-  const { isAdmin } = usePermissions();
 
   return (
     <div className="p-6 space-y-6">
@@ -24,23 +22,19 @@ const GarageSettings = () => {
             <Settings className="h-4 w-4" />
             Général
           </TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger value="permissions" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Droits d'accès
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="permissions" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Droits d'accès
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
           <GeneralSettingsTab />
         </TabsContent>
 
-        {isAdmin && (
-          <TabsContent value="permissions">
-            <GaragePermissionsTab />
-          </TabsContent>
-        )}
+        <TabsContent value="permissions">
+          <GaragePermissionsTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
