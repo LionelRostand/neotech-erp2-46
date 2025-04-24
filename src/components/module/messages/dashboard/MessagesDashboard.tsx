@@ -1,101 +1,176 @@
 
-import React from 'react';
-import { CalendarCheck, Clock, Inbox, Archive, Send } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Message } from '../types/message-types';
-import { useNavigate } from 'react-router-dom';
+import { Message, MessageMetrics } from '../types/message-types';
+import MessageMetricsCards from './MessageMetricsCards';
+import ActivityChart from './ActivityChart';
+import TopContacts from './TopContacts';
+import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
-export function MessagesDashboard() {
-  const navigate = useNavigate();
+const MessagesDashboard: React.FC = () => {
+  const [metrics, setMetrics] = useState<MessageMetrics | null>(null);
   
-  // Use non-nullish collection paths
-  const inboxPath = COLLECTIONS.MESSAGES.INBOX;
-  const sentPath = COLLECTIONS.MESSAGES.SENT;
-  const archivedPath = COLLECTIONS.MESSAGES.ARCHIVED;
-  const scheduledPath = COLLECTIONS.MESSAGES.SCHEDULED;
+  // Ensure we use fallback collection paths
+  const inboxPath = COLLECTIONS.MESSAGES.MESSAGES || 'messages';
+  const archivePath = COLLECTIONS.MESSAGES.ARCHIVE || 'messages_archive';
+  const contactsPath = COLLECTIONS.MESSAGES.CONTACTS || 'contacts';
+  const scheduledPath = COLLECTIONS.MESSAGES.SCHEDULED || 'scheduled_messages';
   
-  const { data: inbox = [] } = useFirebaseCollection<Message>(inboxPath);
-  const { data: sent = [] } = useFirebaseCollection<Message>(sentPath);
-  const { data: archived = [] } = useFirebaseCollection<Message>(archivedPath);
-  const { data: scheduled = [] } = useFirebaseCollection<Message>(scheduledPath);
+  const { data: inboxMessages, isLoading: isLoadingInbox, error: inboxError } = 
+    useFirebaseCollection<Message>(inboxPath);
   
-  // Calculate message counts with null/undefined handling
-  const inboxCount = inbox?.length || 0;
-  const sentCount = sent?.length || 0;
-  const archivedCount = archived?.length || 0;
-  const scheduledCount = scheduled?.length || 0;
+  const { data: archivedMessages, isLoading: isLoadingArchived, error: archivedError } = 
+    useFirebaseCollection<Message>(archivePath);
+  
+  // Récupération des contacts depuis Firestore
+  const { data: contacts, isLoading: isLoadingContacts, error: contactsError } = 
+    useFirebaseCollection(contactsPath);
+  
+  const { data: scheduledMessages, isLoading: isLoadingScheduled, error: scheduledError } = 
+    useFirebaseCollection<Message>(scheduledPath);
+  
+  const isLoading = isLoadingInbox || isLoadingArchived || isLoadingContacts || isLoadingScheduled;
+  const error = inboxError || archivedError || contactsError || scheduledError;
+  
+  // Calcul des métriques
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const totalMessages = inboxMessages.length + archivedMessages.length + scheduledMessages.length;
+    const unreadMessages = inboxMessages.filter(msg => !msg.isRead).length;
+    const archivedMessagesCount = archivedMessages.length;
+    const scheduledMessagesCount = scheduledMessages.length;
+    const sentMessagesCount = inboxMessages.filter(msg => msg.status === 'sent').length;
+    const receivedMessagesCount = inboxMessages.filter(msg => msg.status === 'received').length;
 
-  // Navigation handlers
-  const navigateToInbox = () => navigate('/modules/messages/inbox');
-  const navigateToSent = () => navigate('/modules/messages/sent');
-  const navigateToArchived = () => navigate('/modules/messages/archive');
-  const navigateToScheduled = () => navigate('/modules/messages/scheduled');
+    // Group messages by category
+    const messagesByCategory: Record<string, number> = inboxMessages.reduce((acc: Record<string, number>, msg) => {
+      const category = msg.category || 'other';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Group messages by priority
+    const messagesByPriority: Record<string, number> = inboxMessages.reduce((acc: Record<string, number>, msg) => {
+      acc[msg.priority] = (acc[msg.priority] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Calculate daily activity (example: count messages created each day)
+    const dailyActivity = inboxMessages.reduce((acc: Array<{date: string; count: number}>, msg) => {
+      const date = msg.createdAt?.toDate().toLocaleDateString() || 'N/A';
+      const existingEntry = acc.find(entry => entry.date === date);
+
+      if (existingEntry) {
+        existingEntry.count += 1;
+      } else {
+        acc.push({ date, count: 1 });
+      }
+
+      return acc;
+    }, []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Find top contacts (example: most frequent recipients)
+    const topContacts = contacts
+      .filter(contact => contact && typeof contact === 'object')
+      .map(contact => {
+        // Safely access contact properties
+        const contactId = contact?.id || '';
+        const firstName = contact?.firstName || '';
+        const lastName = contact?.lastName || '';
+        const contactName = firstName && lastName ? `${firstName} ${lastName}` : 'Unknown Contact';
+        
+        return {
+          id: contactId,
+          name: contactName,
+          count: inboxMessages.filter(msg => 
+            msg.recipients && Array.isArray(msg.recipients) && 
+            msg.recipients.includes(contactId)
+          ).length
+        };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    
+    const messagesSentToday = inboxMessages.filter(msg => {
+      const today = new Date();
+      const createdAt = msg.createdAt?.toDate();
+      return createdAt && createdAt.toDateString() === today.toDateString();
+    }).length;
+    
+    const contactsCount = contacts.length;
+
+    setMetrics({
+      totalMessages,
+      unreadMessages,
+      archivedMessages: archivedMessagesCount,
+      scheduledMessages: scheduledMessagesCount,
+      sentMessagesCount,
+      receivedMessagesCount,
+      messagesByCategory,
+      messagesByPriority,
+      dailyActivity,
+      topContacts,
+      messagesSentToday,
+      contactsCount
+    });
+  }, [inboxMessages, archivedMessages, scheduledMessages, contacts, isLoading]);
+  
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tableau de bord des messages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FirebaseErrorAlert error={error} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <MessageCard
-        icon={<Inbox className="h-6 w-6" />}
-        title="Boîte de réception"
-        count={inboxCount}
-        onClick={navigateToInbox}
-        color="bg-blue-500"
-      />
-      <MessageCard
-        icon={<Send className="h-6 w-6" />}
-        title="Messages envoyés"
-        count={sentCount}
-        onClick={navigateToSent}
-        color="bg-green-500"
-      />
-      <MessageCard
-        icon={<Archive className="h-6 w-6" />}
-        title="Archives"
-        count={archivedCount}
-        onClick={navigateToArchived}
-        color="bg-yellow-500"
-      />
-      <MessageCard
-        icon={<CalendarCheck className="h-6 w-6" />}
-        title="Programmés"
-        count={scheduledCount}
-        onClick={navigateToScheduled}
-        color="bg-purple-500"
-      />
+    <div className="space-y-6">
+      <h2 className="text-3xl font-bold">Tableau de bord</h2>
+      
+      {isLoading ? (
+        <div className="space-y-4">
+          <div>Chargement des métriques...</div>
+          <div>Chargement des messages en cours...</div>
+          <div>Chargement des contacts en cours...</div>
+          <div>Chargement des messages planifiés...</div>
+        </div>
+      ) : (
+        <>
+          {metrics && <MessageMetricsCards metrics={metrics} />}
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Activité des messages</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {metrics?.dailyActivity && <ActivityChart data={metrics.dailyActivity} />}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Contacts fréquents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {metrics?.topContacts && <TopContacts contacts={metrics.topContacts} />}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
-}
+};
 
-interface MessageCardProps {
-  icon: React.ReactNode;
-  title: string;
-  count: number;
-  onClick: () => void;
-  color: string;
-}
-
-function MessageCard({ icon, title, count, onClick, color }: MessageCardProps) {
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className={cn("text-white py-3", color)}>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-          {icon}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <div className="text-2xl font-bold mb-2">{count}</div>
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={onClick}
-        >
-          Afficher
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
+export default MessagesDashboard;

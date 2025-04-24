@@ -1,23 +1,16 @@
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { Loader2 } from "lucide-react";
 
 interface AddClientDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onClientAdded?: () => void;
+  onClientAdded: () => void;
 }
 
 const AddClientDialog: React.FC<AddClientDialogProps> = ({
@@ -34,26 +27,17 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
     address: '',
     notes: ''
   });
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  const handleSubmit = async () => {
     try {
       await addClient(formData);
-      
-      // Reset form
+      onClientAdded();
+      onOpenChange(false);
       setFormData({
         firstName: '',
         lastName: '',
@@ -62,32 +46,19 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
         address: '',
         notes: ''
       });
-      
-      // Call onClientAdded callback if provided
-      if (onClientAdded) {
-        onClientAdded();
-      }
-      
-      onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du client:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!isSubmitting) {
-        onOpenChange(open);
-      }
-    }}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Nouveau Client</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4">
+        <div className="grid grid-cols-2 gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="firstName">Prénom *</Label>
             <Input
@@ -153,31 +124,16 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
               rows={3}
             />
           </div>
-          
-          <DialogFooter className="col-span-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Annuler
-            </Button>
-            <Button 
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Ajout en cours...
-                </>
-              ) : (
-                'Ajouter le client'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button onClick={handleSubmit}>
+            Ajouter le client
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

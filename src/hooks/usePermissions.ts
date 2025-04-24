@@ -1,73 +1,81 @@
 
 import { useState, useEffect } from 'react';
+import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/components/module/submodules/employees/services/permissionService';
+import { useAuth } from './useAuth';
 
-// Define types for module permissions
-interface ModulePermissions {
-  view: boolean;
-  create: boolean;
-  edit: boolean;
-  delete: boolean;
-  export?: boolean;
-  modify?: boolean;
-}
+export const usePermissions = (moduleId?: string) => {
+  const { currentUser, isOffline } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
+  const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
-/**
- * Hook to provide permission management functionality
- * Returns information about user permissions and methods to check them
- */
-export const usePermissions = () => {
-  const [isAdmin, setIsAdmin] = useState(true); // For development purposes, default to admin
-  const [loading, setLoading] = useState(false);
-  const [permissions, setPermissions] = useState<Record<string, string[]>>({});
-  
   useEffect(() => {
-    // In a real app, we would fetch user permissions from a backend
-    // For now, we'll simulate this with a timeout
-    setLoading(true);
+    const fetchPermissions = async () => {
+      if (!currentUser?.uid) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const userPermissions = await getUserPermissions(currentUser.uid);
+        
+        if (userPermissions) {
+          setPermissions(userPermissions.permissions);
+          setIsAdmin(!!userPermissions.isAdmin);
+        } else {
+          setPermissions(null);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des permissions:', error);
+        setPermissions(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [currentUser?.uid]);
+
+  const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
+    if (!currentUser?.uid) return false;
     
-    const timer = setTimeout(() => {
-      // Simulate loaded permissions
-      setPermissions({
-        'garage-inventory': ['view', 'create', 'edit', 'delete'],
-        'garage-invoices': ['view', 'create', 'edit', 'delete'],
-        'garage-repairs': ['view', 'create', 'edit', 'delete'],
-        'applications': ['view', 'modify'],
-      });
-      setLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  /**
-   * Check if the user has permission for a specific action on a module
-   * @param moduleId The module ID to check
-   * @param actionType The type of action
-   * @returns Boolean indicating if the user has permission
-   */
-  const checkPermission = async (moduleId: string, actionType: string): Promise<boolean> => {
-    // Safety check for empty moduleId or actionType
-    if (!moduleId || !actionType) {
-      console.warn(`checkPermission: moduleId "${moduleId}" or actionType "${actionType}" is empty`);
+    if (isOffline) {
+      console.log('Mode hors ligne: utilisation des permissions en cache');
+      // En mode hors ligne, on utilise les permissions déjà chargées
+      if (isAdmin) return true;
+      return !!permissions?.[module]?.[action];
+    }
+
+    try {
+      const hasAccess = await checkUserPermission(currentUser.uid, module, action);
+      setHasPermission(prev => ({...prev, [`${module}.${action}`]: hasAccess}));
+      return hasAccess;
+    } catch (error) {
+      console.error(`Erreur lors de la vérification de la permission ${module}.${action}:`, error);
       return false;
     }
-    
-    // Admin has all permissions
-    if (isAdmin) return true;
-    
-    // Check specific permission
-    const modulePermissions = permissions[moduleId];
-    if (!modulePermissions) return false;
-    
-    return modulePermissions.includes(actionType);
   };
-  
+
+  // Vérifier si l'utilisateur peut accéder au module actuel
+  useEffect(() => {
+    if (moduleId && !loading && currentUser?.uid) {
+      checkPermission(moduleId, 'view').then(hasAccess => {
+        if (!hasAccess && !isAdmin) {
+          console.warn(`L'utilisateur n'a pas accès au module ${moduleId}`);
+          // On pourrait rediriger l'utilisateur ou afficher un message
+        }
+      });
+    }
+  }, [moduleId, loading, currentUser?.uid, isAdmin]);
+
   return {
+    permissions,
     isAdmin,
     loading,
-    permissions,
     checkPermission,
+    hasPermission
   };
 };
-
-export default usePermissions;

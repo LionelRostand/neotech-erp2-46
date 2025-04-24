@@ -8,11 +8,6 @@ import { db } from '@/lib/firebase';
  * @returns A CollectionReference
  */
 export const getCollectionRef = (collectionPath: string) => {
-  // Ensure the collection path is valid
-  if (!collectionPath || collectionPath.trim() === '') {
-    console.error('Collection path cannot be empty');
-    throw new Error('Collection path cannot be empty');
-  }
   return collection(db, collectionPath);
 };
 
@@ -23,15 +18,6 @@ export const getCollectionRef = (collectionPath: string) => {
  * @returns A DocumentReference
  */
 export const getDocRef = (collectionPath: string, documentId: string) => {
-  // Ensure the collection path and document ID are valid
-  if (!collectionPath || collectionPath.trim() === '') {
-    console.error('Collection path cannot be empty');
-    throw new Error('Collection path cannot be empty');
-  }
-  if (!documentId || documentId.trim() === '') {
-    console.error('Document ID cannot be empty');
-    throw new Error('Document ID cannot be empty');
-  }
   return doc(db, collectionPath, documentId);
 };
 

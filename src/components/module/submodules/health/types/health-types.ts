@@ -1,261 +1,203 @@
-
 export interface Patient {
-  id: string;
+  id?: string;
   firstName: string;
   lastName: string;
   dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
-  address?: string;
-  phone?: string;
+  gender: 'Male' | 'Female' | 'Other';
   email?: string;
-  bloodType?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
-  allergies?: string[];
+  phone?: string;
+  address?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
   medicalConditions?: string[];
+  allergies?: string[];
+  insurance?: string;
   emergencyContact?: {
     name: string;
-    relationship: string;
     phone: string;
+    relationship: string;
   };
-  insuranceInfo?: {
-    provider: string;
-    policyNumber: string;
-    expiryDate: string;
-  };
+  notes?: string;
   lastVisit?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Doctor {
-  id: string;
+  id?: string;
   firstName: string;
   lastName: string;
-  specialization: string;
-  licenseNumber?: string;
-  phone?: string;
+  specialty: string;
   email?: string;
-  availability?: {
-    monday?: string[];
-    tuesday?: string[];
-    wednesday?: string[];
-    thursday?: string[];
-    friday?: string[];
-    saturday?: string[];
-    sunday?: string[];
+  phone?: string;
+  address?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
   };
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Nurse {
-  id: string;
-  firstName: string;
-  lastName: string;
-  licenseNumber?: string;
-  phone?: string;
-  email?: string;
-  department?: string;
-  shift?: 'morning' | 'afternoon' | 'night';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Staff {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  department?: string;
-  phone?: string;
-  email?: string;
-  createdAt: string;
-  updatedAt: string;
+  qualifications?: string[];
+  availability?: {
+    days: string[];
+    timeSlots: string[];
+  };
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Appointment {
-  id: string;
+  id?: string;
   patientId: string;
   doctorId: string;
   date: string;
   time: string;
-  duration: number;
-  type: 'consultation' | 'followup' | 'emergency';
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+  type: 'Consultation' | 'Checkup' | 'FollowUp';
+  status: 'Scheduled' | 'Completed' | 'Cancelled';
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Consultation {
-  id: string;
+  id?: string;
   patientId: string;
   doctorId: string;
   date: string;
   time: string;
-  chiefComplaint: string;
-  symptoms: string;
-  diagnosis?: string;
-  treatment?: string;
-  notes?: string;
-  followUp?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  createdAt: string;
-  updatedAt: string;
-  patientName?: string; // For display purposes
-  doctorName?: string; // For display purposes
-}
-
-export interface MedicalRecord {
-  id: string;
-  patientId: string;
-  type: string;
-  date: string;
   diagnosis: string;
+  symptoms: string;
   treatment: string;
   notes?: string;
-  attachments?: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LaboratoryTest {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  date: string;
-  testType: string;
-  status: 'ordered' | 'in-progress' | 'completed' | 'cancelled';
-  results?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Prescription {
-  id: string;
+  id?: string;
   patientId: string;
   doctorId: string;
   date: string;
-  medications: {
-    name: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
-    notes?: string;
-  }[];
-  status: 'active' | 'completed' | 'cancelled';
+  medication: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface PharmacyItem {
-  id: string;
+export interface MedicalRecord {
+  id?: string;
+  patientId: string;
+  date: string;
+  type: 'LabTest' | 'Radiology' | 'Procedure' | 'ConsultationNote';
+  description: string;
+  results?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Staff {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  email?: string;
+  phone?: string;
+  address?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  qualifications?: string[];
+  availability?: {
+    days: string[];
+    timeSlots: string[];
+  };
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Nurse {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  address?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  qualifications?: string[];
+  availability?: {
+    days: string[];
+    timeSlots: string[];
+  };
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Insurance {
+  id?: string;
   name: string;
-  genericName?: string;
+  address?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  phone?: string;
+  email?: string;
+  contactPerson?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Invoice {
+  id?: string;
+  patientId: string;
+  date: string;
+  amount: number;
+  status: 'Paid' | 'Unpaid' | 'Pending';
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Inventory {
+  id?: string;
+  name: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
   category: string;
-  stock: number;
-  unit: string;
-  price: number;
-  expiryDate?: string;
-  manufacturer?: string;
-  createdAt: string;
-  updatedAt: string;
+  supplier?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Room {
-  id: string;
-  number: string;
-  type: 'standard' | 'private' | 'icu' | 'operating' | 'emergency';
-  capacity: number;
-  occupied: number;
-  floor: string;
-  available: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Hospitalization {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  roomId: string;
-  roomNumber?: string;
-  admissionDate: string;
-  dischargeDate?: string;
-  reason: string;
-  status: 'admitted' | 'discharged' | 'transferred';
+  id?: string;
+  roomNumber: string;
+  type: 'Single' | 'Double' | 'Suite';
+  floor: number;
+  bedsTotal: number;
+  bedsAvailable: number;
+  isAvailable: boolean;
+  currentPatientId?: string | null;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface InsuranceClaim {
-  id: string;
-  patientId: string;
-  insuranceProvider: string;
-  policyNumber: string;
-  date: string;
-  amount: number;
-  serviceDescription: string;
-  status: 'submitted' | 'in-review' | 'approved' | 'denied' | 'paid';
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BillingRecord {
-  id: string;
-  patientId: string;
-  date: string;
-  dueDate: string;
-  services: {
-    description: string;
-    amount: number;
-  }[];
-  total: number;
-  paymentStatus: 'unpaid' | 'partial' | 'paid';
-  paymentMethod?: 'cash' | 'card' | 'insurance' | 'transfer';
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Schema for forms
-export interface PatientFormValues {
-  firstName: string;
-  lastName: string;
-  dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
-  address?: string;
-  phone?: string;
-  email?: string;
-  bloodType?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
-  allergies?: string[];
-  medicalConditions?: string[];
-}
-
-export interface AppointmentFormValues {
-  patientId: string;
-  doctorId: string;
-  date: string;
-  time: string;
-  duration?: number;
-  type: 'consultation' | 'followup' | 'emergency';
-  status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
-  notes?: string;
-}
-
-export interface ConsultationFormValues {
-  patientId: string;
-  doctorId: string;
-  date: string;
-  time: string;
-  chiefComplaint: string;
-  symptoms: string;
-  diagnosis?: string;
-  treatment?: string;
-  notes?: string;
-  followUp?: string;
-  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  createdAt?: string;
+  updatedAt?: string;
 }

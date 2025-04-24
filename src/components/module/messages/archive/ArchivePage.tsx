@@ -9,10 +9,8 @@ import { Message } from '../types/message-types';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
 const ArchivePage: React.FC = () => {
-  // Ensure we use a valid collection path - ARCHIVED not ARCHIVE
-  const archivePath = COLLECTIONS.MESSAGES?.ARCHIVED || 'message_archived';
-  
-  console.log('Archive path:', archivePath); // Debug log
+  // Ensure we use a valid collection path
+  const archivePath = COLLECTIONS.MESSAGES.ARCHIVE || 'messages_archive';
   
   const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(archivePath);
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -42,7 +40,7 @@ const ArchivePage: React.FC = () => {
               
               <TabsContent value="all">
                 <ArchivedMessagesList 
-                  messages={messages || []} 
+                  messages={messages} 
                   isLoading={isLoading} 
                   onRestoreMessage={handleRestoreMessage}
                 />
@@ -50,7 +48,7 @@ const ArchivePage: React.FC = () => {
               
               <TabsContent value="sent">
                 <ArchivedMessagesList 
-                  messages={(messages || []).filter(m => m.type === 'sent')} 
+                  messages={messages.filter(m => m.type === 'sent')} 
                   isLoading={isLoading} 
                   onRestoreMessage={handleRestoreMessage}
                 />
@@ -58,7 +56,7 @@ const ArchivePage: React.FC = () => {
               
               <TabsContent value="received">
                 <ArchivedMessagesList 
-                  messages={(messages || []).filter(m => m.type === 'received')} 
+                  messages={messages.filter(m => m.type === 'received')} 
                   isLoading={isLoading} 
                   onRestoreMessage={handleRestoreMessage}
                 />

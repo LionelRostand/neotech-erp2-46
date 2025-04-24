@@ -10,32 +10,31 @@ import { toast } from 'sonner';
  * @returns Promise with the collection data
  */
 export async function fetchCollectionData<T>(
-  collectionPath: string | null | undefined, 
+  collectionPath: string, 
   constraints: QueryConstraint[] = []
 ): Promise<T[]> {
   try {
     // Check for empty or invalid collection path
-    if (!collectionPath || typeof collectionPath !== 'string' || collectionPath.trim() === '') {
-      console.error('Error: Collection path cannot be empty or invalid', { path: collectionPath });
+    if (!collectionPath || collectionPath.trim() === '') {
+      const errorMessage = 'Empty collection path provided';
+      console.error(errorMessage);
+      toast.error(`Erreur: ${errorMessage}`);
       return [];
     }
     
-    const path = collectionPath.trim();
-    console.log(`Fetching from collection path: ${path}`);
+    console.log(`Fetching from collection path: ${collectionPath}`);
     
-    const collectionRef = collection(db, path);
+    const collectionRef = collection(db, collectionPath);
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
     
-    const result = querySnapshot.docs.map(doc => ({ 
+    return querySnapshot.docs.map(doc => ({ 
       id: doc.id, 
       ...doc.data() 
     })) as T[];
-    
-    console.log(`Fetched ${result.length} documents from ${path}`);
-    return result;
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);
+    toast.error(`Erreur lors du chargement des données: ${err.message}`);
     return [];
   }
 }

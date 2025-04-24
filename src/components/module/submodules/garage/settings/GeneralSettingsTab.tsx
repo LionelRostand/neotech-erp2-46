@@ -2,158 +2,116 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useGarageSettings } from '@/hooks/garage/useGarageSettings';
-import { Save } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 const GeneralSettingsTab = () => {
-  const { settings, loading, saveSettings } = useGarageSettings();
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    saveSettings({
-      name: formData.get('name') as string,
-      address: {
-        street: formData.get('street') as string,
-        city: formData.get('city') as string,
-        postalCode: formData.get('postalCode') as string,
-        country: formData.get('country') as string,
-      },
-      phone: formData.get('phone') as string,
-      email: formData.get('email') as string,
-      siret: formData.get('siret') as string,
-    });
+  const handleSave = () => {
+    toast.success("Paramètres sauvegardés avec succès");
   };
 
-  if (loading) {
-    return (
-      <div className="p-8 text-center">
-        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-        <p className="mt-2 text-sm text-muted-foreground">Chargement des paramètres...</p>
-      </div>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informations du garage</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Informations du garage</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Nom du garage
-              </label>
-              <Input 
-                id="name" 
-                name="name" 
-                defaultValue={settings.name}
-                placeholder="Nom du garage"
-              />
+              <Label htmlFor="garageName">Nom du garage</Label>
+              <Input id="garageName" placeholder="Nom du garage" defaultValue="Auto Garage Pro" />
             </div>
-            
             <div className="space-y-2">
-              <label htmlFor="siret" className="text-sm font-medium">
-                Numéro SIRET
-              </label>
-              <Input 
-                id="siret" 
-                name="siret" 
-                defaultValue={settings.siret}
-                placeholder="XXX XXX XXX XXXXX"
-              />
+              <Label htmlFor="siret">Numéro SIRET</Label>
+              <Input id="siret" placeholder="XXX XXX XXX XXXXX" defaultValue="123 456 789 00001" />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input id="phone" type="tel" placeholder="+33 X XX XX XX XX" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="contact@garage.com" />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="street" className="text-sm font-medium">
-              Adresse
-            </label>
-            <Input 
-              id="street" 
-              name="street" 
-              defaultValue={settings.address.street}
-              placeholder="Numéro et nom de rue"
-            />
+            <Label htmlFor="address">Adresse</Label>
+            <Input id="address" placeholder="Adresse complète" />
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <label htmlFor="city" className="text-sm font-medium">
-                Ville
-              </label>
-              <Input 
-                id="city" 
-                name="city" 
-                defaultValue={settings.address.city}
-                placeholder="Ville"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="postalCode" className="text-sm font-medium">
-                Code postal
-              </label>
-              <Input 
-                id="postalCode" 
-                name="postalCode" 
-                defaultValue={settings.address.postalCode}
-                placeholder="Code postal"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="country" className="text-sm font-medium">
-                Pays
-              </label>
-              <Input 
-                id="country" 
-                name="country" 
-                defaultValue={settings.address.country}
-                placeholder="Pays"
-              />
-            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Horaires d'ouverture</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map((day) => (
+              <div key={day} className="flex items-center justify-between p-2 border rounded">
+                <span>{day}</span>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    type="time" 
+                    className="w-32" 
+                    defaultValue="09:00"
+                  />
+                  <span>-</span>
+                  <Input 
+                    type="time" 
+                    className="w-32" 
+                    defaultValue="18:00"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Téléphone
-              </label>
-              <Input 
-                id="phone" 
-                name="phone" 
-                defaultValue={settings.phone}
-                placeholder="+33 X XX XX XX XX"
-              />
+      <Card>
+        <CardHeader>
+          <CardTitle>Paramètres par défaut</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Notifications automatiques</Label>
+              <div className="text-sm text-muted-foreground">
+                Envoyer des notifications aux clients pour les rappels de rendez-vous
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input 
-                id="email" 
-                name="email" 
-                defaultValue={settings.email}
-                placeholder="contact@garage.com"
-              />
-            </div>
+            <Switch defaultChecked />
           </div>
+          
+          <Separator />
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Confirmation de rendez-vous</Label>
+              <div className="text-sm text-muted-foreground">
+                Demander une confirmation pour les nouveaux rendez-vous
+              </div>
+            </div>
+            <Switch defaultChecked />
+          </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex justify-end">
-            <Button type="submit">
-              <Save className="w-4 h-4 mr-2" />
-              Enregistrer les modifications
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end">
+        <Button onClick={handleSave}>
+          Enregistrer les modifications
+        </Button>
+      </div>
+    </div>
   );
 };
 

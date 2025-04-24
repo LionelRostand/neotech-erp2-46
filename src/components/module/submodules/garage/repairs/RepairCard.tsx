@@ -33,13 +33,13 @@ export const RepairCard = ({ repair }: RepairCardProps) => {
     >
       <CardContent className="p-4 space-y-2">
         <div>
-          <div className="font-medium">{repair.vehicleName || 'Véhicule non spécifié'}</div>
-          <div className="text-sm text-gray-500">{repair.clientName || 'Client non spécifié'}</div>
+          <div className="font-medium">{repair.vehicleName}</div>
+          <div className="text-sm text-gray-500">{repair.clientName}</div>
         </div>
         <div className="text-sm">{repair.description}</div>
         <div className="flex justify-between text-sm text-gray-500">
-          <span>{repair.mechanicName || 'Non assigné'}</span>
-          <span>{repair.startDate ? new Date(repair.startDate).toLocaleDateString('fr-FR') : 'Date non spécifiée'}</span>
+          <span>{repair.mechanicName}</span>
+          <span>{new Date(repair.startDate).toLocaleDateString('fr-FR')}</span>
         </div>
       </CardContent>
     </Card>

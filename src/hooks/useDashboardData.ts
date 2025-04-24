@@ -29,7 +29,7 @@ const defaultStats: DashboardStats = {
 // Sample transactions for demo
 const sampleTransactions: Transaction[] = [
   {
-    id: 'TX-2025-001',
+    id: 'TX-2023-001',
     date: '21 Avr 2025',
     client: 'Entreprise ABC',
     amount: '€1,250.00',
@@ -37,7 +37,7 @@ const sampleTransactions: Transaction[] = [
     statusText: 'Terminé'
   },
   {
-    id: 'TX-2025-002',
+    id: 'TX-2023-002',
     date: '20 Avr 2025',
     client: 'Société XYZ',
     amount: '€2,840.50',
@@ -45,7 +45,7 @@ const sampleTransactions: Transaction[] = [
     statusText: 'En attente'
   },
   {
-    id: 'TX-2025-003',
+    id: 'TX-2023-003',
     date: '19 Avr 2025',
     client: 'Jean Dupont SARL',
     amount: '€580.25',
@@ -53,7 +53,7 @@ const sampleTransactions: Transaction[] = [
     statusText: 'Terminé'
   },
   {
-    id: 'TX-2025-004',
+    id: 'TX-2023-004',
     date: '18 Avr 2025',
     client: 'Agence Design',
     amount: '€3,200.00',
@@ -61,7 +61,7 @@ const sampleTransactions: Transaction[] = [
     statusText: 'Annulé'
   },
   {
-    id: 'TX-2025-005',
+    id: 'TX-2023-005',
     date: '17 Avr 2025',
     client: 'Martin & Co',
     amount: '€1,795.60',
@@ -86,7 +86,7 @@ export const useDashboardData = (shouldLoad: boolean = true) => {
       return;
     }
     
-    // Use static data only, no Firebase calls
+    // Simulate data loading
     const timer = setTimeout(() => {
       setStats(defaultStats);
       setTransactions(sampleTransactions);

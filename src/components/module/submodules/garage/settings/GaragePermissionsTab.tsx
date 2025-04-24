@@ -1,153 +1,110 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Save, RefreshCw } from "lucide-react";
-import { useGarageEmployees } from '@/hooks/garage/useGarageEmployees';
-import { useGaragePermissionsManager, GARAGE_SUBMODULES } from '@/hooks/garage/useGaragePermissionsManager';
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Search, UserPlus } from "lucide-react";
+import { garageModule } from '@/data/modules/garage';
+import { usePermissions } from '@/hooks/usePermissions';
+import { toast } from 'sonner';
 
 const GaragePermissionsTab = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const { employees, loading: loadingEmployees } = useGarageEmployees();
-  const { 
-    permissions, 
-    loading: loadingPermissions, 
-    saving,
-    getUserPermissions,
-    updatePermission,
-    saveAllPermissions 
-  } = useGaragePermissionsManager();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { permissions, isAdmin } = usePermissions();
+  
+  // Mock users data - in production this would come from your user management system
+  const users = [
+    { id: '1', name: 'Jean Dupont', role: 'Mécanicien', email: 'jean.dupont@garage.com' },
+    { id: '2', name: 'Marie Martin', role: 'Responsable Service', email: 'marie.martin@garage.com' },
+    { id: '3', name: 'Pierre Durant', role: 'Assistant', email: 'pierre.durant@garage.com' },
+  ];
 
-  // Filtrer les utilisateurs en fonction du terme de recherche
-  const filteredEmployees = employees?.filter(employee => 
-    employee.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const loading = loadingEmployees || loadingPermissions;
+  const handlePermissionChange = (userId: string, moduleId: string, permission: string) => {
+    // Ici, vous implementeriez la logique pour mettre à jour les permissions
+    console.log(`Mise à jour des permissions pour l'utilisateur ${userId} sur ${moduleId}: ${permission}`);
+    toast.success("Permissions mises à jour");
+  };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Gestion des droits d'accès</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un employé..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Button 
-              onClick={saveAllPermissions} 
-              disabled={saving}
-              className="ml-auto"
-            >
-              {saving ? (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              Enregistrer les modifications
-            </Button>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un utilisateur..."
+              className="w-[300px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-
-          <div className="rounded-md border">
-            {loading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-                <p className="mt-2 text-sm text-muted-foreground">Chargement des employés et des permissions...</p>
-              </div>
-            ) : filteredEmployees.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                Aucun employé trouvé
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[250px]">Employé</TableHead>
-                      <TableHead className="w-[200px]">Sous-module</TableHead>
-                      <TableHead className="text-center">Voir</TableHead>
-                      <TableHead className="text-center">Créer</TableHead>
-                      <TableHead className="text-center">Modifier</TableHead>
-                      <TableHead className="text-center">Supprimer</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEmployees.map((employee) => (
-                      <React.Fragment key={employee.id}>
-                        {GARAGE_SUBMODULES.map((submodule, submoduleIndex) => {
-                          const userPermissions = getUserPermissions(employee.id);
-                          const submodulePermission = userPermissions.find(p => p.id === submodule.id);
-                          
-                          return (
-                            <TableRow key={`${employee.id}-${submodule.id}`}>
-                              {submoduleIndex === 0 ? (
-                                <TableCell rowSpan={GARAGE_SUBMODULES.length} className="align-top border-r">
-                                  <div className="space-y-1">
-                                    <p className="font-medium">{employee.firstName} {employee.lastName}</p>
-                                    <p className="text-sm text-muted-foreground">{employee.email}</p>
-                                    {employee.position && (
-                                      <p className="text-xs text-muted-foreground">{employee.position}</p>
-                                    )}
-                                  </div>
-                                </TableCell>
-                              ) : null}
-                              <TableCell className="font-medium">{submodule.name}</TableCell>
-                              <TableCell className="text-center">
-                                <Checkbox
-                                  checked={submodulePermission?.permissions.view || false}
-                                  onCheckedChange={(checked) => {
-                                    updatePermission(employee.id, submodule.id, 'view', !!checked);
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Checkbox
-                                  checked={submodulePermission?.permissions.create || false}
-                                  onCheckedChange={(checked) => {
-                                    updatePermission(employee.id, submodule.id, 'create', !!checked);
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Checkbox
-                                  checked={submodulePermission?.permissions.edit || false}
-                                  onCheckedChange={(checked) => {
-                                    updatePermission(employee.id, submodule.id, 'edit', !!checked);
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Checkbox
-                                  checked={submodulePermission?.permissions.delete || false}
-                                  onCheckedChange={(checked) => {
-                                    updatePermission(employee.id, submodule.id, 'delete', !!checked);
-                                  }}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </div>
+          <Button>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Ajouter un utilisateur
+          </Button>
         </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Utilisateur</TableHead>
+              <TableHead>Rôle</TableHead>
+              <TableHead className="text-center">Lecture</TableHead>
+              <TableHead className="text-center">Écriture</TableHead>
+              <TableHead className="text-center">Suppression</TableHead>
+              <TableHead className="text-center">Administration</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users
+              .filter(user => 
+                user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{user.name}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox 
+                      onCheckedChange={(checked) => 
+                        handlePermissionChange(user.id, 'garage', 'read')
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox 
+                      onCheckedChange={(checked) => 
+                        handlePermissionChange(user.id, 'garage', 'write')
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox 
+                      onCheckedChange={(checked) => 
+                        handlePermissionChange(user.id, 'garage', 'delete')
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox 
+                      onCheckedChange={(checked) => 
+                        handlePermissionChange(user.id, 'garage', 'admin')
+                      }
+                      disabled={!isAdmin}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { LoyaltyProgram } from '../types/loyalty-types';
 import { toast } from 'sonner';
-import { useGarageLoyalty } from '@/hooks/garage/useGarageLoyalty';
+import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import LoyaltyProgramForm from './LoyaltyProgramForm';
 
 interface AddLoyaltyProgramDialogProps {
@@ -18,11 +19,13 @@ interface AddLoyaltyProgramDialogProps {
 }
 
 const AddLoyaltyProgramDialog = ({ open, onOpenChange, onSuccess }: AddLoyaltyProgramDialogProps) => {
-  const { addLoyaltyProgram } = useGarageLoyalty();
-
   const handleSubmit = async (data: Partial<LoyaltyProgram>) => {
     try {
-      await addLoyaltyProgram(data as Omit<LoyaltyProgram, 'id'>);
+      await addDocument(COLLECTIONS.GARAGE.LOYALTY, {
+        ...data,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      });
       toast.success("Programme de fidélité créé avec succès");
       onSuccess();
     } catch (error) {

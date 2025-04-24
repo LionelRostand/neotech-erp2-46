@@ -1,4 +1,3 @@
-
 export interface Contact {
   id: string;
   firstName: string;
@@ -35,7 +34,6 @@ export interface Message {
   subject: string;
   content: string;
   sender: string;
-  senderName?: string; // Ajout du nom de l'expéditeur
   recipients: string[];
   status: MessageStatus;
   priority: MessagePriority;
@@ -66,17 +64,6 @@ export interface MessageMetrics {
   topContacts: Array<{id: string; name: string; count: number}>;
   messagesSentToday: number;
   contactsCount: number;
-}
-
-export interface SmtpConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  auth: {
-    user: string;
-    pass: string;
-  };
-  email?: string; // Ajout du champ email manquant
 }
 
 // Message template interface

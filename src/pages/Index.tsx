@@ -1,86 +1,77 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatCard from '@/components/StatCard';
 import DataTable from '@/components/DataTable';
 import { LineChart, ShoppingBag, Users, Package, ArrowUp, ShoppingCart } from 'lucide-react';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { Skeleton } from '@/components/ui/skeleton';
+import GarageDashboard from '@/components/module/submodules/garage/GarageDashboard';
 
 const Index = () => {
-  const dummyTransactions = [
-    { 
-      id: '1234', 
-      date: '15 Juin 2023', 
-      client: 'Société ABC', 
-      amount: '€2,500.00', 
-      status: 'success', 
-      statusText: 'Payée' 
-    },
-    { 
-      id: '1235', 
-      date: '14 Juin 2023', 
-      client: 'Entreprise XYZ', 
-      amount: '€1,890.50', 
-      status: 'warning', 
-      statusText: 'En attente' 
-    },
-    { 
-      id: '1236', 
-      date: '13 Juin 2023', 
-      client: 'Groupe 123', 
-      amount: '€3,200.00', 
-      status: 'success', 
-      statusText: 'Payée' 
-    },
-    { 
-      id: '1237', 
-      date: '12 Juin 2023', 
-      client: 'Tech Solutions', 
-      amount: '€650.75', 
-      status: 'danger', 
-      statusText: 'Annulée' 
-    },
-    { 
-      id: '1238', 
-      date: '11 Juin 2023', 
-      client: 'Service Pro', 
-      amount: '€1,450.00', 
-      status: 'success', 
-      statusText: 'Payée' 
-    },
-  ];
+  const [installedModules, setInstalledModules] = useState<number[]>([]);
+  // Only load dashboard data if modules are installed
+  const loadData = installedModules.length > 0;
+  const { stats, transactions, loading } = useDashboardData(loadData);
 
-  return (
-    <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Tableau de bord</h1>
-        <p className="text-gray-500">Bienvenue sur votre espace NEOTECH-ERP</p>
-      </div>
+  useEffect(() => {
+    const loadInstalledModules = () => {
+      try {
+        const savedModules = localStorage.getItem('installedModules');
+        if (savedModules) {
+          setInstalledModules(JSON.parse(savedModules));
+        }
+      } catch (error) {
+        console.error('Error loading installed modules:', error);
+      }
+    };
+    
+    loadInstalledModules();
+    
+    window.addEventListener('modulesChanged', loadInstalledModules);
+    return () => {
+      window.removeEventListener('modulesChanged', loadInstalledModules);
+    };
+  }, []);
 
+  const renderDefaultDashboard = () => (
+    <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          title="Chiffre d'affaires" 
-          value="€125,430" 
-          icon={<LineChart className="text-primary" size={20} />} 
-          description="+12% par rapport au mois dernier"
-        />
-        <StatCard 
-          title="Commandes" 
-          value="345" 
-          icon={<ShoppingBag className="text-primary" size={20} />} 
-          description="+8% par rapport au mois dernier"
-        />
-        <StatCard 
-          title="Clients" 
-          value="2,340" 
-          icon={<Users className="text-primary" size={20} />} 
-          description="120 nouveaux ce mois-ci"
-        />
-        <StatCard 
-          title="Produits" 
-          value="650" 
-          icon={<Package className="text-primary" size={20} />} 
-          description="45 ajoutés ce mois-ci"
-        />
+        {loading ? (
+          <>
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+          </>
+        ) : (
+          <>
+            <StatCard 
+              title="Chiffre d'affaires" 
+              value={`€${stats.revenue.toLocaleString()}`} 
+              icon={<LineChart className="text-primary" size={20} />} 
+              description="+12% par rapport au mois dernier"
+            />
+            <StatCard 
+              title="Commandes" 
+              value={stats.orders.toString()} 
+              icon={<ShoppingBag className="text-primary" size={20} />} 
+              description="+8% par rapport au mois dernier"
+            />
+            <StatCard 
+              title="Clients" 
+              value={stats.clients.toString()} 
+              icon={<Users className="text-primary" size={20} />} 
+              description="120 nouveaux ce mois-ci"
+            />
+            <StatCard 
+              title="Produits" 
+              value={stats.products.toString()} 
+              icon={<Package className="text-primary" size={20} />} 
+              description="45 ajoutés ce mois-ci"
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -119,9 +110,49 @@ const Index = () => {
       <div className="animate-fade-up" style={{ animationDelay: '0.3s' }}>
         <DataTable 
           title="Dernières transactions" 
-          data={dummyTransactions}
+          data={transactions}
+          columns={[
+            { header: 'ID', accessorKey: 'id' },
+            { header: 'Date', accessorKey: 'date' },
+            { header: 'Client', accessorKey: 'client' },
+            { header: 'Montant', accessorKey: 'amount' },
+            { header: 'Statut', accessorKey: 'statusText' }
+          ]}
         />
       </div>
+    </>
+  );
+
+  const renderDashboardContent = () => {
+    if (installedModules.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <Package className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-4 text-lg font-medium text-gray-900">Aucun module installé</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            Commencez par installer des modules depuis la section "Gérer les applications"
+          </p>
+        </div>
+      );
+    }
+
+    const hasGarageModule = installedModules.includes(11);
+    return hasGarageModule ? <GarageDashboard /> : renderDefaultDashboard();
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Tableau de bord</h1>
+        <p className="text-gray-500">Bienvenue sur votre espace NEOTECH-ERP</p>
+        {installedModules.length === 0 && (
+          <p className="text-sm mt-2 text-amber-600">
+            Aucun module n'est installé. Rendez-vous dans "Gérer les applications" pour installer des modules.
+          </p>
+        )}
+      </div>
+
+      {renderDashboardContent()}
     </DashboardLayout>
   );
 };

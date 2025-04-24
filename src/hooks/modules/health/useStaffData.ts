@@ -2,20 +2,20 @@
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { orderBy } from 'firebase/firestore';
-import type { Nurse, Staff } from '@/components/module/submodules/health/types/health-types';
+import type { Staff } from '@/components/module/submodules/health/types/health-types';
 
 export const useStaffData = () => {
   // Fetch nurses
-  const { 
-    data: nurses, 
-    isLoading: isNursesLoading, 
-    error: nursesError 
-  } = useCollectionData<Nurse>(
+  const {
+    data: nurses,
+    isLoading: isNursesLoading,
+    error: nursesError
+  } = useCollectionData<Staff>(
     COLLECTIONS.HEALTH.NURSES,
     [orderBy('lastName')]
   );
 
-  // Fetch general staff
+  // Fetch staff
   const { 
     data: staff, 
     isLoading: isStaffLoading, 

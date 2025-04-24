@@ -25,60 +25,17 @@ const GarageDashboard = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  // Obtenir la date d'aujourd'hui au format ISO (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
-
-  // Filtrer les données pour obtenir des statistiques pertinentes
-  const activeVehicles = vehicles.filter(v => v?.status === 'active' || v?.status === 'available');
-  
+  const activeVehicles = vehicles.filter(v => v.status === 'active');
   const todayAppointments = appointments.filter(a => {
-    // Si la date est au format ISO, on peut comparer directement
-    if (a?.date === today) return true;
-    
-    // Si la date est un timestamp ou une date complète, on vérifie juste le jour
-    if (a?.date) {
-      try {
-        const appointmentDate = new Date(a.date);
-        const todayDate = new Date();
-        return (
-          appointmentDate.getDate() === todayDate.getDate() &&
-          appointmentDate.getMonth() === todayDate.getMonth() &&
-          appointmentDate.getFullYear() === todayDate.getFullYear()
-        );
-      } catch (e) {
-        return false;
-      }
-    }
-    
-    return false;
+    const today = new Date().toISOString().split('T')[0];
+    return a.date === today;
   });
-  
-  const ongoingRepairs = repairs.filter(r => 
-    r?.status === 'in_progress' || 
-    r?.status === 'ongoing' || 
-    r?.status === 'started'
-  );
-  
-  const unpaidInvoices = invoices.filter(i => 
-    i?.status === 'unpaid' || 
-    i?.status === 'overdue' || 
-    i?.status === 'pending' || 
-    i?.status === 'sent'
-  );
-  
-  const activeClients = clients.filter(c => c?.status === 'active' || !c?.status);
-  
-  const lowStockItems = inventory.filter(item => {
-    if (item?.status === 'low_stock') return true;
-    if (item?.quantity !== undefined && item?.minQuantity !== undefined) {
-      return item.quantity <= item.minQuantity;
-    }
-    if (item?.quantity !== undefined) return item.quantity < 5;
-    return false;
-  });
-  
-  const activeSuppliers = suppliers.filter(s => s?.status === 'active' || !s?.status);
-  const activePrograms = loyalty.filter(p => p?.status === 'active' || !p?.status);
+  const ongoingRepairs = repairs.filter(r => r.status === 'in_progress');
+  const unpaidInvoices = invoices.filter(i => i.status === 'unpaid' || i.status === 'overdue');
+  const activeClients = clients.filter(c => c.status === 'active');
+  const lowStockItems = inventory.filter(item => item.quantity <= item.minQuantity);
+  const activeSuppliers = suppliers.filter(s => s.status === 'active');
+  const activePrograms = loyalty.filter(p => p.status === 'active');
 
   return (
     <div className="container mx-auto p-6 space-y-6">

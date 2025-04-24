@@ -1,197 +1,215 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { clientsMap, vehiclesMap, mechanicsMap } from './repairsData';
-import { Repair } from '../types/garage-types';
 
 interface CreateRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-  onSave?: (data: any) => void;
+  onSave: (repair: any) => void;
+  clientsMap?: Record<string, string>;
+  vehiclesMap?: Record<string, string>;
+  mechanicsMap?: Record<string, string>;
 }
 
-const CreateRepairDialog = ({ 
-  open, 
+const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
+  open,
   onOpenChange,
-  onSuccess,
-  onSave
-}: CreateRepairDialogProps) => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  onSave,
+  clientsMap = {},
+  vehiclesMap = {},
+  mechanicsMap = {}
+}) => {
+  const [clientId, setClientId] = useState<string>('');
+  const [vehicleId, setVehicleId] = useState<string>('');
+  const [mechanicId, setMechanicId] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [estimatedCost, setEstimatedCost] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [estimatedEndDate, setEstimatedEndDate] = useState<string>(
+    new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [licensePlate, setLicensePlate] = useState<string>('');
 
-  const onSubmit = async (data: any) => {
-    try {
-      // Generate a unique ID for the repair
-      const newRepair = {
-        id: `repair-${Date.now()}`,
-        clientId: data.clientId,
-        clientName: clientsMap[data.clientId]?.firstName + ' ' + clientsMap[data.clientId]?.lastName,
-        vehicleId: data.vehicleId,
-        vehicleName: vehiclesMap[data.vehicleId]?.make + ' ' + vehiclesMap[data.vehicleId]?.model,
-        mechanicId: data.mechanicId,
-        mechanicName: mechanicsMap[data.mechanicId]?.firstName + ' ' + mechanicsMap[data.mechanicId]?.lastName,
-        description: data.description,
-        status: 'awaiting_approval',
-        startDate: data.startDate || new Date().toISOString().split('T')[0],
-        estimatedEndDate: data.estimatedEndDate,
-        progress: 0,
-        cost: parseFloat(data.cost) || 0,
-        parts: [],
-        notes: data.notes || '',
-        createdAt: new Date().toISOString(),
-      };
-      
-      // If onSave function is provided, call it with the new repair data
-      if (onSave) {
-        onSave(newRepair);
-      } else {
-        // In a real app, you'd save to Firestore here
-        console.log('Creating new repair:', newRepair);
-        toast.success('Réparation créée avec succès');
-      }
-      
-      // Close the dialog and reset the form
-      reset();
-      onOpenChange(false);
-      
-      // Trigger the success callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error('Error creating repair:', error);
-      toast.error('Erreur lors de la création de la réparation');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!clientId || !vehicleId || !mechanicId || !description || !estimatedCost || !startDate || !estimatedEndDate) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
     }
+
+    const vehicleName = vehiclesMap[vehicleId] || '';
+    const clientName = clientsMap[clientId] || '';
+    const mechanicName = mechanicsMap[mechanicId] || '';
+
+    const newRepair = {
+      vehicleId,
+      vehicleName,
+      clientId,
+      clientName,
+      mechanicId,
+      mechanicName,
+      startDate,
+      estimatedEndDate,
+      status: "in_progress",
+      description,
+      progress: 0,
+      estimatedCost: parseFloat(estimatedCost),
+      licensePlate
+    };
+
+    onSave(newRepair);
+    resetForm();
+    onOpenChange(false);
   };
 
-  const handleClose = () => {
-    reset();
-    onOpenChange(false);
+  const resetForm = () => {
+    setClientId('');
+    setVehicleId('');
+    setMechanicId('');
+    setDescription('');
+    setEstimatedCost('');
+    setStartDate(new Date().toISOString().split('T')[0]);
+    setEstimatedEndDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    setLicensePlate('');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Nouvelle Réparation</DialogTitle>
+          <DialogTitle>Créer une nouvelle réparation</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="clientId" className="block text-sm font-medium mb-1">Client</label>
-              <select 
-                id="clientId"
-                className="w-full p-2 border rounded"
-                {...register("clientId", { required: "Client requis" })}
-              >
-                <option value="">Sélectionnez un client</option>
-                {Object.values(clientsMap).map(client => (
-                  <option key={client.id} value={client.id}>
-                    {client.firstName} {client.lastName}
-                  </option>
-                ))}
-              </select>
-              {errors.clientId && <p className="text-sm text-red-500 mt-1">{errors.clientId.message?.toString()}</p>}
+              <Label htmlFor="client">Client</Label>
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger id="client">
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(clientsMap || {}).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
-              <label htmlFor="vehicleId" className="block text-sm font-medium mb-1">Véhicule</label>
-              <select 
-                id="vehicleId"
-                className="w-full p-2 border rounded"
-                {...register("vehicleId", { required: "Véhicule requis" })}
-              >
-                <option value="">Sélectionnez un véhicule</option>
-                {Object.values(vehiclesMap).map(vehicle => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
-                  </option>
-                ))}
-              </select>
-              {errors.vehicleId && <p className="text-sm text-red-500 mt-1">{errors.vehicleId.message?.toString()}</p>}
+              <Label htmlFor="vehicle">Véhicule</Label>
+              <Select value={vehicleId} onValueChange={setVehicleId}>
+                <SelectTrigger id="vehicle">
+                  <SelectValue placeholder="Sélectionner un véhicule" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(vehiclesMap || {}).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="license">Immatriculation</Label>
+              <Input 
+                id="license" 
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value)}
+                placeholder="Ex: AB-123-CD" 
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="mechanic">Mécanicien</Label>
+              <Select value={mechanicId} onValueChange={setMechanicId}>
+                <SelectTrigger id="mechanic">
+                  <SelectValue placeholder="Sélectionner un mécanicien" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(mechanicsMap || {}).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="startDate">Date de début</Label>
+              <div className="relative">
+                <Input 
+                  id="startDate" 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="endDate">Date de fin estimée</Label>
+              <div className="relative">
+                <Input 
+                  id="endDate" 
+                  type="date" 
+                  value={estimatedEndDate}
+                  onChange={(e) => setEstimatedEndDate(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
           </div>
           
           <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
-            <textarea 
-              id="description"
-              className="w-full p-2 border rounded min-h-[100px]"
-              {...register("description", { required: "Description requise" })}
+            <Label htmlFor="description">Description de la réparation</Label>
+            <Textarea 
+              id="description" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Décrivez la réparation à effectuer..." 
+              rows={3}
             />
-            {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message?.toString()}</p>}
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="mechanicId" className="block text-sm font-medium mb-1">Mécanicien</label>
-              <select 
-                id="mechanicId"
-                className="w-full p-2 border rounded"
-                {...register("mechanicId")}
-              >
-                <option value="">Non assigné</option>
-                {Object.values(mechanicsMap).map(mechanic => (
-                  <option key={mechanic.id} value={mechanic.id}>
-                    {mechanic.firstName} {mechanic.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label htmlFor="cost" className="block text-sm font-medium mb-1">Coût estimé (€)</label>
-              <input 
-                type="number" 
-                id="cost"
-                className="w-full p-2 border rounded"
-                {...register("cost", { min: 0 })}
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="startDate" className="block text-sm font-medium mb-1">Date de début</label>
-              <input 
-                type="date" 
-                id="startDate"
-                className="w-full p-2 border rounded"
-                {...register("startDate")}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="estimatedEndDate" className="block text-sm font-medium mb-1">Date estimée de fin</label>
-              <input 
-                type="date" 
-                id="estimatedEndDate"
-                className="w-full p-2 border rounded"
-                {...register("estimatedEndDate")}
-              />
-            </div>
           </div>
           
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium mb-1">Notes</label>
-            <textarea 
-              id="notes"
-              className="w-full p-2 border rounded min-h-[80px]"
-              {...register("notes")}
+            <Label htmlFor="cost">Coût estimé (€)</Label>
+            <Input 
+              id="cost" 
+              type="number" 
+              min="0" 
+              step="0.01"
+              value={estimatedCost}
+              onChange={(e) => setEstimatedCost(e.target.value)}
+              placeholder="0.00" 
             />
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit">
-              Créer
-            </Button>
+            <Button type="submit">Créer la réparation</Button>
           </DialogFooter>
         </form>
       </DialogContent>

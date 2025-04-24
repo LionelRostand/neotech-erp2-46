@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
@@ -16,39 +16,35 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission = 'view' 
 }) => {
   const params = useParams();
-  const { loading: permissionsLoading, isAdmin, checkPermission } = usePermissions();
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const { loading, isAdmin, checkPermission, hasPermission } = usePermissions(moduleId);
+  const [hasAccess, setHasAccess] = React.useState<boolean | null>(null);
 
-  useEffect(() => {
-    // Skip permission check if no moduleId is provided
-    if (!moduleId) {
-      console.log('ProtectedRoute: No moduleId provided, granting access');
-      setHasAccess(true);
-      return;
-    }
-
+  React.useEffect(() => {
     const checkAccess = async () => {
       if (isAdmin) {
         setHasAccess(true);
         return;
       }
 
-      try {
-        // Check permission
+      if (moduleId) {
+        // Si la permission est déjà en cache
+        if (hasPermission[`${moduleId}.${requiredPermission}`] !== undefined) {
+          setHasAccess(hasPermission[`${moduleId}.${requiredPermission}`]);
+          return;
+        }
+
+        // Sinon on la vérifie
         const result = await checkPermission(moduleId, requiredPermission);
         setHasAccess(result);
-      } catch (error) {
-        console.error(`Error checking permission for ${moduleId}.${requiredPermission}:`, error);
-        setHasAccess(false);
       }
     };
 
-    if (!permissionsLoading) {
+    if (!loading) {
       checkAccess();
     }
-  }, [moduleId, requiredPermission, permissionsLoading, isAdmin, checkPermission]);
+  }, [moduleId, requiredPermission, loading, isAdmin, checkPermission, hasPermission]);
 
-  if (permissionsLoading || hasAccess === null) {
+  if (loading || hasAccess === null) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

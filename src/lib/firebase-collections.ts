@@ -1,102 +1,123 @@
+// Firebase collections paths for the application
 
 export const COLLECTIONS = {
-  HR: {
-    EMPLOYEES: 'hr_employees',
-    TRAININGS: 'hr_trainings',
-    ABSENCE_REQUESTS: 'hr_absence_requests',
-    PAYSLIPS: 'hr_payslips',
-    CONTRACTS: 'hr_contracts',
-    DEPARTMENTS: 'hr_departments',
-    LEAVE_REQUESTS: 'hr_leave_requests',
-    ATTENDANCE: 'hr_attendance',
-    DOCUMENTS: 'hr_documents',
-    TIMESHEET: 'hr_timesheet',
-    EVALUATIONS: 'hr_evaluations',
-    REPORTS: 'hr_reports',
-    ALERTS: 'hr_alerts',
-    RECRUITMENT: 'hr_recruitment'
-  },
-  GARAGE: {
-    MECHANICS: 'garage_mechanics',
-    REPAIRS: 'garage_repairs',
-    VEHICLES: 'garage_vehicles',
-    SERVICES: 'garage_services',
-    INVOICES: 'garage_invoices',
-    CLIENTS: 'garage_clients',
-    APPOINTMENTS: 'garage_appointments',
-    INVENTORY: 'garage_inventory',
-    LOYALTY: 'garage_loyalty',
-    SETTINGS: 'garage_settings',
-    SUPPLIERS: 'garage_suppliers',
-  },
-  MESSAGES: {
-    CONTACTS: 'message_contacts',
-    INBOX: 'message_inbox',
-    SENT: 'message_sent',
-    ARCHIVED: 'message_archived',
-    SCHEDULED: 'message_scheduled',
-    DRAFTS: 'message_drafts',
-    MESSAGES: 'messages',
-  },
-  DOCUMENT_COLLECTIONS: {
-    DOCUMENTS: 'documents',
-    CATEGORIES: 'document_categories',
-    PERMISSIONS: 'document_permissions',
-    SETTINGS: 'document_settings',
-  },
-  ACCOUNTING: {
-    INVOICES: 'accounting_invoices',
-    PAYMENTS: 'accounting_payments',
-    TRANSACTIONS: 'accounting_transactions',
-    TAX_RATES: 'accounting_tax_rates',
-    TAX_DECLARATIONS: 'accounting_tax_declarations',
-    TAXES: 'accounting_taxes',
-    SETTINGS: 'accounting_settings'
-  },
+  EMPLOYEES: "employees",
+  DEPARTMENTS: "departments",
+  COMPANIES: "companies",
+  PAYSLIPS: "payslips",
+  CONTRACTS: "contracts",
+  BADGES: "badges",
+  LEAVES: "leaves",
+  ALERTS: "alerts",
+  NOTIFICATIONS: "notifications",
+  DOCUMENTS: "documents",
+  USERS: "users",
+  TIME_SHEETS: "timeSheets",
+  EVALUATIONS: "evaluations",
+  TRAININGS: "trainings",
+  ATTENDANCE: "attendance",
+  SETTINGS: "settings",
+  
+  // Module-specific collections
   FREIGHT: {
-    SHIPMENTS: 'freight_shipments',
-    CONTAINERS: 'freight_containers',
-    DOCUMENTS: 'freight_documents',
-    BILLING: 'freight_billing',
-    CLIENTS: 'freight_clients',
-    PACKAGES: 'freight_packages',
-    TRACKING_EVENTS: 'freight_tracking_events'
+    SHIPMENTS: "freight_shipments",
+    ROUTES: "freight_routes",
+    CARRIERS: "freight_carriers",
+    CONTAINERS: "freight_containers",
+    PACKAGES: "freight_packages",
+    TRACKINGS: "freight_trackings",
+    CLIENTS: "freight_clients",
+    DOCUMENTS: "freight_documents",
+    SETTINGS: "freight_settings",
+    INVOICES: "freight_invoices",
+    QUOTES: "freight_quotes",
+    BILLING: "freight_billing"
   },
+  
+  MESSAGES: {
+    MESSAGES: "messages",
+    INBOX: "messages_inbox",
+    SENT: "messages_sent",
+    DRAFTS: "messages_drafts",
+    ARCHIVE: "messages_archive",
+    CONTACTS: "contacts",
+    TEMPLATES: "message_templates",
+    SCHEDULED: "scheduled_messages",
+    SETTINGS: "message_settings"
+  },
+  
+  GARAGE: {
+    VEHICLES: "garage_vehicles",
+    CLIENTS: "garage_clients",
+    APPOINTMENTS: "garage_appointments",
+    SERVICES: "garage_services",
+    PARTS: "garage_parts",
+    INVOICES: "garage_invoices"
+  },
+  
+  ACCOUNTING: {
+    INVOICES: "accounting_invoices",
+    CLIENTS: "accounting_clients",
+    PAYMENTS: "accounting_payments",
+    EXPENSES: "accounting_expenses",
+    TAX_RATES: "accounting_tax_rates",
+    TAX_DECLARATIONS: "accounting_tax_declarations"
+  },
+  
+  CRM: {
+    CLIENTS: "crm_clients",
+    PROSPECTS: "crm_prospects",
+    OPPORTUNITIES: "crm_opportunities",
+    ACTIVITIES: "crm_activities",
+    SETTINGS: "crm_settings"
+  },
+  
+  HR: {
+    EMPLOYEES: "hr_employees",
+    PAYSLIPS: "hr_payslips",
+    CONTRACTS: "hr_contracts",
+    DEPARTMENTS: "hr_departments",
+    LEAVES: "hr_leaves",
+    ABSENCE_REQUESTS: "hr_absences",
+    ATTENDANCE: "hr_attendance",
+    TIMESHEET: "hr_timesheet"
+  },
+  
+  PROJECTS: {
+    PROJECTS: "projects",
+    TASKS: "tasks",
+    MILESTONES: "project_milestones",
+    COMMENTS: "project_comments",
+    TIMETRACKING: "project_timetracking",
+    TEAMS: "project_teams"
+  },
+  
   TRANSPORT: {
-    DRIVERS: 'transport_drivers',
-    VEHICLES: 'transport_vehicles',
-    RESERVATIONS: 'transport_reservations',
-    CLIENTS: 'transport_clients'
+    SERVICES: "transport_services",
+    BOOKINGS: "transport_bookings",
+    VEHICLES: "transport_vehicles",
+    DRIVERS: "transport_drivers",
+    ROUTES: "transport_routes",
+    CLIENTS: "transport_clients",
+    RESERVATIONS: "transport_reservations",
+    INVOICES: "transport_invoices"
   },
+  
   LIBRARY: {
-    BOOKS: 'library_books',
-    MEMBERS: 'library_members',
-    LOANS: 'library_loans',
-    STATS: 'library_stats'
+    BOOKS: "library_books",
+    MEMBERS: "library_members",
+    LOANS: "library_loans",
+    RETURNS: "library_returns",
+    CATEGORIES: "library_categories",
+    STATS: "library_stats"
   },
-  SALON: {
-    INVOICES: 'salon_invoices',
-    PAYMENTS: 'salon_payments',
-    CLIENTS: 'salon_clients',
-    APPOINTMENTS: 'salon_appointments',
-    SERVICES: 'salon_services',
-    PRODUCTS: 'salon_products',
-    STAFF: 'salon_staff'
-  },
-  HEALTH: {
-    PATIENTS: 'health_patients',
-    DOCTORS: 'health_doctors',
-    NURSES: 'health_nurses',
-    STAFF: 'health_staff',
-    APPOINTMENTS: 'health_appointments',
-    CONSULTATIONS: 'health_consultations',
-    MEDICAL_RECORDS: 'health_medical_records',
-    LABORATORY: 'health_laboratory',
-    PRESCRIPTIONS: 'health_prescriptions',
-    PHARMACY: 'health_pharmacy',
-    HOSPITALIZATIONS: 'health_hospitalizations',
-    ROOMS: 'health_rooms',
-    BILLING: 'health_billing',
-    INSURANCE: 'health_insurance'
+  
+  DOCUMENT_COLLECTIONS: {
+    DOCUMENTS: "documents",
+    TEMPLATES: "document_templates",
+    CATEGORIES: "document_categories",
+    ARCHIVES: "document_archives",
+    PERMISSIONS: "document_permissions",
+    SETTINGS: "document_settings"
   }
-} as const;
+};

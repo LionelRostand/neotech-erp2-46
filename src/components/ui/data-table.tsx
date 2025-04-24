@@ -10,8 +10,6 @@ export function DataTable<T>({
   isLoading = false,
   emptyMessage = "No data available",
 }: DataTableProps<T>) {
-  console.log("DataTable received data:", data);
-  console.log("DataTable columns:", columns);
   
   if (isLoading) {
     return (
@@ -38,7 +36,7 @@ export function DataTable<T>({
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!data.length) {
     return (
       <div className="w-full rounded-md border border-gray-200 p-8 text-center">
         <p className="text-gray-500">{emptyMessage}</p>
