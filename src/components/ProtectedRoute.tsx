@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
@@ -16,10 +16,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission = 'view' 
 }) => {
   const params = useParams();
-  const { loading, isAdmin, checkPermission, hasPermission } = usePermissions(moduleId);
-  const [hasAccess, setHasAccess] = React.useState<boolean | null>(null);
+  const { loading, isAdmin, checkPermission } = usePermissions();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAccess = async () => {
       if (isAdmin) {
         setHasAccess(true);
@@ -27,13 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       }
 
       if (moduleId) {
-        // Si la permission est déjà en cache
-        if (hasPermission[`${moduleId}.${requiredPermission}`] !== undefined) {
-          setHasAccess(hasPermission[`${moduleId}.${requiredPermission}`]);
-          return;
-        }
-
-        // Sinon on la vérifie
+        // Check permission
         const result = await checkPermission(moduleId, requiredPermission);
         setHasAccess(result);
       }
@@ -42,7 +36,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (!loading) {
       checkAccess();
     }
-  }, [moduleId, requiredPermission, loading, isAdmin, checkPermission, hasPermission]);
+  }, [moduleId, requiredPermission, loading, isAdmin, checkPermission]);
 
   if (loading || hasAccess === null) {
     return (

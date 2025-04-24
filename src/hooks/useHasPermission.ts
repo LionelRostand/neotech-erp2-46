@@ -13,6 +13,13 @@ export const useHasPermission = (moduleId: string, actionType: string) => {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   useEffect(() => {
+    // Don't proceed if moduleId or actionType are empty
+    if (!moduleId || !actionType) {
+      console.warn('useHasPermission: moduleId or actionType is empty');
+      setHasPermission(false);
+      return;
+    }
+
     const checkUserPermission = async () => {
       if (isAdmin) {
         setHasPermission(true);

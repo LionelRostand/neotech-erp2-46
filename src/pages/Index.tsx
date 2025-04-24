@@ -20,9 +20,14 @@ const Index = () => {
         const savedModules = localStorage.getItem('installedModules');
         if (savedModules) {
           setInstalledModules(JSON.parse(savedModules));
+        } else {
+          // Default to empty array if no modules saved
+          setInstalledModules([]);
         }
       } catch (error) {
         console.error('Error loading installed modules:', error);
+        // Fallback to empty array on error
+        setInstalledModules([]);
       }
     };
     
@@ -136,7 +141,8 @@ const Index = () => {
       );
     }
 
-    const hasGarageModule = installedModules.includes(11);
+    // Safe check for module existence
+    const hasGarageModule = Array.isArray(installedModules) && installedModules.includes(11);
     return hasGarageModule ? <GarageDashboard /> : renderDefaultDashboard();
   };
 

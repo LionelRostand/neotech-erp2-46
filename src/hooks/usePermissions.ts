@@ -34,6 +34,12 @@ export const usePermissions = () => {
    * @returns Boolean indicating if the user has permission
    */
   const checkPermission = async (moduleId: string, actionType: string): Promise<boolean> => {
+    // Safety check for empty moduleId or actionType
+    if (!moduleId || !actionType) {
+      console.warn('checkPermission: moduleId or actionType is empty');
+      return false;
+    }
+    
     // Admin has all permissions
     if (isAdmin) return true;
     
@@ -50,31 +56,4 @@ export const usePermissions = () => {
     permissions,
     checkPermission,
   };
-};
-
-/**
- * Hook to check if the user has a specific permission
- * @param moduleId The module ID to check
- * @param actionType The type of action
- * @returns Boolean indicating if the user has permission
- */
-export const useHasPermission = (moduleId: string, actionType: string) => {
-  const { isAdmin, checkPermission, loading } = usePermissions();
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-
-  useEffect(() => {
-    const checkUserPermission = async () => {
-      if (isAdmin) {
-        setHasPermission(true);
-        return;
-      }
-      
-      const result = await checkPermission(moduleId, actionType);
-      setHasPermission(result);
-    };
-    
-    checkUserPermission();
-  }, [moduleId, actionType, isAdmin, checkPermission]);
-  
-  return !loading && hasPermission;
 };
