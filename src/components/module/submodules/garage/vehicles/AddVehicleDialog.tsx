@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
+import { toast } from 'sonner';
 
 interface AddVehicleDialogProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
   onVehicleAdded
 }) => {
   const { addVehicle } = useGarageVehicles();
-  const { clients } = useGarageClients();
+  const { clients, loading: clientsLoading } = useGarageClients();
   const [formData, setFormData] = React.useState({
     make: '',
     model: '',
@@ -33,6 +34,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
     mileage: 0,
     lastCheckDate: ''
   });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,6 +42,12 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!formData.make || !formData.model || !formData.licensePlate || !formData.clientId) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       await addVehicle(formData);
       onVehicleAdded();
@@ -58,6 +66,8 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
       });
     } catch (error) {
       console.error('Erreur lors de l\'ajout du véhicule:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -136,11 +146,17 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.firstName} {client.lastName}
-                  </SelectItem>
-                ))}
+                {clientsLoading ? (
+                  <SelectItem value="loading" disabled>Chargement des clients...</SelectItem>
+                ) : clients.length === 0 ? (
+                  <SelectItem value="empty" disabled>Aucun client disponible</SelectItem>
+                ) : (
+                  clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -158,11 +174,11 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit}>
-            Ajouter le véhicule
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'En cours...' : 'Ajouter le véhicule'}
           </Button>
         </DialogFooter>
       </DialogContent>

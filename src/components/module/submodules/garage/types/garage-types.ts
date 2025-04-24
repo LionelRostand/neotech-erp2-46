@@ -1,16 +1,3 @@
-export interface Vehicle {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  licensePlate: string;
-  mileage: number;
-  lastCheckDate?: string;
-  clientId: string;
-  services: string[];
-  repairs: string[];
-  status: 'available' | 'maintenance';
-}
 
 export interface GarageClient {
   id: string;
@@ -19,10 +6,32 @@ export interface GarageClient {
   email: string;
   phone: string;
   address?: string;
-  createdAt: string;
-  updatedAt: string;
-  status: 'active' | 'inactive';
-  vehicles: string[];
   notes?: string;
-  totalSpent: number;
+  vehicles?: VehicleReference[];
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface VehicleReference {
+  id: string;
+  make: string;
+  model: string;
+  licensePlate: string;
+}
+
+export interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  licensePlate: string;
+  clientId: string;
+  mileage: number;
+  status: 'available' | 'maintenance';
+  lastCheckDate?: string;
+  services?: any[];
+  repairs?: any[];
+  createdAt: string;
+  updatedAt?: string;
 }
