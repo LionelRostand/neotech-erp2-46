@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEmployeeService } from '@/hooks/useEmployeeService';
-import { toast } from 'sonner';
+import { useMechanicService } from '@/hooks/garage/useMechanicService';
 
 const mechanicFormSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis"),
@@ -34,7 +33,7 @@ type AddMechanicFormValues = z.infer<typeof mechanicFormSchema>;
 
 export function AddMechanicDialog() {
   const [open, setOpen] = React.useState(false);
-  const { addEmployee } = useEmployeeService();
+  const { addMechanic } = useMechanicService();
 
   const form = useForm<AddMechanicFormValues>({
     resolver: zodResolver(mechanicFormSchema),
@@ -47,18 +46,10 @@ export function AddMechanicDialog() {
   });
 
   const onSubmit = async (data: AddMechanicFormValues) => {
-    try {
-      await addEmployee({
-        ...data,
-        position: "Mécanicien",
-        status: "active",
-      });
-      
-      toast.success("Mécanicien ajouté avec succès");
+    const success = await addMechanic(data);
+    if (success) {
       setOpen(false);
       form.reset();
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout du mécanicien");
     }
   };
 
