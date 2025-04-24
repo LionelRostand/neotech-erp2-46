@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from 'react-hook-form';
+import { useGarageClients } from '@/hooks/garage/useGarageClients';
+import { useGarageServices } from '@/hooks/garage/useGarageServices';
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -15,6 +17,8 @@ interface CreateAppointmentDialogProps {
 
 const CreateAppointmentDialog = ({ open, onOpenChange, onSubmit }: CreateAppointmentDialogProps) => {
   const { register, handleSubmit, formState: { isSubmitting } } = useForm();
+  const { clients } = useGarageClients();
+  const { services } = useGarageServices();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -26,14 +30,24 @@ const CreateAppointmentDialog = ({ open, onOpenChange, onSubmit }: CreateAppoint
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid gap-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="clientName" className="text-right">
+              <Label htmlFor="clientId" className="text-right">
                 Client
               </Label>
-              <Input
-                id="clientName"
-                className="col-span-3"
-                {...register('clientName', { required: true })}
-              />
+              <Select 
+                onValueChange={(value) => register('clientId').onChange({ target: { value }})}
+                defaultValue=""
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
@@ -61,14 +75,24 @@ const CreateAppointmentDialog = ({ open, onOpenChange, onSubmit }: CreateAppoint
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="service" className="text-right">
+              <Label htmlFor="serviceId" className="text-right">
                 Service
               </Label>
-              <Input
-                id="service"
-                className="col-span-3"
-                {...register('service', { required: true })}
-              />
+              <Select 
+                onValueChange={(value) => register('serviceId').onChange({ target: { value }})}
+                defaultValue=""
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
@@ -76,7 +100,7 @@ const CreateAppointmentDialog = ({ open, onOpenChange, onSubmit }: CreateAppoint
                 Statut
               </Label>
               <Select 
-                onValueChange={(value) => console.log(value)}
+                onValueChange={(value) => register('status').onChange({ target: { value }})}
                 defaultValue="pending"
               >
                 <SelectTrigger className="col-span-3">
