@@ -1,14 +1,13 @@
 
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wrench, Plus } from 'lucide-react';
+import { Wrench, Plus, Shield } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
 import CreateRepairDialog from './CreateRepairDialog';
-import { useHasPermission } from '@/hooks/useHasPermission';
-import { Shield } from 'lucide-react';
+import { useHasPermission } from '@/hooks/usePermissions';
 
 const GarageRepairs = () => {
   const { repairs, isLoading, refetchRepairs } = useGarageData();

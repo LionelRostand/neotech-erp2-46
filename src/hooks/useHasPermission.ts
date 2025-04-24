@@ -1,40 +1,32 @@
 
 import { useState, useEffect } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
+import { usePermissions } from './usePermissions';
 
 /**
- * Hook to check if the current user has permission for a specific module and action
- * @param moduleId The module ID to check permissions for
- * @param actionType The type of action (view, create, edit, delete)
- * @returns Boolean indicating if user has permission
+ * Hook to check if the user has a specific permission
+ * @param moduleId The module ID to check
+ * @param actionType The type of action
+ * @returns Boolean indicating if the user has permission
  */
-export const useHasPermission = (
-  moduleId: string,
-  actionType: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify'
-) => {
-  const [hasPermission, setHasPermission] = useState(false);
+export const useHasPermission = (moduleId: string, actionType: string) => {
   const { isAdmin, checkPermission, loading } = usePermissions();
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkAccess = async () => {
+    const checkUserPermission = async () => {
       if (isAdmin) {
         setHasPermission(true);
         return;
       }
-
-      try {
-        const access = await checkPermission(moduleId, actionType);
-        setHasPermission(access);
-      } catch (error) {
-        console.error(`Error checking permission for ${moduleId}.${actionType}:`, error);
-        setHasPermission(false);
-      }
+      
+      const result = await checkPermission(moduleId, actionType);
+      setHasPermission(result);
     };
-
-    if (!loading) {
-      checkAccess();
-    }
-  }, [moduleId, actionType, checkPermission, isAdmin, loading]);
-
-  return hasPermission;
+    
+    checkUserPermission();
+  }, [moduleId, actionType, isAdmin, checkPermission]);
+  
+  return !loading && hasPermission;
 };
+
+export default useHasPermission;
