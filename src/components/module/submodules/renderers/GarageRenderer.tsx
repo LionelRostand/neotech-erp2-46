@@ -6,7 +6,7 @@ import GarageDashboard from '../garage/GarageDashboard';
 import GarageClientsDashboard from '../garage/clients/GarageClientsDashboard';
 import GarageVehiclesDashboard from '../garage/vehicles/GarageVehiclesDashboard';
 import GarageAppointmentsDashboard from '../garage/appointments/GarageAppointmentsDashboard';
-import GarageRepairsDashboard from '../garage/repairs/GarageRepairsDashboard';
+import GarageRepairs from '../garage/repairs/GarageRepairs';
 import GarageServicesDashboard from '../garage/services/GarageServicesDashboard';
 import GarageInvoicesDashboard from '../garage/invoices/GarageInvoicesDashboard';
 import GarageSuppliersDashboard from '../garage/suppliers/GarageSuppliersDashboard';
@@ -28,7 +28,7 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
     case 'garage-appointments':
       return <GarageAppointmentsDashboard />;
     case 'garage-repairs':
-      return <GarageRepairsDashboard />;
+      return <GarageRepairs />;
     case 'garage-mechanics':
       return <GarageMechanicsDashboard />;
     case 'garage-services':

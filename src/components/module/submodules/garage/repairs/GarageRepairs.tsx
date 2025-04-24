@@ -7,13 +7,33 @@ import { Wrench, Plus } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
 import CreateRepairDialog from './CreateRepairDialog';
+import { useHasPermission } from '@/hooks/useHasPermission';
+import { Shield } from 'lucide-react';
 
 const GarageRepairs = () => {
   const { repairs, isLoading, refetchRepairs } = useGarageData();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const hasViewPermission = useHasPermission('garage-repairs', 'view');
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
+  // Handle case where user doesn't have permission
+  if (!hasViewPermission) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="p-12">
+          <div className="text-center">
+            <Shield className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <h3 className="text-lg font-medium">Accès limité</h3>
+            <p className="text-sm text-gray-500 mt-2">
+              Vous n'avez pas les permissions nécessaires pour visualiser les réparations.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   const inProgress = repairs?.filter(r => r.status === 'in_progress') || [];
@@ -62,7 +82,11 @@ const GarageRepairs = () => {
       <CreateRepairDialog 
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        onSuccess={refetchRepairs}
+        onSuccess={() => {
+          if (refetchRepairs) {
+            refetchRepairs();
+          }
+        }}
       />
     </div>
   );

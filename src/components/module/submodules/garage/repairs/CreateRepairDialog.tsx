@@ -1,58 +1,83 @@
+
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from 'react-hook-form';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
-import { useGarageServices } from '@/hooks/garage/useGarageServices';
-import { useGarageEmployees } from '@/hooks/garage/useGarageEmployees';
-import { toast } from 'sonner';
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface CreateRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  clientsMap?: Record<string, any>;
+  vehiclesMap?: Record<string, any>;
+  mechanicsMap?: Record<string, any>;
 }
 
-const CreateRepairDialog = ({ open, onOpenChange, onSuccess }: CreateRepairDialogProps) => {
-  const { clients } = useGarageClients();
-  const { vehicles } = useGarageVehicles();
-  const { services } = useGarageServices();
-  const { employees } = useGarageEmployees();
-  const [selectedClient, setSelectedClient] = React.useState('');
-  const [selectedVehicle, setSelectedVehicle] = React.useState('');
-  const [selectedService, setSelectedService] = React.useState('');
-  const [selectedMechanic, setSelectedMechanic] = React.useState('');
-  const [description, setDescription] = React.useState('');
-
-  const filteredVehicles = vehicles.filter(v => v.clientId === selectedClient);
-  const selectedServiceData = services.find(s => s.id === selectedService);
-  const mechanics = employees.filter(e => e.position?.toLowerCase().includes('mécanicien'));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedClient || !selectedVehicle || !selectedService || !selectedMechanic) {
-      toast.error("Veuillez remplir tous les champs requis");
-      return;
+const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  onSuccess,
+  clientsMap = {},
+  vehiclesMap = {},
+  mechanicsMap = {}
+}) => {
+  const form = useForm({
+    defaultValues: {
+      clientId: '',
+      clientName: '',
+      vehicleId: '',
+      vehicleName: '',
+      mechanicId: '',
+      mechanicName: '',
+      description: '',
+      startDate: new Date().toISOString().split('T')[0],
+      status: 'awaiting_approval',
+      progress: 0
     }
+  });
 
+  const handleSave = async (data: any) => {
     try {
-      // TODO: Implement repair creation logic
-      toast.success("Réparation créée avec succès");
-      onSuccess?.();
+      console.log('Creating repair:', data);
+      
+      // In a real app, we would save this to Firestore
+      // For now, just show a success message
+      
+      toast.success('Réparation créée avec succès');
       onOpenChange(false);
+      form.reset();
+      
+      // Trigger refetch if callback exists
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
-      console.error('Erreur lors de la création de la réparation:', error);
-      toast.error("Erreur lors de la création de la réparation");
+      console.error('Error creating repair:', error);
+      toast.error('Erreur lors de la création de la réparation');
     }
   };
 
-  const getClientName = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : '';
+  const handleClientChange = (clientId: string) => {
+    const client = clientsMap[clientId] || { id: clientId, name: 'Client inconnu' };
+    form.setValue('clientId', clientId);
+    form.setValue('clientName', client.name || `${client.firstName || ''} ${client.lastName || ''}`);
+  };
+
+  const handleVehicleChange = (vehicleId: string) => {
+    const vehicle = vehiclesMap[vehicleId] || { id: vehicleId, name: 'Véhicule inconnu' };
+    form.setValue('vehicleId', vehicleId);
+    form.setValue('vehicleName', vehicle.name || `${vehicle.make || ''} ${vehicle.model || ''}`);
+  };
+
+  const handleMechanicChange = (mechanicId: string) => {
+    const mechanic = mechanicsMap[mechanicId] || { id: mechanicId, name: 'Mécanicien inconnu' };
+    form.setValue('mechanicId', mechanicId);
+    form.setValue('mechanicName', mechanic.name || `${mechanic.firstName || ''} ${mechanic.lastName || ''}`);
   };
 
   return (
@@ -61,105 +86,94 @@ const CreateRepairDialog = ({ open, onOpenChange, onSuccess }: CreateRepairDialo
         <DialogHeader>
           <DialogTitle>Nouvelle réparation</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
-              <Select value={selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.firstName} {client.lastName}
+
+        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+          <div>
+            <Label htmlFor="clientId">Client</Label>
+            <Select onValueChange={handleClientChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un client" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(clientsMap).length > 0 ? (
+                  Object.entries(clientsMap).map(([id, client]: [string, any]) => (
+                    <SelectItem key={id} value={id}>
+                      {client.name || `${client.firstName || ''} ${client.lastName || ''}`}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="vehicle">Véhicule</Label>
-              <Select 
-                value={selectedVehicle} 
-                onValueChange={setSelectedVehicle}
-                disabled={!selectedClient}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un véhicule" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredVehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="service">Type de service</Label>
-              <Select value={selectedService} onValueChange={setSelectedService}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="estimatedCost">Coût estimé (€)</Label>
-              <Input 
-                id="estimatedCost" 
-                type="number" 
-                value={selectedServiceData?.price || ''} 
-                disabled 
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="mechanic">Mécanicien</Label>
-              <Select value={selectedMechanic} onValueChange={setSelectedMechanic}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un mécanicien" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mechanics.map((mechanic) => (
-                    <SelectItem key={mechanic.id} value={mechanic.id}>
-                      {mechanic.firstName} {mechanic.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description de la réparation"
-              />
-            </div>
+                  ))
+                ) : (
+                  <SelectItem value="dummy">Client non disponible</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+
+          <div>
+            <Label htmlFor="vehicleId">Véhicule</Label>
+            <Select onValueChange={handleVehicleChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un véhicule" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(vehiclesMap).length > 0 ? (
+                  Object.entries(vehiclesMap).map(([id, vehicle]: [string, any]) => (
+                    <SelectItem key={id} value={id}>
+                      {vehicle.name || `${vehicle.make || ''} ${vehicle.model || ''} (${vehicle.licensePlate || 'Sans plaque'})`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="dummy">Véhicule non disponible</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description de la réparation</Label>
+            <Textarea 
+              {...form.register('description')} 
+              placeholder="Décrivez la réparation à effectuer" 
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="mechanicId">Mécanicien assigné</Label>
+            <Select onValueChange={handleMechanicChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un mécanicien" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(mechanicsMap).length > 0 ? (
+                  Object.entries(mechanicsMap).map(([id, mechanic]: [string, any]) => (
+                    <SelectItem key={id} value={id}>
+                      {mechanic.name || `${mechanic.firstName || ''} ${mechanic.lastName || ''}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="dummy">Mécanicien non disponible</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="startDate">Date de début</Label>
+            <Input 
+              type="date" 
+              {...form.register('startDate')} 
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+            >
               Annuler
             </Button>
-            <Button type="submit">
-              Créer
-            </Button>
-          </DialogFooter>
+            <Button type="submit">Créer réparation</Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
