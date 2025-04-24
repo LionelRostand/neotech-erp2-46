@@ -104,7 +104,7 @@ const GarageAppointmentsDashboard = () => {
         <StatCard
           title="Terminés"
           value={completedAppointments.length.toString()}
-          icon={<CheckCircle2 className="h-4 w-4" />}
+          icon={<CheckCircle className="h-4 w-4" />}
           description="Rendez-vous terminés"
           className="bg-amber-50 hover:bg-amber-100"
         />
