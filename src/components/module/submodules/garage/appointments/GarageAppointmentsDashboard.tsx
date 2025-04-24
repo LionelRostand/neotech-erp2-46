@@ -1,11 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Clock, CheckCircle } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
+import AppointmentViewDialog from './AppointmentViewDialog';
+import AppointmentEditDialog from './AppointmentEditDialog';
+import AppointmentDeleteDialog from './AppointmentDeleteDialog';
 import {
   Table,
   TableBody,
@@ -19,6 +21,11 @@ import { useGarageAppointments } from '@/hooks/garage/useGarageAppointments';
 
 const GarageAppointmentsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
   const { appointments, vehicles, clients, isLoading } = useGarageData();
   const { refetchAppointments } = useGarageAppointments();
 
@@ -38,6 +45,21 @@ const GarageAppointmentsDashboard = () => {
   const completedAppointments = appointments.filter(a => 
     a.status === 'completed'
   );
+
+  const handleView = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowViewDialog(true);
+  };
+
+  const handleEdit = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowDeleteDialog(true);
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -87,6 +109,7 @@ const GarageAppointmentsDashboard = () => {
                 <TableHead>Service</TableHead>
                 <TableHead>Véhicule</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -101,18 +124,43 @@ const GarageAppointmentsDashboard = () => {
                   </TableCell>
                   <TableCell>
                     <Badge 
-                      className={
+                      variant={
                         appointment.status === 'scheduled' 
-                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                          ? 'secondary'
                           : appointment.status === 'completed'
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          ? 'default'
+                          : 'destructive'
                       }
                     >
                       {appointment.status === 'scheduled' ? 'Planifié' 
                        : appointment.status === 'completed' ? 'Terminé'
                        : 'Annulé'}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleView(appointment)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(appointment)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(appointment)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -126,6 +174,30 @@ const GarageAppointmentsDashboard = () => {
         onOpenChange={setShowAddDialog}
         onSuccess={refetchAppointments}
       />
+      
+      {selectedAppointment && (
+        <>
+          <AppointmentViewDialog
+            open={showViewDialog}
+            onOpenChange={setShowViewDialog}
+            appointment={selectedAppointment}
+          />
+          
+          <AppointmentEditDialog
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            appointment={selectedAppointment}
+            onSuccess={refetchAppointments}
+          />
+          
+          <AppointmentDeleteDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            appointment={selectedAppointment}
+            onSuccess={refetchAppointments}
+          />
+        </>
+      )}
     </div>
   );
 };
