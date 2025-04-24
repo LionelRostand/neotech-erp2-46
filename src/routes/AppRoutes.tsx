@@ -18,6 +18,7 @@ import { RentalRoutes } from './modules/rentalRoutes';
 import { TransportRoutes } from './modules/transportRoutes';
 import { OtherModulesRoutes } from './modules/otherModulesRoutes';
 import { WebsiteRoutes } from './modules/websiteRoutes';
+import { GarageRoutes } from './modules/garageRoutes';
 import NotFound from '@/pages/NotFound';
 
 const AppRoutes = () => (
@@ -44,6 +45,7 @@ const AppRoutes = () => (
     {RentalRoutes}
     {TransportRoutes}
     {WebsiteRoutes}
+    {GarageRoutes}
     
     {/* Other module routes */}
     {OtherModulesRoutes}
