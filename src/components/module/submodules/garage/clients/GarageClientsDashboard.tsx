@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2, Users } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { Card } from '@/components/ui/card';
