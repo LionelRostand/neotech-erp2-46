@@ -72,6 +72,26 @@ const CreateAppointmentDialog = ({ open, onOpenChange, onSubmit }: CreateAppoint
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Statut
+              </Label>
+              <Select 
+                onValueChange={(value) => console.log(value)}
+                defaultValue="pending"
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="confirmed">Confirmé</SelectItem>
+                  <SelectItem value="cancelled">Annulé</SelectItem>
+                  <SelectItem value="completed">Terminé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="notes" className="text-right">
                 Notes
               </Label>
