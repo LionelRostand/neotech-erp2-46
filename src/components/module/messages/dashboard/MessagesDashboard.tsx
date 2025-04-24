@@ -11,12 +11,15 @@ import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const MessagesDashboard: React.FC = () => {
-  // Paths with fallbacks
+  // Paths with fallbacks - ensure they're never empty
   const inboxPath = COLLECTIONS.MESSAGES?.INBOX || 'message_inbox';
   const sentPath = COLLECTIONS.MESSAGES?.SENT || 'message_sent';
   const archivedPath = COLLECTIONS.MESSAGES?.ARCHIVED || 'message_archived';
   const scheduledPath = COLLECTIONS.MESSAGES?.SCHEDULED || 'message_scheduled';
   const contactsPath = COLLECTIONS.MESSAGES?.CONTACTS || 'message_contacts';
+  
+  // Validate paths before using them
+  console.log('Collection paths:', { inboxPath, sentPath, archivedPath, scheduledPath, contactsPath });
   
   const { data: inbox = [], isLoading: inboxLoading } = useFirebaseCollection(inboxPath);
   const { data: sent = [], isLoading: sentLoading } = useFirebaseCollection(sentPath);

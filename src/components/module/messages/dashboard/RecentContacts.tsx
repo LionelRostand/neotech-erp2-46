@@ -15,9 +15,9 @@ interface Contact {
 }
 
 export const RecentContacts: React.FC = () => {
-  // Use the contacts collection to get recent contacts
+  // Use the contacts collection to get recent contacts, ensure path is not empty
   const contactsPath = COLLECTIONS.MESSAGES?.CONTACTS || 'message_contacts';
-  const { data: contacts, isLoading } = useFirebaseCollection<Contact>(contactsPath);
+  const { data: contacts = [], isLoading } = useFirebaseCollection<Contact>(contactsPath);
   
   // Get the 5 most recent contacts
   const recentContacts = contacts

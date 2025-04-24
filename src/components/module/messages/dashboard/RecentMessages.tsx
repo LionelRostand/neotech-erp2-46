@@ -18,9 +18,9 @@ interface Message {
 }
 
 export const RecentMessages: React.FC = () => {
-  // Use the inbox collection to get recent messages
+  // Use the inbox collection to get recent messages, ensure path is not empty
   const inboxPath = COLLECTIONS.MESSAGES?.INBOX || 'message_inbox';
-  const { data: messages, isLoading } = useFirebaseCollection<Message>(inboxPath);
+  const { data: messages = [], isLoading } = useFirebaseCollection<Message>(inboxPath);
   
   // Get the 5 most recent messages
   const recentMessages = messages
