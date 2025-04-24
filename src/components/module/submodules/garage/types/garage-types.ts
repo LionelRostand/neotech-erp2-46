@@ -8,9 +8,17 @@ export interface GarageClient {
   address?: string;
   notes?: string;
   status: string;
-  vehicles: Vehicle[];
+  vehicles: VehicleSummary[];
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface VehicleSummary {
+  id: string;
+  make: string;
+  model: string;
+  year?: number;
+  licensePlate: string;
 }
 
 export interface Vehicle {
@@ -25,8 +33,11 @@ export interface Vehicle {
   lastService?: string;
   nextService?: string;
   clientId: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'maintenance' | 'available' | 'reserved';
   notes?: string;
+  lastCheckDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Repair {
@@ -87,6 +98,23 @@ export interface Appointment {
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   notes?: string;
   mechanicId?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Inventory {
+  id: string;
+  name: string;
+  category: string;
+  reference: string;
+  price: number;
+  costPrice?: number;
+  quantity: number;
+  minimumQuantity?: number;
+  supplier?: string;
+  location?: string;
+  description?: string;
+  lastOrderDate?: string;
   createdAt: string;
   updatedAt?: string;
 }

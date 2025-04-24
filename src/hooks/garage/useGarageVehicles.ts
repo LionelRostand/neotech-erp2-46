@@ -1,3 +1,4 @@
+
 import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Vehicle } from '@/components/module/submodules/garage/types/garage-types';
@@ -11,23 +12,32 @@ export const useGarageVehicles = () => {
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id'>) => {
     try {
+      console.log('Tentative d\'ajout du véhicule:', vehicleData);
+      
       const vehicleId = await add({
         ...vehicleData,
+        status: vehicleData.status || 'active',
         createdAt: new Date().toISOString()
       });
+      
+      console.log('Véhicule ajouté avec succès, ID:', vehicleId);
 
+      // Mettre à jour les véhicules du client si un client est spécifié
       if (vehicleData.clientId) {
+        console.log('Mise à jour des véhicules du client:', vehicleData.clientId);
         const client = clients.find(c => c.id === vehicleData.clientId);
         
         if (client) {
-          const updatedVehicles = client.vehicles || [];
+          const updatedVehicles = [...(client.vehicles || [])];
           updatedVehicles.push({
             id: vehicleId,
             make: vehicleData.make,
             model: vehicleData.model,
+            year: vehicleData.year,
             licensePlate: vehicleData.licensePlate
           });
           
+          console.log('Véhicules mis à jour pour le client:', updatedVehicles);
           await updateClient(vehicleData.clientId, {
             vehicles: updatedVehicles
           });
@@ -35,6 +45,7 @@ export const useGarageVehicles = () => {
       }
       
       toast.success('Véhicule ajouté avec succès');
+      await refetch();
       return vehicleId;
     } catch (err) {
       console.error('Erreur lors de l\'ajout du véhicule:', err);
@@ -58,6 +69,7 @@ export const useGarageVehicles = () => {
             id: vehicleId,
             make: vehicleData.make || '',
             model: vehicleData.model || '',
+            year: vehicleData.year || 0,
             licensePlate: vehicleData.licensePlate || ''
           });
           
@@ -97,11 +109,13 @@ export const useGarageVehicles = () => {
     }
   };
 
-  const { data: vehicles = [], refetch } = useQuery({
+  const { data: vehicles = [], isLoading, refetch } = useQuery({
     queryKey: ['garage', 'vehicles'],
     queryFn: async () => {
       try {
+        console.log('Récupération des véhicules depuis:', COLLECTIONS.GARAGE.VEHICLES);
         const result = await getAll() as Vehicle[];
+        console.log('Véhicules récupérés:', result);
         return result;
       } catch (err) {
         console.error('Erreur lors de la récupération des véhicules:', err);
@@ -118,6 +132,7 @@ export const useGarageVehicles = () => {
     deleteVehicle,
     refetchVehicles: refetch,
     loading,
+    isLoading,
     error
   };
 };
