@@ -12,8 +12,10 @@ export const useGarageEmployees = () => {
   const { data: employees = [], isLoading, error } = useQuery({
     queryKey: ['garage', 'mechanics'],
     queryFn: async () => {
-      if (!collectionPath) {
-        throw new Error('Collection path for mechanics is not defined');
+      if (!collectionPath || collectionPath.trim() === '') {
+        console.error('Collection path for mechanics is not defined');
+        toast.error('Erreur de configuration: chemin de collection non défini');
+        return [];
       }
       
       console.log('Fetching mechanics from collection:', collectionPath);
