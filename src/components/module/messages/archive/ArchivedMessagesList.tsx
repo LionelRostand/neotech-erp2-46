@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Message } from '../types/message-types';
-import { RestoreIcon } from 'lucide-react';
+import { ArchiveRestoreIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -61,7 +61,7 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
                 onClick={() => onRestoreMessage(message)}
                 className="ml-2"
               >
-                <RestoreIcon className="h-4 w-4 mr-1" />
+                <ArchiveRestoreIcon className="h-4 w-4 mr-1" />
                 <span>Restaurer</span>
               </Button>
             </div>
