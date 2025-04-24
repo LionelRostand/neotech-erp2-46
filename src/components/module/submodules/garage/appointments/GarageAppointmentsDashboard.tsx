@@ -4,12 +4,13 @@ import { useGarageData } from '@/hooks/garage/useGarageData';
 import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Eye, Edit, Trash2, Calendar } from 'lucide-react';
+import { Calendar, Edit, Eye, Trash2 } from 'lucide-react';
 import ViewAppointmentDialog from './ViewAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
 import DeleteAppointmentDialog from './DeleteAppointmentDialog';
 import { toast } from 'sonner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 const GarageAppointmentsDashboard = () => {
   const { appointments, isLoading } = useGarageData();
@@ -76,78 +77,81 @@ const GarageAppointmentsDashboard = () => {
           Nouveau rendez-vous
         </Button>
       </div>
-      
-      <div className="grid gap-4">
-        {appointments.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Aucun rendez-vous</h3>
-            <p className="text-muted-foreground">
-              Aucun rendez-vous n'a été trouvé. Commencez par en créer un nouveau.
-            </p>
-          </Card>
-        ) : (
-          appointments.map((appointment) => (
-            <Card key={appointment.id} className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg">{appointment.clientName}</h3>
-                    {appointment.status && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {appointment.status}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-muted-foreground space-y-1">
-                    <p className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {formatAppointmentDate(appointment.date)} à {appointment.time}
-                    </p>
-                    <p>{appointment.service}</p>
-                    {appointment.notes && (
-                      <p className="text-sm italic">{appointment.notes}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setViewDialogOpen(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Voir
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenEditDialog(appointment)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Supprimer
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+
+      {appointments.length === 0 ? (
+        <div className="text-center py-12 bg-muted/10 rounded-lg border border-dashed">
+          <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="font-semibold text-lg mb-2">Aucun rendez-vous</h3>
+          <p className="text-muted-foreground">
+            Aucun rendez-vous n'a été trouvé. Commencez par en créer un nouveau.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Client</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Heure</TableHead>
+                <TableHead>Service</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {appointments.map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell className="font-medium">{appointment.clientName}</TableCell>
+                  <TableCell>{formatAppointmentDate(appointment.date)}</TableCell>
+                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>{appointment.service}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {appointment.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {appointment.notes || '-'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedAppointment(appointment);
+                          setViewDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleOpenEditDialog(appointment)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedAppointment(appointment);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <ViewAppointmentDialog
         open={viewDialogOpen}
