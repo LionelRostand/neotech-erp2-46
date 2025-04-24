@@ -22,6 +22,8 @@ export async function fetchCollectionData<T>(
       return [];
     }
     
+    console.log(`Fetching from collection path: ${collectionPath}`);
+    
     const collectionRef = collection(db, collectionPath);
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
