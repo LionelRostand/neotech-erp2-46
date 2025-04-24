@@ -34,7 +34,7 @@ const ServicesList = ({ services, isLoading }: ServicesListProps) => {
               <TableCell>{service.name}</TableCell>
               <TableCell>{service.type}</TableCell>
               <TableCell>{service.duration}</TableCell>
-              <TableCell>{service.price}</TableCell>
+              <TableCell>{service.price}€</TableCell>
               <TableCell>{service.description}</TableCell>
             </TableRow>
           ))
