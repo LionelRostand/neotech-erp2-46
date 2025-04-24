@@ -17,7 +17,11 @@ export const useGarageData = () => {
 
   const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
     queryKey: ['garage', 'repairs'],
-    queryFn: () => fetchCollectionData<Repair>(COLLECTIONS.GARAGE.REPAIRS)
+    queryFn: () => {
+      // Check if REPAIRS exists in collections
+      const collectionPath = COLLECTIONS.GARAGE.REPAIRS || 'garage_repairs';
+      return fetchCollectionData<Repair>(collectionPath);
+    }
   });
 
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
@@ -27,7 +31,11 @@ export const useGarageData = () => {
 
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useQuery({
     queryKey: ['garage', 'suppliers'],
-    queryFn: () => fetchCollectionData<Supplier>(COLLECTIONS.GARAGE.SUPPLIERS)
+    queryFn: () => {
+      // Check if SUPPLIERS exists in collections
+      const collectionPath = COLLECTIONS.GARAGE.SUPPLIERS || 'garage_suppliers';
+      return fetchCollectionData<Supplier>(collectionPath);
+    }
   });
 
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
@@ -37,17 +45,29 @@ export const useGarageData = () => {
 
   const { data: inventory = [], isLoading: isLoadingInventory } = useQuery({
     queryKey: ['garage', 'inventory'],
-    queryFn: () => fetchCollectionData<InventoryItem>(COLLECTIONS.GARAGE.INVENTORY)
+    queryFn: () => {
+      // Check if INVENTORY exists in collections
+      const collectionPath = COLLECTIONS.GARAGE.INVENTORY || 'garage_inventory';
+      return fetchCollectionData<InventoryItem>(collectionPath);
+    }
   });
 
   const { data: loyalty = [], isLoading: isLoadingLoyalty } = useQuery({
     queryKey: ['garage', 'loyalty'],
-    queryFn: () => fetchCollectionData<LoyaltyProgram>(COLLECTIONS.GARAGE.LOYALTY)
+    queryFn: () => {
+      // Check if LOYALTY exists in collections
+      const collectionPath = COLLECTIONS.GARAGE.LOYALTY || 'garage_loyalty';
+      return fetchCollectionData<LoyaltyProgram>(collectionPath);
+    }
   });
 
   const { data: settings = [], isLoading: isLoadingSettings } = useQuery({
     queryKey: ['garage', 'settings'],
-    queryFn: () => fetchCollectionData<GarageSettings>(COLLECTIONS.GARAGE.SETTINGS)
+    queryFn: () => {
+      // Check if SETTINGS exists in collections
+      const collectionPath = COLLECTIONS.GARAGE.SETTINGS || 'garage_settings';
+      return fetchCollectionData<GarageSettings>(collectionPath);
+    }
   });
 
   return {
