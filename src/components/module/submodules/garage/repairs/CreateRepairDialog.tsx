@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 import { useGarageServices } from '@/hooks/garage/useGarageServices';
+import { useGarageEmployees } from '@/hooks/garage/useGarageEmployees';
 import { toast } from 'sonner';
 
 interface CreateRepairDialogProps {
@@ -19,18 +20,21 @@ const CreateRepairDialog = ({ open, onOpenChange, onSuccess }: CreateRepairDialo
   const { clients } = useGarageClients();
   const { vehicles } = useGarageVehicles();
   const { services } = useGarageServices();
+  const { employees } = useGarageEmployees();
   const [selectedClient, setSelectedClient] = React.useState('');
   const [selectedVehicle, setSelectedVehicle] = React.useState('');
   const [selectedService, setSelectedService] = React.useState('');
+  const [selectedMechanic, setSelectedMechanic] = React.useState('');
   const [description, setDescription] = React.useState('');
 
   const filteredVehicles = vehicles.filter(v => v.clientId === selectedClient);
   const selectedServiceData = services.find(s => s.id === selectedService);
+  const mechanics = employees.filter(e => e.position?.toLowerCase().includes('mécanicien'));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedClient || !selectedVehicle || !selectedService) {
+    if (!selectedClient || !selectedVehicle || !selectedService || !selectedMechanic) {
       toast.error("Veuillez remplir tous les champs requis");
       return;
     }
@@ -119,6 +123,22 @@ const CreateRepairDialog = ({ open, onOpenChange, onSuccess }: CreateRepairDialo
                 value={selectedServiceData?.price || ''} 
                 disabled 
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mechanic">Mécanicien</Label>
+              <Select value={selectedMechanic} onValueChange={setSelectedMechanic}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un mécanicien" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mechanics.map((mechanic) => (
+                    <SelectItem key={mechanic.id} value={mechanic.id}>
+                      {mechanic.firstName} {mechanic.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

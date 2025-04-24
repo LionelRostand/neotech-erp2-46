@@ -45,3 +45,22 @@ export interface GarageService {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface GarageRepair {
+  id: string;
+  name: string;
+  description: string;
+  duration: number;
+  price: number;
+  type: 'maintenance' | 'repair' | 'diagnostic';
+  createdAt: string;
+  updatedAt?: string;
+  mechanicId?: string;
+}
+
+export interface GarageMechanic {
+  id: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+}
