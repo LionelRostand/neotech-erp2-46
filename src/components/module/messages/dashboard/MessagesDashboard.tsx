@@ -4,17 +4,24 @@ import { CalendarCheck, Clock, Inbox, Archive, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useCollectionData } from '@/hooks/useCollectionData';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Message } from '../types/message-types';
 import { useNavigate } from 'react-router-dom';
 
 export function MessagesDashboard() {
   const navigate = useNavigate();
-  const { data: inbox = [] } = useCollectionData(COLLECTIONS.MESSAGES.INBOX) as { data: Message[] };
-  const { data: sent = [] } = useCollectionData(COLLECTIONS.MESSAGES.SENT) as { data: Message[] };
-  const { data: archived = [] } = useCollectionData(COLLECTIONS.MESSAGES.ARCHIVED) as { data: Message[] };
-  const { data: scheduled = [] } = useCollectionData(COLLECTIONS.MESSAGES.SCHEDULED) as { data: Message[] };
+  
+  // Utilisation de nullish coalescing pour les chemins de collection
+  const inboxPath = COLLECTIONS.MESSAGES?.INBOX || 'message_inbox';
+  const sentPath = COLLECTIONS.MESSAGES?.SENT || 'message_sent';
+  const archivedPath = COLLECTIONS.MESSAGES?.ARCHIVED || 'message_archived';
+  const scheduledPath = COLLECTIONS.MESSAGES?.SCHEDULED || 'message_scheduled';
+  
+  const { data: inbox = [] } = useFirebaseCollection<Message>(inboxPath);
+  const { data: sent = [] } = useFirebaseCollection<Message>(sentPath);
+  const { data: archived = [] } = useFirebaseCollection<Message>(archivedPath);
+  const { data: scheduled = [] } = useFirebaseCollection<Message>(scheduledPath);
   
   // Calculate message counts with null/undefined handling
   const inboxCount = inbox?.length || 0;

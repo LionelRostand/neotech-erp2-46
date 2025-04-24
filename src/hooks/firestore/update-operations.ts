@@ -1,121 +1,129 @@
-import { 
-  updateDoc,
-  setDoc,
-  DocumentData,
-  doc,
-  getDoc
-} from 'firebase/firestore';
+
+import { doc, updateDoc, increment, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { formatDocumentWithTimestamps } from './common-utils';
 import { toast } from 'sonner';
 
-// Helper function to clean data by removing undefined and null values
-const cleanData = (data: DocumentData): DocumentData => {
-  // Créer une copie pour ne pas modifier l'objet original
-  const result: DocumentData = {};
+/**
+ * Update an existing document in a collection
+ * @param collectionName Name of the collection
+ * @param documentId ID of the document to update
+ * @param data Data to update
+ * @returns Promise with update result
+ */
+export const updateDocument = async (collectionName: string, documentId: string, data: any) => {
+  if (!collectionName || !documentId) {
+    console.error("Collection name or document ID is missing", { collectionName, documentId });
+    throw new Error("Collection name and document ID are required");
+  }
   
-  Object.keys(data).forEach(key => {
-    const value = data[key];
-    
-    if (value !== undefined && value !== null) {
-      // Handle nested objects recursively
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        const cleanedObj = cleanData(value);
-        // Only add the cleaned object if it has properties
-        if (Object.keys(cleanedObj).length > 0) {
-          result[key] = cleanedObj;
-        }
-      } else {
-        result[key] = value;
-      }
-    }
-  });
-  
-  return result;
-};
-
-// Update an existing document
-export const updateDocument = async (collectionName: string, id: string, data: DocumentData) => {
   try {
-    console.log(`Updating document ${id} in collection ${collectionName}`);
-    console.log('Update data:', data);
+    console.log(`Updating document ${documentId} in collection ${collectionName}`);
     
-    const docRef = doc(db, collectionName, id);
+    const docRef = doc(db, collectionName, documentId);
     
-    // Vérifier d'abord si le document existe
-    const docSnapshot = await getDoc(docRef);
-    const exists = docSnapshot.exists();
+    // Always add updatedAt timestamp
+    data.updatedAt = serverTimestamp();
     
-    // Nettoyer les données pour éliminer les valeurs undefined et null
-    const cleanedData = cleanData(data);
+    await updateDoc(docRef, data);
     
-    console.log('Données nettoyées avant mise à jour:', cleanedData);
-    
-    // Préparer les données avec les timestamps
-    const updatedData = formatDocumentWithTimestamps(cleanedData);
-    
-    // Make sure ID is not included in the update data
-    // as Firebase doesn't need it and it could cause problems
-    const { id: _, ...dataWithoutId } = updatedData;
-    
-    if (exists) {
-      // Document exists, update it
-      console.log(`Document ${id} exists, updating with updateDoc`);
-      await updateDoc(docRef, dataWithoutId);
-      console.log(`Document ${id} updated successfully with updateDoc`);
-    } else {
-      // Document doesn't exist, create it with setDoc
-      console.log(`Document ${id} does not exist, creating with setDoc`);
-      await setDoc(docRef, updatedData);
-      console.log(`Document ${id} created with setDoc`);
-    }
-    
-    console.log(`Document ${id} processed successfully`);
-    return { id, ...updatedData };
+    console.log(`Document with ID ${documentId} updated in ${collectionName}`);
+    return true;
   } catch (error: any) {
-    console.error(`Error updating document ${id}:`, error);
+    console.error(`Error updating document in ${collectionName}:`, error);
     
     // Check if this is a network error
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
-      toast.success('Document mis à jour en mode hors ligne. Les modifications seront synchronisées plus tard.');
-      return { id, ...data, _offlineUpdated: true };
+      toast.error('Impossible de mettre à jour le document en mode hors ligne');
     } else {
       toast.error(`Erreur lors de la mise à jour: ${errorMessage}`);
-      throw error;
     }
+    
+    throw error;
   }
 };
 
-// Create or update a document with a specific ID
-export const setDocument = async (collectionName: string, id: string, data: DocumentData) => {
+/**
+ * Increment a numeric field in a document
+ * @param collectionName Name of the collection
+ * @param documentId ID of the document to update
+ * @param field Field to increment
+ * @param value Amount to increment by (default: 1)
+ * @returns Promise with update result
+ */
+export const incrementField = async (collectionName: string, documentId: string, field: string, value = 1) => {
   try {
-    console.log(`Setting document ${id} in collection ${collectionName}`);
-    console.log('Document data:', data);
-    
-    // Nettoyer les données pour éliminer les valeurs undefined et null
-    const cleanedData = cleanData(data);
-    
-    console.log('Données nettoyées avant setDocument:', cleanedData);
-    
-    const docRef = doc(db, collectionName, id);
-    const updatedData = formatDocumentWithTimestamps(cleanedData);
-    
-    // Use merge: true to merge data instead of replacing the entire document
-    await setDoc(docRef, updatedData, { merge: true });
-    console.log(`Document ${id} set successfully`);
-    return { id, ...updatedData };
-  } catch (error: any) {
-    console.error(`Error setting document ${id}:`, error);
-    
-    // Check if this is a network error
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
-      toast.success('Document enregistré en mode hors ligne. Les modifications seront synchronisées plus tard.');
-      return { id, ...data, _offlineUpdated: true };
-    } else {
-      toast.error(`Erreur lors de la sauvegarde: ${errorMessage}`);
-      throw error;
-    }
+    const docRef = doc(db, collectionName, documentId);
+    await updateDoc(docRef, {
+      [field]: increment(value),
+      updatedAt: serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error(`Error incrementing field ${field} in ${collectionName}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Add an element to an array field in a document
+ * @param collectionName Name of the collection
+ * @param documentId ID of the document to update
+ * @param field Array field to update
+ * @param element Element to add to the array
+ * @returns Promise with update result
+ */
+export const addToArray = async (collectionName: string, documentId: string, field: string, element: any) => {
+  try {
+    const docRef = doc(db, collectionName, documentId);
+    await updateDoc(docRef, {
+      [field]: arrayUnion(element),
+      updatedAt: serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error(`Error adding to array field ${field} in ${collectionName}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Remove an element from an array field in a document
+ * @param collectionName Name of the collection
+ * @param documentId ID of the document to update
+ * @param field Array field to update
+ * @param element Element to remove from the array
+ * @returns Promise with update result
+ */
+export const removeFromArray = async (collectionName: string, documentId: string, field: string, element: any) => {
+  try {
+    const docRef = doc(db, collectionName, documentId);
+    await updateDoc(docRef, {
+      [field]: arrayRemove(element),
+      updatedAt: serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error(`Error removing from array field ${field} in ${collectionName}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Update a training document in the HR trainings collection
+ * @param trainingId ID of the training to update
+ * @param data Data to update
+ * @returns Promise with update result
+ */
+export const updateTrainingDocument = async (trainingId: string, data: any) => {
+  if (!trainingId) {
+    throw new Error("Training ID is required");
+  }
+  
+  try {
+    return await updateDocument("hr_trainings", trainingId, data);
+  } catch (error) {
+    console.error('Error updating training document:', error);
+    throw error;
   }
 };

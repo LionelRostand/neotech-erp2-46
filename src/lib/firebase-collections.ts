@@ -32,5 +32,19 @@ export const COLLECTIONS = {
     CATEGORIES: 'document_categories',
     PERMISSIONS: 'document_permissions',
     SETTINGS: 'document_settings',
+  },
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    TRANSACTIONS: 'accounting_transactions',
+    TAX_RATES: 'accounting_tax_rates',
+    TAX_DECLARATIONS: 'accounting_tax_declarations',
+    SETTINGS: 'accounting_settings'
+  },
+  FREIGHT: {
+    SHIPMENTS: 'freight_shipments',
+    CONTAINERS: 'freight_containers',
+    DOCUMENTS: 'freight_documents',
+    BILLING: 'freight_billing'
   }
 } as const;

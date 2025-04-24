@@ -25,6 +25,7 @@ export const useCollectionData = (
       console.error(`Error: ${errorMsg}`);
       setError(new Error(errorMsg));
       setIsLoading(false);
+      setData([]); // Return empty data array
       toast.error(errorMsg);
       return () => {}; // Return empty cleanup function
     }
@@ -55,6 +56,7 @@ export const useCollectionData = (
           console.error(`Error fetching from ${validPath}:`, err);
           setError(err);
           setIsLoading(false);
+          setData([]); // Return empty data array on error
           toast.error(`Erreur de chargement: ${err.message}`);
         }
       );
@@ -69,6 +71,7 @@ export const useCollectionData = (
       console.error(`Error setting up listener for ${validPath}:`, error);
       setError(error);
       setIsLoading(false);
+      setData([]); // Return empty data array on error
       toast.error(`Erreur: ${error.message}`);
       return () => {}; // Return empty cleanup function
     }

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export interface StatusBadgeProps {
   status: string;
@@ -50,8 +51,27 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propV
     }
   };
 
+  // Map custom variants to supported Badge variants
+  const mapVariantToBadgeVariant = (variant: string) => {
+    switch (variant) {
+      case 'success': return 'secondary';
+      case 'warning': return 'outline';
+      case 'danger': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
   return (
-    <Badge variant={getVariant()}>{getLabel()}</Badge>
+    <Badge 
+      variant={mapVariantToBadgeVariant(getVariant())}
+      className={cn(
+        getVariant() === 'success' && "bg-green-500 hover:bg-green-600",
+        getVariant() === 'warning' && "bg-yellow-500 text-black hover:bg-yellow-600",
+        getVariant() === 'danger' && "bg-red-500 hover:bg-red-600",
+      )}
+    >
+      {getLabel()}
+    </Badge>
   );
 };
 
