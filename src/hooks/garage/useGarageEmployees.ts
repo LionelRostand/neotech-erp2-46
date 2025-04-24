@@ -11,6 +11,8 @@ export interface GarageEmployee {
   lastName: string;
   email: string;
   position?: string;
+  phone?: string;
+  status?: 'active' | 'busy' | 'onLeave';
 }
 
 export const useGarageEmployees = () => {
@@ -34,6 +36,8 @@ export const useGarageEmployees = () => {
             lastName: data.lastName || '',
             email: data.email || '',
             position: data.position || data.role || '',
+            phone: data.phone || '',
+            status: data.status || 'active',
           };
         });
         
