@@ -69,6 +69,11 @@ export const useGarageData = () => {
     }
   });
 
+  const { data: services = [], isLoading: isLoadingServices } = useQuery({
+    queryKey: ['garage', 'services'],
+    queryFn: () => fetchCollectionData<any>('garage_services')
+  });
+
   return {
     vehicles,
     appointments,
@@ -79,6 +84,7 @@ export const useGarageData = () => {
     inventory,
     loyalty,
     settings: settings[0],
+    services,
     isLoading: 
       isLoadingVehicles || 
       isLoadingAppointments || 
@@ -88,6 +94,7 @@ export const useGarageData = () => {
       isLoadingClients || 
       isLoadingInventory || 
       isLoadingLoyalty || 
-      isLoadingSettings
+      isLoadingSettings ||
+      isLoadingServices // Update isLoading check
   };
 };
