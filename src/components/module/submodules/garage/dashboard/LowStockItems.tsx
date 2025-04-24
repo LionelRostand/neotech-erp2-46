@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { useHasPermission } from '@/lib/fetchCollectionData';
+import { useHasPermission } from '@/hooks/useHasPermission';
 import { Shield } from 'lucide-react';
 
 const LowStockItems = () => {

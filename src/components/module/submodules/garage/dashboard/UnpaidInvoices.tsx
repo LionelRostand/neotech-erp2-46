@@ -3,7 +3,7 @@ import React from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useHasPermission } from '@/lib/fetchCollectionData';
+import { useHasPermission } from '@/hooks/useHasPermission';
 import { Shield } from 'lucide-react';
 
 const UnpaidInvoices = () => {
