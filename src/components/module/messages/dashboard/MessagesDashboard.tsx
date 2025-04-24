@@ -10,7 +10,7 @@ import { RecentContacts } from './RecentContacts';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
-export const MessagesDashboard: React.FC = () => {
+const MessagesDashboard: React.FC = () => {
   // Paths with fallbacks
   const inboxPath = COLLECTIONS.MESSAGES?.INBOX || 'message_inbox';
   const sentPath = COLLECTIONS.MESSAGES?.SENT || 'message_sent';
@@ -98,3 +98,5 @@ export const MessagesDashboard: React.FC = () => {
     </div>
   );
 };
+
+export default MessagesDashboard;
