@@ -1,53 +1,44 @@
 
 import React from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DeleteAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => Promise<void>;
-  appointmentInfo: string;
-  isLoading?: boolean;
 }
 
-const DeleteAppointmentDialog = ({
+const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
   open,
   onOpenChange,
-  onConfirm,
-  appointmentInfo,
-  isLoading
-}: DeleteAppointmentDialogProps) => {
+  onConfirm
+}) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Supprimer le rendez-vous</DialogTitle>
-          <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer le rendez-vous {appointmentInfo} ? Cette action est irréversible.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            Annuler
-          </Button>
-          <Button 
-            variant="destructive" 
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
-            {isLoading ? "Suppression..." : "Supprimer"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Cette action est irréversible. Le rendez-vous sera définitivement supprimé.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

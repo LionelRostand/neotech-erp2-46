@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { format, isValid, parse } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface ViewAppointmentDialogProps {
@@ -10,81 +11,78 @@ interface ViewAppointmentDialogProps {
   appointment: any;
 }
 
-const ViewAppointmentDialog = ({ open, onOpenChange, appointment }: ViewAppointmentDialogProps) => {
-  const formatAppointmentDate = (dateString: string | null | undefined) => {
+const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
+  open,
+  onOpenChange,
+  appointment
+}) => {
+  if (!appointment) return null;
+
+  const formatDate = (dateString: string) => {
     try {
-      if (!dateString) return 'Date non spécifiée';
-      
-      // First, try to parse the date directly
-      let date = new Date(dateString);
-      
-      // Check if the date is valid
-      if (isValid(date)) {
-        return format(date, 'PPP', { locale: fr });
-      }
-      
-      // If format is potentially DD/MM/YYYY, try to parse it
-      try {
-        const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
-        if (isValid(parsedDate)) {
-          return format(parsedDate, 'PPP', { locale: fr });
-        }
-      } catch (error) {
-        console.error('Error parsing date with format dd/MM/yyyy:', error);
-      }
-      
-      // If still not valid, try other common formats
-      try {
-        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
-        if (isValid(parsedDate)) {
-          return format(parsedDate, 'PPP', { locale: fr });
-        }
-      } catch (error) {
-        console.error('Error parsing date with format yyyy-MM-dd:', error);
-      }
-      
-      // Fallback to displaying the raw string if parsing fails
+      return format(new Date(dateString), 'PPP', { locale: fr });
+    } catch {
       return dateString;
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Date invalide';
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-green-500">Confirmé</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500">En attente</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500">Annulé</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-500">Terminé</Badge>;
+      default:
+        return <Badge>Inconnu</Badge>;
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Détails du rendez-vous</DialogTitle>
+          <DialogDescription>
+            Informations complètes sur le rendez-vous
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <dt className="text-sm font-medium text-gray-500">Date:</dt>
-            <dd className="col-span-3">
-              {formatAppointmentDate(appointment?.date)}
-            </dd>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Client:</span>
+            <span>{appointment.clientName}</span>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <dt className="text-sm font-medium text-gray-500">Heure:</dt>
-            <dd className="col-span-3">{appointment?.time || 'Non spécifiée'}</dd>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Date:</span>
+            <span>{formatDate(appointment.date)}</span>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <dt className="text-sm font-medium text-gray-500">Client:</dt>
-            <dd className="col-span-3">{appointment?.clientName || 'Non spécifié'}</dd>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Heure:</span>
+            <span>{appointment.time}</span>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <dt className="text-sm font-medium text-gray-500">Service:</dt>
-            <dd className="col-span-3">{appointment?.service || 'Non spécifié'}</dd>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Service:</span>
+            <span>{appointment.service}</span>
           </div>
           
-          {appointment?.notes && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <dt className="text-sm font-medium text-gray-500">Notes:</dt>
-              <dd className="col-span-3">{appointment.notes}</dd>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">Statut:</span>
+            {getStatusBadge(appointment.status)}
+          </div>
+          
+          {appointment.notes && (
+            <div className="flex flex-col gap-2">
+              <span className="font-medium">Notes:</span>
+              <div className="bg-gray-100 p-2 rounded-md text-sm">
+                {appointment.notes}
+              </div>
             </div>
           )}
         </div>

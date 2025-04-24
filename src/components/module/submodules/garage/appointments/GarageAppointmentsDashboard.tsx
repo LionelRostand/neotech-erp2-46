@@ -1,21 +1,25 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Users, CheckCircle, Plus } from "lucide-react";
+import { Calendar, Clock, Users, CheckCircle, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { DataTable } from '@/components/ui/data-table';
 import EditAppointmentDialog from './EditAppointmentDialog';
+import DeleteAppointmentDialog from './DeleteAppointmentDialog';
+import ViewAppointmentDialog from './ViewAppointmentDialog';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
 import { Button } from "@/components/ui/button";
+import { updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
 import { toast } from 'sonner';
 
 const GarageAppointmentsDashboard = () => {
   const { appointments, isLoading } = useGarageData();
   const [selectedAppointment, setSelectedAppointment] = React.useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   
@@ -25,6 +29,7 @@ const GarageAppointmentsDashboard = () => {
 
   const handleUpdate = async (id: string, data: any) => {
     try {
+      await updateDocument('garage_appointments', id, data);
       toast.success('Rendez-vous mis à jour avec succès');
       setIsEditDialogOpen(false);
     } catch (error) {
@@ -32,12 +37,13 @@ const GarageAppointmentsDashboard = () => {
     }
   };
 
-  const handleCreate = async (data: any) => {
+  const handleDelete = async () => {
     try {
-      toast.success('Rendez-vous créé avec succès');
-      setIsCreateDialogOpen(false);
+      await deleteDocument('garage_appointments', selectedAppointment.id);
+      toast.success('Rendez-vous supprimé avec succès');
+      setIsDeleteDialogOpen(false);
     } catch (error) {
-      toast.error('Erreur lors de la création du rendez-vous');
+      toast.error('Erreur lors de la suppression du rendez-vous');
     }
   };
 
@@ -84,15 +90,38 @@ const GarageAppointmentsDashboard = () => {
       accessorKey: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          onClick={() => {
-            setSelectedAppointment(row.original);
-            setIsEditDialogOpen(true);
-          }}
-        >
-          Modifier
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => {
+              setSelectedAppointment(row.original);
+              setIsViewDialogOpen(true);
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => {
+              setSelectedAppointment(row.original);
+              setIsEditDialogOpen(true);
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => {
+              setSelectedAppointment(row.original);
+              setIsDeleteDialogOpen(true);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       )
     }
   ];
@@ -154,11 +183,23 @@ const GarageAppointmentsDashboard = () => {
         </CardContent>
       </Card>
 
+      <ViewAppointmentDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        appointment={selectedAppointment}
+      />
+
       <EditAppointmentDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         appointment={selectedAppointment}
         onUpdate={handleUpdate}
+      />
+
+      <DeleteAppointmentDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
       />
 
       <CreateAppointmentDialog
