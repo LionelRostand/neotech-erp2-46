@@ -1,178 +1,132 @@
 
-import React, { useState } from 'react';
-import { useGarageData } from '@/hooks/garage/useGarageData';
-import { format, isValid, parseISO } from 'date-fns';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Clock, Users, CheckCircle } from "lucide-react";
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { Calendar, Edit, Eye, Trash2 } from 'lucide-react';
-import ViewAppointmentDialog from './ViewAppointmentDialog';
+import StatCard from '@/components/StatCard';
+import { useGarageData } from '@/hooks/garage/useGarageData';
+import { DataTable } from '@/components/ui/data-table';
 import EditAppointmentDialog from './EditAppointmentDialog';
-import DeleteAppointmentDialog from './DeleteAppointmentDialog';
+import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 
 const GarageAppointmentsDashboard = () => {
   const { appointments, isLoading } = useGarageData();
-  const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = React.useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
-  const formatAppointmentDate = (dateString: string) => {
-    if (!dateString) return 'Date non spécifiée';
-    
+  const today = new Date().toISOString().split('T')[0];
+  
+  const todayAppointments = appointments.filter(a => a.date === today);
+  const upcomingAppointments = appointments.filter(a => a.date > today);
+  const completedAppointments = appointments.filter(a => a.status === 'completed');
+
+  const handleUpdate = async (id: string, data: any) => {
     try {
-      const date = parseISO(dateString);
-      if (!isValid(date)) {
-        return 'Date invalide';
-      }
-      return format(date, 'PPP', { locale: fr });
+      // Implement your update logic here
+      toast.success('Rendez-vous mis à jour avec succès');
+      setIsEditDialogOpen(false);
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Date invalide';
+      toast.error('Erreur lors de la mise à jour du rendez-vous');
     }
   };
 
-  const handleUpdate = async (id: string, data: any) => {
-    // Implement update logic later
-    toast.success('Rendez-vous mis à jour');
-    setEditDialogOpen(false);
-  };
-
-  const handleDelete = async () => {
-    // Implement delete logic later
-    toast.success('Rendez-vous supprimé');
-    setDeleteDialogOpen(false);
-  };
-
-  const handleOpenEditDialog = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setEditDialogOpen(true);
-  };
+  const columns = [
+    {
+      accessorKey: "clientName",
+      header: "Client",
+    },
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }) => format(new Date(row.original.date), 'dd MMMM yyyy', { locale: fr })
+    },
+    {
+      accessorKey: "time",
+      header: "Heure",
+    },
+    {
+      accessorKey: "service",
+      header: "Service",
+    },
+    {
+      accessorKey: "notes",
+      header: "Notes",
+    },
+    {
+      accessorKey: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setSelectedAppointment(row.original);
+            setIsEditDialogOpen(true);
+          }}
+        >
+          Modifier
+        </Button>
+      )
+    }
+  ];
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-sm text-muted-foreground">Chargement des rendez-vous...</p>
-        </div>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Liste des Rendez-vous</h1>
-          <p className="text-muted-foreground mt-1">
-            {appointments.length} rendez-vous au total
-          </p>
-        </div>
-        
-        <Button className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          Nouveau rendez-vous
-        </Button>
+    <div className="p-6 space-y-6">
+      <h2 className="text-3xl font-bold">Gestion des Rendez-vous</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatCard
+          title="RDV Aujourd'hui"
+          value={todayAppointments.length.toString()}
+          icon={<Calendar className="h-4 w-4" />}
+          description="Rendez-vous du jour"
+          className="bg-blue-50 hover:bg-blue-100"
+        />
+        <StatCard
+          title="À venir"
+          value={upcomingAppointments.length.toString()}
+          icon={<Clock className="h-4 w-4" />}
+          description="Rendez-vous planifiés"
+          className="bg-green-50 hover:bg-green-100"
+        />
+        <StatCard
+          title="Clients"
+          value={appointments.length.toString()}
+          icon={<Users className="h-4 w-4" />}
+          description="Total clients"
+          className="bg-purple-50 hover:bg-purple-100"
+        />
+        <StatCard
+          title="Terminés"
+          value={completedAppointments.length.toString()}
+          icon={<CheckCircle2 className="h-4 w-4" />}
+          description="Rendez-vous terminés"
+          className="bg-amber-50 hover:bg-amber-100"
+        />
       </div>
 
-      {appointments.length === 0 ? (
-        <div className="text-center py-12 bg-muted/10 rounded-lg border border-dashed">
-          <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-lg mb-2">Aucun rendez-vous</h3>
-          <p className="text-muted-foreground">
-            Aucun rendez-vous n'a été trouvé. Commencez par en créer un nouveau.
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Heure</TableHead>
-                <TableHead>Service</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {appointments.map((appointment) => (
-                <TableRow key={appointment.id}>
-                  <TableCell className="font-medium">{appointment.clientName}</TableCell>
-                  <TableCell>{formatAppointmentDate(appointment.date)}</TableCell>
-                  <TableCell>{appointment.time}</TableCell>
-                  <TableCell>{appointment.service}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      {appointment.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {appointment.notes || '-'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setViewDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleOpenEditDialog(appointment)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedAppointment(appointment);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      <ViewAppointmentDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        appointment={selectedAppointment}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Rendez-vous</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable 
+            columns={columns} 
+            data={appointments} 
+          />
+        </CardContent>
+      </Card>
 
       <EditAppointmentDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
         appointment={selectedAppointment}
         onUpdate={handleUpdate}
-        isLoading={false}
-      />
-
-      <DeleteAppointmentDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDelete}
-        appointmentInfo={selectedAppointment ? `${selectedAppointment.clientName} - ${formatAppointmentDate(selectedAppointment.date)}` : ''}
-        isLoading={false}
       />
     </div>
   );
