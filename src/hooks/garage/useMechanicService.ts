@@ -11,19 +11,18 @@ export const useMechanicService = () => {
     lastName: string;
     email: string;
     phone: string;
+    position?: string;
   }) => {
     try {
-      if (!COLLECTIONS.GARAGE?.MECHANICS) {
-        console.error('COLLECTIONS.GARAGE.MECHANICS is not defined');
-        toast.error('Erreur de configuration: collection MECHANICS non définie');
-        return false;
-      }
+      // Ensure we have a valid collection path
+      const mechanicsPath = COLLECTIONS.GARAGE?.MECHANICS || 'garage_mechanics';
       
-      console.log('Adding mechanic to collection:', COLLECTIONS.GARAGE.MECHANICS);
+      console.log('Adding mechanic to collection:', mechanicsPath);
       
-      const mechanicsRef = collection(db, COLLECTIONS.GARAGE.MECHANICS);
+      const mechanicsRef = collection(db, mechanicsPath);
       const newMechanic: Partial<Mechanic> = {
         ...mechanicData,
+        position: mechanicData.position || 'Mécanicien',
         status: 'active',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

@@ -20,7 +20,8 @@ export const useCollectionData = (
 
   useEffect(() => {
     // Validate collection path first
-    if (!collectionPath || collectionPath.trim() === '') {
+    const validPath = collectionPath?.trim();
+    if (!validPath) {
       const errorMsg = 'Collection path cannot be empty';
       console.error(`Error: ${errorMsg}`);
       setError(new Error(errorMsg));
@@ -32,10 +33,10 @@ export const useCollectionData = (
     // For development/testing, you can use a timeout to simulate network latency
     const timeoutId = setTimeout(() => {
       try {
-        console.log(`Fetching data from collection: ${collectionPath}`);
+        console.log(`Fetching data from collection: ${validPath}`);
         
         // Create a reference to the collection
-        const collectionRef = collection(db, collectionPath);
+        const collectionRef = collection(db, validPath);
         
         // Create a query with the provided constraints
         const q = query(collectionRef, ...queryConstraints);
@@ -50,10 +51,10 @@ export const useCollectionData = (
             }));
             setData(documents);
             setIsLoading(false);
-            console.log(`Received ${documents.length} documents from ${collectionPath}`);
+            console.log(`Received ${documents.length} documents from ${validPath}`);
           },
           (err: Error) => {
-            console.error(`Error fetching from ${collectionPath}:`, err);
+            console.error(`Error fetching from ${validPath}:`, err);
             setError(err);
             setIsLoading(false);
             toast.error(`Erreur de chargement: ${err.message}`);
@@ -62,16 +63,16 @@ export const useCollectionData = (
         
         // Clean up subscription on unmount
         return () => {
-          console.log(`Unsubscribing from collection: ${collectionPath}`);
+          console.log(`Unsubscribing from collection: ${validPath}`);
           unsubscribe();
         };
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error occurred');
-        console.error(`Error setting up listener for ${collectionPath}:`, error);
+        console.error(`Error setting up listener for ${validPath}:`, error);
         setError(error);
         setIsLoading(false);
         toast.error(`Erreur: ${error.message}`);
-        return () => {}; // Return empty cleanup function on error
+        return () => {}; // Return empty cleanup function
       }
     }, 500); // Simulate a small delay for loading states to be visible
     

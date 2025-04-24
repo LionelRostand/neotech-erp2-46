@@ -9,7 +9,7 @@ import { AddMechanicDialog } from './AddMechanicDialog';
 
 const GarageMechanicsDashboard = () => {
   const { employees, loading } = useGarageEmployees();
-  const mechanics = employees.filter(e => e.position?.toLowerCase().includes('mécanicien'));
+  const mechanics = employees?.filter(e => e.position?.toLowerCase().includes('mécanicien')) || [];
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;

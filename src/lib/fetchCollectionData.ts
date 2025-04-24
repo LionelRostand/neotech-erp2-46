@@ -21,12 +21,6 @@ export async function fetchCollectionData<T>(
       return [];
     }
     
-    // Special case for invalid placeholder to avoid Firebase errors
-    if (collectionPath === 'invalid_collection_placeholder') {
-      console.warn('Using fallback for invalid collection path');
-      return [];
-    }
-    
     console.log(`Fetching from collection path: ${collectionPath}`);
     
     const collectionRef = collection(db, collectionPath);

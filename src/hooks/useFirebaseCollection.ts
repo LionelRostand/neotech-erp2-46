@@ -20,8 +20,9 @@ export const useFirebaseCollection = <T>(
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    // Check for empty collection path and exit the effect with appropriate error
-    if (!collectionPath || collectionPath.trim() === '') {
+    // Use a valid collection path or early return
+    const validPath = collectionPath?.trim();
+    if (!validPath) {
       console.error('Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));
       setIsLoading(false);
@@ -30,10 +31,10 @@ export const useFirebaseCollection = <T>(
     }
     
     try {
-      console.log(`Fetching data from collection: ${collectionPath}`);
+      console.log(`Fetching data from collection: ${validPath}`);
       
       // Create a reference to the collection
-      const collectionRef = collection(db, collectionPath);
+      const collectionRef = collection(db, validPath);
       
       // Create a query with the provided constraints
       const q = query(collectionRef, ...queryConstraints);
@@ -49,10 +50,10 @@ export const useFirebaseCollection = <T>(
           
           setData(documents);
           setIsLoading(false);
-          console.log(`Received ${documents.length} documents from ${collectionPath}`);
+          console.log(`Received ${documents.length} documents from ${validPath}`);
         },
         (err: Error) => {
-          console.error(`Error fetching from ${collectionPath}:`, err);
+          console.error(`Error fetching from ${validPath}:`, err);
           setError(err);
           setIsLoading(false);
           toast.error(`Erreur lors du chargement des données: ${err.message}`);
@@ -61,7 +62,7 @@ export const useFirebaseCollection = <T>(
       
       // Clean up subscription on unmount
       return () => {
-        console.log(`Unsubscribing from collection: ${collectionPath}`);
+        console.log(`Unsubscribing from collection: ${validPath}`);
         unsubscribe();
       };
     } catch (err) {
