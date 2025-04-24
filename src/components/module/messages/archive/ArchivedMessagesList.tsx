@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Message } from '../types/message-types';
-import { ArchiveRestoreIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import ArchivedMessageItem from './ArchivedMessageItem';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface ArchivedMessagesListProps {
   messages: Message[];
@@ -17,55 +16,53 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   isLoading, 
   onRestoreMessage 
 }) => {
+  // Ensure messages is always an array
+  const safeMessages = Array.isArray(messages) ? messages : [];
+  
+  // State for message being restored
+  const [restoringMessageId, setRestoringMessageId] = React.useState<string | null>(null);
+
+  const handleRestore = (message: Message) => {
+    setRestoringMessageId(message.id);
+    
+    // Simulate restoration process
+    setTimeout(() => {
+      onRestoreMessage(message);
+      setRestoringMessageId(null);
+    }, 1000);
+  };
+
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des messages archivés...</span>
       </div>
     );
   }
 
-  if (messages.length === 0) {
+  if (safeMessages.length === 0) {
     return (
-      <div className="py-8 text-center text-muted-foreground">
-        <p>Aucun message archivé.</p>
+      <div className="text-center p-8">
+        <p className="text-gray-500">Aucun message archivé trouvé.</p>
       </div>
     );
   }
 
   return (
-    <div className="divide-y">
-      {messages.map(message => {
-        const timestamp = message.timestamp?.toDate 
-          ? message.timestamp.toDate() 
-          : new Date();
-        
-        const formattedDate = format(timestamp, 'Pp', { locale: fr });
+    <div className="space-y-4">
+      {safeMessages.map(message => {
+        // Get display name for the contact
+        const contactName = message.senderName || 'Contact inconnu';
+        const isRestoring = restoringMessageId === message.id;
         
         return (
-          <div key={message.id} className="py-4 hover:bg-gray-50 rounded transition-colors">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="font-medium">{message.subject}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {message.type === 'sent' 
-                    ? `À: ${message.recipientName || message.recipient || 'Inconnu'}` 
-                    : `De: ${message.senderName || message.sender || 'Inconnu'}`}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">{formattedDate}</p>
-              </div>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onRestoreMessage(message)}
-                className="ml-2"
-              >
-                <ArchiveRestoreIcon className="h-4 w-4 mr-1" />
-                <span>Restaurer</span>
-              </Button>
-            </div>
-          </div>
+          <ArchivedMessageItem 
+            key={message.id} 
+            message={message} 
+            onRestoreMessage={() => handleRestore(message)}
+            isRestoring={isRestoring}
+          />
         );
       })}
     </div>

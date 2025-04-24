@@ -8,7 +8,6 @@ import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
 import { renderHealthSubmodule } from './renderers/HealthRenderer';
 import { renderDocumentsSubmodule } from './renderers/DocumentsRenderer';
 import { renderGarageSubmodule } from './renderers/GarageRenderer';
-import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 
 interface SubmoduleRenderProps {
@@ -38,8 +37,6 @@ export function renderSubmoduleContent({ submoduleId, submodule }: SubmoduleRend
       return renderDocumentsSubmodule(submoduleId, submodule);
     case 'garage':
       return renderGarageSubmodule(submoduleId, submodule);
-    case 'messages':
-      return renderMessagesSubmodule(submoduleId, submodule);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;

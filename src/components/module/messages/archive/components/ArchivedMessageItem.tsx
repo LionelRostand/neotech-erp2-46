@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  ArchiveRestoreIcon, 
+  ArchiveRestore, 
   Calendar, 
   Paperclip, 
   MoreHorizontal, 
@@ -19,50 +19,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-
-// Update the Message and Contact interfaces to include missing properties
-interface ExtendedMessage extends Message {
-  content?: string;
-  createdAt?: any;
-  category?: string;
-  tags?: string[];
-  hasAttachments?: boolean;
-}
-
-interface ExtendedContact extends Contact {
-  firstName?: string;
-  lastName?: string;
-}
-
-// Helper functions
-const getInitials = (firstName?: string, lastName?: string): string => {
-  if (!firstName && !lastName) return '?';
-  return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`;
-};
-
-const truncateText = (text?: string, maxLength: number = 100): string => {
-  if (!text) return '';
-  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
-};
-
-const extractTextFromHtml = (html?: string): string => {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, '');
-};
-
-const formatMessageDate = (date?: any): string => {
-  if (!date) return '';
-  const messageDate = date?.toDate ? date.toDate() : new Date(date);
-  return messageDate.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-};
+import { formatMessageDate, getInitials, truncateText, extractTextFromHtml } from '../utils/archiveMessageUtils';
 
 interface ArchivedMessageItemProps {
-  message: ExtendedMessage;
-  contact: ExtendedContact | undefined;
+  message: Message;
+  contact: Contact | undefined;
   onRestoreMessage: (messageId: string) => void;
   isRestoring: boolean;
 }
@@ -96,13 +57,13 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
         <div className="flex justify-between items-start mb-1">
           <div className="font-medium truncate" style={{ maxWidth: 'calc(100% - 90px)' }}>
             {contact 
-              ? `${contact.firstName || ''} ${contact.lastName || ''}` 
+              ? `${contact.firstName} ${contact.lastName}` 
               : 'Contact inconnu'
             }
           </div>
           <div className="flex items-center text-xs text-muted-foreground whitespace-nowrap">
             <Calendar className="h-3 w-3 mr-1" />
-            {formatMessageDate(message.createdAt || message.timestamp)}
+            {formatMessageDate(message.createdAt)}
           </div>
         </div>
         
@@ -136,7 +97,7 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
             </div>
           )}
           
-          {message.hasAttachments || (message.attachments && message.attachments.length > 0) && (
+          {message.hasAttachments && (
             <Paperclip className="h-3 w-3 text-muted-foreground" />
           )}
         </div>
@@ -153,7 +114,7 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
           {isRestoring ? (
             <Loader2 className="h-4 w-4 animate-spin mr-1" />
           ) : (
-            <ArchiveRestoreIcon className="h-4 w-4 mr-1" />
+            <ArchiveRestore className="h-4 w-4 mr-1" />
           )}
           <span className="hidden sm:inline">Restaurer</span>
         </Button>
@@ -168,7 +129,7 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onRestoreMessage(message.id)}>
-              <ArchiveRestoreIcon className="h-4 w-4 mr-2" />
+              <ArchiveRestore className="h-4 w-4 mr-2" />
               Restaurer
             </DropdownMenuItem>
             <DropdownMenuItem>

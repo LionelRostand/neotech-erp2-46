@@ -10,9 +10,9 @@ import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 
 const ArchivePage: React.FC = () => {
   // Ensure we use a valid collection path
-  const archivePath = COLLECTIONS.MESSAGES?.ARCHIVED || 'messages_archive';
+  const archivePath = COLLECTIONS.MESSAGES.ARCHIVE || 'messages_archive';
   
-  const { data: messages = [], isLoading, error, refetch } = useFirebaseCollection<Message>(archivePath);
+  const { data: messages, isLoading, error, refetch } = useFirebaseCollection<Message>(archivePath);
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   // Fonction pour restaurer un message archivé

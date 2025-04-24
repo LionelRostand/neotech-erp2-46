@@ -20,7 +20,7 @@ export const useFirebaseCollection = <T>(
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    // Early return with empty array if collectionPath is undefined or empty
+    // Check for empty collection path and exit the effect with appropriate error
     if (!collectionPath || collectionPath.trim() === '') {
       console.error('Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));

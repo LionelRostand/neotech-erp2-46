@@ -11,31 +11,26 @@ export const useRepairService = () => {
     vehicleName: string;
     mechanicName: string;
     description: string;
-    estimatedCost?: number;
-    serviceType?: string;
   }) => {
     try {
-      // Ensure we have a valid collection path with fallback
-      const collectionPath = COLLECTIONS.GARAGE?.REPAIRS || 'garage_repairs';
-      
-      if (!collectionPath || collectionPath.trim() === '') {
-        throw new Error('Collection path for repairs is not defined or empty');
+      if (!COLLECTIONS.GARAGE?.REPAIRS) {
+        console.error('COLLECTIONS.GARAGE.REPAIRS is not defined');
+        toast.error('Erreur de configuration: collection REPAIRS non définie');
+        return false;
       }
       
-      console.log('Adding repair to collection:', collectionPath);
+      console.log('Adding repair to collection:', COLLECTIONS.GARAGE.REPAIRS);
       
-      const repairsRef = collection(db, collectionPath);
+      const repairsRef = collection(db, COLLECTIONS.GARAGE.REPAIRS);
       const newRepair: Partial<Repair> = {
         ...repairData,
         status: 'awaiting_approval',
         progress: 0,
-        startDate: new Date().toISOString().split('T')[0],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
       await addDoc(repairsRef, newRepair);
-      console.log('Repair added successfully');
       toast.success('Réparation ajoutée avec succès');
       return true;
     } catch (error: any) {

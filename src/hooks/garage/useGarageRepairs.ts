@@ -1,24 +1,24 @@
 
-import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import type { Repair } from '@/components/module/submodules/garage/types/garage-types';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 
 export const useGarageRepairs = () => {
-  // Ensure we have a valid collection path with fallback
-  const collectionPath = COLLECTIONS.GARAGE?.REPAIRS || 'garage_repairs';
-  
-  const { data: repairs, isLoading, error, refetch } = useFirebaseCollection<Repair>(collectionPath);
+  // Utiliser useFirebaseCollection pour avoir les mises à jour en temps réel
+  const { data = [], isLoading, error } = useFirebaseCollection<Repair>(
+    COLLECTIONS.GARAGE?.REPAIRS || 'invalid_collection_placeholder'
+  );
 
-  // Add debug logging
-  console.log('useGarageRepairs - collection path:', collectionPath);
-  console.log('useGarageRepairs - repairs:', repairs);
-  console.log('useGarageRepairs - loading:', isLoading);
-  if (error) console.error('useGarageRepairs - error:', error);
+  // Ajouter des logs pour déboguer
+  console.log('useGarageRepairs - data:', data);
+  console.log('useGarageRepairs - isLoading:', isLoading);
+  console.log('useGarageRepairs - error:', error);
 
   return {
-    repairs: repairs || [],
+    repairs: data,
     loading: isLoading,
-    error,
-    refetch
+    error
   };
 };

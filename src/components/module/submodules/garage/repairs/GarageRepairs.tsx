@@ -2,33 +2,50 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench } from 'lucide-react';
+import { Plus, Wrench, Shield } from 'lucide-react';
 import StatCard from '@/components/StatCard';
-import { RepairsTable } from './RepairsTable';
 import { RepairKanban } from './RepairKanban';
+import { RepairsTable } from './RepairsTable';
 import CreateRepairDialog from './CreateRepairDialog';
+import useHasPermission from '@/hooks/useHasPermission';
 import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const GarageRepairs = () => {
   const { repairs, loading, error } = useGarageRepairs();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
+  const queryClient = useQueryClient();
 
+  // Ajouter des logs pour déboguer
   console.log('GarageRepairs - repairs:', repairs);
+  console.log('GarageRepairs - loading:', loading);
+  console.log('GarageRepairs - error:', error);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
 
   if (error) {
-    toast.error(`Erreur: ${error.message}`);
-    return <div className="container mx-auto p-6">
-      <Card className="p-6">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-red-600">Erreur de chargement</h3>
-          <p className="text-sm text-gray-500 mt-2">{error.message}</p>
-          <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>
-            Réessayer
-          </Button>
-        </div>
-      </Card>
-    </div>;
+    toast.error(`Erreur de chargement: ${error.message}`);
+    console.error("Erreur lors du chargement des réparations:", error);
+  }
+
+  if (!hasViewPermission) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="p-12">
+          <div className="text-center">
+            <Shield className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <h3 className="text-lg font-medium">Accès limité</h3>
+            <p className="text-sm text-gray-500 mt-2">
+              Vous n'avez pas les permissions nécessaires pour visualiser les réparations.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   // Filtrer les réparations pour les statistiques
@@ -92,8 +109,7 @@ const GarageRepairs = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={() => {
-          toast.success("Réparation créée avec succès");
-          window.location.reload(); // Force refresh to update data
+          queryClient.invalidateQueries(['garage', 'repairs']);
         }}
       />
     </div>

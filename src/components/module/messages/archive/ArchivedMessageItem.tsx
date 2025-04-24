@@ -1,60 +1,68 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Message } from '../types/message-types';
-import { ArchiveRestoreIcon, Eye } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Archive, Loader2 } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 interface ArchivedMessageItemProps {
   message: Message;
-  onRestore: (message: Message) => void;
-  onView: (message: Message) => void;
+  onRestoreMessage: () => void;
+  isRestoring: boolean;
 }
 
 const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({ 
   message, 
-  onRestore,
-  onView 
+  onRestoreMessage,
+  isRestoring
 }) => {
-  const timestamp = message.timestamp?.toDate 
-    ? message.timestamp.toDate() 
-    : new Date();
-  
-  const formattedDate = format(timestamp, 'Pp', { locale: fr });
+  // Ensure message has all required properties with defaults
+  const safeMessage = {
+    id: message?.id || 'unknown',
+    senderName: message?.senderName || 'Contact inconnu',
+    createdAt: message?.createdAt || new Date(),
+    subject: message?.subject || 'Sans objet',
+    content: message?.content || 'Aucun contenu',
+    ...message
+  };
 
   return (
-    <div className="py-3 px-4 hover:bg-gray-50 rounded transition-colors">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <h3 className="font-medium">{message.subject}</h3>
-          <p className="text-sm text-muted-foreground">
-            {message.type === 'sent' 
-              ? `À: ${message.recipientName || message.recipient || 'Inconnu'}` 
-              : `De: ${message.senderName || message.sender || 'Inconnu'}`}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">{formattedDate}</p>
-        </div>
-        
-        <div className="flex space-x-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onView(message)}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+    <Card className="hover:bg-muted/30 transition-colors">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">{safeMessage.senderName}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDate(safeMessage.createdAt?.toDate?.() || new Date())}
+              </span>
+            </div>
+            <div className="text-sm font-medium">{safeMessage.subject}</div>
+            <div className="text-sm text-muted-foreground line-clamp-2">{safeMessage.content}</div>
+          </div>
           
           <Button 
-            variant="ghost" 
             size="sm" 
-            onClick={() => onRestore(message)}
+            variant="outline" 
+            onClick={onRestoreMessage}
+            disabled={isRestoring}
           >
-            <ArchiveRestoreIcon className="h-4 w-4" />
+            {isRestoring ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Restauration...
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4 mr-2" />
+                Restaurer
+              </>
+            )}
           </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
