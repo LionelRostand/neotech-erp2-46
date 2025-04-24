@@ -16,7 +16,7 @@ const GarageSettings = () => {
         <h2 className="text-3xl font-bold">Paramètres du Garage</h2>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />

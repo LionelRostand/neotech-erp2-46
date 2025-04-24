@@ -71,6 +71,7 @@ export const COLLECTIONS = {
     CLIENTS: 'garage_clients',
     INVOICES: 'garage_invoices',
     PARTS: 'garage_parts',
+    PERMISSIONS: 'garage_permissions',
     SERVICES: 'garage_services',
     VEHICLES: 'garage_vehicles'
   },
