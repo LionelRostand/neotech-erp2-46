@@ -15,10 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useGarageAppointments } from '@/hooks/garage/useGarageAppointments';
 
 const GarageAppointmentsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { appointments, vehicles, clients, isLoading } = useGarageData();
+  const { refetchAppointments } = useGarageAppointments();
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -122,6 +124,7 @@ const GarageAppointmentsDashboard = () => {
       <CreateAppointmentDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+        onSuccess={refetchAppointments}
       />
     </div>
   );

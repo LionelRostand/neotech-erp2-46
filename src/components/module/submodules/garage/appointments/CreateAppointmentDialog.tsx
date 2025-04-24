@@ -9,11 +9,13 @@ import { useGarageClients } from "@/hooks/garage/useGarageClients";
 import { useGarageVehicles } from "@/hooks/garage/useGarageVehicles";
 import { useGarageServices } from "@/hooks/garage/useGarageServices";
 import { useState } from "react";
+import { useGarageAppointments } from "@/hooks/garage/useGarageAppointments";
+import { toast } from "sonner";
 
 interface CreateAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 const CreateAppointmentDialog = ({ open, onOpenChange, onSuccess }: CreateAppointmentDialogProps) => {
@@ -21,18 +23,51 @@ const CreateAppointmentDialog = ({ open, onOpenChange, onSuccess }: CreateAppoin
   const { clients } = useGarageClients();
   const { vehicles } = useGarageVehicles();
   const { services } = useGarageServices();
-  const form = useForm();
+  const { addAppointment } = useGarageAppointments();
+  
+  const form = useForm({
+    defaultValues: {
+      clientId: "",
+      date: "",
+      time: "",
+      serviceId: "",
+      vehicleId: "",
+      notes: ""
+    }
+  });
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Implement appointment creation logic here
-      console.log('Appointment data:', data);
-      onSuccess();
-      onOpenChange(false);
+      // Trouver le nom du client sélectionné
+      const selectedClient = clients.find(client => client.id === data.clientId);
+      const clientName = selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : 'Client inconnu';
+      
+      // Trouver le nom du service sélectionné
+      const selectedService = services.find(service => service.id === data.serviceId);
+      const serviceName = selectedService ? selectedService.name : 'Service non spécifié';
+      
+      await addAppointment({
+        clientId: data.clientId,
+        clientName: clientName,
+        vehicleId: data.vehicleId,
+        service: serviceName,
+        date: data.date,
+        time: data.time,
+        status: 'scheduled',
+        notes: data.notes || '',
+        createdAt: new Date().toISOString()
+      });
+      
+      toast.success("Rendez-vous créé avec succès");
       form.reset();
+      onOpenChange(false);
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
-      console.error('Error creating appointment:', error);
+      console.error('Erreur lors de la création du rendez-vous:', error);
+      toast.error("Erreur lors de la création du rendez-vous");
     } finally {
       setIsSubmitting(false);
     }
