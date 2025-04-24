@@ -1,212 +1,258 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Users, CheckCircle, Plus, Eye, Pencil, Trash2 } from "lucide-react";
-import { format, isValid, parseISO } from 'date-fns';
+
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import StatCard from '@/components/StatCard';
-import { useGarageData } from '@/hooks/garage/useGarageData';
-import { DataTable } from '@/components/ui/data-table';
+import { Badge } from "@/components/ui/badge";
+import { collection, query, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useToast } from '@/hooks/use-toast';
+import ViewAppointmentDialog from './ViewAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
 import DeleteAppointmentDialog from './DeleteAppointmentDialog';
-import ViewAppointmentDialog from './ViewAppointmentDialog';
-import CreateAppointmentDialog from './CreateAppointmentDialog';
-import { Button } from "@/components/ui/button";
-import { updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
-import { toast } from 'sonner';
+
+type Appointment = {
+  id: string;
+  clientName: string;
+  date: string;
+  time: string;
+  service: string;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  notes?: string;
+};
 
 const GarageAppointmentsDashboard = () => {
-  const { appointments, isLoading } = useGarageData();
-  const [selectedAppointment, setSelectedAppointment] = React.useState<any>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-
-  const today = new Date().toISOString().split('T')[0];
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  const todayAppointments = appointments.filter(a => a.date === today);
-  const upcomingAppointments = appointments.filter(a => a.date > today);
-  const completedAppointments = appointments.filter(a => a.status === 'completed');
+  // Add the missing state variables
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  const handleUpdate = async (id: string, data: any) => {
+  useEffect(() => {
+    const appointmentsRef = collection(db, COLLECTIONS.GARAGE.APPOINTMENTS);
+    const q = query(appointmentsRef);
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const appointmentData: Appointment[] = [];
+      querySnapshot.forEach((doc) => {
+        appointmentData.push({ id: doc.id, ...doc.data() } as Appointment);
+      });
+      setAppointments(appointmentData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching appointments:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les rendez-vous",
+        variant: "destructive",
+      });
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [toast]);
+  
+  const handleUpdateAppointment = async (id: string, data: Partial<Appointment>) => {
     try {
-      await updateDocument('garage_appointments', id, data);
-      toast.success('Rendez-vous mis à jour avec succès');
+      const appointmentRef = doc(db, COLLECTIONS.GARAGE.APPOINTMENTS, id);
+      await updateDoc(appointmentRef, data);
+      toast({
+        title: "Succès",
+        description: "Le rendez-vous a été mis à jour",
+      });
       setIsEditDialogOpen(false);
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour du rendez-vous');
+      console.error("Error updating appointment:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le rendez-vous",
+        variant: "destructive",
+      });
     }
   };
-
-  const handleDelete = async () => {
+  
+  const handleDeleteAppointment = async () => {
+    if (!selectedAppointment) return;
+    
     try {
-      await deleteDocument('garage_appointments', selectedAppointment.id);
-      toast.success('Rendez-vous supprimé avec succès');
+      const appointmentRef = doc(db, COLLECTIONS.GARAGE.APPOINTMENTS, selectedAppointment.id);
+      await deleteDoc(appointmentRef);
+      toast({
+        title: "Succès",
+        description: "Le rendez-vous a été supprimé",
+      });
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      toast.error('Erreur lors de la suppression du rendez-vous');
+      console.error("Error deleting appointment:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le rendez-vous",
+        variant: "destructive",
+      });
     }
   };
-
+  
   const formatDate = (dateString: string) => {
     try {
-      if (!dateString) return 'Date non disponible';
-      
-      const parsedDate = parseISO(dateString);
-      
-      if (!isValid(parsedDate)) {
-        return 'Date invalide';
-      }
-      
-      return format(parsedDate, 'dd MMMM yyyy', { locale: fr });
+      return format(new Date(dateString), 'PPP', { locale: fr });
     } catch (error) {
-      console.error('Date formatting error:', error, dateString);
-      return 'Erreur de date';
+      return dateString;
     }
   };
-
-  const columns = [
-    {
-      accessorKey: "clientName",
-      header: "Client",
-    },
-    {
-      accessorKey: "date",
-      header: "Date",
-      cell: ({ row }) => formatDate(row.original.date)
-    },
-    {
-      accessorKey: "time",
-      header: "Heure",
-    },
-    {
-      accessorKey: "service",
-      header: "Service",
-    },
-    {
-      accessorKey: "notes",
-      header: "Notes",
-    },
-    {
-      accessorKey: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => {
-              setSelectedAppointment(row.original);
-              setIsViewDialogOpen(true);
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => {
-              setSelectedAppointment(row.original);
-              setIsEditDialogOpen(true);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => {
-              setSelectedAppointment(row.original);
-              setIsDeleteDialogOpen(true);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )
+  
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-green-500">Confirmé</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500">En attente</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500">Annulé</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-500">Terminé</Badge>;
+      default:
+        return <Badge>Inconnu</Badge>;
     }
-  ];
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
-  }
-
+  };
+  
+  const handleView = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsViewDialogOpen(true);
+  };
+  
+  const handleEdit = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDelete = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsDeleteDialogOpen(true);
+  };
+  
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Gestion des Rendez-vous</h2>
+        <h2 className="text-2xl font-bold">Rendez-vous</h2>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Nouveau Rendez-vous
         </Button>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard
-          title="RDV Aujourd'hui"
-          value={todayAppointments.length.toString()}
-          icon={<Calendar className="h-4 w-4" />}
-          description="Rendez-vous du jour"
-          className="bg-blue-50 hover:bg-blue-100"
-        />
-        <StatCard
-          title="À venir"
-          value={upcomingAppointments.length.toString()}
-          icon={<Clock className="h-4 w-4" />}
-          description="Rendez-vous planifiés"
-          className="bg-green-50 hover:bg-green-100"
-        />
-        <StatCard
-          title="Clients"
-          value={appointments.length.toString()}
-          icon={<Users className="h-4 w-4" />}
-          description="Total clients"
-          className="bg-purple-50 hover:bg-purple-100"
-        />
-        <StatCard
-          title="Terminés"
-          value={completedAppointments.length.toString()}
-          icon={<CheckCircle className="h-4 w-4" />}
-          description="Rendez-vous terminés"
-          className="bg-amber-50 hover:bg-amber-100"
-        />
-      </div>
-
+      
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Rendez-vous</CardTitle>
+          <CardTitle>Liste des rendez-vous</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable 
-            columns={columns} 
-            data={appointments} 
-          />
+          {loading ? (
+            <div className="text-center py-4">Chargement...</div>
+          ) : appointments.length === 0 ? (
+            <div className="text-center py-4">Aucun rendez-vous trouvé</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Heure</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>{appointment.clientName}</TableCell>
+                      <TableCell>{formatDate(appointment.date)}</TableCell>
+                      <TableCell>{appointment.time}</TableCell>
+                      <TableCell>{appointment.service}</TableCell>
+                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleView(appointment)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleEdit(appointment)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDelete(appointment)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      <ViewAppointmentDialog
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
-        appointment={selectedAppointment}
-      />
-
-      <EditAppointmentDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        appointment={selectedAppointment}
-        onUpdate={handleUpdate}
-      />
-
-      <DeleteAppointmentDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDelete}
-      />
-
-      <CreateAppointmentDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSubmit={handleCreate}
-      />
+      
+      {/* Dialog for creating new appointment - placeholder for now */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un rendez-vous</DialogTitle>
+          </DialogHeader>
+          <div>
+            <p>Formulaire de création de rendez-vous à implémenter.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* View appointment dialog */}
+      {selectedAppointment && (
+        <ViewAppointmentDialog
+          open={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          appointment={selectedAppointment}
+        />
+      )}
+      
+      {/* Edit appointment dialog */}
+      {selectedAppointment && (
+        <EditAppointmentDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          appointment={selectedAppointment}
+          onUpdate={handleUpdateAppointment}
+        />
+      )}
+      
+      {/* Delete appointment dialog */}
+      {selectedAppointment && (
+        <DeleteAppointmentDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDeleteAppointment}
+        />
+      )}
     </div>
   );
 };
