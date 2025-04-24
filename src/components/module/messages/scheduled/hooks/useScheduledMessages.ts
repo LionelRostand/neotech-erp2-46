@@ -4,12 +4,9 @@ import { useScheduledMessagesData } from './useScheduledMessagesData';
 import { useScheduledMessagesFilter } from './useScheduledMessagesFilter';
 import { useScheduledMessageOperations } from './useScheduledMessageOperations';
 import { Message } from '../../types/message-types';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useScheduledMessages = () => {
-  // Ensure we have a valid collection path
-  const scheduledMessagesPath = COLLECTIONS.MESSAGES.SCHEDULED || 'messages-scheduled';
-  
+  // Ensure we have a valid collection path 
   const { 
     messages, 
     isLoading, 
