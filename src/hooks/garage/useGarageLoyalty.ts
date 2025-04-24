@@ -1,4 +1,3 @@
-
 import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { LoyaltyProgram } from '@/components/module/submodules/garage/types/loyalty-types';
@@ -8,12 +7,12 @@ import { useQuery } from '@tanstack/react-query';
 export const useGarageLoyalty = () => {
   const collectionPath = COLLECTIONS.GARAGE.LOYALTY;
   
-  // Check if collection path is defined
   if (!collectionPath) {
     console.error('Collection path for garage loyalty is undefined');
+    throw new Error('Collection path for garage loyalty is undefined');
   }
   
-  const { add, getAll, update, remove, loading, error } = useFirestore(collectionPath || 'garage_loyalty');
+  const { add, getAll, update, remove, loading, error } = useFirestore(collectionPath);
 
   const addLoyaltyProgram = async (programData: Omit<LoyaltyProgram, 'id'>) => {
     try {
@@ -35,11 +34,6 @@ export const useGarageLoyalty = () => {
     queryKey: ['garage', 'loyalty'],
     queryFn: async () => {
       try {
-        if (!collectionPath) {
-          console.error('Cannot fetch loyalty programs: Collection path is empty');
-          return [];
-        }
-        
         const result = await getAll() as LoyaltyProgram[];
         return result;
       } catch (err) {

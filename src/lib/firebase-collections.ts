@@ -74,7 +74,7 @@ export const COLLECTIONS = {
     PERMISSIONS: 'garage_permissions',
     SERVICES: 'garage_services',
     VEHICLES: 'garage_vehicles',
-    LOYALTY: 'garage_loyalty',
+    LOYALTY: 'garage_loyalty', // Ensure this line exists and has the correct value
     SETTINGS: 'garage_settings',
     SUPPLIERS: 'garage_suppliers',
     INVENTORY: 'garage_inventory'
