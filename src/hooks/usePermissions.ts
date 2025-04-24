@@ -1,6 +1,16 @@
 
 import { useState, useEffect } from 'react';
 
+// Define types for module permissions
+interface ModulePermissions {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  delete: boolean;
+  export?: boolean;
+  modify?: boolean;
+}
+
 /**
  * Hook to provide permission management functionality
  * Returns information about user permissions and methods to check them
@@ -14,12 +24,14 @@ export const usePermissions = () => {
     // In a real app, we would fetch user permissions from a backend
     // For now, we'll simulate this with a timeout
     setLoading(true);
+    
     const timer = setTimeout(() => {
       // Simulate loaded permissions
       setPermissions({
         'garage-inventory': ['view', 'create', 'edit', 'delete'],
         'garage-invoices': ['view', 'create', 'edit', 'delete'],
         'garage-repairs': ['view', 'create', 'edit', 'delete'],
+        'applications': ['view', 'modify'],
       });
       setLoading(false);
     }, 500);
@@ -36,7 +48,7 @@ export const usePermissions = () => {
   const checkPermission = async (moduleId: string, actionType: string): Promise<boolean> => {
     // Safety check for empty moduleId or actionType
     if (!moduleId || !actionType) {
-      console.warn('checkPermission: moduleId or actionType is empty');
+      console.warn(`checkPermission: moduleId "${moduleId}" or actionType "${actionType}" is empty`);
       return false;
     }
     
@@ -57,3 +69,5 @@ export const usePermissions = () => {
     checkPermission,
   };
 };
+
+export default usePermissions;

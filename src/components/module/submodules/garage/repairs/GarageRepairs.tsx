@@ -7,12 +7,12 @@ import { Wrench, Plus, Shield } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
 import CreateRepairDialog from './CreateRepairDialog';
-import { useHasPermission } from '@/hooks/useHasPermission';
+import useHasPermission from '@/hooks/useHasPermission';
 
 const GarageRepairs = () => {
   const { repairs, isLoading, refetchRepairs } = useGarageData();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const hasViewPermission = useHasPermission('garage-repairs', 'view');
+  const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;

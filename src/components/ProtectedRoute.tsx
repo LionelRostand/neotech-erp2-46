@@ -16,29 +16,39 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission = 'view' 
 }) => {
   const params = useParams();
-  const { loading, isAdmin, checkPermission } = usePermissions();
+  const { loading: permissionsLoading, isAdmin, checkPermission } = usePermissions();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Skip permission check if no moduleId is provided
+    if (!moduleId) {
+      console.log('ProtectedRoute: No moduleId provided, granting access');
+      setHasAccess(true);
+      return;
+    }
+
     const checkAccess = async () => {
       if (isAdmin) {
         setHasAccess(true);
         return;
       }
 
-      if (moduleId) {
+      try {
         // Check permission
         const result = await checkPermission(moduleId, requiredPermission);
         setHasAccess(result);
+      } catch (error) {
+        console.error(`Error checking permission for ${moduleId}.${requiredPermission}:`, error);
+        setHasAccess(false);
       }
     };
 
-    if (!loading) {
+    if (!permissionsLoading) {
       checkAccess();
     }
-  }, [moduleId, requiredPermission, loading, isAdmin, checkPermission]);
+  }, [moduleId, requiredPermission, permissionsLoading, isAdmin, checkPermission]);
 
-  if (loading || hasAccess === null) {
+  if (permissionsLoading || hasAccess === null) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -19,7 +19,13 @@ const Index = () => {
       try {
         const savedModules = localStorage.getItem('installedModules');
         if (savedModules) {
-          setInstalledModules(JSON.parse(savedModules));
+          const parsedModules = JSON.parse(savedModules);
+          if (Array.isArray(parsedModules)) {
+            setInstalledModules(parsedModules);
+          } else {
+            console.warn('Invalid installedModules format in localStorage, using empty array');
+            setInstalledModules([]);
+          }
         } else {
           // Default to empty array if no modules saved
           setInstalledModules([]);
