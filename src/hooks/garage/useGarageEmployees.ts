@@ -23,7 +23,17 @@ export const useGarageEmployees = () => {
     const fetchEmployees = async () => {
       setLoading(true);
       try {
-        // Utiliser la collection HR_EMPLOYEES
+        // Make sure we have a valid collection path before proceeding
+        if (!COLLECTIONS.HR || !COLLECTIONS.HR.EMPLOYEES) {
+          console.error('COLLECTIONS.HR.EMPLOYEES is not defined');
+          toast.error('Erreur de configuration: collection HR.EMPLOYEES non définie');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Fetching employees from collection:', COLLECTIONS.HR.EMPLOYEES);
+        
+        // Use the HR_EMPLOYEES collection
         const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
         const q = query(employeesRef);
         const snapshot = await getDocs(q);

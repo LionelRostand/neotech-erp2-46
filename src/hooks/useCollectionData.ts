@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
 
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates
@@ -10,24 +9,23 @@ import { toast } from 'sonner';
  * @param queryConstraints Optional query constraints (where, orderBy, limit, etc.)
  * @returns Object containing data, loading state, and error if any
  */
-export const useCollectionData = <T>(
+export const useCollectionData = (
   collectionPath: string,
   queryConstraints: QueryConstraint[] = []
 ) => {
-  const [data, setData] = useState<T[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     // Validate collection path first
     if (!collectionPath || collectionPath.trim() === '') {
-      console.error('Collection path cannot be empty');
+      console.error('Error: Collection path cannot be empty');
       setError(new Error('Collection path cannot be empty'));
       setIsLoading(false);
-      toast.error('Erreur: Chemin de collection invalide ou vide');
       return () => {}; // Return empty cleanup function
     }
-    
+
     // For development/testing, you can use a timeout to simulate network latency
     const timeoutId = setTimeout(() => {
       try {
@@ -71,7 +69,7 @@ export const useCollectionData = <T>(
             const documents = snapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
-            })) as T[];
+            }));
             setData(documents);
             setIsLoading(false);
             console.log(`Received ${documents.length} documents from ${collectionPath}`);
@@ -80,7 +78,6 @@ export const useCollectionData = <T>(
             console.error(`Error fetching from ${collectionPath}:`, err);
             setError(err);
             setIsLoading(false);
-            toast.error(`Erreur lors du chargement des données: ${err.message}`);
           }
         );
         
@@ -94,8 +91,7 @@ export const useCollectionData = <T>(
         console.error(`Error setting up listener for ${collectionPath}:`, error);
         setError(error);
         setIsLoading(false);
-        toast.error(`Erreur lors du chargement des données: ${error.message}`);
-        return () => {}; // Return empty cleanup function
+        return () => {}; // Return empty cleanup function on error
       }
     }, 500); // Simulate a small delay for loading states to be visible
     

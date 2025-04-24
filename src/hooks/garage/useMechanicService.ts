@@ -12,7 +12,17 @@ export const useMechanicService = () => {
     phone: string;
   }) => {
     try {
-      const mechanicsRef = collection(db, COLLECTIONS.GARAGE.MECHANICS);
+      // Check that the collection path exists before attempting to use it
+      if (!COLLECTIONS.GARAGE || !COLLECTIONS.GARAGE.MECHANICS) {
+        console.error('COLLECTIONS.GARAGE.MECHANICS is not defined');
+        toast.error('Erreur de configuration: collection non définie');
+        return false;
+      }
+      
+      const mechanicsCollectionPath = COLLECTIONS.GARAGE.MECHANICS;
+      console.log('Adding mechanic to collection path:', mechanicsCollectionPath);
+      
+      const mechanicsRef = collection(db, mechanicsCollectionPath);
       const newMechanic = {
         ...mechanicData,
         position: 'Mécanicien',
