@@ -1,9 +1,8 @@
 
 // Firebase lite implementation for development
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
-import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
-import { toast } from 'sonner';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 // Firebase configuration - this would normally come from environment variables
 // For development purposes, we're using a placeholder config
@@ -19,55 +18,52 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase services
+// Initialize Firestore
 const firestore = getFirestore(app);
 
 // Use development environment variables
 const isDevMode = import.meta.env.DEV;
 const useEmulator = import.meta.env.VITE_EMULATOR === 'true';
 
-// Enable emulators if configured
-if (isDevMode && useEmulator) {
-  try {
-    connectFirestoreEmulator(firestore, 'localhost', 8080);
-  } catch (err) {
-    console.warn('Failed to connect to Firestore emulator:', err);
-  }
-}
-
+// Setup Firebase Auth
 const firebaseAuth = getAuth(app);
 
+// Only try to connect to emulators if explicitly enabled
 if (isDevMode && useEmulator) {
   try {
+    console.log('Connecting to Firestore emulator on localhost:8080');
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    console.log('Connecting to Auth emulator on localhost:9099');
     connectAuthEmulator(firebaseAuth, 'http://localhost:9099');
   } catch (err) {
-    console.warn('Failed to connect to Auth emulator:', err);
+    console.warn('Failed to connect to Firebase emulators:', err);
   }
 }
 
-// Mock authentication for development
-const auth: Auth = {
+// Mock authentication with improved error handling for development
+const auth = {
   ...firebaseAuth,
   currentUser: null,
-  onAuthStateChanged: (callback: any) => {
-    callback(null);
+  onAuthStateChanged: (callback) => {
+    try {
+      callback(null);
+    } catch (error) {
+      console.error("Error in auth state change handler:", error);
+    }
     return () => {};
   },
-  signInWithEmailAndPassword: async () => ({ user: null } as any),
-  createUserWithEmailAndPassword: async () => ({ user: null } as any),
-  signOut: async () => {},
-} as Auth;
-
-// Subscribe to global unhandled promise rejection errors
-if (typeof window !== 'undefined') {
-  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-    const error = event.reason;
-    if (error && error.code && typeof error.code === 'string' && error.code.includes('firestore')) {
-      console.error('Firebase Error:', error);
-      toast.error('Firebase error: ' + (error.message || 'Unknown error'));
-    }
-  });
-}
+  signInWithEmailAndPassword: async () => {
+    console.log("Mock: Sign in with email and password");
+    return { user: null };
+  },
+  createUserWithEmailAndPassword: async () => {
+    console.log("Mock: Create user with email and password");
+    return { user: null };
+  },
+  signOut: async () => {
+    console.log("Mock: Sign out");
+  },
+};
 
 // Export the initialized services
 export { auth, firestore as db };

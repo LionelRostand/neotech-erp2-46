@@ -1,38 +1,50 @@
 
 /**
- * Utility function to execute a callback with retry logic for network operations
- * @param callback The callback to execute
- * @param maxRetries Maximum number of retry attempts
- * @returns Promise with the result of the callback
+ * Utility function to execute a Firestore operation with network retry logic
  */
-export const executeWithNetworkRetry = async <T>(
-  callback: () => Promise<T>,
-  maxRetries = 3
-): Promise<T> => {
-  let attempts = 0;
+export const executeWithNetworkRetry = async <T>(operation: () => Promise<T>, maxRetries = 2): Promise<T> => {
+  let retries = 0;
   
-  while (attempts < maxRetries) {
+  while (true) {
     try {
-      return await callback();
+      return await operation();
     } catch (error: any) {
-      attempts++;
+      console.warn(`Firestore operation failed (attempt ${retries + 1}/${maxRetries + 1}):`, error);
       
-      // If it's a network error and we haven't hit max retries yet
-      const isNetworkError = error.code === 'failed-precondition' || 
-                             error.code === 'unavailable' ||
-                             error.message?.includes('network');
-      
-      if (isNetworkError && attempts < maxRetries) {
-        console.log(`Retry attempt ${attempts} after network error:`, error);
-        // Wait for increasing time before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
-        continue;
+      // If we've reached max retries or this isn't a network error, rethrow
+      if (retries >= maxRetries || !isNetworkError(error)) {
+        throw error;
       }
       
-      // For other errors or if max retries reached, rethrow
-      throw error;
+      // Exponential backoff: 500ms, 1500ms, 3500ms, etc.
+      const delay = 500 * Math.pow(2, retries);
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      retries++;
     }
   }
+};
+
+/**
+ * Check if an error is likely a network-related error
+ */
+const isNetworkError = (error: any): boolean => {
+  if (!error) return false;
   
-  throw new Error(`Failed after ${maxRetries} retry attempts`);
+  // Check if it's a specific Firebase network error
+  if (error.code && typeof error.code === 'string') {
+    return [
+      'unavailable', 
+      'network-request-failed', 
+      'deadline-exceeded',
+      'cancelled'
+    ].some(code => error.code.includes(code));
+  }
+  
+  // Check for common network error messages
+  if (error.message && typeof error.message === 'string') {
+    return /network|timeout|connection|offline|unavailable/i.test(error.message);
+  }
+  
+  return false;
 };
