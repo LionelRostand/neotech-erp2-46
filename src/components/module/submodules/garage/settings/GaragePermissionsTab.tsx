@@ -3,56 +3,24 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useGarageUsers } from '@/hooks/garage/useGarageUsers';
-import GaragePermissionsTable from './GaragePermissionsTable';
-import { useToast } from "@/hooks/use-toast";
+import { useGaragePermissions } from '@/hooks/garage/useGaragePermissions';
 
 const GaragePermissionsTab = () => {
-  const { users, loading, updateUserPermissions } = useGarageUsers();
   const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
+  const { users, loading, updatePermission } = useGaragePermissions();
 
   // Filtrer les utilisateurs en fonction du terme de recherche
-  const filteredUsers = users.filter(user => 
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handlePermissionUpdate = async (userId: string, moduleId: string, action: 'view' | 'create' | 'edit' | 'delete', value: boolean) => {
-    try {
-      await updateUserPermissions(userId, moduleId, { [action]: value });
-      toast({
-        title: "Permission mise à jour",
-        description: "Les droits d'accès ont été modifiés avec succès.",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de mettre à jour les permissions.",
-      });
-    }
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center h-48">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const filteredUsers = users?.filter(user => 
+    user.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gestion des Permissions</CardTitle>
+        <CardTitle>Gestion des droits d'accès</CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent>
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
@@ -67,10 +35,72 @@ const GaragePermissionsTab = () => {
           </div>
 
           <div className="rounded-md border">
-            <GaragePermissionsTable 
-              users={filteredUsers}
-              updatePermission={handlePermissionUpdate}
-            />
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+                <p className="mt-2 text-sm text-muted-foreground">Chargement des permissions...</p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                Aucun utilisateur trouvé
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-4 font-medium">Utilisateur</th>
+                    <th className="text-center p-4 font-medium">Voir</th>
+                    <th className="text-center p-4 font-medium">Créer</th>
+                    <th className="text-center p-4 font-medium">Modifier</th>
+                    <th className="text-center p-4 font-medium">Supprimer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user.userId} className="border-b">
+                      <td className="p-4">
+                        <div>
+                          <div className="font-medium">{user.userName}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                      </td>
+                      <td className="text-center p-4">
+                        <input
+                          type="checkbox"
+                          checked={user.permissions?.view || false}
+                          onChange={(e) => updatePermission(user.userId, 'garage', 'view', e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                      <td className="text-center p-4">
+                        <input
+                          type="checkbox"
+                          checked={user.permissions?.create || false}
+                          onChange={(e) => updatePermission(user.userId, 'garage', 'create', e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                      <td className="text-center p-4">
+                        <input
+                          type="checkbox"
+                          checked={user.permissions?.edit || false}
+                          onChange={(e) => updatePermission(user.userId, 'garage', 'edit', e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                      <td className="text-center p-4">
+                        <input
+                          type="checkbox"
+                          checked={user.permissions?.delete || false}
+                          onChange={(e) => updatePermission(user.userId, 'garage', 'delete', e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </CardContent>

@@ -1,45 +1,63 @@
 
-import { useState } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
-import { toast } from 'sonner';
-import { garageModule } from '@/data/modules/garage';
-import { updateUserPermissions } from '@/components/module/submodules/employees/services/permissionService';
+import { useState, useEffect } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
-// Type pour représenter les permissions d'un utilisateur sur le module garage
 export interface GarageUserPermission {
   userId: string;
   userName: string;
   email: string;
   permissions: {
-    [submoduleId: string]: {
-      view: boolean;
-      create: boolean;
-      edit: boolean;
-      delete: boolean;
-    };
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
   };
 }
 
 export const useGaragePermissions = () => {
-  const { permissions: globalPermissions, isAdmin, loading } = usePermissions('garage');
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [users, setUsers] = useState<GarageUserPermission[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fonction pour mettre à jour les permissions d'un utilisateur
-  const updatePermission = async (
-    userId: string, 
-    submoduleId: string, 
-    action: 'view' | 'create' | 'edit' | 'delete', 
-    value: boolean
-  ) => {
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        // Simulation de chargement des utilisateurs
+        // TODO: Implémenter la vraie logique de chargement depuis Firestore
+        setUsers([
+          {
+            userId: '1',
+            userName: 'John Doe',
+            email: 'john@example.com',
+            permissions: {
+              view: true,
+              create: true,
+              edit: true,
+              delete: false
+            }
+          },
+          // Ajoutez d'autres utilisateurs ici
+        ]);
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs:', error);
+        toast.error('Erreur lors du chargement des utilisateurs');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const updatePermission = async (userId: string, moduleId: string, action: 'view' | 'create' | 'edit' | 'delete', value: boolean) => {
     try {
-      setIsUpdating(true);
-      console.log(`Mise à jour des permissions pour l'utilisateur ${userId}, module ${submoduleId}, action ${action}: ${value}`);
+      console.log(`Mise à jour des permissions pour l'utilisateur ${userId}, module ${moduleId}, action ${action}: ${value}`);
       
       // Construire le chemin pour la mise à jour
-      const permissionPath = `permissions.garage-${submoduleId}.${action}`;
+      const permissionPath = `permissions.${moduleId}.${action}`;
       
       // Mise à jour dans Firestore
       const userPermRef = doc(db, COLLECTIONS.USER_PERMISSIONS, userId);
@@ -47,40 +65,31 @@ export const useGaragePermissions = () => {
         [permissionPath]: value
       });
       
+      // Mise à jour de l'état local
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.userId === userId
+            ? {
+                ...user,
+                permissions: {
+                  ...user.permissions,
+                  [action]: value
+                }
+              }
+            : user
+        )
+      );
+      
       toast.success('Permissions mises à jour');
-      return true;
     } catch (error) {
       console.error('Erreur lors de la mise à jour des permissions:', error);
-      toast.error("Erreur lors de la mise à jour des permissions");
-      return false;
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  // Fonction pour définir plusieurs permissions à la fois
-  const setUserPermissions = async (userId: string, permissions: any) => {
-    try {
-      setIsUpdating(true);
-      await updateUserPermissions(userId, { permissions });
-      toast.success('Permissions enregistrées avec succès');
-      return true;
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde des permissions:', error);
-      toast.error("Erreur lors de la sauvegarde des permissions");
-      return false;
-    } finally {
-      setIsUpdating(false);
+      toast.error('Erreur lors de la mise à jour des permissions');
     }
   };
 
   return {
-    globalPermissions,
-    isAdmin,
+    users,
     loading,
-    isUpdating,
-    updatePermission,
-    setUserPermissions,
-    garageSubmodules: garageModule.submodules
+    updatePermission
   };
 };
