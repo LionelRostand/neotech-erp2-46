@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { toast } from 'sonner';
 
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates
@@ -20,9 +21,11 @@ export const useCollectionData = (
   useEffect(() => {
     // Validate collection path first
     if (!collectionPath || collectionPath.trim() === '') {
-      console.error('Error: Collection path cannot be empty');
-      setError(new Error('Collection path cannot be empty'));
+      const errorMsg = 'Collection path cannot be empty';
+      console.error(`Error: ${errorMsg}`);
+      setError(new Error(errorMsg));
       setIsLoading(false);
+      toast.error(errorMsg);
       return () => {}; // Return empty cleanup function
     }
 
@@ -31,33 +34,8 @@ export const useCollectionData = (
       try {
         console.log(`Fetching data from collection: ${collectionPath}`);
         
-        // Handle collection paths with slashes
-        const getCollectionRef = (path: string) => {
-          if (path.includes('/')) {
-            // Split the path into segments
-            const segments = path.split('/');
-            
-            // For paths like 'crm/clients', use the pattern:
-            // collection(db, 'crm', 'crm', 'clients')
-            // where first 'crm' is the collection and second 'crm' is a document ID
-            if (segments.length === 2) {
-              const parentCollection = segments[0];
-              const subcollection = segments[1];
-              const parentDocId = parentCollection; // Use the collection name as the document ID
-              
-              console.log(`Creating reference for ${parentCollection}/${parentDocId}/${subcollection}`);
-              return collection(db, parentCollection, parentDocId, subcollection);
-            }
-            
-            return collection(db, path);
-          } else {
-            // Simple collection path
-            return collection(db, path);
-          }
-        };
-        
         // Create a reference to the collection
-        const collectionRef = getCollectionRef(collectionPath);
+        const collectionRef = collection(db, collectionPath);
         
         // Create a query with the provided constraints
         const q = query(collectionRef, ...queryConstraints);
@@ -78,6 +56,7 @@ export const useCollectionData = (
             console.error(`Error fetching from ${collectionPath}:`, err);
             setError(err);
             setIsLoading(false);
+            toast.error(`Erreur de chargement: ${err.message}`);
           }
         );
         
@@ -91,6 +70,7 @@ export const useCollectionData = (
         console.error(`Error setting up listener for ${collectionPath}:`, error);
         setError(error);
         setIsLoading(false);
+        toast.error(`Erreur: ${error.message}`);
         return () => {}; // Return empty cleanup function on error
       }
     }, 500); // Simulate a small delay for loading states to be visible

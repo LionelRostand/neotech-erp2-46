@@ -15,12 +15,18 @@ export const useMechanicService = () => {
       // Check that the collection path exists before attempting to use it
       if (!COLLECTIONS.GARAGE || !COLLECTIONS.GARAGE.MECHANICS) {
         console.error('COLLECTIONS.GARAGE.MECHANICS is not defined');
-        toast.error('Erreur de configuration: collection non définie');
+        toast.error('Erreur de configuration: collection GARAGE.MECHANICS non définie');
         return false;
       }
       
       const mechanicsCollectionPath = COLLECTIONS.GARAGE.MECHANICS;
       console.log('Adding mechanic to collection path:', mechanicsCollectionPath);
+      
+      if (!mechanicsCollectionPath || mechanicsCollectionPath.trim() === '') {
+        console.error('Empty mechanics collection path');
+        toast.error('Erreur: Impossible d\'ajouter le mécanicien - configuration incorrecte');
+        return false;
+      }
       
       const mechanicsRef = collection(db, mechanicsCollectionPath);
       const newMechanic = {

@@ -16,9 +16,9 @@ const GarageRepairs = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const inProgress = repairs.filter(r => r.status === 'in_progress');
-  const awaitingParts = repairs.filter(r => r.status === 'awaiting_parts');
-  const completed = repairs.filter(r => r.status === 'completed');
+  const inProgress = repairs?.filter(r => r.status === 'in_progress') || [];
+  const awaitingParts = repairs?.filter(r => r.status === 'awaiting_parts') || [];
+  const completed = repairs?.filter(r => r.status === 'completed') || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -33,7 +33,7 @@ const GarageRepairs = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Réparations"
-          value={repairs.length.toString()}
+          value={(repairs?.length || 0).toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="En cours et terminées"
         />

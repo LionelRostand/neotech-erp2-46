@@ -13,59 +13,93 @@ export const useGarageData = () => {
     staleTime: 10000, // Considérer les données comme périmées après 10 secondes
   };
 
+  // Safety check for collection paths
+  const validateCollectionPath = (path: string, name: string): string => {
+    if (!path) {
+      console.error(`Collection path for ${name} is undefined or empty`);
+      // Return a placeholder path that won't be used but prevents Firebase error
+      return 'invalid_collection_placeholder';
+    }
+    return path;
+  };
+
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['garage', 'vehicles'],
-    queryFn: () => fetchCollectionData<Vehicle>(COLLECTIONS.GARAGE.VEHICLES),
+    queryFn: () => fetchCollectionData<Vehicle>(
+      validateCollectionPath(COLLECTIONS.GARAGE.VEHICLES, 'vehicles')
+    ),
     ...queryConfig
   });
 
   const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['garage', 'appointments'],
-    queryFn: () => fetchCollectionData<Appointment>(COLLECTIONS.GARAGE.APPOINTMENTS),
+    queryFn: () => fetchCollectionData<Appointment>(
+      validateCollectionPath(COLLECTIONS.GARAGE.APPOINTMENTS, 'appointments')
+    ),
     ...queryConfig
   });
 
   const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
     queryKey: ['garage', 'repairs'],
-    queryFn: () => fetchCollectionData<Repair>(COLLECTIONS.GARAGE.REPAIRS),
+    queryFn: () => fetchCollectionData<Repair>(
+      validateCollectionPath(COLLECTIONS.GARAGE.REPAIRS, 'repairs')
+    ),
     ...queryConfig
   });
 
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
     queryKey: ['garage', 'invoices'],
-    queryFn: () => fetchCollectionData<Invoice>(COLLECTIONS.GARAGE.INVOICES),
+    queryFn: () => fetchCollectionData<Invoice>(
+      validateCollectionPath(COLLECTIONS.GARAGE.INVOICES, 'invoices')
+    ),
     ...queryConfig
   });
 
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useQuery({
     queryKey: ['garage', 'suppliers'],
-    queryFn: () => fetchCollectionData<Supplier>(COLLECTIONS.GARAGE.SUPPLIERS),
+    queryFn: () => fetchCollectionData<Supplier>(
+      validateCollectionPath(COLLECTIONS.GARAGE.SUPPLIERS, 'suppliers')
+    ),
     ...queryConfig
   });
 
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['garage', 'clients'],
-    queryFn: () => fetchCollectionData<GarageClient>(COLLECTIONS.GARAGE.CLIENTS),
+    queryFn: () => fetchCollectionData<GarageClient>(
+      validateCollectionPath(COLLECTIONS.GARAGE.CLIENTS, 'clients')
+    ),
     ...queryConfig
   });
 
   const { data: inventory = [], isLoading: isLoadingInventory } = useQuery({
     queryKey: ['garage', 'inventory'],
-    queryFn: () => fetchCollectionData<InventoryItem>(COLLECTIONS.GARAGE.INVENTORY),
+    queryFn: () => fetchCollectionData<InventoryItem>(
+      validateCollectionPath(COLLECTIONS.GARAGE.INVENTORY, 'inventory')
+    ),
     ...queryConfig
   });
 
   const { data: loyalty = [], isLoading: isLoadingLoyalty } = useQuery({
     queryKey: ['garage', 'loyalty'],
-    queryFn: () => fetchCollectionData<LoyaltyProgram>(COLLECTIONS.GARAGE.LOYALTY),
+    queryFn: () => fetchCollectionData<LoyaltyProgram>(
+      validateCollectionPath(COLLECTIONS.GARAGE.LOYALTY, 'loyalty')
+    ),
     ...queryConfig
   });
 
   const { data: settings = [], isLoading: isLoadingSettings } = useQuery({
     queryKey: ['garage', 'settings'],
-    queryFn: () => fetchCollectionData<GarageSettings>(COLLECTIONS.GARAGE.SETTINGS),
+    queryFn: () => fetchCollectionData<GarageSettings>(
+      validateCollectionPath(COLLECTIONS.GARAGE.SETTINGS, 'settings')
+    ),
     ...queryConfig
   });
+
+  // Add refetch functions for each collection
+  const refetchRepairs = () => {
+    // Explicitly trigger a refetch for the repairs query
+    return useQuery.getQueryCache().findAll(['garage', 'repairs'])[0]?.fetch();
+  };
 
   return {
     vehicles,
@@ -77,6 +111,7 @@ export const useGarageData = () => {
     inventory,
     loyalty,
     settings: settings[0],
+    refetchRepairs,
     isLoading: 
       isLoadingVehicles || 
       isLoadingAppointments || 
