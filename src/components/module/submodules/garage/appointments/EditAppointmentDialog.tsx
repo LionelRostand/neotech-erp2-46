@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useForm } from 'react-hook-form';
-import { isValid, parseISO } from 'date-fns';
+import { isValid, parseISO, format } from 'date-fns';
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -23,31 +23,36 @@ const EditAppointmentDialog = ({
   onUpdate,
   isLoading 
 }: EditAppointmentDialogProps) => {
+  // Format date to YYYY-MM-DD for the date input
+  const formatDateForInput = (dateString?: string) => {
+    if (!dateString) return '';
+    
+    try {
+      // Try to parse as ISO first
+      const date = new Date(dateString);
+      if (isValid(date)) {
+        return format(date, 'yyyy-MM-dd');
+      }
+      
+      return '';
+    } catch (error) {
+      console.error('Invalid date format:', error);
+      return '';
+    }
+  };
+
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      date: appointment.date,
-      time: appointment.time,
-      clientName: appointment.clientName,
-      service: appointment.service,
+      date: formatDateForInput(appointment.date),
+      time: appointment.time || '',
+      clientName: appointment.clientName || '',
+      service: appointment.service || '',
       notes: appointment.notes || ''
     }
   });
 
   const onSubmit = async (data: any) => {
     await onUpdate(appointment.id, data);
-  };
-
-  // Helper function to verify if the passed date string is valid ISO format
-  const getValidISODateString = (dateString?: string) => {
-    if (!dateString) return '';
-    
-    try {
-      const date = parseISO(dateString);
-      return isValid(date) ? dateString : '';
-    } catch (error) {
-      console.error('Invalid date format:', error);
-      return '';
-    }
   };
 
   return (
@@ -76,6 +81,15 @@ const EditAppointmentDialog = ({
                 type="time"
                 className="col-span-3"
                 {...register('time')}
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="clientName">Client</Label>
+              <Input 
+                id="clientName"
+                className="col-span-3"
+                {...register('clientName')}
               />
             </div>
             
