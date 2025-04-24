@@ -2,11 +2,9 @@
 import { ReactNode } from 'react';
 
 export interface Column {
-  accessorKey?: string;
   header: string;
+  accessorKey?: string;
   cell?: (props: { row: { original: any } }) => ReactNode;
-  enableSorting?: boolean;
-  enableHiding?: boolean;
 }
 
 export interface DataTableProps<T> {

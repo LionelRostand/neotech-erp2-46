@@ -6,35 +6,12 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useCallback, useEffect } from 'react';
 import { isOnline, initNetworkListeners } from '@/hooks/firestore/network-handler';
+import { useNetwork } from '@/components/providers/NetworkProvider';
 
 export const useGarageClients = () => {
   const { add, getAll } = useFirestore(COLLECTIONS.GARAGE.CLIENTS);
   const [clientCache, setClientCache] = useState<GarageClient[]>([]);
-  const [networkStatus, setNetworkStatus] = useState({
-    isOnline: isOnline(),
-    reconnecting: false
-  });
-
-  // Setup network status listeners
-  useEffect(() => {
-    const { cleanup } = initNetworkListeners(
-      // Online handler
-      () => {
-        setNetworkStatus({ isOnline: true, reconnecting: true });
-        // Trigger a refetch when we come back online
-        refetch().finally(() => {
-          setNetworkStatus(prev => ({ ...prev, reconnecting: false }));
-        });
-      },
-      // Offline handler
-      () => {
-        setNetworkStatus({ isOnline: false, reconnecting: false });
-        toast.warning('Vous êtes hors ligne. Certaines fonctionnalités seront limitées.');
-      }
-    );
-    
-    return cleanup;
-  }, []);
+  const { isOnline, isReconnecting } = useNetwork();
 
   // Use React Query for data fetching with caching
   const { 
@@ -48,7 +25,7 @@ export const useGarageClients = () => {
       try {
         console.log('Récupération des clients depuis:', COLLECTIONS.GARAGE.CLIENTS);
         
-        if (!networkStatus.isOnline) {
+        if (!isOnline) {
           console.log('En mode hors ligne, utilisation du cache');
           return clientCache;
         }
@@ -66,14 +43,14 @@ export const useGarageClients = () => {
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: networkStatus.isOnline ? 2 : 0 // Only retry if online
+    retry: isOnline ? 2 : 0 // Only retry if online
   });
 
   // Add client with optimistic update
   const addClient = useCallback(async (clientData: Omit<GarageClient, 'id'>) => {
     try {
       // Check if we're online
-      if (!networkStatus.isOnline) {
+      if (!isOnline) {
         toast.error('Impossible d\'ajouter un client en mode hors ligne');
         throw new Error('Offline mode - cannot add client');
       }
@@ -117,7 +94,12 @@ export const useGarageClients = () => {
       toast.error('Erreur lors de l\'ajout du client');
       throw err;
     }
-  }, [add, refetch, networkStatus.isOnline]);
+  }, [add, refetch, isOnline]);
+
+  useEffect(() => {
+    // Log whenever clients data changes to help debugging
+    console.log("Clients data updated:", clients);
+  }, [clients]);
 
   return {
     clients,
@@ -125,7 +107,7 @@ export const useGarageClients = () => {
     isLoading,
     error,
     refetchClients: refetch,
-    isOffline: !networkStatus.isOnline,
-    isReconnecting: networkStatus.reconnecting
+    isOffline: !isOnline,
+    isReconnecting
   };
 };

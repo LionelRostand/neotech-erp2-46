@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Search, RefreshCw, AlertTriangle } from "lucide-react";
@@ -54,6 +55,9 @@ const GarageClientsDashboard = () => {
     {
       header: "Email",
       accessorKey: "email",
+      cell: ({ row }) => (
+        <div>{row.original.email || "Non renseigné"}</div>
+      ),
     },
     {
       header: "Adresse",
@@ -63,6 +67,8 @@ const GarageClientsDashboard = () => {
       ),
     }
   ];
+
+  console.log("Clients dans GarageClientsDashboard:", clients);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -153,6 +159,7 @@ const GarageClientsDashboard = () => {
             columns={columns}
             data={filteredClients}
             isLoading={isLoading || isReconnecting}
+            emptyMessage="Aucun client trouvé"
           />
         </CardContent>
       </Card>
