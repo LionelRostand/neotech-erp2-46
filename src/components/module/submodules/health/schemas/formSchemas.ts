@@ -1,4 +1,3 @@
-
 import * as z from 'zod';
 
 export const patientFormSchema = z.object({
@@ -48,7 +47,6 @@ export const medicalRecordFormSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Adding the missing doctorFormSchema
 export const doctorFormSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis' }),
   lastName: z.string().min(1, { message: 'Le nom de famille est requis' }),
@@ -60,8 +58,19 @@ export const doctorFormSchema = z.object({
   status: z.enum(['active', 'inactive', 'on-leave']).default('active'),
 });
 
+export const nurseFormSchema = z.object({
+  firstName: z.string().min(1, { message: 'Le prénom est requis' }),
+  lastName: z.string().min(1, { message: 'Le nom de famille est requis' }),
+  department: z.string().optional(),
+  licenseNumber: z.string().min(1, { message: 'Le numéro de licence est requis' }),
+  email: z.string().email({ message: 'Email invalide' }).optional().or(z.literal('')),
+  phone: z.string().optional(),
+  status: z.enum(['active', 'inactive', 'on-leave']).default('active'),
+});
+
 export type PatientFormValues = z.infer<typeof patientFormSchema>;
 export type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
 export type ConsultationFormValues = z.infer<typeof consultationFormSchema>;
 export type MedicalRecordFormValues = z.infer<typeof medicalRecordFormSchema>;
 export type DoctorFormValues = z.infer<typeof doctorFormSchema>;
+export type NurseFormValues = z.infer<typeof nurseFormSchema>;
