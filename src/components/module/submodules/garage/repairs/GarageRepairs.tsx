@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench } from 'lucide-react';
+import { Plus, Wrench, Shield } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
 import { RepairsTable } from './RepairsTable';
@@ -9,15 +10,26 @@ import CreateRepairDialog from './CreateRepairDialog';
 import useHasPermission from '@/hooks/useHasPermission';
 import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const GarageRepairs = () => {
-  const { repairs, loading } = useGarageRepairs();
+  const { repairs, loading, error } = useGarageRepairs();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
   const queryClient = useQueryClient();
 
+  // Ajouter des logs pour déboguer
+  console.log('GarageRepairs - repairs:', repairs);
+  console.log('GarageRepairs - loading:', loading);
+  console.log('GarageRepairs - error:', error);
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
+  if (error) {
+    toast.error(`Erreur de chargement: ${error.message}`);
+    console.error("Erreur lors du chargement des réparations:", error);
   }
 
   if (!hasViewPermission) {
@@ -36,6 +48,15 @@ const GarageRepairs = () => {
     );
   }
 
+  // Filtrer les réparations pour les statistiques
+  const todayRepairs = repairs.filter(r => {
+    const today = new Date().toISOString().split('T')[0];
+    return r.startDate === today;
+  });
+
+  const inProgressRepairs = repairs.filter(r => r.status === 'in_progress');
+  const awaitingPartsRepairs = repairs.filter(r => r.status === 'awaiting_parts');
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -48,33 +69,38 @@ const GarageRepairs = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Réparations"
-          value={(repairs?.length || 0).toString()}
+          title="Réparations aujourd'hui"
+          value={todayRepairs.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
-          description="En cours et terminées"
+          description="Planifiées pour aujourd'hui"
         />
         <StatCard
           title="En Cours"
-          value={repairs?.filter(r => r.status === 'in_progress').length.toString()}
+          value={inProgressRepairs.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Réparations actives"
         />
         <StatCard
           title="En Attente de Pièces"
-          value={repairs?.filter(r => r.status === 'awaiting_parts').length.toString()}
+          value={awaitingPartsRepairs.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Commandes en cours"
         />
         <StatCard
-          title="Terminées"
-          value={repairs?.filter(r => r.status === 'completed').length.toString()}
+          title="Total"
+          value={repairs.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
-          description="Total complété"
+          description="Toutes les réparations"
         />
       </div>
 
-      <Card className="p-6">
-        <RepairsTable />
+      <Card>
+        <CardHeader>
+          <CardTitle>Dernières réparations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RepairsTable />
+        </CardContent>
       </Card>
 
       <RepairKanban />

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
+import { cn } from '@/lib/utils';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -42,33 +43,48 @@ const getStatusText = (status: string) => {
 };
 
 export const RepairsTable = () => {
-  const { repairs, loading } = useGarageRepairs();
+  const { repairs, loading, error } = useGarageRepairs();
+
+  // Ajouter des logs pour déboguer
+  console.log('RepairsTable - repairs:', repairs);
+  console.log('RepairsTable - loading:', loading);
+  console.log('RepairsTable - error:', error);
 
   if (loading) {
     return <div className="text-center py-4">Chargement des réparations...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-4 text-red-500">Erreur: {error.message}</div>;
+  }
+
+  if (repairs.length === 0) {
+    return <div className="text-center py-4">Aucune réparation trouvée.</div>;
   }
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>Date</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Véhicule</TableHead>
           <TableHead>Mécanicien</TableHead>
           <TableHead>Description</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>Statut</TableHead>
           <TableHead>Progression</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {repairs.map((repair) => (
           <TableRow key={repair.id}>
+            <TableCell>{repair.startDate || repair.createdAt?.split('T')[0] || 'N/A'}</TableCell>
             <TableCell>{repair.clientName}</TableCell>
             <TableCell>{repair.vehicleName}</TableCell>
             <TableCell>{repair.mechanicName}</TableCell>
-            <TableCell>{repair.description}</TableCell>
+            <TableCell className="max-w-xs truncate">{repair.description}</TableCell>
             <TableCell>
-              <Badge className={getStatusColor(repair.status)}>
+              <Badge className={cn(getStatusColor(repair.status))}>
                 {getStatusText(repair.status)}
               </Badge>
             </TableCell>
