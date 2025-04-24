@@ -2,32 +2,22 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench, Shield } from 'lucide-react';
+import { Plus, Wrench } from 'lucide-react';
 import StatCard from '@/components/StatCard';
-import { RepairKanban } from './RepairKanban';
 import { RepairsTable } from './RepairsTable';
+import { RepairKanban } from './RepairKanban';
 import CreateRepairDialog from './CreateRepairDialog';
-import useHasPermission from '@/hooks/useHasPermission';
 import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
 import { toast } from 'sonner';
 
 const GarageRepairs = () => {
   const { repairs, loading, error } = useGarageRepairs();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
 
-  // Add debug logging
-  console.log('GarageRepairs component - repairs:', repairs);
-  console.log('GarageRepairs component - loading:', loading);
-  console.log('GarageRepairs component - error:', error);
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-96">Chargement des réparations...</div>;
-  }
+  console.log('GarageRepairs - repairs:', repairs);
 
   if (error) {
-    toast.error(`Erreur de chargement: ${error.message}`);
-    console.error("Erreur lors du chargement des réparations:", error);
+    toast.error(`Erreur: ${error.message}`);
     return <div className="container mx-auto p-6">
       <Card className="p-6">
         <div className="text-center">
@@ -39,22 +29,6 @@ const GarageRepairs = () => {
         </div>
       </Card>
     </div>;
-  }
-
-  if (!hasViewPermission) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="p-12">
-          <div className="text-center">
-            <Shield className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-            <h3 className="text-lg font-medium">Accès limité</h3>
-            <p className="text-sm text-gray-500 mt-2">
-              Vous n'avez pas les permissions nécessaires pour visualiser les réparations.
-            </p>
-          </div>
-        </Card>
-      </div>
-    );
   }
 
   // Filtrer les réparations pour les statistiques
