@@ -3,18 +3,41 @@ import React, { useState } from 'react';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import AddVehicleDialog from './AddVehicleDialog';
+import ViewVehicleDialog from './ViewVehicleDialog';
+import EditVehicleDialog from './EditVehicleDialog';
+import DeleteVehicleDialog from './DeleteVehicleDialog';
+import { Vehicle } from '../types/garage-types';
 
 const GarageVehiclesDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { vehicles, loading, refetchVehicles } = useGarageVehicles();
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  const { vehicles, loading, updateVehicle, deleteVehicle, refetchVehicles } = useGarageVehicles();
 
   const handleVehicleAdded = async () => {
     await refetchVehicles();
     setShowAddDialog(false);
+  };
+
+  const handleUpdateVehicle = async (vehicleId: string, data: Partial<Vehicle>) => {
+    await updateVehicle(vehicleId, data);
+    await refetchVehicles();
+  };
+
+  const handleDeleteVehicle = async () => {
+    if (selectedVehicle) {
+      await deleteVehicle(selectedVehicle.id, selectedVehicle.clientId);
+      setShowDeleteDialog(false);
+      setSelectedVehicle(null);
+      await refetchVehicles();
+    }
   };
 
   if (loading) {
@@ -77,12 +100,13 @@ const GarageVehiclesDashboard = () => {
                 <TableHead>Kilométrage</TableHead>
                 <TableHead>Dernier contrôle</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vehicles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     Aucun véhicule trouvé. Cliquez sur "Nouveau véhicule" pour en ajouter.
                   </TableCell>
                 </TableRow>
@@ -104,6 +128,40 @@ const GarageVehiclesDashboard = () => {
                         {vehicle?.status === 'available' ? 'Disponible' : 'En maintenance'}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedVehicle(vehicle);
+                            setShowViewDialog(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedVehicle(vehicle);
+                            setShowEditDialog(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedVehicle(vehicle);
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -116,6 +174,35 @@ const GarageVehiclesDashboard = () => {
         isOpen={showAddDialog} 
         onOpenChange={setShowAddDialog}
         onVehicleAdded={handleVehicleAdded}
+      />
+
+      <ViewVehicleDialog
+        isOpen={showViewDialog}
+        onClose={() => {
+          setShowViewDialog(false);
+          setSelectedVehicle(null);
+        }}
+        vehicle={selectedVehicle}
+      />
+
+      <EditVehicleDialog
+        isOpen={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setSelectedVehicle(null);
+        }}
+        vehicle={selectedVehicle}
+        onUpdate={handleUpdateVehicle}
+      />
+
+      <DeleteVehicleDialog
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setSelectedVehicle(null);
+        }}
+        onConfirm={handleDeleteVehicle}
+        vehicleName={selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model}` : ''}
       />
     </div>
   );

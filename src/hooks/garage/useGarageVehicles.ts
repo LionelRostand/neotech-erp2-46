@@ -1,4 +1,3 @@
-
 import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Vehicle } from '@/components/module/submodules/garage/types/garage-types';
@@ -7,23 +6,20 @@ import { useQuery } from '@tanstack/react-query';
 import { useGarageClients } from './useGarageClients';
 
 export const useGarageVehicles = () => {
-  const { add, getAll, update, loading, error } = useFirestore(COLLECTIONS.GARAGE.VEHICLES);
+  const { add, getAll, update, remove, loading, error } = useFirestore(COLLECTIONS.GARAGE.VEHICLES);
   const { clients, updateClient } = useGarageClients();
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id'>) => {
     try {
-      // Ajouter le véhicule à la collection des véhicules
       const vehicleId = await add({
         ...vehicleData,
         createdAt: new Date().toISOString()
       });
 
-      // Si un client est associé au véhicule, mettre à jour le client
       if (vehicleData.clientId) {
         const client = clients.find(c => c.id === vehicleData.clientId);
         
         if (client) {
-          // Préparer la mise à jour du client avec le nouveau véhicule
           const updatedVehicles = client.vehicles || [];
           updatedVehicles.push({
             id: vehicleId,
@@ -32,7 +28,6 @@ export const useGarageVehicles = () => {
             licensePlate: vehicleData.licensePlate
           });
           
-          // Mettre à jour le client avec la nouvelle liste de véhicules
           await updateClient(vehicleData.clientId, {
             vehicles: updatedVehicles
           });
@@ -44,6 +39,60 @@ export const useGarageVehicles = () => {
     } catch (err) {
       console.error('Erreur lors de l\'ajout du véhicule:', err);
       toast.error('Erreur lors de l\'ajout du véhicule');
+      throw err;
+    }
+  };
+
+  const updateVehicle = async (vehicleId: string, vehicleData: Partial<Vehicle>) => {
+    try {
+      await update(vehicleId, {
+        ...vehicleData,
+        updatedAt: new Date().toISOString()
+      });
+      
+      if (vehicleData.clientId) {
+        const client = clients.find(c => c.id === vehicleData.clientId);
+        if (client) {
+          const updatedVehicles = client.vehicles?.filter(v => v.id !== vehicleId) || [];
+          updatedVehicles.push({
+            id: vehicleId,
+            make: vehicleData.make || '',
+            model: vehicleData.model || '',
+            licensePlate: vehicleData.licensePlate || ''
+          });
+          
+          await updateClient(vehicleData.clientId, {
+            vehicles: updatedVehicles
+          });
+        }
+      }
+      
+      toast.success('Véhicule mis à jour avec succès');
+      await refetch();
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour du véhicule:', err);
+      toast.error('Erreur lors de la mise à jour du véhicule');
+      throw err;
+    }
+  };
+
+  const deleteVehicle = async (vehicleId: string, clientId: string) => {
+    try {
+      await remove(vehicleId);
+      
+      const client = clients.find(c => c.id === clientId);
+      if (client) {
+        const updatedVehicles = client.vehicles?.filter(v => v.id !== vehicleId) || [];
+        await updateClient(clientId, {
+          vehicles: updatedVehicles
+        });
+      }
+      
+      toast.success('Véhicule supprimé avec succès');
+      await refetch();
+    } catch (err) {
+      console.error('Erreur lors de la suppression du véhicule:', err);
+      toast.error('Erreur lors de la suppression du véhicule');
       throw err;
     }
   };
@@ -65,6 +114,8 @@ export const useGarageVehicles = () => {
   return {
     vehicles,
     addVehicle,
+    updateVehicle,
+    deleteVehicle,
     refetchVehicles: refetch,
     loading,
     error
