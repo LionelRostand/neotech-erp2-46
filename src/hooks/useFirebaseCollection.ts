@@ -5,34 +5,34 @@ import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
 /**
- * Hook personnalisé pour récupérer des données d'une collection Firestore avec mises à jour en temps réel
- * @param collectionPath Chemin vers la collection Firestore
- * @param queryConstraints Contraintes de requête optionnelles (where, orderBy, limit, etc.)
- * @returns Objet contenant les données, l'état de chargement et les erreurs éventuelles
+ * Custom hook to fetch data from a Firestore collection with real-time updates
+ * @param collectionPath Path to the Firestore collection
+ * @param queryConstraints Optional query constraints (where, orderBy, limit, etc.)
+ * @returns Object containing data, loading state, and error if any
  */
-export const useFirebaseCollection = <T>(
-  collectionPath: string,
+export const useCollectionData = (
+  collectionPath: string | null | undefined,
   queryConstraints: QueryConstraint[] = []
 ) => {
-  const [data, setData] = useState<T[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    // Use a valid collection path or early return
-    const validPath = collectionPath?.trim();
-    if (!validPath) {
-      console.error('Collection path cannot be empty');
-      setError(new Error('Collection path cannot be empty'));
+    // Validate collection path first - early return if invalid
+    if (!collectionPath || typeof collectionPath !== 'string' || collectionPath.trim() === '') {
+      const errorMsg = 'Collection path cannot be empty';
+      console.error(`Error: ${errorMsg}`);
+      setError(new Error(errorMsg));
       setIsLoading(false);
-      toast.error('Erreur: Chemin de collection invalide ou vide');
+      toast.error(errorMsg);
       return () => {}; // Return empty cleanup function
     }
+
+    const validPath = collectionPath.trim();
+    console.log(`Setting up listener for collection: ${validPath}`);
     
     try {
-      console.log(`Fetching data from collection: ${validPath}`);
-      
       // Create a reference to the collection
       const collectionRef = collection(db, validPath);
       
@@ -46,8 +46,7 @@ export const useFirebaseCollection = <T>(
           const documents = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-          })) as T[];
-          
+          }));
           setData(documents);
           setIsLoading(false);
           console.log(`Received ${documents.length} documents from ${validPath}`);
@@ -56,7 +55,7 @@ export const useFirebaseCollection = <T>(
           console.error(`Error fetching from ${validPath}:`, err);
           setError(err);
           setIsLoading(false);
-          toast.error(`Erreur lors du chargement des données: ${err.message}`);
+          toast.error(`Erreur de chargement: ${err.message}`);
         }
       );
       
@@ -67,18 +66,45 @@ export const useFirebaseCollection = <T>(
       };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error occurred');
-      console.error(`Error setting up listener for ${collectionPath}:`, error);
+      console.error(`Error setting up listener for ${validPath}:`, error);
       setError(error);
       setIsLoading(false);
-      toast.error(`Erreur lors du chargement des données: ${error.message}`);
+      toast.error(`Erreur: ${error.message}`);
       return () => {}; // Return empty cleanup function
     }
-  }, [collectionPath, JSON.stringify(queryConstraints), refetchTrigger]);
+  }, [collectionPath, JSON.stringify(queryConstraints)]);
 
-  // Function to trigger a refetch
-  const refetch = () => {
-    setRefetchTrigger(prev => prev + 1);
+  return { data, isLoading, error };
+};
+
+/**
+ * Custom hook to fetch data from a Firestore collection with real-time updates
+ * @param collectionPath Path to the Firestore collection
+ * @param queryConstraints Optional query constraints
+ * @returns Object containing data, loading state, and error if any
+ */
+export const useFirebaseCollection = <T extends Record<string, any>>(
+  collectionPath: string | null | undefined,
+  queryConstraints: QueryConstraint[] = []
+) => {
+  // Use the base collection data hook with proper validation
+  const { data, isLoading, error } = useCollectionData(collectionPath, queryConstraints);
+
+  // Provide more debug information on error
+  useEffect(() => {
+    if (error) {
+      console.error(`Firebase collection error for "${collectionPath}":`, error);
+    }
+  }, [collectionPath, error]);
+
+  // Return type-safe version of the data
+  return {
+    data: data as T[],
+    isLoading,
+    error,
+    refetch: () => {
+      console.log("Refetch requested for", collectionPath);
+      // Real-time listeners don't need manual refetching but we can add functionality here if needed
+    }
   };
-
-  return { data: data || [], isLoading, error, refetch };
 };

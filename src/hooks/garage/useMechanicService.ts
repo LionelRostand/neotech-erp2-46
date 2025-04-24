@@ -14,10 +14,17 @@ export const useMechanicService = () => {
     position?: string;
   }) => {
     try {
-      // Ensure we have a valid collection path
-      const mechanicsPath = COLLECTIONS.GARAGE?.MECHANICS || 'garage_mechanics';
+      // Ensure we have a valid collection path with a solid fallback
+      const mechanicsPath = 
+        (COLLECTIONS.GARAGE && COLLECTIONS.GARAGE.MECHANICS) || 
+        'garage_mechanics';
       
       console.log('Adding mechanic to collection:', mechanicsPath);
+      
+      // Make sure mechanicsPath is definitely not empty before proceeding
+      if (!mechanicsPath || mechanicsPath.trim() === '') {
+        throw new Error('Invalid collection path for mechanics');
+      }
       
       const mechanicsRef = collection(db, mechanicsPath);
       const newMechanic: Partial<Mechanic> = {
