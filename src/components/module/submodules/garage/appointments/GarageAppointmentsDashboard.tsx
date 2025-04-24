@@ -35,12 +35,18 @@ const GarageAppointmentsDashboard = () => {
   const handleUpdate = async (id: string, data: any) => {
     // Implement update logic later
     toast.success('Rendez-vous mis à jour');
+    setEditDialogOpen(false);
   };
 
   const handleDelete = async () => {
     // Implement delete logic later
     toast.success('Rendez-vous supprimé');
     setDeleteDialogOpen(false);
+  };
+
+  const handleOpenEditDialog = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setEditDialogOpen(true);
   };
 
   if (isLoading) {
@@ -74,10 +80,7 @@ const GarageAppointmentsDashboard = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setSelectedAppointment(appointment);
-                    setEditDialogOpen(true);
-                  }}
+                  onClick={() => handleOpenEditDialog(appointment)}
                 >
                   Modifier
                 </Button>

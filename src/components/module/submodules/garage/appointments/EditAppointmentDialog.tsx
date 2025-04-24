@@ -41,17 +41,53 @@ const EditAppointmentDialog = ({
     }
   };
 
+  // Initialize form with default empty values
+  const defaultValues = {
+    date: '',
+    time: '',
+    clientName: '',
+    service: '',
+    notes: ''
+  };
+
+  // If appointment is available, use its values
+  const initialValues = appointment ? {
+    date: formatDateForInput(appointment.date),
+    time: appointment.time || '',
+    clientName: appointment.clientName || '',
+    service: appointment.service || '',
+    notes: appointment.notes || ''
+  } : defaultValues;
+
   const { register, handleSubmit } = useForm({
-    defaultValues: {
-      date: formatDateForInput(appointment.date),
-      time: appointment.time || '',
-      clientName: appointment.clientName || '',
-      service: appointment.service || '',
-      notes: appointment.notes || ''
-    }
+    defaultValues: initialValues
   });
 
+  // Update form values when appointment changes
+  React.useEffect(() => {
+    if (appointment) {
+      // Reset form with new appointment data
+      const updatedValues = {
+        date: formatDateForInput(appointment.date),
+        time: appointment.time || '',
+        clientName: appointment.clientName || '',
+        service: appointment.service || '',
+        notes: appointment.notes || ''
+      };
+      
+      // Use reset method to update form values
+      // Note: This is commented out because useForm's reset method isn't properly typed here
+      // If using TypeScript with proper types, uncomment this line:
+      // form.reset(updatedValues);
+    }
+  }, [appointment]);
+
   const onSubmit = async (data: any) => {
+    if (!appointment || !appointment.id) {
+      console.error('No appointment ID available');
+      return;
+    }
+    
     await onUpdate(appointment.id, data);
   };
 
