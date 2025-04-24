@@ -73,7 +73,11 @@ export const COLLECTIONS = {
     PARTS: 'garage_parts',
     PERMISSIONS: 'garage_permissions',
     SERVICES: 'garage_services',
-    VEHICLES: 'garage_vehicles'
+    VEHICLES: 'garage_vehicles',
+    LOYALTY: 'garage_loyalty',
+    SETTINGS: 'garage_settings',
+    SUPPLIERS: 'garage_suppliers',
+    INVENTORY: 'garage_inventory'
   },
 
   // Health
