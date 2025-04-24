@@ -1,37 +1,24 @@
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useGarageData } from '@/hooks/garage/useGarageData';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench, Shield } from 'lucide-react';
+import { Wrench, Plus, Shield } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { RepairKanban } from './RepairKanban';
-import { RepairsTable } from './RepairsTable';
 import CreateRepairDialog from './CreateRepairDialog';
 import useHasPermission from '@/hooks/useHasPermission';
-import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 const GarageRepairs = () => {
-  const { repairs, loading, error } = useGarageRepairs();
+  const { repairs, isLoading, refetchRepairs } = useGarageData();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
-  const queryClient = useQueryClient();
 
-  // Ajouter des logs pour déboguer
-  console.log('GarageRepairs - repairs:', repairs);
-  console.log('GarageRepairs - loading:', loading);
-  console.log('GarageRepairs - error:', error);
-
-  if (loading) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  if (error) {
-    toast.error(`Erreur de chargement: ${error.message}`);
-    console.error("Erreur lors du chargement des réparations:", error);
-  }
-
+  // Handle case where user doesn't have permission
   if (!hasViewPermission) {
     return (
       <div className="container mx-auto p-6">
@@ -48,14 +35,9 @@ const GarageRepairs = () => {
     );
   }
 
-  // Filtrer les réparations pour les statistiques
-  const todayRepairs = repairs.filter(r => {
-    const today = new Date().toISOString().split('T')[0];
-    return r.startDate === today;
-  });
-
-  const inProgressRepairs = repairs.filter(r => r.status === 'in_progress');
-  const awaitingPartsRepairs = repairs.filter(r => r.status === 'awaiting_parts');
+  const inProgress = repairs?.filter(r => r.status === 'in_progress') || [];
+  const awaitingParts = repairs?.filter(r => r.status === 'awaiting_parts') || [];
+  const completed = repairs?.filter(r => r.status === 'completed') || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -69,39 +51,30 @@ const GarageRepairs = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Réparations aujourd'hui"
-          value={todayRepairs.length.toString()}
+          title="Total Réparations"
+          value={(repairs?.length || 0).toString()}
           icon={<Wrench className="h-4 w-4" />}
-          description="Planifiées pour aujourd'hui"
+          description="En cours et terminées"
         />
         <StatCard
           title="En Cours"
-          value={inProgressRepairs.length.toString()}
+          value={inProgress.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Réparations actives"
         />
         <StatCard
           title="En Attente de Pièces"
-          value={awaitingPartsRepairs.length.toString()}
+          value={awaitingParts.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
           description="Commandes en cours"
         />
         <StatCard
-          title="Total"
-          value={repairs.length.toString()}
+          title="Terminées"
+          value={completed.length.toString()}
           icon={<Wrench className="h-4 w-4" />}
-          description="Toutes les réparations"
+          description="Total complété"
         />
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Dernières réparations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RepairsTable />
-        </CardContent>
-      </Card>
 
       <RepairKanban />
 
@@ -109,7 +82,9 @@ const GarageRepairs = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={() => {
-          queryClient.invalidateQueries(['garage', 'repairs']);
+          if (refetchRepairs) {
+            refetchRepairs();
+          }
         }}
       />
     </div>
