@@ -1,4 +1,5 @@
-import { Car, LayoutDashboard, Users, CalendarRange, Receipt, Truck, Package, BadgePercent, Settings } from 'lucide-react';
+
+import { Car, LayoutDashboard, Users, Wrench, CalendarRange, Receipt, Truck, Package, BadgePercent, Settings } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const garageModule: AppModule = {
