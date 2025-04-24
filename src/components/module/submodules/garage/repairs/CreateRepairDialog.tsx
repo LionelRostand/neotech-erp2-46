@@ -3,11 +3,11 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { useGarageVehiclesByClient } from '@/hooks/garage/useGarageVehiclesByClient';
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 interface CreateRepairDialogProps {
   open: boolean;
@@ -35,7 +35,6 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
     setFormData(prev => ({
       ...prev,
       [name]: value,
-      // Reset vehicle selection when client changes
       ...(name === 'clientId' ? { vehicleId: '' } : {})
     }));
   };
