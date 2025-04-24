@@ -38,14 +38,14 @@ const getStatusText = (status: string) => {
     case 'awaiting_approval':
       return 'En attente d\'approbation';
     default:
-      return status;
+      return status || 'Inconnu';
   }
 };
 
 export const RepairsTable = () => {
   const { repairs, loading, error } = useGarageRepairs();
 
-  // Ajouter des logs pour déboguer
+  // Extra logging for debugging
   console.log('RepairsTable - repairs:', repairs);
   console.log('RepairsTable - loading:', loading);
   console.log('RepairsTable - error:', error);
@@ -58,9 +58,25 @@ export const RepairsTable = () => {
     return <div className="text-center py-4 text-red-500">Erreur: {error.message}</div>;
   }
 
-  if (repairs.length === 0) {
+  if (!repairs || repairs.length === 0) {
     return <div className="text-center py-4">Aucune réparation trouvée.</div>;
   }
+
+  // Format date for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      // Handle different date formats
+      if (dateString.includes('T')) {
+        // ISO format
+        return dateString.split('T')[0];
+      }
+      return dateString;
+    } catch (e) {
+      return 'N/A';
+    }
+  };
 
   return (
     <Table>
@@ -78,14 +94,14 @@ export const RepairsTable = () => {
       <TableBody>
         {repairs.map((repair) => (
           <TableRow key={repair.id}>
-            <TableCell>{repair.startDate || repair.createdAt?.split('T')[0] || 'N/A'}</TableCell>
-            <TableCell>{repair.clientName}</TableCell>
-            <TableCell>{repair.vehicleName}</TableCell>
-            <TableCell>{repair.mechanicName}</TableCell>
-            <TableCell className="max-w-xs truncate">{repair.description}</TableCell>
+            <TableCell>{formatDate(repair.startDate || repair.createdAt)}</TableCell>
+            <TableCell>{repair.clientName || 'N/A'}</TableCell>
+            <TableCell>{repair.vehicleName || 'N/A'}</TableCell>
+            <TableCell>{repair.mechanicName || 'N/A'}</TableCell>
+            <TableCell className="max-w-xs truncate">{repair.description || 'Pas de description'}</TableCell>
             <TableCell>
-              <Badge className={cn(getStatusColor(repair.status))}>
-                {getStatusText(repair.status)}
+              <Badge className={cn(getStatusColor(repair.status || ''))}>
+                {getStatusText(repair.status || '')}
               </Badge>
             </TableCell>
             <TableCell>

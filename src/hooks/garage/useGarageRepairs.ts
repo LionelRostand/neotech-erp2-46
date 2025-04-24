@@ -1,23 +1,48 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { Repair } from '@/components/module/submodules/garage/types/garage-types';
-import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export const useGarageRepairs = () => {
-  // Utiliser useFirebaseCollection pour avoir les mises à jour en temps réel
-  const { data = [], isLoading, error } = useFirebaseCollection<Repair>(
-    COLLECTIONS.GARAGE?.REPAIRS || 'invalid_collection_placeholder'
-  );
+  const [repairs, setRepairs] = useState<Repair[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Ajouter des logs pour déboguer
-  console.log('useGarageRepairs - data:', data);
-  console.log('useGarageRepairs - isLoading:', isLoading);
-  console.log('useGarageRepairs - error:', error);
+  // Use direct Firestore query to get the data
+  useEffect(() => {
+    const fetchRepairs = async () => {
+      try {
+        console.log('Fetching garage repairs...');
+        const collectionRef = collection(db, 'garage_repairs');
+        const snapshot = await getDocs(collectionRef);
+        
+        const repairsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Repair[];
+        
+        console.log('Repairs data fetched:', repairsData);
+        setRepairs(repairsData);
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error('Error fetching garage repairs:', err);
+        setError(err instanceof Error ? err : new Error(err.message));
+        setIsLoading(false);
+        toast.error(`Erreur lors du chargement des réparations: ${err.message}`);
+      }
+    };
+
+    fetchRepairs();
+  }, []);
+
+  // Log for debugging
+  console.log('useGarageRepairs hook state:', { repairs, isLoading, error });
 
   return {
-    repairs: data,
+    repairs,
     loading: isLoading,
     error
   };

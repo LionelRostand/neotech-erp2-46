@@ -9,27 +9,36 @@ import { RepairsTable } from './RepairsTable';
 import CreateRepairDialog from './CreateRepairDialog';
 import useHasPermission from '@/hooks/useHasPermission';
 import { useGarageRepairs } from '@/hooks/garage/useGarageRepairs';
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const GarageRepairs = () => {
   const { repairs, loading, error } = useGarageRepairs();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { hasPermission: hasViewPermission } = useHasPermission('garage-repairs', 'view');
-  const queryClient = useQueryClient();
 
-  // Ajouter des logs pour déboguer
-  console.log('GarageRepairs - repairs:', repairs);
-  console.log('GarageRepairs - loading:', loading);
-  console.log('GarageRepairs - error:', error);
+  // Add debug logging
+  console.log('GarageRepairs component - repairs:', repairs);
+  console.log('GarageRepairs component - loading:', loading);
+  console.log('GarageRepairs component - error:', error);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+    return <div className="flex items-center justify-center h-96">Chargement des réparations...</div>;
   }
 
   if (error) {
     toast.error(`Erreur de chargement: ${error.message}`);
     console.error("Erreur lors du chargement des réparations:", error);
+    return <div className="container mx-auto p-6">
+      <Card className="p-6">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-red-600">Erreur de chargement</h3>
+          <p className="text-sm text-gray-500 mt-2">{error.message}</p>
+          <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
+        </div>
+      </Card>
+    </div>;
   }
 
   if (!hasViewPermission) {
@@ -109,7 +118,8 @@ const GarageRepairs = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={() => {
-          queryClient.invalidateQueries(['garage', 'repairs']);
+          toast.success("Réparation créée avec succès");
+          window.location.reload(); // Force refresh to update data
         }}
       />
     </div>
