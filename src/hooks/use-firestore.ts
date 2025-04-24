@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { executeWithNetworkRetry } from './firestore/network-handler';
+import { executeWithNetworkRetry, isOnline } from './firestore/network-handler';
 import { toast } from 'sonner';
 
 /**
@@ -18,6 +18,11 @@ export const useFirestore = (collectionPath: string) => {
     setLoading(true);
     try {
       return await executeWithNetworkRetry(async () => {
+        if (!isOnline()) {
+          console.log('Operating in offline mode');
+          toast.info('Vous êtes actuellement hors ligne. Certaines fonctionnalités peuvent être limitées.');
+        }
+        
         console.log(`Fetching all documents from ${collectionPath}`, constraints ? 'with constraints' : '');
         // Simulation - in a real app, this would call Firestore
         return [];
@@ -25,7 +30,13 @@ export const useFirestore = (collectionPath: string) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue';
       setError(err);
-      toast.error(`Erreur lors de la récupération des données: ${errorMessage}`);
+      
+      if (!isOnline()) {
+        toast.error('Impossible d\'accéder aux données en mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de la récupération des données: ${errorMessage}`);
+      }
+      
       return [];
     } finally {
       setLoading(false);
@@ -46,7 +57,13 @@ export const useFirestore = (collectionPath: string) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue';
       setError(err);
-      toast.error(`Erreur lors de la récupération du document: ${errorMessage}`);
+      
+      if (!isOnline()) {
+        toast.error('Impossible d\'accéder au document en mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de la récupération du document: ${errorMessage}`);
+      }
+      
       return null;
     } finally {
       setLoading(false);
@@ -62,12 +79,19 @@ export const useFirestore = (collectionPath: string) => {
       return await executeWithNetworkRetry(async () => {
         console.log(`Adding document to ${collectionPath}`, data);
         // Simulation
-        return { id: 'simulated-id-' + Date.now(), ...data };
+        const id = 'simulated-id-' + Date.now();
+        return { id, ...data };
       });
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue';
       setError(err);
-      toast.error(`Erreur lors de l'ajout du document: ${errorMessage}`);
+      
+      if (!isOnline()) {
+        toast.error('Impossible d\'ajouter le document en mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de l'ajout du document: ${errorMessage}`);
+      }
+      
       throw err;
     } finally {
       setLoading(false);
@@ -88,7 +112,13 @@ export const useFirestore = (collectionPath: string) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue';
       setError(err);
-      toast.error(`Erreur lors de la mise à jour du document: ${errorMessage}`);
+      
+      if (!isOnline()) {
+        toast.error('Impossible de mettre à jour le document en mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de la mise à jour du document: ${errorMessage}`);
+      }
+      
       throw err;
     } finally {
       setLoading(false);
@@ -109,7 +139,13 @@ export const useFirestore = (collectionPath: string) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue';
       setError(err);
-      toast.error(`Erreur lors de la suppression du document: ${errorMessage}`);
+      
+      if (!isOnline()) {
+        toast.error('Impossible de supprimer le document en mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de la suppression du document: ${errorMessage}`);
+      }
+      
       throw err;
     } finally {
       setLoading(false);
@@ -130,7 +166,13 @@ export const useFirestore = (collectionPath: string) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue';
       setError(err);
-      toast.error(`Erreur lors de l'écriture du document: ${errorMessage}`);
+      
+      if (!isOnline()) {
+        toast.error('Impossible d\'écrire le document en mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de l'écriture du document: ${errorMessage}`);
+      }
+      
       throw err;
     } finally {
       setLoading(false);

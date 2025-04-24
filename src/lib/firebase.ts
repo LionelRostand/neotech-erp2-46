@@ -1,8 +1,9 @@
 
 // Firebase lite implementation for development
 import { initializeApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { toast } from 'sonner';
 
 // Firebase configuration - this would normally come from environment variables
 // For development purposes, we're using a placeholder config
@@ -38,6 +39,23 @@ if (isDevMode && useEmulator) {
   } catch (err) {
     console.warn('Failed to connect to Firebase emulators:', err);
   }
+}
+
+// Enable offline persistence
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(firestore)
+    .then(() => {
+      console.log('Firestore persistence enabled');
+    })
+    .catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Firestore persistence failed - multiple tabs open');
+        toast.warning('Attention: Mode hors ligne limité car plusieurs onglets sont ouverts');
+      } else if (err.code === 'unimplemented') {
+        console.warn('Firestore persistence not supported on this browser');
+        toast.warning('Attention: Mode hors ligne non supporté sur ce navigateur');
+      }
+    });
 }
 
 // Mock authentication with improved error handling for development

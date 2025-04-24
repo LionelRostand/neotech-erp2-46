@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Search, RefreshCw } from "lucide-react";
+import { Plus, Users, Search, RefreshCw, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,11 +9,19 @@ import StatCard from '@/components/StatCard';
 import AddClientDialog from './AddClientDialog';
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const GarageClientsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { clients, isLoading, refetchClients } = useGarageClients();
+  const { 
+    clients, 
+    isLoading, 
+    refetchClients,
+    error,
+    isOffline,
+    isReconnecting
+  } = useGarageClients();
 
   // Filter clients based on search term
   const filteredClients = clients.filter(client => {
@@ -64,16 +72,40 @@ const GarageClientsDashboard = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Clients</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => refetchClients()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Rafraîchir
+          <Button 
+            variant="outline" 
+            onClick={() => refetchClients()} 
+            disabled={isLoading || isReconnecting}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isReconnecting ? 'animate-spin' : ''}`} />
+            {isReconnecting ? 'Reconnexion...' : 'Rafraîchir'}
           </Button>
-          <Button onClick={() => setShowAddDialog(true)}>
+          <Button onClick={() => setShowAddDialog(true)} disabled={isOffline}>
             <Plus className="h-4 w-4 mr-2" />
             Nouveau client
           </Button>
         </div>
       </div>
+
+      {isOffline && (
+        <Alert variant="warning" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Mode hors ligne</AlertTitle>
+          <AlertDescription>
+            Vous êtes actuellement hors ligne. Certaines fonctionnalités sont limitées et les données affichées peuvent ne pas être à jour.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erreur de connexion</AlertTitle>
+          <AlertDescription>
+            Une erreur s'est produite lors du chargement des données. Veuillez réessayer.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
@@ -123,7 +155,7 @@ const GarageClientsDashboard = () => {
           <DataTable
             columns={columns}
             data={filteredClients}
-            isLoading={isLoading}
+            isLoading={isLoading || isReconnecting}
           />
         </CardContent>
       </Card>

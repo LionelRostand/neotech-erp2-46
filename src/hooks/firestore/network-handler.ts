@@ -2,7 +2,7 @@
 /**
  * Utility function to execute a Firestore operation with network retry logic
  */
-export const executeWithNetworkRetry = async <T>(operation: () => Promise<T>, maxRetries = 2): Promise<T> => {
+export const executeWithNetworkRetry = async <T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> => {
   let retries = 0;
   
   while (true) {
@@ -37,14 +37,39 @@ const isNetworkError = (error: any): boolean => {
       'unavailable', 
       'network-request-failed', 
       'deadline-exceeded',
-      'cancelled'
+      'cancelled',
+      'failed-precondition',
+      'resource-exhausted'
     ].some(code => error.code.includes(code));
   }
   
   // Check for common network error messages
   if (error.message && typeof error.message === 'string') {
-    return /network|timeout|connection|offline|unavailable/i.test(error.message);
+    return /network|timeout|connection|offline|unavailable|channel|stream|rpc/i.test(error.message);
   }
   
   return false;
+};
+
+// Helper to check if we're online
+export const isOnline = (): boolean => {
+  return typeof navigator !== 'undefined' && navigator.onLine === true;
+};
+
+// Network status event listeners
+export const initNetworkListeners = (
+  onOnline: () => void = () => console.log('Back online'),
+  onOffline: () => void = () => console.log('Went offline')
+) => {
+  if (typeof window === 'undefined') return { cleanup: () => {} };
+
+  window.addEventListener('online', onOnline);
+  window.addEventListener('offline', onOffline);
+  
+  return {
+    cleanup: () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    }
+  };
 };
