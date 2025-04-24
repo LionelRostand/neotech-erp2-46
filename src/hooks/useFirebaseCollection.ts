@@ -87,9 +87,10 @@ export const useFirebaseCollection = <T extends Record<string, any>>(
   collectionPath: string | null | undefined,
   queryConstraints: QueryConstraint[] = []
 ) => {
-  // Ensure collection path has a fallback value
-  const safeCollectionPath = collectionPath && collectionPath.trim() !== '' 
-    ? collectionPath 
+  // Ensure collection path has a valid fallback value
+  // Only pass non-empty paths to the collection function
+  const safeCollectionPath = collectionPath && typeof collectionPath === 'string' && collectionPath.trim() !== '' 
+    ? collectionPath.trim() 
     : null;
     
   // Use the base collection data hook with proper validation
