@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Search, RefreshCw, AlertTriangle } from "lucide-react";
@@ -23,7 +22,6 @@ const GarageClientsDashboard = () => {
     isReconnecting
   } = useGarageClients();
 
-  // Filter clients based on search term
   const filteredClients = clients.filter(client => {
     if (!searchTerm) return true;
     
@@ -42,29 +40,28 @@ const GarageClientsDashboard = () => {
 
   const columns = [
     {
+      header: "ID",
+      accessorKey: "id",
+    },
+    {
+      header: "Prénom",
+      accessorKey: "firstName",
+    },
+    {
       header: "Nom",
       accessorKey: "lastName",
-      cell: ({ row }) => (
-        <div>
-          {row.original.firstName} {row.original.lastName}
-        </div>
-      ),
     },
     {
       header: "Email",
       accessorKey: "email",
     },
     {
-      header: "Téléphone",
-      accessorKey: "phone",
-    },
-    {
-      header: "Véhicules",
-      accessorKey: "vehicles",
+      header: "Adresse",
+      accessorKey: "address",
       cell: ({ row }) => (
-        <div>{row.original.vehicles?.length || 0}</div>
+        <div>{row.original.address || "Non renseignée"}</div>
       ),
-    },
+    }
   ];
 
   return (
