@@ -82,5 +82,21 @@ export const COLLECTIONS = {
     SERVICES: 'salon_services',
     PRODUCTS: 'salon_products',
     STAFF: 'salon_staff'
+  },
+  HEALTH: {
+    PATIENTS: 'health_patients',
+    DOCTORS: 'health_doctors',
+    NURSES: 'health_nurses',
+    STAFF: 'health_staff',
+    APPOINTMENTS: 'health_appointments',
+    CONSULTATIONS: 'health_consultations',
+    MEDICAL_RECORDS: 'health_medical_records',
+    LABORATORY: 'health_laboratory',
+    PRESCRIPTIONS: 'health_prescriptions',
+    PHARMACY: 'health_pharmacy',
+    HOSPITALIZATIONS: 'health_hospitalizations',
+    ROOMS: 'health_rooms',
+    BILLING: 'health_billing',
+    INSURANCE: 'health_insurance'
   }
 } as const;

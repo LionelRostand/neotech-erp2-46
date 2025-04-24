@@ -72,28 +72,28 @@ export const useHealthData = () => {
 
   return {
     // People
-    patients,
-    doctors,
-    nurses,
-    staff,
+    patients: patients || [],
+    doctors: doctors || [],
+    nurses: nurses || [],
+    staff: staff || [],
 
     // Appointments and consultations
-    appointments,
-    consultations,
+    appointments: appointments || [],
+    consultations: consultations || [],
 
     // Medical data
-    prescriptions,
-    medicalRecords,
-    laboratoryTests,
+    prescriptions: prescriptions || [],
+    medicalRecords: medicalRecords || [],
+    laboratoryTests: laboratoryTests || [],
 
     // Hospital resources
-    pharmacy,
-    rooms,
-    hospitalizations,
+    pharmacy: pharmacy || [],
+    rooms: rooms || [],
+    hospitalizations: hospitalizations || [],
 
     // Financial
-    insurance,
-    billing,
+    insurance: insurance || [],
+    billing: billing || [],
 
     // Status
     isLoading,
