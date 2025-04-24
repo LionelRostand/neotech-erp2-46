@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, Users, CheckCircle } from "lucide-react";
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
@@ -32,6 +32,25 @@ const GarageAppointmentsDashboard = () => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      // First, check if the date string is valid
+      if (!dateString) return 'Date non disponible';
+      
+      const parsedDate = parseISO(dateString);
+      
+      // Verify the date is valid before formatting
+      if (!isValid(parsedDate)) {
+        return 'Date invalide';
+      }
+      
+      return format(parsedDate, 'dd MMMM yyyy', { locale: fr });
+    } catch (error) {
+      console.error('Date formatting error:', error, dateString);
+      return 'Erreur de date';
+    }
+  };
+
   const columns = [
     {
       accessorKey: "clientName",
@@ -40,7 +59,7 @@ const GarageAppointmentsDashboard = () => {
     {
       accessorKey: "date",
       header: "Date",
-      cell: ({ row }) => format(new Date(row.original.date), 'dd MMMM yyyy', { locale: fr })
+      cell: ({ row }) => formatDate(row.original.date)
     },
     {
       accessorKey: "time",
