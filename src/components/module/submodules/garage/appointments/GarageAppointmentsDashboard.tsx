@@ -1,26 +1,30 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Clock, CheckCircle } from "lucide-react";
-import StatCard from '@/components/StatCard';
+import { Plus, Calendar, Clock, CheckCircle, Eye, Pencil, Trash2 } from "lucide-react";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import ViewAppointmentDialog from './ViewAppointmentDialog';
+import EditAppointmentDialog from './EditAppointmentDialog';
+import DeleteAppointmentDialog from './DeleteAppointmentDialog';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const GarageAppointmentsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { appointments, vehicles, clients, isLoading } = useGarageData();
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (isLoading) {
+  const { appointments, vehicles, clients, isLoading: isLoadingData } = useGarageData();
+  const { update, remove } = useFirestore(COLLECTIONS.GARAGE.APPOINTMENTS);
+
+  if (isLoadingData) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
@@ -36,6 +40,51 @@ const GarageAppointmentsDashboard = () => {
   const completedAppointments = appointments.filter(a => 
     a.status === 'completed'
   );
+
+  const handleView = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowViewDialog(true);
+  };
+
+  const handleEdit = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowDeleteDialog(true);
+  };
+
+  const handleUpdate = async (id: string, updatedData: any) => {
+    setIsLoading(true);
+    try {
+      await update(id, updatedData);
+      toast.success("Rendez-vous mis à jour avec succès");
+      setShowEditDialog(false);
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      toast.error("Erreur lors de la mise à jour du rendez-vous");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedAppointment) return;
+    
+    setIsLoading(true);
+    try {
+      await remove(selectedAppointment.id);
+      toast.success("Rendez-vous supprimé avec succès");
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      toast.error("Erreur lors de la suppression du rendez-vous");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -73,7 +122,7 @@ const GarageAppointmentsDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Prochains rendez-vous</CardTitle>
+          <CardTitle>Liste des Rendez-vous</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -84,13 +133,15 @@ const GarageAppointmentsDashboard = () => {
                 <TableHead>Client</TableHead>
                 <TableHead>Service</TableHead>
                 <TableHead>Véhicule</TableHead>
-                <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {upcomingAppointments.slice(0, 5).map((appointment) => (
+              {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{appointment.date}</TableCell>
+                  <TableCell>
+                    {format(new Date(appointment.date), 'PPP', { locale: fr })}
+                  </TableCell>
                   <TableCell>{appointment.time}</TableCell>
                   <TableCell>{appointment.clientName}</TableCell>
                   <TableCell>{appointment.service}</TableCell>
@@ -98,19 +149,29 @@ const GarageAppointmentsDashboard = () => {
                     {vehicles.find(v => v.id === appointment.vehicleId)?.licensePlate || 'N/A'}
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      className={
-                        appointment.status === 'scheduled' 
-                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                          : appointment.status === 'completed'
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }
-                    >
-                      {appointment.status === 'scheduled' ? 'Planifié' 
-                       : appointment.status === 'completed' ? 'Terminé'
-                       : 'Annulé'}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleView(appointment)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEdit(appointment)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDelete(appointment)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -123,6 +184,32 @@ const GarageAppointmentsDashboard = () => {
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
       />
+
+      {selectedAppointment && (
+        <>
+          <ViewAppointmentDialog
+            open={showViewDialog}
+            onOpenChange={setShowViewDialog}
+            appointment={selectedAppointment}
+          />
+          
+          <EditAppointmentDialog
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            appointment={selectedAppointment}
+            onUpdate={handleUpdate}
+            isLoading={isLoading}
+          />
+          
+          <DeleteAppointmentDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            onConfirm={handleDeleteConfirm}
+            appointmentDate={format(new Date(selectedAppointment.date), 'PPP', { locale: fr })}
+            isLoading={isLoading}
+          />
+        </>
+      )}
     </div>
   );
 };
