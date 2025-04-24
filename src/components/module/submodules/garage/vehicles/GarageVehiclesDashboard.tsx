@@ -1,20 +1,64 @@
 
 import React, { useState } from 'react';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { toast } from 'sonner';
+import { Vehicle } from '../types/garage-types';
 import AddVehicleDialog from './AddVehicleDialog';
+import ViewVehicleDialog from './ViewVehicleDialog';
+import EditVehicleDialog from './EditVehicleDialog';
+import DeleteVehicleDialog from './DeleteVehicleDialog';
+import StatCard from '@/components/StatCard';
 
 const GarageVehiclesDashboard = () => {
-  const [showAddDialog, setShowAddDialog] = useState(false);
   const { vehicles, loading, refetchVehicles } = useGarageVehicles();
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleVehicleAdded = async () => {
     await refetchVehicles();
     setShowAddDialog(false);
+  };
+
+  const handleUpdate = async (id: string, data: Partial<Vehicle>) => {
+    setIsLoading(true);
+    try {
+      // Call your update function here
+      // await updateVehicle(id, data);
+      await refetchVehicles();
+      toast.success('Véhicule mis à jour avec succès');
+    } catch (error) {
+      console.error('Error updating vehicle:', error);
+      toast.error('Erreur lors de la mise à jour du véhicule');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedVehicle) return;
+    
+    setIsLoading(true);
+    try {
+      // Call your delete function here
+      // await deleteVehicle(selectedVehicle.id);
+      await refetchVehicles();
+      setDeleteDialogOpen(false);
+      toast.success('Véhicule supprimé avec succès');
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      toast.error('Erreur lors de la suppression du véhicule');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (loading) {
@@ -32,36 +76,21 @@ const GarageVehiclesDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Véhicules</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{vehicles.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>En Maintenance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {vehicles.filter(v => v.status === 'maintenance').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Disponibles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {vehicles.filter(v => v.status === 'available').length}
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Véhicules"
+          value={vehicles.length.toString()}
+          description="Tous les véhicules"
+        />
+        <StatCard
+          title="En Maintenance"
+          value={vehicles.filter(v => v.status === 'maintenance').length.toString()}
+          description="Véhicules en maintenance"
+        />
+        <StatCard
+          title="Disponibles"
+          value={vehicles.filter(v => v.status === 'available').length.toString()}
+          description="Véhicules disponibles"
+        />
       </div>
 
       <Card>
@@ -77,6 +106,7 @@ const GarageVehiclesDashboard = () => {
                 <TableHead>Kilométrage</TableHead>
                 <TableHead>Dernier contrôle</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -87,9 +117,7 @@ const GarageVehiclesDashboard = () => {
                   </TableCell>
                   <TableCell>{vehicle.licensePlate}</TableCell>
                   <TableCell>
-                    {vehicle.mileage != null && typeof vehicle.mileage === 'number' 
-                      ? vehicle.mileage.toLocaleString() + ' km'
-                      : 'Non renseigné'}
+                    {vehicle.mileage?.toLocaleString()} km
                   </TableCell>
                   <TableCell>
                     {vehicle.lastCheckDate ? new Date(vehicle.lastCheckDate).toLocaleDateString() : 'Non renseigné'}
@@ -101,12 +129,72 @@ const GarageVehiclesDashboard = () => {
                       {vehicle.status === 'available' ? 'Disponible' : 'En maintenance'}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedVehicle(vehicle);
+                          setViewDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedVehicle(vehicle);
+                          setEditDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedVehicle(vehicle);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {selectedVehicle && (
+        <>
+          <ViewVehicleDialog
+            open={viewDialogOpen}
+            onOpenChange={setViewDialogOpen}
+            vehicle={selectedVehicle}
+          />
+
+          <EditVehicleDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            vehicle={selectedVehicle}
+            onUpdate={handleUpdate}
+            isLoading={isLoading}
+          />
+
+          <DeleteVehicleDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onConfirm={handleDelete}
+            vehicleInfo={`${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.licensePlate})`}
+            isLoading={isLoading}
+          />
+        </>
+      )}
 
       <AddVehicleDialog 
         isOpen={showAddDialog} 
