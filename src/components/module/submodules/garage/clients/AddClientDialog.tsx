@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
+import { toast } from 'sonner';
 
 interface AddClientDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onClientAdded: () => void;
+  onClientAdded?: () => void;
 }
 
 const AddClientDialog: React.FC<AddClientDialogProps> = ({
@@ -27,6 +28,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
     address: '',
     notes: ''
   });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -34,10 +36,17 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    
     try {
+      setIsSubmitting(true);
       await addClient(formData);
-      onClientAdded();
-      onOpenChange(false);
+      toast.success('Client ajouté avec succès');
+      
+      // Reset form and close dialog
       setFormData({
         firstName: '',
         lastName: '',
@@ -46,13 +55,27 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
         address: '',
         notes: ''
       });
+      
+      // Call the callback if it exists
+      if (onClientAdded) {
+        onClientAdded();
+      }
+      
+      onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du client:', error);
+      toast.error('Erreur lors de l\'ajout du client');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!isSubmitting) {
+        onOpenChange(open);
+      }
+    }}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Nouveau Client</DialogTitle>
@@ -127,11 +150,18 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Annuler
           </Button>
-          <Button onClick={handleSubmit}>
-            Ajouter le client
+          <Button 
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Ajout en cours...' : 'Ajouter le client'}
           </Button>
         </DialogFooter>
       </DialogContent>

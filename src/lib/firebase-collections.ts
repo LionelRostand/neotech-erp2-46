@@ -76,6 +76,11 @@ export const COLLECTIONS = {
   },
   SALON: {
     INVOICES: 'salon_invoices',
-    PAYMENTS: 'salon_payments'
+    PAYMENTS: 'salon_payments',
+    CLIENTS: 'salon_clients',
+    APPOINTMENTS: 'salon_appointments',
+    SERVICES: 'salon_services',
+    PRODUCTS: 'salon_products',
+    STAFF: 'salon_staff'
   }
 } as const;

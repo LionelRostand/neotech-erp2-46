@@ -14,21 +14,22 @@ export const useGarageClients = () => {
     console.error('Collection path for garage clients is undefined or empty');
   }
   
-  const { add, getAll, update, loading, error } = useFirestore(collectionPath || 'garage_clients');
+  const { add, getAll, update, remove, loading, error } = useFirestore(collectionPath || 'garage_clients');
 
   const addClient = async (clientData: Omit<GarageClient, 'id'>) => {
     try {
+      console.log('Attempting to add client:', clientData);
       const result = await add({
         ...clientData,
         vehicles: [],
         status: 'active',
         createdAt: new Date().toISOString()
       });
-      toast.success('Client ajouté avec succès');
+      console.log('Client added successfully, result:', result);
+      await refetch(); // Refresh client list
       return result;
     } catch (err) {
       console.error('Erreur lors de l\'ajout du client:', err);
-      toast.error('Erreur lors de l\'ajout du client');
       throw err;
     }
   };
@@ -43,16 +44,26 @@ export const useGarageClients = () => {
       
       // Rafraîchir les données après la mise à jour
       await refetch();
-      toast.success('Client mis à jour avec succès');
       return true;
     } catch (err) {
       console.error('Erreur lors de la mise à jour du client:', err);
-      toast.error('Erreur lors de la mise à jour du client');
+      throw err;
+    }
+  };
+  
+  // Fonction pour supprimer un client
+  const deleteClient = async (clientId: string) => {
+    try {
+      await remove(clientId);
+      await refetch();
+      return true;
+    } catch (err) {
+      console.error('Erreur lors de la suppression du client:', err);
       throw err;
     }
   };
 
-  const { data: clients = [], refetch } = useQuery({
+  const { data: clients = [], isLoading, refetch } = useQuery({
     queryKey: ['garage', 'clients'],
     queryFn: async () => {
       try {
@@ -65,7 +76,6 @@ export const useGarageClients = () => {
         return result;
       } catch (err) {
         console.error('Erreur lors de la récupération des clients:', err);
-        toast.error('Erreur lors de la récupération des clients');
         return [];
       }
     }
@@ -75,8 +85,10 @@ export const useGarageClients = () => {
     clients,
     addClient,
     updateClient,
+    deleteClient,
     refetchClients: refetch,
     loading,
-    error
+    error,
+    isLoading
   };
 };
