@@ -13,11 +13,10 @@ export const useMechanicService = () => {
     phone: string;
   }) => {
     try {
-      // Ensure we have a valid collection path
-      const collectionPath = COLLECTIONS.GARAGE?.MECHANICS || 'garage_mechanics';
+      const collectionPath = COLLECTIONS.GARAGE.MECHANICS;
       
-      if (!collectionPath || collectionPath.trim() === '') {
-        throw new Error('Collection path for mechanics cannot be empty');
+      if (!collectionPath) {
+        throw new Error('Collection path for mechanics is not defined');
       }
       
       console.log('Adding mechanic to collection:', collectionPath);

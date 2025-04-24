@@ -6,15 +6,20 @@ import type { Mechanic } from '@/components/module/submodules/garage/types/garag
 import { toast } from 'sonner';
 
 export const useGarageEmployees = () => {
-  // Ensure collection path is always valid
-  const collectionPath = COLLECTIONS.GARAGE?.MECHANICS || 'garage_mechanics';
+  const collectionPath = COLLECTIONS.GARAGE?.MECHANICS;
   
   const { data: employees = [], isLoading, error } = useQuery({
     queryKey: ['garage', 'mechanics'],
     queryFn: async () => {
+      if (!collectionPath) {
+        throw new Error('Collection path for mechanics is not defined');
+      }
+      
       console.log('Fetching mechanics from collection:', collectionPath);
       try {
-        return await fetchCollectionData<Mechanic>(collectionPath);
+        const mechanics = await fetchCollectionData<Mechanic>(collectionPath);
+        console.log('Fetched mechanics:', mechanics);
+        return mechanics;
       } catch (err: any) {
         console.error('Error fetching mechanics:', err);
         toast.error(`Erreur: ${err.message}`);
@@ -22,12 +27,6 @@ export const useGarageEmployees = () => {
       }
     },
   });
-
-  // Add debug logging
-  console.log('useGarageEmployees hook - mechanics count:', employees.length);
-  if (error) {
-    console.error('useGarageEmployees hook - error:', error);
-  }
 
   return {
     employees,

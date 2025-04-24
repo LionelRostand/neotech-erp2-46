@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,17 +8,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
 import { useMechanicService } from '@/hooks/garage/useMechanicService';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const mechanicFormSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis"),
@@ -29,13 +23,11 @@ const mechanicFormSchema = z.object({
   phone: z.string().min(1, "Le numéro de téléphone est requis"),
 });
 
-type AddMechanicFormValues = z.infer<typeof mechanicFormSchema>;
-
 export function AddMechanicDialog() {
   const [open, setOpen] = React.useState(false);
   const { addMechanic } = useMechanicService();
-
-  const form = useForm<AddMechanicFormValues>({
+  
+  const form = useForm({
     resolver: zodResolver(mechanicFormSchema),
     defaultValues: {
       firstName: "",
@@ -45,7 +37,7 @@ export function AddMechanicDialog() {
     },
   });
 
-  const onSubmit = async (data: AddMechanicFormValues) => {
+  const onSubmit = async (data: z.infer<typeof mechanicFormSchema>) => {
     const success = await addMechanic(data);
     if (success) {
       setOpen(false);
@@ -56,71 +48,69 @@ export function AddMechanicDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          + Nouveau mécanicien
+        <Button className="bg-emerald-600 hover:bg-emerald-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau mécanicien
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Ajouter un mécanicien</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prénom</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Prénom" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">Prénom</Label>
+            <Input
+              id="firstName"
+              placeholder="Prénom"
+              {...form.register('firstName')}
             />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nom" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            {form.formState.errors.firstName && (
+              <p className="text-sm text-red-500">{form.formState.errors.firstName.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Nom</Label>
+            <Input
+              id="lastName"
+              placeholder="Nom"
+              {...form.register('lastName')}
             />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="email@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            {form.formState.errors.lastName && (
+              <p className="text-sm text-red-500">{form.formState.errors.lastName.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="email@example.com"
+              {...form.register('email')}
             />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Téléphone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Téléphone" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            {form.formState.errors.email && (
+              <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Téléphone</Label>
+            <Input
+              id="phone"
+              placeholder="Téléphone"
+              {...form.register('phone')}
             />
-            <Button type="submit" className="w-full">Ajouter</Button>
-          </form>
-        </Form>
+            {form.formState.errors.phone && (
+              <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
+            )}
+          </div>
+
+          <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
+            Ajouter
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );
