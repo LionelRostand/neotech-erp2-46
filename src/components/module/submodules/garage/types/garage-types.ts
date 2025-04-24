@@ -1,4 +1,3 @@
-
 export interface GarageClient {
   id: string;
   firstName: string;
@@ -32,6 +31,17 @@ export interface Vehicle {
   lastCheckDate?: string;
   services?: any[];
   repairs?: any[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface GarageService {
+  id: string;
+  name: string;
+  description: string;
+  duration: number;
+  price: number;
+  type: 'maintenance' | 'repair' | 'diagnostic';
   createdAt: string;
   updatedAt?: string;
 }

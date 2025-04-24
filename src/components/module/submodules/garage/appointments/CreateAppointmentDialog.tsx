@@ -1,200 +1,175 @@
 
-import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Appointment } from '../types/garage-types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { useGarageClients } from "@/hooks/garage/useGarageClients";
+import { useGarageVehicles } from "@/hooks/garage/useGarageVehicles";
+import { useGarageServices } from "@/hooks/garage/useGarageServices";
+import { useState } from "react";
 
 interface CreateAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clientId: string;
-  clientName: string;
-  onAppointmentCreated: () => void;
+  onSuccess: () => void;
 }
 
-const serviceTypes = [
-  { id: "maintenance", label: "Maintenance régulière" },
-  { id: "repair", label: "Réparation" },
-  { id: "diagnostic", label: "Diagnostic" },
-  { id: "tire", label: "Changement de pneus" },
-  { id: "oil", label: "Vidange d'huile" },
-  { id: "brake", label: "Système de freinage" },
-  { id: "other", label: "Autre" }
-];
+const CreateAppointmentDialog = ({ open, onOpenChange, onSuccess }: CreateAppointmentDialogProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { clients } = useGarageClients();
+  const { vehicles } = useGarageVehicles();
+  const { services } = useGarageServices();
+  const form = useForm();
 
-const timeSlots = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", 
-  "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"
-];
-
-const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
-  open,
-  onOpenChange,
-  clientId,
-  clientName,
-  onAppointmentCreated
-}) => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const [date, setDate] = useState<string>(format(tomorrow, 'yyyy-MM-dd'));
-  const [time, setTime] = useState<string>("09:00");
-  const [serviceType, setServiceType] = useState<string>("maintenance");
-  const [vehicleId, setVehicleId] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [duration, setDuration] = useState<string>("60");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Here you would normally save the appointment to your backend
-    console.log("Creating appointment:", {
-      clientId,
-      clientName,
-      date,
-      time,
-      serviceType,
-      vehicleId,
-      description,
-      duration: parseInt(duration),
-    });
-    
-    onAppointmentCreated();
+  const onSubmit = async (data: any) => {
+    setIsSubmitting(true);
+    try {
+      // Implement appointment creation logic here
+      console.log('Appointment data:', data);
+      onSuccess();
+      onOpenChange(false);
+      form.reset();
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Prendre un rendez-vous</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Client</Label>
-            <div className="p-2 bg-muted rounded-md">
-              {clientName} (ID: {clientId})
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  min={format(new Date(), 'yyyy-MM-dd')}
-                  required
-                />
-                <CalendarIcon className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="time">Heure</Label>
-              <Select value={time || timeSlots[0]} onValueChange={setTime}>
-                <SelectTrigger id="time">
-                  <SelectValue placeholder="Sélectionner une heure" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map(slot => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="serviceType">Type de service</Label>
-            <Select value={serviceType || serviceTypes[0].id} onValueChange={setServiceType}>
-              <SelectTrigger id="serviceType">
-                <SelectValue placeholder="Sélectionner un type de service" />
-              </SelectTrigger>
-              <SelectContent>
-                {serviceTypes.map(service => (
-                  <SelectItem key={service.id} value={service.id}>
-                    {service.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="vehicle">Véhicule</Label>
-            <Select value={vehicleId || "no-selection"} onValueChange={setVehicleId} required>
-              <SelectTrigger id="vehicle">
-                <SelectValue placeholder="Sélectionner un véhicule" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-selection" disabled>Sélectionner un véhicule</SelectItem>
-                <SelectItem value="VH001">Peugeot 208 (VH001)</SelectItem>
-                <SelectItem value="VH002">Renault Clio (VH002)</SelectItem>
-                <SelectItem value="VH003">Citroën C3 (VH003)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="duration">Durée (minutes)</Label>
-            <Select value={duration || "60"} onValueChange={setDuration}>
-              <SelectTrigger id="duration">
-                <SelectValue placeholder="Sélectionner une durée" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">1 heure</SelectItem>
-                <SelectItem value="90">1 heure 30</SelectItem>
-                <SelectItem value="120">2 heures</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description / Commentaires</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Décrivez le problème ou la raison du rendez-vous"
-              rows={3}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="clientId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client</FormLabel>
+                  <Select onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un client" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.firstName} {client.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit">
-              Confirmer le rendez-vous
-            </Button>
-          </DialogFooter>
-        </form>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Heure</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="serviceId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type de service</FormLabel>
+                  <Select onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un service" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {services.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="vehicleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Véhicule</FormLabel>
+                  <Select onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un véhicule" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {vehicles.map((vehicle) => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
+                          {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description / Commentaires</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Décrivez le problème ou la raison du rendez-vous" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Création...' : 'Créer'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
