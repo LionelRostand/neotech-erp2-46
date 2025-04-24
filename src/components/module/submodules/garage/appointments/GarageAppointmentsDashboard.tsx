@@ -51,8 +51,14 @@ const GarageAppointmentsDashboard = () => {
           cancelled: { label: "Annulé", variant: "destructive" },
           completed: { label: "Terminé", variant: "default" }
         };
-        const status = statusMap[row.original.status as keyof typeof statusMap];
-        return <StatusBadge variant={status.variant}>{status.label}</StatusBadge>;
+        
+        // Extract the status from the row
+        const statusKey = row.original.status as keyof typeof statusMap;
+        
+        // Provide a fallback for unknown status values
+        const status = statusMap[statusKey] || { label: statusKey || "Inconnu", variant: "default" };
+        
+        return <StatusBadge status={status.variant}>{status.label}</StatusBadge>;
       }
     }
   ];
