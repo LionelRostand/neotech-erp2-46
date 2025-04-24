@@ -33,17 +33,17 @@ const GarageServicesDashboard = () => {
     {
       accessorKey: "cost",
       header: "Coût",
-      cell: ({ row }) => `${row.original.cost} €`
+      cell: ({ row }: { row: { original: any } }) => `${row.original.cost} €`
     },
     {
       accessorKey: "duration",
       header: "Durée",
-      cell: ({ row }) => `${row.original.duration} min`
+      cell: ({ row }: { row: { original: any } }) => `${row.original.duration} min`
     }
   ];
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+    return <div className="flex items-center justify-center h-96">Chargement des services...</div>;
   }
 
   return (
@@ -63,7 +63,9 @@ const GarageServicesDashboard = () => {
         <CardContent>
           <DataTable 
             columns={columns} 
-            data={services} 
+            data={services || []} 
+            isLoading={isLoading}
+            emptyMessage="Aucun service disponible"
           />
         </CardContent>
       </Card>

@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { Suspense } from 'react';
 import { SubModule } from "@/data/types/modules";
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import GarageDashboard from '../garage/GarageDashboard';
@@ -12,6 +13,9 @@ import GarageInventoryDashboard from '../garage/inventory/GarageInventoryDashboa
 import GarageLoyaltyDashboard from '../garage/loyalty/GarageLoyaltyDashboard';
 import GarageSettings from '../garage/settings/GarageSettings';
 import { lazy } from 'react';
+
+// Import the GarageServicesDashboard component directly instead of using lazy loading
+import GarageServicesDashboard from '../garage/services/GarageServicesDashboard';
 
 export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering garage submodule:', submoduleId);
@@ -38,7 +42,6 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
     case 'garage-settings':
       return <GarageSettings />;
     case 'garage-services':
-      const GarageServicesDashboard = lazy(() => import('../garage/services/GarageServicesDashboard'));
       return <GarageServicesDashboard />;
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);

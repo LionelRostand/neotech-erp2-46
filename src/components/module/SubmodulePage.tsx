@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
 import { modules } from '@/data/modules';
 import { SubModule } from '@/data/types/modules';
@@ -39,7 +39,9 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
 
   return (
     <div className="submodule-content">
-      {renderSubmoduleContent({ submoduleId, submodule })}
+      <Suspense fallback={<div className="flex items-center justify-center h-96">Chargement du module...</div>}>
+        {renderSubmoduleContent({ submoduleId, submodule })}
+      </Suspense>
     </div>
   );
 };
