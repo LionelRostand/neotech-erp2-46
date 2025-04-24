@@ -14,7 +14,7 @@ interface DeleteAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => Promise<void>;
-  appointmentDate: string;
+  appointmentInfo: string;
   isLoading?: boolean;
 }
 
@@ -22,7 +22,7 @@ const DeleteAppointmentDialog = ({
   open,
   onOpenChange,
   onConfirm,
-  appointmentDate,
+  appointmentInfo,
   isLoading
 }: DeleteAppointmentDialogProps) => {
   return (
@@ -31,7 +31,7 @@ const DeleteAppointmentDialog = ({
         <DialogHeader>
           <DialogTitle>Supprimer le rendez-vous</DialogTitle>
           <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer le rendez-vous du {appointmentDate} ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer le rendez-vous {appointmentInfo} ? Cette action est irréversible.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

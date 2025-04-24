@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useForm } from 'react-hook-form';
+import { isValid, parseISO } from 'date-fns';
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -34,6 +35,19 @@ const EditAppointmentDialog = ({
 
   const onSubmit = async (data: any) => {
     await onUpdate(appointment.id, data);
+  };
+
+  // Helper function to verify if the passed date string is valid ISO format
+  const getValidISODateString = (dateString?: string) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = parseISO(dateString);
+      return isValid(date) ? dateString : '';
+    } catch (error) {
+      console.error('Invalid date format:', error);
+      return '';
+    }
   };
 
   return (
