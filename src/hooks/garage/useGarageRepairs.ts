@@ -4,7 +4,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import type { Repair } from '@/components/module/submodules/garage/types/garage-types';
 
 export const useGarageRepairs = () => {
-  // Ensure we have a valid collection path
+  // Ensure we have a valid collection path with fallback
   const collectionPath = COLLECTIONS.GARAGE?.REPAIRS || 'garage_repairs';
   
   const { data: repairs, isLoading, error, refetch } = useFirebaseCollection<Repair>(collectionPath);

@@ -2,23 +2,40 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Wrench } from "lucide-react";
+import { Wrench, AlertTriangle, RefreshCw } from "lucide-react";
 import { useGarageEmployees } from '@/hooks/garage/useGarageEmployees';
 import StatCard from '@/components/StatCard';
 import { AddMechanicDialog } from './AddMechanicDialog';
 import { Badge } from "@/components/ui/badge";
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const GarageMechanicsDashboard = () => {
   const { employees: mechanics, loading, error } = useGarageEmployees();
+  
+  const handleRefresh = () => {
+    window.location.reload();
+    toast.info("Actualisation de la page...");
+  };
   
   if (error) {
     return (
       <div className="container mx-auto p-6">
         <Card className="p-6 border-red-200">
           <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <AlertTriangle className="h-12 w-12 text-red-500" />
+            </div>
             <h3 className="text-lg font-semibold text-red-600">Erreur de chargement</h3>
             <p className="text-red-600 font-mono text-sm bg-red-50 p-2 mt-2 rounded">{String(error)}</p>
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline" 
+              className="mt-4"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Rafraîchir la page
+            </Button>
           </div>
         </Card>
       </div>
@@ -60,7 +77,11 @@ const GarageMechanicsDashboard = () => {
       <Card>
         <CardContent className="p-6">
           <h2 className="text-xl font-semibold mb-6">Liste des Mécaniciens</h2>
-          {mechanics.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>Chargement des mécaniciens...</p>
+            </div>
+          ) : mechanics.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>Aucun mécanicien trouvé.</p>
               <p className="mt-2 text-sm">Ajoutez des mécaniciens avec le bouton "Nouveau mécanicien".</p>

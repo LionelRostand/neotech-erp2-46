@@ -6,7 +6,8 @@ import type { Mechanic } from '@/components/module/submodules/garage/types/garag
 import { toast } from 'sonner';
 
 export const useGarageEmployees = () => {
-  const collectionPath = COLLECTIONS.GARAGE?.MECHANICS;
+  // Ensure we have a valid collection path with fallback
+  const collectionPath = COLLECTIONS.GARAGE?.MECHANICS || 'garage_mechanics';
   
   const { data: employees = [], isLoading, error } = useQuery({
     queryKey: ['garage', 'mechanics'],

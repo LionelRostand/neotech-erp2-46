@@ -15,11 +15,11 @@ export const useRepairService = () => {
     serviceType?: string;
   }) => {
     try {
-      // Ensure we have a valid collection path
-      const collectionPath = COLLECTIONS.GARAGE?.REPAIRS;
+      // Ensure we have a valid collection path with fallback
+      const collectionPath = COLLECTIONS.GARAGE?.REPAIRS || 'garage_repairs';
       
       if (!collectionPath || collectionPath.trim() === '') {
-        throw new Error('Collection path for repairs is not defined');
+        throw new Error('Collection path for repairs is not defined or empty');
       }
       
       console.log('Adding repair to collection:', collectionPath);
