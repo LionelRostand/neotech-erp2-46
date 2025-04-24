@@ -1,12 +1,18 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { toast } from 'sonner';
+import { Loader2 } from "lucide-react";
 
 interface AddClientDialogProps {
   isOpen: boolean;
@@ -35,18 +41,19 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
       await addClient(formData);
-      toast.success('Client ajouté avec succès');
       
-      // Reset form and close dialog
+      // Reset form
       setFormData({
         firstName: '',
         lastName: '',
@@ -56,7 +63,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
         notes: ''
       });
       
-      // Call the callback if it exists
+      // Call onClientAdded callback if provided
       if (onClientAdded) {
         onClientAdded();
       }
@@ -64,7 +71,6 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du client:', error);
-      toast.error('Erreur lors de l\'ajout du client');
     } finally {
       setIsSubmitting(false);
     }
@@ -81,7 +87,7 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
           <DialogTitle>Nouveau Client</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-4 py-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="firstName">Prénom *</Label>
             <Input
@@ -147,23 +153,31 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
               rows={3}
             />
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Ajout en cours...' : 'Ajouter le client'}
-          </Button>
-        </DialogFooter>
+          
+          <DialogFooter className="col-span-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Ajout en cours...
+                </>
+              ) : (
+                'Ajouter le client'
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
