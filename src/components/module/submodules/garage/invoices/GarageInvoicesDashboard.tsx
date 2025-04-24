@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
+import { useGarageData } from '@/hooks/garage/useGarageData';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Receipt } from "lucide-react";
 import StatCard from '@/components/StatCard';
-import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Invoice } from '../types/garage-types';
 import CreateInvoiceDialog from './CreateInvoiceDialog';
 import {
@@ -96,7 +97,9 @@ const GarageInvoicesDashboard = () => {
                 <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
                 <TableCell>{invoice.clientName}</TableCell>
                 <TableCell>{invoice.vehicleName}</TableCell>
-                <TableCell>{invoice.total.toFixed(2)} €</TableCell>
+                <TableCell>
+                  {invoice.total !== undefined ? invoice.total.toFixed(2) + ' €' : 'Non renseigné'}
+                </TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium
                     ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
