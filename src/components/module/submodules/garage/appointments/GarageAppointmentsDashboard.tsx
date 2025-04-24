@@ -27,7 +27,7 @@ const GarageAppointmentsDashboard = () => {
     },
     {
       header: "Service",
-      accessorKey: "serviceId",
+      accessorKey: "serviceId", 
       cell: ({ row }) => {
         const service = services.find(s => s.id === row.original.serviceId);
         return service ? service.name : row.original.serviceId;
@@ -56,7 +56,10 @@ const GarageAppointmentsDashboard = () => {
         const statusKey = row.original.status as keyof typeof statusMap;
         
         // Provide a fallback for unknown status values
-        const status = statusMap[statusKey] || { label: statusKey || "Inconnu", variant: "default" };
+        const status = statusMap[statusKey] || { 
+          label: statusKey || "Inconnu", 
+          variant: "default" 
+        };
         
         return <StatusBadge status={status.variant}>{status.label}</StatusBadge>;
       }
@@ -82,6 +85,7 @@ const GarageAppointmentsDashboard = () => {
         columns={columns}
         data={appointments}
         isLoading={isLoading}
+        emptyMessage="Aucun rendez-vous trouvé"
       />
 
       <CreateAppointmentDialog
@@ -94,3 +98,4 @@ const GarageAppointmentsDashboard = () => {
 };
 
 export default GarageAppointmentsDashboard;
+
