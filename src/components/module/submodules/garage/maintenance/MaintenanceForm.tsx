@@ -1,259 +1,314 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { fr } from 'date-fns/locale';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
-import { useGarageServicesList } from '@/hooks/garage/useGarageServicesList';
-import { toast } from 'sonner';
-import { useFirestore } from '@/hooks/useFirestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useGarageServicesList } from '../hooks/useGarageServicesList';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const maintenanceFormSchema = z.object({
+  clientId: z.string().min(1, "Client requis"),
+  vehicleId: z.string().min(1, "Véhicule requis"),
+  mechanicId: z.string().min(1, "Mécanicien requis"),
+  status: z.string().min(1, "Statut requis"),
+  startDate: z.date().optional(),
+  estimatedEndDate: z.date().optional(),
+  selectedServices: z.array(z.string()).min(1, "Au moins un service requis"),
+  estimatedCost: z.number(),
+  description: z.string().optional(),
+});
+
+type MaintenanceFormValues = z.infer<typeof maintenanceFormSchema>;
 
 interface MaintenanceFormProps {
   onCancel: () => void;
 }
 
 const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
-  const { clients, isLoading: isLoadingClients } = useGarageClients();
-  const { vehicles, loading: isLoadingVehicles } = useGarageVehicles();
-  const { mechanics, isLoading: isLoadingMechanics } = useGarageMechanics();
-  const { services, servicesOptions, isLoading: isLoadingServices } = useGarageServicesList();
-  
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(new Date());
-  const [clientId, setClientId] = useState<string>("");
-  const [vehicleId, setVehicleId] = useState<string>("");
-  const [mechanicId, setMechanicId] = useState<string>("");
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [description, setDescription] = useState<string>("");
-  const [estimatedCost, setEstimatedCost] = useState<number>(0);
-  const [notes, setNotes] = useState<string>("");
+  const { clients } = useGarageClients();
+  const { vehicles } = useGarageVehicles();
+  const { mechanics } = useGarageMechanics();
+  const { services, servicesOptions } = useGarageServicesList();
 
-  // Filtrer les véhicules par client
-  const filteredVehicles = vehicles.filter(vehicle => vehicle.clientId === clientId);
+  const form = useForm<MaintenanceFormValues>({
+    resolver: zodResolver(maintenanceFormSchema),
+    defaultValues: {
+      status: "en_attente",
+      selectedServices: [],
+      estimatedCost: 0,
+    },
+  });
 
-  const { add } = useFirestore(COLLECTIONS.GARAGE.MAINTENANCE);
+  // Calculer le coût total basé sur les services sélectionnés
+  const calculateTotalCost = (selectedServiceIds: string[]) => {
+    return services
+      .filter(service => selectedServiceIds.includes(service.id))
+      .reduce((total, service) => total + service.cost, 0);
+  };
 
-  // Calculer le coût total en fonction des services sélectionnés
-  useEffect(() => {
-    if (services.length > 0 && selectedServices.length > 0) {
-      const totalCost = selectedServices.reduce((sum, serviceId) => {
-        const service = services.find(s => s.id === serviceId);
-        return service ? sum + service.cost : sum;
-      }, 0);
-      setEstimatedCost(totalCost);
-    } else {
-      setEstimatedCost(0);
-    }
-  }, [selectedServices, services]);
+  // Mettre à jour le coût estimé quand les services sélectionnés changent
+  React.useEffect(() => {
+    const selectedServices = form.watch("selectedServices");
+    const totalCost = calculateTotalCost(selectedServices);
+    form.setValue("estimatedCost", totalCost);
+  }, [form.watch("selectedServices")]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!clientId || !vehicleId || !mechanicId || selectedServices.length === 0 || !selectedDate) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-
-    try {
-      const maintenanceData = {
-        clientId,
-        vehicleId,
-        mechanicId,
-        services: selectedServices,
-        date: selectedDate.toISOString(),
-        endDate: selectedEndDate ? selectedEndDate.toISOString() : undefined,
-        description,
-        cost: estimatedCost,
-        notes,
-        status: 'scheduled',
-        createdAt: new Date().toISOString()
-      };
-
-      await add(maintenanceData);
-      toast.success("Maintenance programmée avec succès");
-      onCancel(); // Fermer le dialogue
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de la maintenance:", error);
-      toast.error("Erreur lors de l'ajout de la maintenance");
-    }
+  const onSubmit = (data: MaintenanceFormValues) => {
+    console.log("Form submitted:", data);
+    // Implémenter la logique de soumission ici
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="client">Client</Label>
-          <Select value={clientId} onValueChange={setClientId}>
-            <SelectTrigger id="client">
-              <SelectValue placeholder="Sélectionner un client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.firstName} {client.lastName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="vehicle">Véhicule</Label>
-          <Select value={vehicleId} onValueChange={setVehicleId} disabled={!clientId}>
-            <SelectTrigger id="vehicle">
-              <SelectValue placeholder={clientId ? "Sélectionner un véhicule" : "Sélectionnez d'abord un client"} />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredVehicles.map((vehicle) => (
-                <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.brand} {vehicle.model} - {vehicle.registrationNumber}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Date de début</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !selectedDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="endDate">Date de fin estimée</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !selectedEndDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedEndDate ? format(selectedEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedEndDate}
-                onSelect={setSelectedEndDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="mechanic">Mécanicien</Label>
-        <Select value={mechanicId} onValueChange={setMechanicId}>
-          <SelectTrigger id="mechanic">
-            <SelectValue placeholder="Sélectionner un mécanicien" />
-          </SelectTrigger>
-          <SelectContent>
-            {mechanics.map((mechanic) => (
-              <SelectItem key={mechanic.id} value={mechanic.id}>
-                {mechanic.firstName} {mechanic.lastName} - {mechanic.specialization}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="services">Services</Label>
-        <div className="flex flex-wrap gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
-          {services.map((service) => (
-            <label key={service.id} className="flex items-center space-x-2 p-1 border rounded cursor-pointer hover:bg-gray-100 w-full">
-              <input 
-                type="checkbox"
-                checked={selectedServices.includes(service.id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedServices([...selectedServices, service.id]);
-                  } else {
-                    setSelectedServices(selectedServices.filter(id => id !== service.id));
-                  }
-                }}
-                className="h-4 w-4"
-              />
-              <span className="flex-1">{service.name}</span>
-              <span className="text-gray-600">{service.cost}€</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea 
-          id="description" 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
-          placeholder="Description des travaux à effectuer"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="clientId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Client</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un client" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes supplémentaires</Label>
-        <Textarea 
-          id="notes" 
-          value={notes} 
-          onChange={(e) => setNotes(e.target.value)} 
-          placeholder="Notes supplémentaires (facultatif)"
+        <FormField
+          control={form.control}
+          name="vehicleId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Véhicule</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un véhicule" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {vehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="border-t pt-4">
-        <div className="flex justify-between items-center mb-4">
-          <span className="font-semibold">Coût total estimé:</span>
-          <span className="text-xl font-bold">{estimatedCost}€</span>
+        <FormField
+          control={form.control}
+          name="mechanicId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mécanicien</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un mécanicien" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {mechanics.map((mechanic) => (
+                    <SelectItem key={mechanic.id} value={mechanic.id}>
+                      {mechanic.firstName} {mechanic.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statut</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="en_attente">En attente d'approbation</SelectItem>
+                  <SelectItem value="approuve">Approuvé</SelectItem>
+                  <SelectItem value="en_cours">En cours</SelectItem>
+                  <SelectItem value="termine">Terminé</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date de début</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "P")
+                        ) : (
+                          <span>Sélectionner une date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date()
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="estimatedEndDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date de fin estimée</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "P")
+                        ) : (
+                          <span>Sélectionner une date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date()
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </FormItem>
+            )}
+          />
         </div>
+
+        <FormField
+          control={form.control}
+          name="selectedServices"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Services</FormLabel>
+              <FormControl>
+                <MultiSelect
+                  options={servicesOptions}
+                  selected={field.value}
+                  onChange={field.onChange}
+                  placeholder="Sélectionner les services"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="estimatedCost"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Coût estimé (€)</FormLabel>
+              <FormControl>
+                <Input {...field} type="number" disabled />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Détails de la maintenance..."
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel}>
             Annuler
           </Button>
           <Button type="submit">
-            Créer la maintenance
+            Ajouter la maintenance
           </Button>
         </div>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 
