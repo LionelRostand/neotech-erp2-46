@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -10,34 +9,40 @@ import AddClientDialog from './components/AddClientDialog';
 import ViewClientDialog from '../dialogs/ViewClientDialog';
 import EditClientDialog from '../dialogs/EditClientDialog';
 import DeleteClientDialog from '../dialogs/DeleteClientDialog';
+import AddAppointmentDialog from '../appointments/AddAppointmentDialog';
 import { GarageClient } from '../types/garage-types';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const GarageClientsDashboard = () => {
   const { clients = [], isLoading, updateClient, deleteClient } = useGarageClients();
-  const [showAddDialog, setShowAddDialog] = React.useState(false);
-  const [selectedClient, setSelectedClient] = React.useState<GarageClient | null>(null);
-  const [showViewDialog, setShowViewDialog] = React.useState(false);
-  const [showEditDialog, setShowEditDialog] = React.useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-  
-  const today = new Date().toISOString().split('T')[0];
-  
-  const newClients = clients.filter(c => {
-    // Vérifie si createdAt est une chaîne valide avant de la convertir en Date
-    if (!c.createdAt || typeof c.createdAt !== 'string') return false;
-    
-    try {
-      const createdDate = new Date(c.createdAt).toISOString().split('T')[0];
-      return createdDate === today;
-    } catch (error) {
-      console.error('Date invalide détectée:', c.createdAt, error);
-      return false;
-    }
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<GarageClient | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['garage', 'vehicles'],
+    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.VEHICLES)
   });
 
-  const activeClients = clients.filter(c => c.status === 'active');
-  const inactiveClients = clients.filter(c => c.status === 'inactive');
-  const allClients = clients;
+  const { data: mechanics = [] } = useQuery({
+    queryKey: ['garage', 'mechanics'],
+    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.MECHANICS)
+  });
+
+  const { data: services = [] } = useQuery({
+    queryKey: ['garage', 'services'],
+    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.SERVICES)
+  });
+
+  const handleCreateAppointment = (client: GarageClient) => {
+    setSelectedClient(client);
+    setShowAppointmentDialog(true);
+  };
 
   const handleView = (client: GarageClient) => {
     setSelectedClient(client);
@@ -81,19 +86,34 @@ const GarageClientsDashboard = () => {
       </div>
 
       <ClientsStats 
-        todayCount={newClients.length}
-        activeCount={activeClients.length}
-        inactiveCount={inactiveClients.length}
-        totalCount={allClients.length}
+        todayCount={clients.filter(c => {
+          try {
+            return new Date(c.createdAt).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+          } catch {
+            return false;
+          }
+        }).length}
+        activeCount={clients.filter(c => c.status === 'active').length}
+        inactiveCount={clients.filter(c => c.status === 'inactive').length}
+        totalCount={clients.length}
       />
 
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Liste des clients</h2>
         <ClientsTable 
-          clients={clients} 
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          clients={clients}
+          onView={(client) => {
+            setSelectedClient(client);
+            setShowViewDialog(true);
+          }}
+          onEdit={(client) => {
+            setSelectedClient(client);
+            setShowEditDialog(true);
+          }}
+          onDelete={(client) => {
+            setSelectedClient(client);
+            setShowDeleteDialog(true);
+          }}
+          onCreateAppointment={handleCreateAppointment}
         />
       </Card>
 
@@ -122,6 +142,16 @@ const GarageClientsDashboard = () => {
         client={selectedClient}
         onConfirm={handleDeleteConfirm}
         isLoading={deleteClient.isPending}
+      />
+
+      <AddAppointmentDialog 
+        open={showAppointmentDialog}
+        onOpenChange={setShowAppointmentDialog}
+        clients={clients}
+        vehicles={vehicles}
+        mechanics={mechanics}
+        services={services}
+        clientId={selectedClient?.id}
       />
     </div>
   );

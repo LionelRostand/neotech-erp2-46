@@ -1,18 +1,16 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import * as z from 'zod';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -20,105 +18,83 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { useFirestore } from '@/hooks/useFirestore';
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { GarageClient, Vehicle } from '../types/garage-types';
+import { GarageClient, Vehicle, Mechanic, Service } from '../types/garage-types';
 
-// Define the form schema
 const appointmentSchema = z.object({
-  clientId: z.string().min(1, { message: "Le client est requis" }),
-  vehicleId: z.string().min(1, { message: "Le véhicule est requis" }),
-  date: z.string().min(1, { message: "La date est requise" }),
-  time: z.string().min(1, { message: "L'heure est requise" }),
-  type: z.string().min(1, { message: "Le type de rendez-vous est requis" }),
+  clientId: z.string().min(1, "Le client est requis"),
+  vehicleId: z.string().min(1, "Le véhicule est requis"),
+  date: z.string().min(1, "La date est requise"),
+  time: z.string().min(1, "L'heure est requise"),
+  mechanicId: z.string().optional(),
+  serviceId: z.string().optional(),
+  duration: z.number().min(1, "La durée est requise"),
   notes: z.string().optional(),
 });
-
-type AppointmentFormValues = z.infer<typeof appointmentSchema>;
 
 interface AddAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clients: GarageClient[];
-  vehicles: Vehicle[];
+  clients?: GarageClient[];
+  vehicles?: Vehicle[];
+  mechanics?: Mechanic[];
+  services?: Service[];
+  clientId?: string;
 }
 
-const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({ 
+const AddAppointmentDialog = ({ 
   open, 
-  onOpenChange,
-  clients = [],
-  vehicles = []
-}) => {
-  const { add } = useFirestore(COLLECTIONS.GARAGE.APPOINTMENTS);
-
-  const form = useForm<AppointmentFormValues>({
+  onOpenChange, 
+  clients = [], 
+  vehicles = [], 
+  mechanics = [], 
+  services = [],
+  clientId 
+}: AddAppointmentDialogProps) => {
+  const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      clientId: '',
-      vehicleId: '',
-      date: new Date().toISOString().split('T')[0],
-      time: '10:00',
-      type: 'maintenance',
-      notes: '',
+      clientId: clientId || '',
+      duration: 60,
     },
   });
 
-  const clientId = form.watch('clientId');
-  
-  // Filter vehicles by the selected client
-  const clientVehicles = clientId 
-    ? vehicles.filter(vehicle => vehicle.clientId === clientId)
-    : [];
-
-  const onSubmit = async (data: AppointmentFormValues) => {
+  const onSubmit = async (values: z.infer<typeof appointmentSchema>) => {
     try {
-      const selectedClient = clients.find(c => c.id === data.clientId);
-      const selectedVehicle = vehicles.find(v => v.id === data.vehicleId);
-      
-      if (!selectedClient || !selectedVehicle) {
-        toast.error("Client ou véhicule non trouvé");
-        return;
-      }
-
       const appointment = {
-        ...data,
-        clientName: `${selectedClient.firstName} ${selectedClient.lastName}`,
-        vehicleMake: selectedVehicle.make,
-        vehicleModel: selectedVehicle.model,
+        ...values,
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
 
-      await add(appointment);
+      await addDoc(collection(db, COLLECTIONS.GARAGE.APPOINTMENTS), appointment);
       toast.success("Rendez-vous créé avec succès");
-      
-      // Reset the form
       form.reset();
-      
-      // Close the dialog
-      if (typeof onOpenChange === 'function') {
-        onOpenChange(false);
-      }
+      onOpenChange(false);
     } catch (error) {
-      console.error("Error creating appointment:", error);
+      console.error("Erreur lors de la création du rendez-vous:", error);
       toast.error("Erreur lors de la création du rendez-vous");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Ajouter un rendez-vous</DialogTitle>
+          <DialogTitle>Nouveau Rendez-vous</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -154,16 +130,71 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Véhicule</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!clientId}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un véhicule" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clientVehicles.map((vehicle) => (
-                        <SelectItem key={vehicle.id} value={vehicle.id}>
-                          {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                      {vehicles
+                        .filter(v => !form.getValues('clientId') || v.clientId === form.getValues('clientId'))
+                        .map((vehicle) => (
+                          <SelectItem key={vehicle.id} value={vehicle.id}>
+                            {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} min={format(new Date(), 'yyyy-MM-dd')} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Heure</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mechanicId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mécanicien (optionnel)</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un mécanicien" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {mechanics.map((mechanic) => (
+                        <SelectItem key={mechanic.id} value={mechanic.id}>
+                          {mechanic.firstName} {mechanic.lastName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -173,55 +204,40 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Heure</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
-              name="type"
+              name="serviceId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Type de rendez-vous</FormLabel>
+                  <FormLabel>Service (optionnel)</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
+                        <SelectValue placeholder="Sélectionner un service" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="repair">Réparation</SelectItem>
-                      <SelectItem value="diagnosis">Diagnostic</SelectItem>
-                      <SelectItem value="inspection">Inspection</SelectItem>
+                      {services.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="duration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Durée (minutes)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -232,21 +248,23 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Notes (optionnel)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Notes ou instructions spécifiques..." {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <DialogFooter>
+            <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Annuler
               </Button>
-              <Button type="submit">Créer le rendez-vous</Button>
-            </DialogFooter>
+              <Button type="submit">
+                Créer le rendez-vous
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
