@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/data-table";
 import AddAppointmentDialog from './AddAppointmentDialog';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import StatusBadge from '@/components/StatusBadge';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 const GarageAppointmentsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -21,7 +21,18 @@ const GarageAppointmentsDashboard = () => {
     {
       header: "Date",
       accessorKey: "date",
-      cell: ({ row }) => format(new Date(row.original.date), 'dd/MM/yyyy'),
+      cell: ({ row }) => {
+        try {
+          const dateValue = row.original.date;
+          if (!dateValue) return "N/A";
+          
+          const date = new Date(dateValue);
+          return isValid(date) ? format(date, 'dd/MM/yyyy') : "Date invalide";
+        } catch (error) {
+          console.error("Error formatting date:", error, row.original);
+          return "Date invalide";
+        }
+      },
     },
     {
       header: "Heure",
