@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from 'react-hook-form';
+import { useGarageServicesOperations } from '@/hooks/garage/useGarageServicesOperations';
 
 interface CreateServiceDialogProps {
   open: boolean;
@@ -12,8 +13,25 @@ interface CreateServiceDialogProps {
   onSubmit: (data: any) => Promise<void>;
 }
 
-export const CreateServiceDialog = ({ open, onOpenChange, onSubmit }: CreateServiceDialogProps) => {
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm();
+export const CreateServiceDialog = ({ open, onOpenChange }: CreateServiceDialogProps) => {
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
+  const { createService } = useGarageServicesOperations();
+
+  const onSubmit = async (data: any) => {
+    try {
+      await createService({
+        name: data.name,
+        description: data.description,
+        cost: parseFloat(data.cost),
+        duration: parseInt(data.duration),
+        status: 'active',
+      });
+      onOpenChange(false);
+      reset();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

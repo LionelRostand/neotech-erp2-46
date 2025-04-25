@@ -13,7 +13,6 @@ import { updateDocument, deleteDocument } from '@/hooks/firestore/firestore-util
 import { toast } from 'sonner';
 
 const GarageServicesDashboard = () => {
-  const { services = [], isLoading } = useGarageData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
