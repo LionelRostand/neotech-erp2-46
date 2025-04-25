@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Repair } from '@/components/module/submodules/garage/types/garage-types';
+import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 
 interface AddRepairDialogProps {
   open: boolean;
@@ -15,7 +16,8 @@ interface AddRepairDialogProps {
 }
 
 const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogProps) => {
-  const { addRepair, clients, vehicles, mechanics } = useGarageData();
+  const { addRepair, clients = [], vehicles = [] } = useGarageData();
+  const { mechanics = [] } = useGarageMechanics();
   const { register, handleSubmit, setValue, reset, watch } = useForm<Repair>();
 
   const onSubmit = async (data: Partial<Repair>) => {
@@ -61,7 +63,7 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((client) => (
+                  {Array.isArray(clients) && clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
                     </SelectItem>
@@ -77,7 +79,7 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
                   <SelectValue placeholder="Sélectionner un véhicule" />
                 </SelectTrigger>
                 <SelectContent>
-                  {vehicles.map((vehicle) => (
+                  {Array.isArray(vehicles) && vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
                       {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
                     </SelectItem>
@@ -93,7 +95,7 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
                   <SelectValue placeholder="Sélectionner un mécanicien" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mechanics.map((mechanic) => (
+                  {Array.isArray(mechanics) && mechanics.map((mechanic) => (
                     <SelectItem key={mechanic.id} value={mechanic.id}>
                       {mechanic.firstName} {mechanic.lastName}
                     </SelectItem>

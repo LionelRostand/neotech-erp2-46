@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,11 @@ import { Card } from "@/components/ui/card";
 import RepairsTable from './components/RepairsTable';
 import AddRepairDialog from './AddRepairDialog';
 import { format } from 'date-fns';
+import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading, refetch } = useGarageData();
+  const { mechanics } = useGarageMechanics();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   if (isLoading) {
