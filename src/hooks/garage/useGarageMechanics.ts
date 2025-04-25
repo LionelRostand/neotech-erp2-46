@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
