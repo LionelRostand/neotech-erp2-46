@@ -21,22 +21,25 @@ import { clientsMap, vehiclesMap, mechanicsMap } from './repairsData';
 
 const GarageRepairsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { repairs, vehicles, clients, isLoading } = useGarageData();
+  const { repairs = [], vehicles = [], clients = [], isLoading } = useGarageData();
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const todayRepairs = repairs.filter(r => {
+  // Safeguard against undefined repairs
+  const safeRepairs = repairs || [];
+
+  const todayRepairs = safeRepairs.filter(r => {
     const today = new Date().toISOString().split('T')[0];
     return r.startDate === today;
   });
 
-  const inProgressRepairs = repairs.filter(r => 
+  const inProgressRepairs = safeRepairs.filter(r => 
     r.status === 'in_progress'
   );
 
-  const awaitingPartsRepairs = repairs.filter(r => 
+  const awaitingPartsRepairs = safeRepairs.filter(r => 
     r.status === 'awaiting_parts'
   );
 
@@ -96,7 +99,7 @@ const GarageRepairsDashboard = () => {
         />
         <StatCard
           title="Total réparations"
-          value={repairs.length.toString()}
+          value={safeRepairs.length.toString()}
           icon={<Wrench className="h-4 w-4 text-emerald-500" />}
           description="Toutes les réparations"
           className="bg-emerald-50 hover:bg-emerald-100"
@@ -121,13 +124,13 @@ const GarageRepairsDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {repairs.slice(0, 5).map((repair) => (
+              {safeRepairs.slice(0, 5).map((repair) => (
                 <TableRow key={repair.id}>
                   <TableCell>{repair.startDate}</TableCell>
-                  <TableCell>{repair.clientName}</TableCell>
-                  <TableCell>{repair.vehicleName}</TableCell>
+                  <TableCell>{repair.clientName || 'N/A'}</TableCell>
+                  <TableCell>{repair.vehicleName || 'N/A'}</TableCell>
                   <TableCell>{repair.description}</TableCell>
-                  <TableCell>{repair.mechanicName}</TableCell>
+                  <TableCell>{repair.mechanicName || 'N/A'}</TableCell>
                   <TableCell>
                     <Badge className={cn(getStatusColor(repair.status))}>
                       {repair.status === 'in_progress' ? 'En cours' 
@@ -141,7 +144,7 @@ const GarageRepairsDashboard = () => {
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div 
                         className="bg-blue-600 h-2.5 rounded-full" 
-                        style={{ width: `${repair.progress}%` }}
+                        style={{ width: `${repair.progress || 0}%` }}
                       ></div>
                     </div>
                   </TableCell>
