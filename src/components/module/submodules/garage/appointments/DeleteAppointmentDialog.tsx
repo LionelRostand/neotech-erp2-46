@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,34 +10,42 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useFirestore } from '@/hooks/useFirestore';
 
 interface DeleteAppointmentDialogProps {
-  appointment: any;
   isOpen: boolean;
   onClose: () => void;
+  appointment: any;
   getClientName: (clientId: string) => string;
   getVehicleInfo: (vehicleId: string) => string;
+  onSuccess: () => void;
 }
 
 const DeleteAppointmentDialog = ({ 
-  appointment, 
   isOpen, 
   onClose,
+  appointment,
   getClientName,
-  getVehicleInfo
+  getVehicleInfo,
+  onSuccess
 }: DeleteAppointmentDialogProps) => {
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { remove } = useFirestore('garage_appointments');
+
+  if (!appointment) return null;
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // Here you would delete the appointment from the database
+      // Suppression du rendez-vous
       console.log("Deleting appointment with ID:", appointment.id);
+      await remove(appointment.id);
       
-      // Show success message
+      // Afficher un message de succès
       toast.success("Rendez-vous supprimé avec succès");
       
-      // Close the dialog
+      // Appeler la fonction de succès et fermer la boîte de dialogue
+      onSuccess();
       onClose();
     } catch (error) {
       console.error("Error deleting appointment:", error);
@@ -46,8 +54,6 @@ const DeleteAppointmentDialog = ({
       setIsDeleting(false);
     }
   };
-
-  if (!appointment) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

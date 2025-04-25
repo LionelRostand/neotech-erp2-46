@@ -12,10 +12,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useFirestore } from '@/hooks/useFirestore';
 
-interface EditAppointmentDialogProps {
+interface NewAppointmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  appointment: any;
   clients: any[];
   vehicles: any[];
   mechanics: any[];
@@ -23,66 +22,61 @@ interface EditAppointmentDialogProps {
   onSuccess: () => void;
 }
 
-const EditAppointmentDialog = ({ 
-  isOpen, 
+const NewAppointmentDialog: React.FC<NewAppointmentDialogProps> = ({
+  isOpen,
   onClose,
-  appointment,
   clients,
   vehicles,
   mechanics,
   services,
   onSuccess
-}: EditAppointmentDialogProps) => {
+}) => {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
-      clientId: appointment?.clientId || '',
-      vehicleId: appointment?.vehicleId || '',
-      date: appointment?.date || '',
-      time: appointment?.time || '',
-      mechanicId: appointment?.mechanicId || '',
-      serviceId: appointment?.serviceId || '',
-      status: appointment?.status || 'scheduled',
-      notes: appointment?.notes || '',
+      clientId: '',
+      vehicleId: '',
+      date: '',
+      time: '',
+      mechanicId: '',
+      serviceId: '',
+      notes: '',
+      status: 'scheduled'
     }
   });
   
-  const { update } = useFirestore('garage_appointments');
+  const { add } = useFirestore('garage_appointments');
 
   const onSubmit = async (data: any) => {
-    if (!appointment) return;
-    
     try {
-      // Mise à jour du rendez-vous
-      await update(appointment.id, {
+      // Ajouter un nouvel enregistrement à la collection
+      await add({
         ...data,
-        updatedAt: new Date().toISOString()
+        createdAt: new Date().toISOString()
       });
       
       // Afficher un message de succès
-      toast.success("Rendez-vous mis à jour avec succès");
+      toast.success("Rendez-vous créé avec succès");
       
-      // Appeler la fonction de succès et fermer la boîte de dialogue
+      // Fermer la boîte de dialogue et rafraîchir les données
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Error updating appointment:", error);
-      toast.error("Erreur lors de la mise à jour du rendez-vous");
+      console.error("Error creating appointment:", error);
+      toast.error("Erreur lors de la création du rendez-vous");
     }
   };
-
-  if (!appointment) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Modifier le rendez-vous</DialogTitle>
+          <DialogTitle>Nouveau rendez-vous</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Ici, nous ajouterions les champs du formulaire */}
           <div className="text-center text-gray-500">
-            Formulaire d'édition de rendez-vous
+            Formulaire de création de rendez-vous
           </div>
           
           <DialogFooter>
@@ -90,7 +84,7 @@ const EditAppointmentDialog = ({
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
+              {isSubmitting ? 'Création...' : 'Créer'}
             </Button>
           </DialogFooter>
         </form>
@@ -99,4 +93,4 @@ const EditAppointmentDialog = ({
   );
 };
 
-export default EditAppointmentDialog;
+export default NewAppointmentDialog;

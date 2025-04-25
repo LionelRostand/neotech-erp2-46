@@ -1,47 +1,38 @@
 
-import React, { useEffect, useState } from 'react';
-import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
-import { modules } from '@/data/modules';
-import { SubModule } from '@/data/types/modules';
+import React from 'react';
+import { useParams } from 'react-router-dom';
+import DefaultSubmoduleContent from './submodules/DefaultSubmoduleContent';
+import SubmoduleRenderer from './submodules/SubmoduleRenderer';
+
+// Import des composants garage
+import GarageAppointments from './submodules/garage/appointments/GarageAppointments';
 
 interface SubmodulePageProps {
   moduleId: number;
-  submoduleId: string;
+  submoduleId?: string;
 }
 
-const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) => {
-  const [submodule, setSubmodule] = useState<SubModule | null>(null);
-  
-  useEffect(() => {
-    console.log(`SubmodulePage - Looking for submodule: ${submoduleId} in module: ${moduleId}`);
-    
-    // Find the module with the given ID
-    const module = modules.find(m => m.id === moduleId);
-    
-    if (module) {
-      // Find the submodule with the given ID within the module
-      const foundSubmodule = module.submodules.find(sm => sm.id === submoduleId);
-      
-      if (foundSubmodule) {
-        console.log(`SubmodulePage - Found submodule: ${foundSubmodule.name}`);
-        setSubmodule(foundSubmodule);
-      } else {
-        console.error(`SubmodulePage - Submodule not found: ${submoduleId}`);
+const SubmodulePage = ({ moduleId, submoduleId }: SubmodulePageProps) => {
+  const params = useParams();
+  const currentSubmoduleId = submoduleId || params.submoduleId;
+
+  // Mapper les ID de sous-modules aux composants spécifiques
+  const renderSubmodule = () => {
+    // Module garage (moduleId 6)
+    if (moduleId === 6) {
+      switch (currentSubmoduleId) {
+        case 'garage-appointments':
+          return <GarageAppointments />;
+        default:
+          return <SubmoduleRenderer moduleId={moduleId} submoduleId={currentSubmoduleId} />;
       }
-    } else {
-      console.error(`SubmodulePage - Module not found: ${moduleId}`);
     }
-  }, [moduleId, submoduleId]);
 
-  if (!submodule) {
-    return <div>Loading submodule...</div>;
-  }
+    // Modules généraux (fallback)
+    return <SubmoduleRenderer moduleId={moduleId} submoduleId={currentSubmoduleId} />;
+  };
 
-  return (
-    <div className="submodule-content">
-      {renderSubmoduleContent({ submoduleId, submodule })}
-    </div>
-  );
+  return renderSubmodule();
 };
 
 export default SubmodulePage;

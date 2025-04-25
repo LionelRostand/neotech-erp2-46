@@ -6,11 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface ViewAppointmentDialogProps {
-  appointment: any;
   isOpen: boolean;
   onClose: () => void;
+  appointment: any;
   getClientName: (clientId: string) => string;
   getVehicleInfo: (vehicleId: string) => string;
   getMechanicName: (mechanicId: string) => string;
@@ -18,15 +19,30 @@ interface ViewAppointmentDialogProps {
 }
 
 const ViewAppointmentDialog = ({ 
-  appointment, 
   isOpen, 
   onClose,
+  appointment,
   getClientName,
   getVehicleInfo,
   getMechanicName,
   getServiceName
 }: ViewAppointmentDialogProps) => {
   if (!appointment) return null;
+
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'scheduled':
+        return <Badge className="bg-blue-500 hover:bg-blue-600">Prévu</Badge>;
+      case 'in-progress':
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600">En cours</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-500 hover:bg-green-600">Terminé</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500 hover:bg-red-600">Annulé</Badge>;
+      default:
+        return <Badge variant="outline">Prévu</Badge>;
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -69,10 +85,7 @@ const ViewAppointmentDialog = ({
           <div className="grid grid-cols-3 items-center gap-4">
             <span className="font-medium">Statut:</span>
             <span className="col-span-2">
-              {appointment.status === 'scheduled' ? 'Prévu' :
-               appointment.status === 'in-progress' ? 'En cours' :
-               appointment.status === 'completed' ? 'Terminé' :
-               appointment.status === 'cancelled' ? 'Annulé' : appointment.status}
+              {getStatusBadge(appointment.status)}
             </span>
           </div>
 
