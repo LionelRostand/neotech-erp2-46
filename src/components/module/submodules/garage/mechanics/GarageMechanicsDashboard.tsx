@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Plus, Eye, Pencil, Trash2 } from 'lucide-react';
@@ -11,6 +10,7 @@ import type { Mechanic } from '@/components/module/submodules/garage/types/garag
 import ViewMechanicDialog from './components/ViewMechanicDialog';
 import EditMechanicDialog from './components/EditMechanicDialog';
 import DeleteMechanicDialog from './components/DeleteMechanicDialog';
+import { AddMechanicDialog } from './components/AddMechanicDialog';
 
 const GarageMechanicsDashboard = () => {
   const { mechanics = [], isLoading, updateMechanic, deleteMechanic } = useGarageMechanics();
@@ -106,6 +106,11 @@ const GarageMechanicsDashboard = () => {
           isLoading={isLoading}
         />
       </Card>
+
+      <AddMechanicDialog 
+        open={openAddDialog}
+        onOpenChange={setOpenAddDialog}
+      />
 
       <ViewMechanicDialog
         mechanic={selectedMechanic}
