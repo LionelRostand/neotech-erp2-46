@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
 import { Plus, Wrench, Clock, PackageSearch, Settings, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Card } from "@/components/ui/card";
-import { AddRepairDialog } from './AddRepairDialog';
+import AddRepairDialog from './AddRepairDialog';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading } = useGarageData();
