@@ -8,31 +8,35 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { GarageClient } from '../types/garage-types';
 
 interface DeleteClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  client: GarageClient | null;
   onConfirm: () => void;
-  clientName: string;
   isLoading?: boolean;
 }
 
 const DeleteClientDialog = ({
   open,
   onOpenChange,
+  client,
   onConfirm,
-  clientName,
   isLoading
 }: DeleteClientDialogProps) => {
+  if (!client) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Supprimer le client</DialogTitle>
           <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer le client {clientName} ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer le client {client.firstName} {client.lastName} ? Cette action est irréversible.
           </DialogDescription>
         </DialogHeader>
+        
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler

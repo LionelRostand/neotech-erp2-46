@@ -10,12 +10,16 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { GarageClient } from '../../types/garage-types';
 
 interface ClientsTableProps {
-  clients: any[];
+  clients: GarageClient[];
+  onView: (client: GarageClient) => void;
+  onEdit: (client: GarageClient) => void;
+  onDelete: (client: GarageClient) => void;
 }
 
-const ClientsTable = ({ clients }: ClientsTableProps) => {
+const ClientsTable = ({ clients, onView, onEdit, onDelete }: ClientsTableProps) => {
   return (
     <Table>
       <TableHeader>
@@ -47,13 +51,13 @@ const ClientsTable = ({ clients }: ClientsTableProps) => {
               <TableCell>{client.lastVisit || '-'}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" onClick={() => onView(client)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(client)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" onClick={() => onDelete(client)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
