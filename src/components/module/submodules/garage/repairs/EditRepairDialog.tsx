@@ -35,17 +35,6 @@ const EditRepairDialog = ({ repair, open, onOpenChange, onUpdate }: EditRepairDi
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleServiceChange = (serviceId: string) => {
-    const selectedService = services.find(s => s.id === serviceId);
-    if (selectedService) {
-      setFormData(prev => ({
-        ...prev,
-        service: selectedService.name,
-        estimatedCost: selectedService.cost
-      }));
-    }
-  };
-
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -83,16 +72,25 @@ const EditRepairDialog = ({ repair, open, onOpenChange, onUpdate }: EditRepairDi
 
           <div>
             <label className="text-sm font-medium">Service</label>
-            <Select
-              value={formData.service}
-              onValueChange={handleServiceChange}
+            <Select 
+              value={formData.service} 
+              onValueChange={(value) => {
+                const selectedService = services.find(s => s.name === value);
+                if (selectedService) {
+                  setFormData(prev => ({
+                    ...prev,
+                    service: value,
+                    estimatedCost: selectedService.cost || prev.estimatedCost
+                  }));
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un service" />
               </SelectTrigger>
               <SelectContent>
                 {services.map((service) => (
-                  <SelectItem key={service.id} value={service.id}>
+                  <SelectItem key={service.id} value={service.name}>
                     {service.name}
                   </SelectItem>
                 ))}
