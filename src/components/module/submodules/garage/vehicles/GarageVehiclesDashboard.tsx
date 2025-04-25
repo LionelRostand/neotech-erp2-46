@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -8,6 +9,7 @@ import VehiclesStats from './components/VehiclesStats';
 import ViewVehicleDialog from './components/ViewVehicleDialog';
 import EditVehicleDialog from './components/EditVehicleDialog';
 import DeleteVehicleDialog from './components/DeleteVehicleDialog';
+import { Vehicle } from '../types/garage-types';
 
 const GarageVehiclesDashboard = () => {
   const [showAddDialog, setShowAddDialog] = React.useState(false);
@@ -15,7 +17,7 @@ const GarageVehiclesDashboard = () => {
   const [showViewDialog, setShowViewDialog] = React.useState(false);
   const [showEditDialog, setShowEditDialog] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-  const { vehicles = [], loading } = useGarageVehicles();
+  const { vehicles = [], loading, refetchVehicles } = useGarageVehicles();
   
   const today = new Date().toISOString().split('T')[0];
   
@@ -142,14 +144,14 @@ const GarageVehiclesDashboard = () => {
         vehicle={selectedVehicle}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        onSuccess={refetchVehicles}
+        onSuccess={() => refetchVehicles()}
       />
 
       <DeleteVehicleDialog
         vehicle={selectedVehicle}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        onSuccess={refetchVehicles}
+        onSuccess={() => refetchVehicles()}
       />
     </div>
   );
