@@ -120,18 +120,21 @@ export const COLLECTIONS = {
     CLIENTS: 'transport-clients'
   },
   FREIGHT: {
-    SHIPMENTS: 'freight-shipments',
-    VEHICLES: 'freight-vehicles',
-    DRIVERS: 'freight-drivers',
-    CLIENTS: 'freight-clients',
-    ROUTES: 'freight-routes',
-    INVOICES: 'freight-invoices',
-    EXPENSES: 'freight-expenses',
-    REPORTS: 'freight-reports',
-    SETTINGS: 'freight-settings',
-    DOCUMENTS: 'freight-documents',
-    PACKAGES: 'freight-packages',
-    TRACKING_EVENTS: 'freight-tracking-events'
+    BILLING: 'freight_billing',
+    CARRIERS: 'freight_carriers',
+    CLIENTS: 'freight_clients',
+    CONTAINERS: 'freight_containers',
+    DOCUMENTS: 'freight_documents',
+    PACKAGE_TYPES: 'freight_package_types',
+    PACKAGES: 'freight_packages',
+    PRICING: 'freight_pricing',
+    QUOTES: 'freight_quotes',
+    ROUTES: 'freight_routes',
+    SETTINGS: 'freight_settings',
+    SHIPMENTS: 'freight_shipments',
+    TRACKING: 'freight_tracking',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    USERS: 'freight_users'
   },
   ACCOUNTING: {
     INVOICES: 'accounting-invoices',
