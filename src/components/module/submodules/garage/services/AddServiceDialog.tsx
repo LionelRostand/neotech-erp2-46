@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
@@ -19,18 +20,39 @@ interface ServiceFormData {
   description: string;
   cost: number;
   duration: number;
+  canBeUsedIn: {
+    vehicles: boolean;
+    appointments: boolean;
+    repairs: boolean;
+    invoices: boolean;
+    mechanics: boolean;
+    suppliers: boolean;
+    inventory: boolean;
+  };
 }
 
 export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) {
-  const { add } = useFirestore('services');
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ServiceFormData>();
+  const { add } = useFirestore('garage_services');
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ServiceFormData>({
+    defaultValues: {
+      canBeUsedIn: {
+        vehicles: false,
+        appointments: false,
+        repairs: false,
+        invoices: false,
+        mechanics: false,
+        suppliers: false,
+        inventory: false
+      }
+    }
+  });
 
   const onSubmit = async (data: ServiceFormData) => {
     try {
       await add({
         ...data,
-        date: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        createdAt: new Date().toISOString()
       });
       toast.success('Service ajouté avec succès');
       reset();
@@ -42,7 +64,7 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Ajouter un service</DialogTitle>
         </DialogHeader>
@@ -89,6 +111,40 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
               {errors.duration && (
                 <p className="text-sm text-destructive">{errors.duration.message}</p>
               )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label>Ce service peut être utilisé dans :</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox id="vehicles" {...register("canBeUsedIn.vehicles")} />
+                <Label htmlFor="vehicles">Véhicules</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="appointments" {...register("canBeUsedIn.appointments")} />
+                <Label htmlFor="appointments">Rendez-vous</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="repairs" {...register("canBeUsedIn.repairs")} />
+                <Label htmlFor="repairs">Réparations</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="invoices" {...register("canBeUsedIn.invoices")} />
+                <Label htmlFor="invoices">Factures</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="mechanics" {...register("canBeUsedIn.mechanics")} />
+                <Label htmlFor="mechanics">Mécaniciens</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="suppliers" {...register("canBeUsedIn.suppliers")} />
+                <Label htmlFor="suppliers">Fournisseurs</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="inventory" {...register("canBeUsedIn.inventory")} />
+                <Label htmlFor="inventory">Inventaire</Label>
+              </div>
             </div>
           </div>
 
