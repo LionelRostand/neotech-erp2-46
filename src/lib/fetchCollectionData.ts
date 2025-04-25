@@ -95,7 +95,51 @@ function getDefaultData<T>(collectionPath: string): T[] {
     ] as unknown as T[];
   }
   
-  // Default data for other collections
+  // Default inventory items
+  if (collectionPath === 'garage-inventory') {
+    return [
+      {
+        id: 'item1',
+        name: 'Huile moteur 5W30',
+        category: 'Lubrifiants',
+        reference: 'HM-5W30',
+        quantity: 8,
+        minQuantity: 5,
+        price: 45.99,
+        status: 'in_stock'
+      },
+      {
+        id: 'item2',
+        name: 'Filtre à huile universel',
+        category: 'Filtres',
+        reference: 'FH-UNIV',
+        quantity: 3,
+        minQuantity: 5,
+        price: 12.99,
+        status: 'low_stock'
+      }
+    ] as unknown as T[];
+  }
+  
+  // Default invoices
+  if (collectionPath === 'garage-invoices') {
+    return [
+      {
+        id: 'invoice1',
+        clientId: 'client1',
+        vehicleId: 'vehicle1',
+        date: '2025-04-20',
+        dueDate: '2025-05-20',
+        amount: 299.99,
+        tax: 59.99,
+        total: 359.98,
+        status: 'unpaid',
+        clientName: 'Jean Dupont',
+        number: 'INV-2025-001'
+      }
+    ] as unknown as T[];
+  }
+  
   // Return empty array for unknown collections
   return [] as T[];
 }

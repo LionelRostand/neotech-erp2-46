@@ -10,14 +10,14 @@ import StatCard from '@/components/StatCard';
 
 const GarageDashboard = () => {
   const { 
-    vehicles, 
-    appointments, 
-    repairs, 
-    invoices, 
-    suppliers, 
-    clients, 
-    inventory, 
-    loyalty, 
+    vehicles = [], 
+    appointments = [], 
+    repairs = [], 
+    invoices = [], 
+    suppliers = [], 
+    clients = [], 
+    inventory = [], 
+    loyalty = [], 
     isLoading 
   } = useGarageData();
   
@@ -25,17 +25,17 @@ const GarageDashboard = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const activeVehicles = vehicles.filter(v => v.status === 'active');
-  const todayAppointments = appointments.filter(a => {
+  const activeVehicles = vehicles?.filter(v => v?.status === 'active') || [];
+  const todayAppointments = appointments?.filter(a => {
     const today = new Date().toISOString().split('T')[0];
-    return a.date === today;
-  });
-  const ongoingRepairs = repairs.filter(r => r.status === 'in_progress');
-  const unpaidInvoices = invoices.filter(i => i.status === 'unpaid' || i.status === 'overdue');
-  const activeClients = clients.filter(c => c.status === 'active');
-  const lowStockItems = inventory.filter(item => item.quantity <= item.minQuantity);
-  const activeSuppliers = suppliers.filter(s => s.status === 'active');
-  const activePrograms = loyalty.filter(p => p.status === 'active');
+    return a?.date === today;
+  }) || [];
+  const ongoingRepairs = repairs?.filter(r => r?.status === 'in_progress') || [];
+  const unpaidInvoices = invoices?.filter(i => i?.status === 'unpaid' || i?.status === 'overdue') || [];
+  const activeClients = clients?.filter(c => c?.status === 'active') || [];
+  const lowStockItems = inventory?.filter(item => (item?.quantity <= item?.minQuantity)) || [];
+  const activeSuppliers = suppliers?.filter(s => s?.status === 'active') || [];
+  const activePrograms = loyalty?.filter(p => p?.status === 'active') || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
