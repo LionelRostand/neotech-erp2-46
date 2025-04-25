@@ -5,19 +5,12 @@ import { Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import RepairsStats from '../repairs/components/RepairsStats';
-import RepairsTable from '../repairs/components/RepairsTable';
+import ServicesTable from './components/ServicesTable';
 import { AddServiceDialog } from './AddServiceDialog';
 
 const GarageServicesDashboard = () => {
-  const { repairs = [], isLoading } = useGarageData();
+  const { services = [], isLoading } = useGarageData();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
-  const today = new Date().toISOString().split('T')[0];
-  
-  const todayRepairs = repairs.filter(r => r?.date === today);
-  const activeRepairs = repairs.filter(r => r?.status === 'in_progress');
-  const pendingParts = repairs.filter(r => r?.status === 'waiting_parts');
-  const allRepairs = repairs;
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -34,15 +27,15 @@ const GarageServicesDashboard = () => {
       </div>
 
       <RepairsStats 
-        todayCount={todayRepairs.length}
-        activeCount={activeRepairs.length}
-        pendingPartsCount={pendingParts.length}
-        totalCount={allRepairs.length}
+        todayCount={0}
+        activeCount={services.length}
+        pendingPartsCount={0}
+        totalCount={services.length}
       />
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Derniers services</h2>
-        <RepairsTable repairs={repairs} />
+        <ServicesTable services={services} />
       </Card>
 
       <AddServiceDialog 

@@ -23,7 +23,6 @@ interface ServiceFormData {
 
 export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) {
   const { add } = useFirestore('services');
-  
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ServiceFormData>();
 
   const onSubmit = async (data: ServiceFormData) => {
