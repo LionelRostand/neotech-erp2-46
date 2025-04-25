@@ -6,7 +6,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { DataTable } from "@/components/ui/data-table";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Tool, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, XCircle } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 
@@ -58,7 +58,7 @@ const GarageServicesDashboard = () => {
         <StatCard
           title="Services actifs"
           value={activeServices.length.toString()}
-          icon={<Tool className="h-4 w-4" />}
+          icon={<Wrench className="h-4 w-4" />}
           description="Services en cours"
           className="bg-blue-50 hover:bg-blue-100"
         />
