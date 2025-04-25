@@ -7,7 +7,6 @@ import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
 import AppointmentsStats from './components/AppointmentsStats';
-import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const GarageAppointmentsDashboard = () => {
@@ -19,6 +18,26 @@ const GarageAppointmentsDashboard = () => {
   const todayAppointments = appointments.filter(a => a.date === today);
   const activeAppointments = appointments.filter(a => a.status === 'confirmed');
   const pendingAppointments = appointments.filter(a => a.status === 'pending');
+
+  // Helper function to safely format dates
+  const safeFormatDate = (dateStr: string) => {
+    try {
+      // First check if the date string is valid
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return "Date invalide";
+      }
+      // Format the date as dd/MM/yyyy
+      return new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).format(date);
+    } catch (error) {
+      console.error("Erreur lors du formatage de la date:", dateStr, error);
+      return "Date invalide";
+    }
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -61,7 +80,7 @@ const GarageAppointmentsDashboard = () => {
             <TableBody>
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{format(new Date(appointment.date), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell>{safeFormatDate(appointment.date)}</TableCell>
                   <TableCell>{appointment.time}</TableCell>
                   <TableCell>{appointment.clientName}</TableCell>
                   <TableCell>{appointment.vehicleMake} {appointment.vehicleModel}</TableCell>
