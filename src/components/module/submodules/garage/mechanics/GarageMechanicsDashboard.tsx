@@ -133,7 +133,7 @@ const GarageMechanicsDashboard = () => {
           setIsDeleteOpen(false);
           setSelectedMechanic(null);
         }}
-        onUpdate={deleteMechanic}
+        onDelete={deleteMechanic}
       />
     </div>
   );

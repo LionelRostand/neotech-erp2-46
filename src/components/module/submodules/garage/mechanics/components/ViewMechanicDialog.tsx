@@ -17,17 +17,6 @@ interface ViewMechanicDialogProps {
 const ViewMechanicDialog = ({ mechanic, isOpen, onClose }: ViewMechanicDialogProps) => {
   if (!mechanic) return null;
 
-  // Fonction utilitaire pour s'assurer que specialization est traité comme un tableau
-  const formatSpecialization = (specialization: unknown): string => {
-    if (Array.isArray(specialization)) {
-      return specialization.join(', ');
-    } else if (typeof specialization === 'string') {
-      return specialization;
-    } else {
-      return 'Non spécifié';
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -53,7 +42,7 @@ const ViewMechanicDialog = ({ mechanic, isOpen, onClose }: ViewMechanicDialogPro
           
           <div className="grid grid-cols-3 items-center gap-4">
             <span className="font-medium">Spécialisation:</span>
-            <span className="col-span-2">{formatSpecialization(mechanic.specialization)}</span>
+            <span className="col-span-2">{Array.isArray(mechanic.specialization) ? mechanic.specialization.join(', ') : mechanic.specialization}</span>
           </div>
           
           <div className="grid grid-cols-3 items-center gap-4">
