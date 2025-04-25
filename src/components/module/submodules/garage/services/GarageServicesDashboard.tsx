@@ -1,54 +1,45 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from '@tanstack/react-query';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+
+import React from 'react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Wrench, Clock, CheckCircle, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import StatCard from '@/components/StatCard';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { Plus } from "lucide-react";
+import { useGarageServices } from '../hooks/useGarageServices';
 import { AddServiceDialog } from './AddServiceDialog';
 
 const GarageServicesDashboard = () => {
-  const [openAddDialog, setOpenAddDialog] = useState(false);
-  
-  const { data: services = [], isLoading } = useQuery({
-    queryKey: ['garage', 'services'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.SERVICES)
-  });
-
-  const activeServices = services.filter(s => s.status === 'active');
-  const pendingServices = services.filter(s => s.status === 'pending');
-  const completedServices = services.filter(s => s.status === 'completed');
+  const [openAddDialog, setOpenAddDialog] = React.useState(false);
+  const { services, servicesStats } = useGarageServices();
 
   const columns = [
     {
-      accessorKey: 'name',
-      header: 'Service',
+      accessorKey: "date",
+      header: "Date",
     },
     {
-      accessorKey: 'description',
-      header: 'Description',
+      accessorKey: "name",
+      header: "Service",
     },
     {
-      accessorKey: 'duration',
-      header: 'Durée',
+      accessorKey: "category",
+      header: "Catégorie",
     },
     {
-      accessorKey: 'price',
-      header: 'Prix',
-      cell: ({ row }) => `${row.original.price} €`,
+      accessorKey: "duration",
+      header: "Durée",
     },
     {
-      accessorKey: 'status',
-      header: 'Statut',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        return status === 'active' ? 'Actif' :
-               status === 'pending' ? 'En attente' :
-               status === 'completed' ? 'Terminé' : status;
-      },
+      accessorKey: "mechanicName",
+      header: "Mécanicien",
     },
+    {
+      accessorKey: "status",
+      header: "Statut",
+    },
+    {
+      accessorKey: "progress",
+      header: "Progression",
+    }
   ];
 
   return (
@@ -57,45 +48,44 @@ const GarageServicesDashboard = () => {
         <h2 className="text-3xl font-bold tracking-tight">Services</h2>
         <Button onClick={() => setOpenAddDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Ajouter un service
+          Nouveau service
         </Button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Services actifs"
-          value={activeServices.length.toString()}
-          icon={<Wrench className="h-4 w-4" />}
-          description="Services en cours"
-          className="bg-blue-50 hover:bg-blue-100"
-        />
-        <StatCard
-          title="En attente"
-          value={pendingServices.length.toString()}
-          icon={<Clock className="h-4 w-4" />}
-          description="Services à traiter"
-          className="bg-yellow-50 hover:bg-yellow-100"
-        />
-        <StatCard
-          title="Terminés"
-          value={completedServices.length.toString()}
-          icon={<CheckCircle className="h-4 w-4" />}
-          description="Services complétés"
-          className="bg-green-50 hover:bg-green-100"
-        />
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-4 bg-blue-50">
+          <h3 className="font-medium mb-2">Services aujourd'hui</h3>
+          <p className="text-2xl font-bold">{servicesStats?.today || 0}</p>
+          <p className="text-sm text-gray-500">Planifiés pour aujourd'hui</p>
+        </Card>
+
+        <Card className="p-4 bg-yellow-50">
+          <h3 className="font-medium mb-2">En cours</h3>
+          <p className="text-2xl font-bold">{servicesStats?.inProgress || 0}</p>
+          <p className="text-sm text-gray-500">Services actifs</p>
+        </Card>
+
+        <Card className="p-4 bg-purple-50">
+          <h3 className="font-medium mb-2">En attente de pièces</h3>
+          <p className="text-2xl font-bold">{servicesStats?.waitingParts || 0}</p>
+          <p className="text-sm text-gray-500">Commandes en attente</p>
+        </Card>
+
+        <Card className="p-4 bg-green-50">
+          <h3 className="font-medium mb-2">Total services</h3>
+          <p className="text-2xl font-bold">{servicesStats?.total || 0}</p>
+          <p className="text-sm text-gray-500">Tous les services</p>
+        </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Liste des services</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Derniers services</h3>
           <DataTable 
-            columns={columns}
-            data={services}
-            isLoading={isLoading}
+            columns={columns} 
+            data={services} 
           />
-        </CardContent>
+        </div>
       </Card>
 
       <AddServiceDialog 
