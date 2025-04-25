@@ -1,220 +1,69 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useHrData } from './modules/useHrData';
-import { Company } from '@/components/module/submodules/companies/types';
-import { Employee } from '@/types/employee';
 
-/**
- * Hook to fetch and process HR module data
- */
+import { useState, useEffect } from 'react';
+import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import type { Employee } from '@/types/employee';
+import type { Department } from '@/components/module/submodules/departments/types';
+import type { TimeReport } from '@/types/timesheet';
+import { toast } from 'sonner';
+
 export const useHrModuleData = () => {
-  const { 
-    employees: rawEmployees, 
-    payslips, 
-    contracts, 
-    departments, 
-    leaveRequests, 
-    attendance,
-    absenceRequests,
-    hrDocuments,
-    timeSheets,
-    evaluations,
-    trainings,
-    hrReports,
-    hrAlerts,
-    isLoading, 
-    error,
-    refetchEmployees: refetchRawEmployees 
-  } = useHrData();
-  
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [timeSheets, setTimeSheets] = useState<TimeReport[]>([]);
+  const [payslips, setPayslips] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Process employees data
   useEffect(() => {
-    if (rawEmployees) {
-      // Log the raw data for debugging
-      console.log(`Raw employees data length: ${rawEmployees.length}`);
-      
-      // Make a copy of raw data to avoid modifying original
-      const employeesData = [...rawEmployees];
-      
-      // Ensure we don't have empty entries
-      const filteredEmployees = employeesData.filter(emp => emp && emp.id);
-      
-      // Log filtered data for debugging
-      console.log(`After filtering empty entries: ${filteredEmployees.length}`);
-      
-      // Process each employee to ensure required fields exist
-      const processedEmployees = filteredEmployees.map(emp => {
-        return {
-          id: emp.id,
-          firstName: emp.firstName || '',
-          lastName: emp.lastName || '',
-          email: emp.email || '',
-          phone: emp.phone || '',
-          position: emp.position || emp.role || 'Employé',
-          department: emp.department || 'Non spécifié',
-          departmentId: emp.departmentId || emp.department || '',
-          photo: emp.photoURL || emp.photo || '',
-          photoURL: emp.photoURL || emp.photo || '',
-          hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
-          startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
-          status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
-          address: emp.address || {},
-          contract: emp.contract || '',
-          socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
-          birthDate: emp.birthDate || '',
-          documents: emp.documents || [],
-          company: emp.company || '',
-          role: emp.role || emp.position || '',
-          title: emp.title || emp.position || '',
-          manager: emp.manager || '',
-          managerId: emp.managerId || '',
-          professionalEmail: emp.professionalEmail || emp.email || '',
-          skills: emp.skills || [],
-          education: emp.education || [],
-          isManager: emp.isManager || determineIfManager(emp.position || emp.role),
-          workSchedule: emp.workSchedule || {
-            monday: '09:00 - 18:00',
-            tuesday: '09:00 - 18:00',
-            wednesday: '09:00 - 18:00',
-            thursday: '09:00 - 18:00',
-            friday: '09:00 - 17:00',
-          },
-          payslips: emp.payslips || [],
-          // Add photoMeta with required properties if it exists
-          photoMeta: emp.photoMeta ? {
-            fileName: emp.photoMeta.fileName || `photo_${Date.now()}.jpg`,
-            fileType: emp.photoMeta.fileType || 'image/jpeg',
-            fileSize: emp.photoMeta.fileSize || 100000,
-            updatedAt: emp.photoMeta.updatedAt || new Date().toISOString()
-          } : undefined
-        } as Employee;
-      });
-      
-      // Check for Lionel in the processed data
-      const lionelPresent = processedEmployees.some(emp => 
-        emp.firstName?.toLowerCase().includes('lionel') && 
-        emp.lastName?.toLowerCase().includes('djossa')
-      );
-      
-      console.log(`useHrModuleData: ${processedEmployees.length} employés uniques (avant: ${rawEmployees.length})`);
-      console.log(`useHrModuleData: LIONEL DJOSSA présent dans les données après traitement? ${lionelPresent}`);
-      
-      setEmployees(processedEmployees);
-    }
-  }, [rawEmployees]);
-
-  // Extract companies from employees if available
-  useEffect(() => {
-    if (employees && employees.length > 0) {
-      // Create a map to ensure unique companies
-      const companiesMap = new Map<string, Company>();
-      
-      employees.forEach(emp => {
-        if (emp.company) {
-          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Check if HR collection exists in COLLECTIONS before trying to access its properties
+        if (COLLECTIONS.HR) {
+          const employeesData = await fetchCollectionData<Employee>(COLLECTIONS.HR.EMPLOYEES);
+          const departmentsData = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS);
+          const companiesData = await fetchCollectionData(COLLECTIONS.COMPANIES);
+          const timeSheetsData = await fetchCollectionData<TimeReport>(COLLECTIONS.HR.TIMESHEET);
+          const payslipsData = await fetchCollectionData(COLLECTIONS.HR.PAYSLIPS);
+          const contractsData = await fetchCollectionData(COLLECTIONS.HR.CONTRACTS);
+          const leaveRequestsData = await fetchCollectionData(COLLECTIONS.HR.LEAVE_REQUESTS);
           
-          if (!companiesMap.has(companyId)) {
-            if (typeof emp.company === 'string') {
-              // Only has the id, create a basic company object
-              companiesMap.set(companyId, {
-                id: companyId,
-                name: 'Entreprise',
-                address: {
-                  street: '',
-                  city: '',
-                  postalCode: '',
-                  country: ''
-                },
-                siret: '',
-                logo: '',
-                logoUrl: '',
-                phone: '',
-                email: '',
-                website: '',
-                industry: '',
-                size: '',
-                status: 'active',
-                employeesCount: 0,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              });
-            } else {
-              // Has the full company object
-              const company = emp.company as Company;
-              
-              // Add missing properties if needed
-              if (!company.address) {
-                company.address = {
-                  street: '',
-                  city: '',
-                  postalCode: '',
-                  country: ''
-                };
-              }
-              
-              companiesMap.set(companyId, {
-                ...company,
-                logo: company.logo || '',
-                logoUrl: company.logoUrl || '',
-                phone: company.phone || '',
-                email: company.email || '',
-                website: company.website || '',
-                industry: company.industry || '',
-                size: company.size || '',
-                status: company.status || 'active',
-                employeesCount: company.employeesCount || 0,
-                createdAt: company.createdAt || new Date().toISOString(),
-                updatedAt: company.updatedAt || new Date().toISOString()
-              });
-            }
-          }
+          setEmployees(employeesData);
+          setDepartments(departmentsData);
+          setCompanies(companiesData);
+          setTimeSheets(timeSheetsData);
+          setPayslips(payslipsData);
+          setContracts(contractsData);
+          setLeaveRequests(leaveRequestsData);
+        } else {
+          console.error("HR collection is not defined in COLLECTIONS");
+          toast.error("La collection HR n'est pas définie");
         }
-      });
-      
-      // Convert map to array
-      setCompanies(Array.from(companiesMap.values()));
-    }
-  }, [employees]);
+      } catch (err) {
+        console.error('Error fetching HR data:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
+        toast.error('Erreur lors du chargement des données RH');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fonction pour déterminer si un employé est un manager d'après son poste
-  const determineIfManager = (position: string | undefined): boolean => {
-    if (!position) return false;
-    
-    const lowerPosition = position.toLowerCase();
-    return lowerPosition.includes('manager') || 
-           lowerPosition.includes('responsable') || 
-           lowerPosition.includes('directeur') || 
-           lowerPosition.includes('pdg') ||
-           lowerPosition.includes('ceo') || 
-           lowerPosition.includes('chief');
-  };
-  
-  // Add refetchEmployees function that will call the refetchRawEmployees from useHrData
-  const refetchEmployees = useCallback(async () => {
-    if (refetchRawEmployees && typeof refetchRawEmployees === 'function') {
-      await refetchRawEmployees();
-    }
-  }, [refetchRawEmployees]);
+    fetchData();
+  }, []);
 
   return {
     employees,
-    payslips,
-    contracts,
     departments,
     companies,
-    leaveRequests: leaveRequests || [],
-    attendance: attendance || [],
-    absenceRequests: absenceRequests || [],
-    hrDocuments: hrDocuments || [],
-    timeSheets: timeSheets || [],
-    evaluations: evaluations || [],
-    trainings: trainings || [],
-    hrReports: hrReports || [],
-    hrAlerts: hrAlerts || [],
+    timeSheets,
+    payslips,
+    contracts,
+    leaveRequests,
     isLoading,
-    error,
-    refetchEmployees
+    error
   };
 };
