@@ -1,4 +1,3 @@
-
 export const COLLECTIONS = {
   USERS: 'users',
   EMPLOYEES: 'employees',
@@ -46,16 +45,16 @@ export const COLLECTIONS = {
     TASKS: 'crm-tasks'
   },
   GARAGE: {
-    CLIENTS: 'garage-clients',
-    VEHICLES: 'garage-vehicles',
-    MECHANICS: 'garage-mechanics',
-    REPAIRS: 'garage-repairs',
-    APPOINTMENTS: 'garage-appointments',
-    SERVICES: 'garage-services',
-    SUPPLIERS: 'garage-suppliers',
-    INVENTORY: 'garage-inventory',
-    INVOICES: 'garage-invoices',
-    LOYALTY: 'garage-loyalty'
+    CLIENTS: 'garage_clients',
+    APPOINTMENTS: 'garage_appointments', 
+    INVOICES: 'garage_invoices',
+    LOYALTY: 'garage_loyalty',
+    MECHANICS: 'garage_mechanics',
+    PARTS: 'garage_parts',
+    PERMISSIONS: 'garage_permissions',
+    REPAIRS: 'garage_repairs',
+    SERVICES: 'garage_services',
+    VEHICLES: 'garage_vehicles'
   },
   HR: {
     EMPLOYEES: 'hr-employees',
