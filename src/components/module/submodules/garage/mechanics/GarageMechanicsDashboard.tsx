@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Plus, Eye, Pencil, Trash2 } from 'lucide-react';
@@ -41,25 +42,29 @@ const GarageMechanicsDashboard = () => {
     setIsDeleteOpen(true);
   };
 
-  const formatSpecialization = (specialization: string | string[] | undefined) => {
-    if (!specialization) return 'Non spécifié';
-    
-    if (Array.isArray(specialization)) {
-      return specialization.join(', ');
-    }
-    
-    return specialization;
-  };
-
   const columns: Column[] = [
     { header: "Prénom", accessorKey: "firstName" },
     { header: "Nom", accessorKey: "lastName" },
     { header: "Email", accessorKey: "email" },
     { header: "Téléphone", accessorKey: "phone" },
-    { 
-      header: "Spécialisation", 
-      accessorKey: "specialization",
-      cell: ({ row }) => formatSpecialization(row.original.specialization)
+    { header: "Spécialisation", 
+      accessorFn: (row: Mechanic) => {
+        // Make sure row.specialization exists and is handled properly
+        if (!row.specialization) return '';
+        
+        // If it's already an array, join it
+        if (Array.isArray(row.specialization)) {
+          return row.specialization.join(', ');
+        }
+        
+        // If it's a string, return it directly
+        if (typeof row.specialization === 'string') {
+          return row.specialization;
+        }
+        
+        // Fallback
+        return '';
+      }
     },
     { header: "Statut", accessorKey: "status",
       cell: ({ row }) => {
