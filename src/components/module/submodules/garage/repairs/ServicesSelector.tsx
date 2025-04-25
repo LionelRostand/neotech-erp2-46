@@ -6,13 +6,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { GarageService, RepairService } from './types';
-
-const MOCK_SERVICES: GarageService[] = [
-  { id: '1', name: 'Vidange', cost: 80, duration: 60 },
-  { id: '2', name: 'Changement des plaquettes de frein', cost: 120, duration: 90 },
-  { id: '3', name: 'Changement des pneus', cost: 400, duration: 120 },
-  { id: '4', name: 'Révision complète', cost: 250, duration: 180 },
-];
+import { useGarageData } from '@/hooks/garage/useGarageData';
 
 interface ServicesSelectorProps {
   services: RepairService[];
@@ -25,6 +19,8 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
   onChange,
   onCostChange,
 }) => {
+  const { services: garageServices = [], isLoading } = useGarageData();
+
   const addService = () => {
     const newServices = [...services, { serviceId: '', quantity: 1, cost: 0 }];
     onChange(newServices);
@@ -42,14 +38,14 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
     newServices[index] = { ...newServices[index], [field]: value };
     
     if (field === 'serviceId') {
-      const selectedService = MOCK_SERVICES.find(s => s.id === value);
+      const selectedService = garageServices.find(s => s.id === value);
       if (selectedService) {
         newServices[index].cost = selectedService.cost * newServices[index].quantity;
       }
     }
     
     if (field === 'quantity') {
-      const selectedService = MOCK_SERVICES.find(s => s.id === newServices[index].serviceId);
+      const selectedService = garageServices.find(s => s.id === newServices[index].serviceId);
       if (selectedService) {
         newServices[index].cost = selectedService.cost * value;
       }
@@ -63,6 +59,10 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
     const total = services.reduce((sum, service) => sum + service.cost, 0);
     onCostChange(total);
   };
+
+  if (isLoading) {
+    return <div>Chargement des services...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -99,7 +99,7 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
                     <SelectValue placeholder="Sélectionner un service" />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_SERVICES.map((s) => (
+                    {garageServices.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name} - {s.cost}€
                       </SelectItem>
