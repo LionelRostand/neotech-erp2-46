@@ -1,14 +1,17 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { DataTable } from "@/components/ui/data-table";
-import { Wrench, Clock, CheckCircle } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import StatCard from '@/components/StatCard';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { AddServiceDialog } from './AddServiceDialog';
 
 const GarageServicesDashboard = () => {
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['garage', 'services'],
     queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.SERVICES)
@@ -50,7 +53,13 @@ const GarageServicesDashboard = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight">Services</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Services</h2>
+        <Button onClick={() => setOpenAddDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Ajouter un service
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
@@ -88,6 +97,11 @@ const GarageServicesDashboard = () => {
           />
         </CardContent>
       </Card>
+
+      <AddServiceDialog 
+        open={openAddDialog}
+        onOpenChange={setOpenAddDialog}
+      />
     </div>
   );
 };
