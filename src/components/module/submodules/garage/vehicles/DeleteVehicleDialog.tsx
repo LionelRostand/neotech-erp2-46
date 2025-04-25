@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,22 +9,39 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useGarageVehiclesOperations } from '@/hooks/garage/useGarageVehiclesOperations';
 
 interface DeleteVehicleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => Promise<void>;
+  vehicleId: string;
   vehicleInfo: string;
-  isLoading?: boolean;
+  onDeleted: () => void;
 }
 
 const DeleteVehicleDialog = ({
   open,
   onOpenChange,
-  onConfirm,
+  vehicleId,
   vehicleInfo,
-  isLoading
+  onDeleted
 }: DeleteVehicleDialogProps) => {
+  const { deleteVehicle } = useGarageVehiclesOperations();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const success = await deleteVehicle(vehicleId);
+      if (success) {
+        onDeleted();
+        onOpenChange(false);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -35,15 +52,15 @@ const DeleteVehicleDialog = ({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isDeleting}>
             Annuler
           </Button>
           <Button 
             variant="destructive" 
-            onClick={onConfirm}
-            disabled={isLoading}
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
-            {isLoading ? "Suppression..." : "Supprimer"}
+            {isDeleting ? "Suppression..." : "Supprimer"}
           </Button>
         </DialogFooter>
       </DialogContent>
