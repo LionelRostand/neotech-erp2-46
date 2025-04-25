@@ -4,19 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { DataTable } from "@/components/ui/data-table";
-import { UserCog, UserCheck, Clock, Ban } from 'lucide-react';
+import { UserCog, Clock, CheckCircle } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 
 const GarageMechanicsDashboard = () => {
   const { data: mechanics = [], isLoading } = useQuery({
     queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData(`${COLLECTIONS.GARAGE.MECHANICS}`)
+    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.MECHANICS)
   });
 
   const availableMechanics = mechanics.filter(m => m.status === 'available');
   const busyMechanics = mechanics.filter(m => m.status === 'busy');
-  const unavailableMechanics = mechanics.filter(m => m.status === 'unavailable');
+  const onBreakMechanics = mechanics.filter(m => m.status === 'onBreak');
 
   const columns = [
     {
@@ -32,17 +32,13 @@ const GarageMechanicsDashboard = () => {
       header: 'Expérience',
     },
     {
-      accessorKey: 'currentTask',
-      header: 'Tâche actuelle',
-    },
-    {
       accessorKey: 'status',
       header: 'Statut',
       cell: ({ row }) => {
         const status = row.original.status;
         return status === 'available' ? 'Disponible' :
                status === 'busy' ? 'Occupé' :
-               status === 'unavailable' ? 'Indisponible' : status;
+               status === 'onBreak' ? 'En pause' : status;
       },
     },
   ];
@@ -55,23 +51,23 @@ const GarageMechanicsDashboard = () => {
         <StatCard
           title="Disponibles"
           value={availableMechanics.length.toString()}
-          icon={<UserCheck className="h-4 w-4" />}
+          icon={<UserCog className="h-4 w-4" />}
           description="Mécaniciens disponibles"
           className="bg-green-50 hover:bg-green-100"
         />
         <StatCard
-          title="Occupés"
+          title="En service"
           value={busyMechanics.length.toString()}
           icon={<Clock className="h-4 w-4" />}
-          description="En intervention"
-          className="bg-yellow-50 hover:bg-yellow-100"
+          description="Mécaniciens occupés"
+          className="bg-blue-50 hover:bg-blue-100"
         />
         <StatCard
-          title="Indisponibles"
-          value={unavailableMechanics.length.toString()}
-          icon={<Ban className="h-4 w-4" />}
-          description="Absents ou en pause"
-          className="bg-gray-50 hover:bg-gray-100"
+          title="En pause"
+          value={onBreakMechanics.length.toString()}
+          icon={<CheckCircle className="h-4 w-4" />}
+          description="Mécaniciens en pause"
+          className="bg-yellow-50 hover:bg-yellow-100"
         />
       </div>
 
