@@ -1,23 +1,45 @@
 
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Plus } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 import MechanicsStats from './components/MechanicsStats';
 import { DataTable } from "@/components/ui/data-table";
 import type { Column } from "@/types/table-types";
 import type { Mechanic } from '@/components/module/submodules/garage/types/garage-types';
+import ViewMechanicDialog from './components/ViewMechanicDialog';
+import EditMechanicDialog from './components/EditMechanicDialog';
+import DeleteMechanicDialog from './components/DeleteMechanicDialog';
 
 const GarageMechanicsDashboard = () => {
-  const { mechanics = [], isLoading } = useGarageMechanics();
+  const { mechanics = [], isLoading, updateMechanic, deleteMechanic } = useGarageMechanics();
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [selectedMechanic, setSelectedMechanic] = useState<Mechanic | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   
   const today = new Date().toISOString().split('T')[0];
   
   const availableMechanics = mechanics.filter(m => m.status === 'available');
   const busyMechanics = mechanics.filter(m => m.status === 'in_service');
   const onBreakMechanics = mechanics.filter(m => m.status === 'on_break');
+
+  const handleView = (mechanic: Mechanic) => {
+    setSelectedMechanic(mechanic);
+    setIsViewOpen(true);
+  };
+
+  const handleEdit = (mechanic: Mechanic) => {
+    setSelectedMechanic(mechanic);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = (mechanic: Mechanic) => {
+    setSelectedMechanic(mechanic);
+    setIsDeleteOpen(true);
+  };
 
   const columns: Column[] = [
     { header: "Prénom", accessorKey: "firstName" },
@@ -37,10 +59,18 @@ const GarageMechanicsDashboard = () => {
     },
     { 
       header: "Actions",
-      cell: () => (
-        <Button variant="ghost" size="sm">
-          Voir
-        </Button>
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => handleView(row.original)}>
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleEdit(row.original)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleDelete(row.original)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       )
     }
   ];
@@ -76,6 +106,35 @@ const GarageMechanicsDashboard = () => {
           isLoading={isLoading}
         />
       </Card>
+
+      <ViewMechanicDialog
+        mechanic={selectedMechanic}
+        isOpen={isViewOpen}
+        onClose={() => {
+          setIsViewOpen(false);
+          setSelectedMechanic(null);
+        }}
+      />
+
+      <EditMechanicDialog
+        mechanic={selectedMechanic}
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedMechanic(null);
+        }}
+        onUpdate={updateMechanic}
+      />
+
+      <DeleteMechanicDialog
+        mechanic={selectedMechanic}
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          setIsDeleteOpen(false);
+          setSelectedMechanic(null);
+        }}
+        onUpdate={deleteMechanic}
+      />
     </div>
   );
 };
