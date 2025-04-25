@@ -1,3 +1,4 @@
+
 export const COLLECTIONS = {
   USERS: 'users',
   EMPLOYEES: 'employees',
@@ -9,7 +10,7 @@ export const COLLECTIONS = {
     ARCHIVED: 'messages-archived',
     SCHEDULED: 'messages-scheduled',
     TEMPLATES: 'messages-templates',
-    CONTACTS: 'contacts' // Added for message contacts
+    CONTACTS: 'contacts'
   },
   CONTACTS: 'contacts',
   DOCUMENTS: {
@@ -17,6 +18,15 @@ export const COLLECTIONS = {
     FOLDERS: 'documents-folders',
     SHARED: 'documents-shared',
     FAVORITES: 'documents-favorites',
+    RECENTS: 'documents-recents',
+    ARCHIVES: 'documents-archives',
+    METADATA: 'documents-metadata'
+  },
+  DOCUMENT_COLLECTIONS: {
+    FILES: 'documents-files',
+    FOLDERS: 'documents-folders',
+    SHARED: 'documents-shared',
+    FAVORITES: 'documents-favorites', 
     RECENTS: 'documents-recents',
     ARCHIVES: 'documents-archives',
     METADATA: 'documents-metadata'

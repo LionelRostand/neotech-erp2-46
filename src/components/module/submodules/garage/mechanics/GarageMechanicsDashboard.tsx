@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
@@ -8,40 +9,46 @@ import { Button } from '@/components/ui/button';
 import StatCard from '@/components/StatCard';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { AddMechanicDialog } from './AddMechanicDialog';
+import { Mechanic } from '@/components/module/submodules/garage/types/garage-types';
 
 const GarageMechanicsDashboard = () => {
   const [openAddDialog, setOpenAddDialog] = useState(false);
   
   const { data: mechanics = [], isLoading } = useQuery({
     queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.MECHANICS)
+    queryFn: () => fetchCollectionData<Mechanic>(COLLECTIONS.GARAGE.MECHANICS)
   });
 
-  const availableMechanics = mechanics.filter(m => m.status === 'available');
-  const busyMechanics = mechanics.filter(m => m.status === 'busy');
-  const onBreakMechanics = mechanics.filter(m => m.status === 'onBreak');
+  // Filter mechanics by status
+  const availableMechanics = mechanics.filter(m => m.status === 'available' || m.status === 'Disponible');
+  const busyMechanics = mechanics.filter(m => m.status === 'in_service' || m.status === 'busy');
+  const onBreakMechanics = mechanics.filter(m => m.status === 'on_break' || m.status === 'onBreak');
 
   const columns = [
     {
-      accessorKey: 'name',
+      accessorKey: 'firstName',
+      header: 'Prénom',
+    },
+    {
+      accessorKey: 'lastName',
       header: 'Nom',
     },
     {
-      accessorKey: 'specialization',
+      accessorFn: (row: Mechanic) => (row.specialization || []).join(', '),
       header: 'Spécialisation',
     },
     {
-      accessorKey: 'experience',
-      header: 'Expérience',
+      accessorKey: 'phone',
+      header: 'Téléphone',
     },
     {
       accessorKey: 'status',
       header: 'Statut',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         const status = row.original.status;
         return status === 'available' ? 'Disponible' :
-               status === 'busy' ? 'Occupé' :
-               status === 'onBreak' ? 'En pause' : status;
+               status === 'in_service' || status === 'busy' ? 'Occupé' :
+               status === 'on_break' || status === 'onBreak' ? 'En pause' : status;
       },
     },
   ];
