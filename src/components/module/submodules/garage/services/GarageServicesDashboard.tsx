@@ -27,7 +27,7 @@ const GarageServicesDashboard = () => {
         <h1 className="text-2xl font-bold">Services</h1>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle réparation
+          Nouveau service
         </Button>
       </div>
 
@@ -39,7 +39,7 @@ const GarageServicesDashboard = () => {
       />
 
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Dernières réparations</h2>
+        <h2 className="text-xl font-semibold mb-4">Derniers services</h2>
         <RepairsTable repairs={repairs} />
       </Card>
     </div>
@@ -47,4 +47,3 @@ const GarageServicesDashboard = () => {
 };
 
 export default GarageServicesDashboard;
-
