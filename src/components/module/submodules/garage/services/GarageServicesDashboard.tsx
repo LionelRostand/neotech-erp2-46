@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import ServicesTable from './components/ServicesTable';
+import ServicesStats from './components/ServicesStats';
 
 const GarageServicesDashboard = () => {
   const { services = [], isLoading, refetch } = useGarageData();
@@ -22,6 +23,8 @@ const GarageServicesDashboard = () => {
           Nouveau service
         </Button>
       </div>
+
+      <ServicesStats />
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Derniers services</h2>
