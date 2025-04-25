@@ -11,6 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mechanic } from '../../types/garage-types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface EditMechanicDialogProps {
@@ -33,6 +40,7 @@ const EditMechanicDialog = ({ mechanic, isOpen, onClose, onUpdate }: EditMechani
       toast.success("Mécanicien mis à jour avec succès");
       onClose();
     } catch (error) {
+      console.error('Error updating mechanic:', error);
       toast.error("Erreur lors de la mise à jour du mécanicien");
     }
   };
@@ -48,31 +56,76 @@ const EditMechanicDialog = ({ mechanic, isOpen, onClose, onUpdate }: EditMechani
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="firstName" className="text-right">Prénom</label>
-              <Input id="firstName" className="col-span-3" {...register('firstName')} />
+              <Input
+                id="firstName"
+                defaultValue={mechanic.firstName}
+                className="col-span-3"
+                {...register('firstName')}
+              />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="lastName" className="text-right">Nom</label>
-              <Input id="lastName" className="col-span-3" {...register('lastName')} />
+              <Input
+                id="lastName"
+                defaultValue={mechanic.lastName}
+                className="col-span-3"
+                {...register('lastName')}
+              />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="email" className="text-right">Email</label>
-              <Input id="email" type="email" className="col-span-3" {...register('email')} />
+              <Input
+                id="email"
+                type="email"
+                defaultValue={mechanic.email}
+                className="col-span-3"
+                {...register('email')}
+              />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="phone" className="text-right">Téléphone</label>
-              <Input id="phone" className="col-span-3" {...register('phone')} />
+              <Input
+                id="phone"
+                defaultValue={mechanic.phone}
+                className="col-span-3"
+                {...register('phone')}
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="specialization" className="text-right">Spécialisation</label>
+              <Input
+                id="specialization"
+                defaultValue={Array.isArray(mechanic.specialization) ? mechanic.specialization.join(', ') : mechanic.specialization}
+                className="col-span-3"
+                {...register('specialization')}
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="status" className="text-right">Statut</label>
+              <Select defaultValue={mechanic.status} onValueChange={(value) => register('status').onChange({ target: { value } })}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionnez un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">Disponible</SelectItem>
+                  <SelectItem value="in_service">En service</SelectItem>
+                  <SelectItem value="on_break">En pause</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
+              {isSubmitting ? "Mise à jour..." : "Mettre à jour"}
             </Button>
           </DialogFooter>
         </form>
