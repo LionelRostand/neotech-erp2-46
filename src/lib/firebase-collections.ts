@@ -50,6 +50,7 @@ export const COLLECTIONS = {
     VEHICLES: "garage_vehicles",
     CLIENTS: "garage_clients",
     APPOINTMENTS: "garage_appointments",
+    MECHANICS: "garage_mechanics",
     SERVICES: "garage_services",
     PARTS: "garage_parts",
     REPAIRS: "garage_repairs",
