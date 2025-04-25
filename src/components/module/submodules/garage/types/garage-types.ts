@@ -1,102 +1,143 @@
 
 export interface GarageClient {
   id: string;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
   address?: string;
-  city?: string;
-  postalCode?: string;
-  status?: 'active' | 'inactive';
+  vehicles?: string[];
+  status: 'active' | 'inactive';
+  createdAt: string;
   notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface Vehicle {
   id: string;
-  clientId: string;
   make: string;
   model: string;
-  year?: number;
-  color?: string;
-  licensePlate?: string;
-  vin?: string;
-  fuelType?: string;
-  status?: 'active' | 'maintenance' | 'repair' | 'sold';
-  mileage?: number;
+  year: number;
+  licensePlate: string;
+  vin: string;
+  clientId: string;
+  status: 'active' | 'inactive' | 'maintenance';
   lastService?: string;
-  nextServiceDue?: string;
-  purchaseDate?: string;
+  mileage?: number;
+  color?: string;
   notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface Mechanic {
   id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  specialization?: string;
-  status?: 'active' | 'inactive' | 'on_leave';
-  hourlyRate?: number;
-  startDate?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  specialization: string[];
+  status: 'available' | 'in_service' | 'on_break' | 'off_duty';
+  hireDate: string;
+  photo?: string;
   notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: string;
+  status: 'active' | 'pending' | 'completed' | 'cancelled';
+  mechanicId?: string;
+  category?: string;
 }
 
 export interface Repair {
   id: string;
   vehicleId: string;
-  vehicleName?: string;
-  vehicleModel?: string;
-  clientId: string;
-  clientName?: string;
-  mechanicId?: string;
-  mechanicName?: string;
-  service?: string;
+  mechanicId: string;
   description: string;
-  status: 'in_progress' | 'awaiting_parts' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   startDate: string;
-  estimatedEndDate?: string;
-  actualEndDate?: string;
-  estimatedCost?: number;
-  actualCost?: number;
-  partsUsed?: RepairPart[];
+  endDate?: string;
+  cost: number;
+  parts?: RepairPart[];
   laborHours?: number;
   notes?: string;
-  progress?: number;
-  invoiceId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  licensePlate?: string;
 }
 
 export interface RepairPart {
   id: string;
   name: string;
-  partNumber?: string;
   quantity: number;
-  unitCost: number;
-  totalCost: number;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 export interface GarageAppointment {
   id: string;
   clientId: string;
-  clientName: string;
-  vehicleId?: string;
-  vehicleMake?: string;
-  vehicleModel?: string;
+  vehicleId: string;
+  mechanicId?: string;
+  serviceId?: string;
   date: string;
   time: string;
-  type: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  duration: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   notes?: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  address: string;
+  type?: string;
+  status: 'active' | 'inactive';
   createdAt: string;
-  updatedAt?: string;
+  notes?: string;
+}
+
+export interface Inventory {
+  id: string;
+  name: string;
+  category: string;
+  reference: string;
+  quantity: number;
+  minQuantity: number;
+  price: number;
+  supplierRef?: string;
+  location?: string;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  lastOrderDate?: string;
+  notes?: string;
+}
+
+export interface Invoice {
+  id: string;
+  clientId: string;
+  vehicleId: string;
+  repairId?: string;
+  date: string;
+  dueDate: string;
+  amount: number;
+  tax: number;
+  total: number;
+  status: 'paid' | 'unpaid' | 'overdue' | 'cancelled';
+  paymentMethod?: string;
+  paymentDate?: string;
+  notes?: string;
+}
+
+export interface LoyaltyProgram {
+  id: string;
+  name: string;
+  description: string;
+  discountRate: number;
+  requiredVisits: number;
+  status: 'active' | 'inactive';
+  startDate: string;
+  endDate?: string;
+  clients?: string[];
 }

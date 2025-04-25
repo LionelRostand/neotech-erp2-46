@@ -13,7 +13,7 @@ export const COLLECTIONS = {
     CONTACTS: 'contacts' // Added for message contacts
   },
   CONTACTS: 'contacts',
-  DOCUMENT_COLLECTIONS: {
+  DOCUMENTS: {
     FILES: 'documents-files',
     FOLDERS: 'documents-folders',
     SHARED: 'documents-shared',
@@ -29,15 +29,6 @@ export const COLLECTIONS = {
     TAGS: 'project-tags',
     STATUSES: 'project-statuses',
     MEMBERS: 'project-members'
-  },
-  DOCUMENTS: {
-    FILES: 'documents-files',
-    FOLDERS: 'documents-folders',
-    SHARED: 'documents-shared',
-    FAVORITES: 'documents-favorites',
-    RECENTS: 'documents-recents',
-    ARCHIVES: 'documents-archives',
-    METADATA: 'documents-metadata'
   },
   CRMS: {
     CLIENTS: 'crm-clients',
