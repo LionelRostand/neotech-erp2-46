@@ -13,6 +13,7 @@ export const GarageRoutes = (
     <Route path="appointments" element={<SubmodulePage moduleId={6} submoduleId="garage-appointments" />} />
     <Route path="services" element={<SubmodulePage moduleId={6} submoduleId="garage-services" />} />
     <Route path="mechanics" element={<SubmodulePage moduleId={6} submoduleId="garage-mechanics" />} />
+    <Route path="maintenance" element={<SubmodulePage moduleId={6} submoduleId="garage-maintenance" />} />
     <Route path="invoices" element={<SubmodulePage moduleId={6} submoduleId="garage-invoices" />} />
     <Route path="suppliers" element={<SubmodulePage moduleId={6} submoduleId="garage-suppliers" />} />
     <Route path="inventory" element={<SubmodulePage moduleId={6} submoduleId="garage-inventory" />} />
