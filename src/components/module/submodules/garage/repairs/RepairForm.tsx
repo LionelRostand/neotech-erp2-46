@@ -1,63 +1,38 @@
 
 import React from 'react';
-import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import ServicesSelector from './ServicesSelector';
-import type { RepairFormData } from './types';
-import { toast } from "sonner";
+import { CustomerSelector } from "@/components/selectors/CustomerSelector";
+import { MechanicSelector } from "./components/MechanicSelector";
+import { ServicesSelector } from "../services/ServicesSelector";
+import { useForm } from "react-hook-form";
 
 interface RepairFormProps {
-  onSubmit: (data: RepairFormData) => void;
-  defaultValues?: Partial<RepairFormData>;
-  isLoading?: boolean;
+  onSubmit: (data: any) => void;
+  initialData?: any;
 }
 
-const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => {
-  const form = useForm<RepairFormData>({
+export const RepairForm: React.FC<RepairFormProps> = ({ onSubmit, initialData = {} }) => {
+  const form = useForm({
     defaultValues: {
-      clientId: '',
-      vehicleId: '',
-      mechanicId: '',
-      startDate: new Date().toISOString().split('T')[0],
-      estimatedEndDate: '',
-      status: 'pending',
-      estimatedCost: 0,
-      progress: 0,
-      description: '',
-      services: [],
-      ...defaultValues
+      clientId: initialData.clientId || '',
+      clientName: initialData.clientName || '',
+      mechanicId: initialData.mechanicId || '',
+      vehicleInfo: initialData.vehicleInfo || '',
+      description: initialData.description || '',
+      estimatedTime: initialData.estimatedTime || '',
+      services: initialData.services || []
     }
   });
 
-  // Get mechanics data from the hook
-  const { mechanics, isLoading: isLoadingMechanics } = useGarageMechanics();
-
-  // Filter only available mechanics
-  const availableMechanics = mechanics?.filter(m => m.status === 'available') || [];
-  
-  // Log for debugging
-  console.log("Available mechanics:", availableMechanics);
+  const handleSubmit = (data: any) => {
+    onSubmit(data);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="clientId"
@@ -65,129 +40,42 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
             <FormItem>
               <FormLabel>Client</FormLabel>
               <FormControl>
-                <Input placeholder="Client ID" {...field} />
+                <CustomerSelector
+                  value={field.value}
+                  onChange={(value, name) => {
+                    field.onChange(value);
+                    form.setValue('clientName', name);
+                  }}
+                />
               </FormControl>
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="vehicleId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Véhicule</FormLabel>
-              <FormControl>
-                <Input placeholder="Vehicle ID" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        
         <FormField
           control={form.control}
           name="mechanicId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Mécanicien</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un mécanicien" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {isLoadingMechanics ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                  ) : availableMechanics.length > 0 ? (
-                    availableMechanics.map((mechanic) => (
-                      <SelectItem key={mechanic.id} value={mechanic.id}>
-                        {mechanic.firstName} {mechanic.lastName}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled>Aucun mécanicien disponible</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="startDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date de début</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="estimatedEndDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date de fin estimée</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Statut</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un statut" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Terminé</SelectItem>
-                  <SelectItem value="cancelled">Annulé</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="estimatedCost"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Coût estimé</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="Coût estimé" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="progress"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Progression (%)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Progression en pourcentage"
-                  {...field}
+                <MechanicSelector
+                  value={field.value}
+                  onChange={field.onChange}
                 />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="vehicleInfo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Informations du véhicule</FormLabel>
+              <FormControl>
+                <Input {...field} />
               </FormControl>
             </FormItem>
           )}
@@ -198,9 +86,22 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Description de la réparation</FormLabel>
               <FormControl>
-                <Textarea placeholder="Description de la réparation" {...field} />
+                <Input {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="estimatedTime"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Temps estimé</FormLabel>
+              <FormControl>
+                <Input {...field} type="text" placeholder="Ex: 2 heures" />
               </FormControl>
             </FormItem>
           )}
@@ -221,15 +122,11 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
             </FormItem>
           )}
         />
-        
-        <div className="flex justify-end space-x-2">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "En cours..." : "Enregistrer"}
-          </Button>
-        </div>
+
+        <Button type="submit" className="w-full">
+          {initialData.id ? 'Mettre à jour la réparation' : 'Créer la réparation'}
+        </Button>
       </form>
     </Form>
   );
 };
-
-export default RepairForm;
