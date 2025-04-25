@@ -1,17 +1,20 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/patched-select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Repair } from '../types/garage-types';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGarageData } from '@/hooks/garage/useGarageData';
+import { Repair } from '../types/garage-types';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 interface CreateRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (repair: Partial<Repair>) => void;
+  onSave?: (repair: Repair) => void;
 }
 
 const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
@@ -23,20 +26,20 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
   const [formData, setFormData] = React.useState<Partial<Repair>>({
     startDate: new Date().toISOString().split('T')[0],
     status: 'pending',
-    description: '',
-    estimatedCost: 0
+    progress: 0
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleVehicleChange = (vehicleId: string) => {
     const selectedVehicle = vehicles.find(v => v.id === vehicleId);
+    const selectedClient = clients.find(c => c.id === selectedVehicle?.clientId);
+    
     setFormData(prev => ({
       ...prev,
       vehicleId,
+      clientId: selectedClient?.id || '',
+      clientName: selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : '',
+      vehicleName: `${selectedVehicle?.brand} ${selectedVehicle?.model}`,
       licensePlate: selectedVehicle?.licensePlate || ''
     }));
   };
@@ -50,34 +53,43 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const newRepair = {
+        ...formData,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        progress: 0
+      };
+
+      // Add to Firestore
+      const docRef = await addDoc(collection(db, COLLECTIONS.GARAGE.REPAIRS), newRepair);
+      const savedRepair = { ...newRepair, id: docRef.id } as Repair;
+      
+      toast.success('Réparation créée avec succès');
+      if (onSave) onSave(savedRepair);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating repair:', error);
+      toast.error('Erreur lors de la création de la réparation');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Nouvelle réparation</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
-              <Select 
-                value={formData.clientId} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, clientId: value }))}
-              >
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Sélectionner un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.firstName} {client.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="space-y-4">
+            {/* Vehicle Selection */}
             <div className="space-y-2">
               <Label htmlFor="vehicle">Véhicule</Label>
               <Select
@@ -90,13 +102,14 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
                 <SelectContent>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.brand} {vehicle.model} ({vehicle.year})
+                      {vehicle.brand} {vehicle.model} - {vehicle.licensePlate}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* License Plate */}
             <div className="space-y-2">
               <Label htmlFor="licensePlate">Immatriculation</Label>
               <Input
@@ -107,6 +120,7 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
               />
             </div>
 
+            {/* Service Selection */}
             <div className="space-y-2">
               <Label htmlFor="service">Service</Label>
               <Select
@@ -126,11 +140,19 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
               </Select>
             </div>
 
+            {/* Mechanic Selection */}
             <div className="space-y-2">
               <Label htmlFor="mechanic">Mécanicien</Label>
               <Select
                 value={formData.mechanicId}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, mechanicId: value }))}
+                onValueChange={(value) => {
+                  const selectedMechanic = mechanics.find(m => m.id === value);
+                  setFormData(prev => ({
+                    ...prev,
+                    mechanicId: value,
+                    mechanicName: selectedMechanic?.name || ''
+                  }));
+                }}
               >
                 <SelectTrigger id="mechanic">
                   <SelectValue placeholder="Sélectionner un mécanicien" />
@@ -144,48 +166,36 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-            />
-          </div>
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={formData.description || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description de la réparation"
+              />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Start Date */}
             <div className="space-y-2">
               <Label htmlFor="startDate">Date de début</Label>
               <Input
                 id="startDate"
                 type="date"
-                value={formData.startDate}
+                value={formData.startDate || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="estimatedCost">Coût estimé (€)</Label>
-              <Input
-                id="estimatedCost"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.estimatedCost}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedCost: Number(e.target.value) }))}
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit">
-              Créer
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Création...' : 'Créer'}
             </Button>
           </DialogFooter>
         </form>

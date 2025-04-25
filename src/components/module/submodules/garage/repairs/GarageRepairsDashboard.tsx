@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,8 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { clientsMap, vehiclesMap, mechanicsMap } from './repairsData';
+import { Repair } from '../types/garage-types';
 
 const GarageRepairsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -27,19 +25,16 @@ const GarageRepairsDashboard = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  // Safeguard against undefined repairs
-  const safeRepairs = repairs || [];
-
-  const todayRepairs = safeRepairs.filter(r => {
+  const todayRepairs = repairs.filter(r => {
     const today = new Date().toISOString().split('T')[0];
     return r.startDate === today;
   });
 
-  const inProgressRepairs = safeRepairs.filter(r => 
+  const inProgressRepairs = repairs.filter(r => 
     r.status === 'in_progress'
   );
 
-  const awaitingPartsRepairs = safeRepairs.filter(r => 
+  const awaitingPartsRepairs = repairs.filter(r => 
     r.status === 'awaiting_parts'
   );
 
@@ -58,11 +53,8 @@ const GarageRepairsDashboard = () => {
     }
   };
 
-  // Function to handle adding a new repair
-  const handleAddRepair = (newRepair: any) => {
-    // In a real app, you would save this to your database
-    console.log('New repair created:', newRepair);
-    toast.success("Réparation créée avec succès");
+  const handleAddRepair = (repair: Repair) => {
+    console.log('New repair created:', repair);
   };
 
   return (
@@ -99,7 +91,7 @@ const GarageRepairsDashboard = () => {
         />
         <StatCard
           title="Total réparations"
-          value={safeRepairs.length.toString()}
+          value={repairs.length.toString()}
           icon={<Wrench className="h-4 w-4 text-emerald-500" />}
           description="Toutes les réparations"
           className="bg-emerald-50 hover:bg-emerald-100"
@@ -124,7 +116,9 @@ const GarageRepairsDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {safeRepairs.slice(0, 5).map((repair) => (
+              {repairs.sort((a, b) => 
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              ).slice(0, 5).map((repair) => (
                 <TableRow key={repair.id}>
                   <TableCell>{repair.startDate}</TableCell>
                   <TableCell>{repair.clientName || 'N/A'}</TableCell>
@@ -137,7 +131,7 @@ const GarageRepairsDashboard = () => {
                        : repair.status === 'awaiting_parts' ? 'En attente de pièces'
                        : repair.status === 'completed' ? 'Terminé'
                        : repair.status === 'awaiting_approval' ? 'En attente d\'approbation'
-                       : 'Inconnu'}
+                       : 'En attente'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -159,9 +153,6 @@ const GarageRepairsDashboard = () => {
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
         onSave={handleAddRepair}
-        clientsMap={clientsMap}
-        vehiclesMap={vehiclesMap}
-        mechanicsMap={mechanicsMap}
       />
     </div>
   );
