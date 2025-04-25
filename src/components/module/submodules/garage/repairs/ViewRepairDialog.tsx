@@ -2,10 +2,9 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { Repair } from '../types/garage-types';
 import { Progress } from "@/components/ui/progress";
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface ViewRepairDialogProps {
   repair: Repair | null;
@@ -26,6 +25,18 @@ const ViewRepairDialog = ({ repair, open, onOpenChange }: ViewRepairDialogProps)
         return <Badge className="bg-green-100 text-green-800">Terminé</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  // Format dates safely
+  const formatSafeDate = (dateValue: string | Date | null | undefined) => {
+    if (!dateValue) return 'Date non spécifiée';
+    
+    try {
+      return formatDate(new Date(dateValue));
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date invalide';
     }
   };
 
@@ -58,8 +69,8 @@ const ViewRepairDialog = ({ repair, open, onOpenChange }: ViewRepairDialogProps)
 
           <div>
             <h3 className="font-medium mb-1">Dates</h3>
-            <p className="text-sm">Début: {format(new Date(repair.startDate), 'dd MMMM yyyy', { locale: fr })}</p>
-            <p className="text-sm">Fin estimée: {format(new Date(repair.estimatedEndDate), 'dd MMMM yyyy', { locale: fr })}</p>
+            <p className="text-sm">Début: {formatSafeDate(repair.startDate)}</p>
+            <p className="text-sm">Fin estimée: {formatSafeDate(repair.estimatedEndDate)}</p>
           </div>
 
           <div>
@@ -74,7 +85,7 @@ const ViewRepairDialog = ({ repair, open, onOpenChange }: ViewRepairDialogProps)
 
           <div>
             <h3 className="font-medium mb-1">Coût estimé</h3>
-            <p>{repair.estimatedCost.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
+            <p>{formatCurrency(repair.estimatedCost)}</p>
           </div>
         </div>
       </DialogContent>
