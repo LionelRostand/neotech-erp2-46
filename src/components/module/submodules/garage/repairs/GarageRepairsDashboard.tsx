@@ -3,8 +3,8 @@ import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
 import { Plus, Wrench, Clock, PackageSearch, Settings } from 'lucide-react';
 import { Card } from "@/components/ui/card";
-import AddRepairDialog from './AddRepairDialog';
 import RepairsTable from './components/RepairsTable';
+import AddRepairDialog from './AddRepairDialog';
 import { format } from 'date-fns';
 
 const GarageRepairsDashboard = () => {
