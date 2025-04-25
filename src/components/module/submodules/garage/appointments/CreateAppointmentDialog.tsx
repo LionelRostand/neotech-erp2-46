@@ -13,15 +13,16 @@ interface CreateAppointmentDialogProps {
 const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   open,
   onOpenChange,
-  clients,
-  vehicles
+  clients = [],
+  vehicles = []
 }) => {
+  // Ensure we pass valid default values
   return (
     <AddAppointmentDialog
       open={open}
       onOpenChange={onOpenChange}
-      clients={clients}
-      vehicles={vehicles}
+      clients={clients || []}
+      vehicles={vehicles || []}
     />
   );
 };
