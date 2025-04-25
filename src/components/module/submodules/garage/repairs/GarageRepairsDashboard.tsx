@@ -1,35 +1,21 @@
-
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench, Clock, PackageSearch, Settings, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Wrench, Clock, PackageSearch, Settings } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import AddRepairDialog from './AddRepairDialog';
+import RepairsTable from './components/RepairsTable';
 
 const GarageRepairsDashboard = () => {
-  const { repairs, isLoading } = useGarageData();
+  const { repairs, isLoading, refetch } = useGarageData();
   const [showAddDialog, setShowAddDialog] = useState(false);
-
-  const today = new Date();
-  const todaysRepairs = repairs.filter(r => {
-    if (!r.date && !r.startDate) return false;
-    const repairDate = new Date(r.date || r.startDate);
-    return !isNaN(repairDate.getTime()) && repairDate.toDateString() === today.toDateString();
-  });
-
-  const inProgress = repairs.filter(r => r.status === 'in_progress');
-  const awaitingParts = repairs.filter(r => r.status === 'awaiting_parts');
-  const allRepairs = repairs.length;
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const sortedRepairs = [...repairs].sort((a, b) => {
-    const dateA = new Date(a.date || a.startDate || 0);
-    const dateB = new Date(b.date || b.startDate || 0);
-    return dateB.getTime() - dateA.getTime();
-  });
+  // Ensure repairs is an array
+  const safeRepairs = Array.isArray(repairs) ? repairs : [];
 
   return (
     <div className="p-6">
@@ -92,46 +78,10 @@ const GarageRepairsDashboard = () => {
           <h2 className="text-lg font-semibold">Liste de réparations</h2>
         </div>
         <div className="p-4">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-sm">
-                <th className="py-2">Date</th>
-                <th>Client</th>
-                <th>Véhicule</th>
-                <th>Description</th>
-                <th>Mécanicien</th>
-                <th>Statut</th>
-                <th>Progression</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRepairs.map((repair) => (
-                <tr key={repair.id} className="border-t">
-                  <td className="py-3">{repair.date ? new Date(repair.date).toLocaleDateString('fr-FR') : 'N/A'}</td>
-                  <td>{repair.clientName}</td>
-                  <td>{repair.vehicleName}</td>
-                  <td>{repair.description}</td>
-                  <td>{repair.mechanicName}</td>
-                  <td>{repair.status === 'in_progress' ? 'En cours' : repair.status}</td>
-                  <td>{repair.progress}%</td>
-                  <td>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <RepairsTable 
+            repairs={safeRepairs}
+            onRepairModified={refetch}
+          />
         </div>
       </div>
 

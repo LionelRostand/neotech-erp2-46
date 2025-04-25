@@ -8,20 +8,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Repair } from '../../../types/garage-types';
+import RepairsTableActions from './RepairsTableActions';
 import ViewRepairDialog from '../ViewRepairDialog';
 import EditRepairDialog from '../EditRepairDialog';
 import DeleteRepairDialog from '../DeleteRepairDialog';
-import { Repair } from '../../../types/garage-types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface RepairsTableProps {
   repairs: Repair[];
+  onRepairModified: () => void;
 }
 
-const RepairsTable = ({ repairs }: RepairsTableProps) => {
+const RepairsTable = ({ repairs, onRepairModified }: RepairsTableProps) => {
   const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -42,20 +42,12 @@ const RepairsTable = ({ repairs }: RepairsTableProps) => {
     setDeleteDialogOpen(true);
   };
 
-  const handleUpdate = () => {
-    // This will trigger a refetch of the repairs data
-    window.location.reload();
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'awaiting_approval': return 'En attente d\'approbation';
-      case 'approved': return 'Approuvé';
-      case 'in_progress': return 'En cours';
-      case 'awaiting_parts': return 'En attente de pièces';
-      case 'completed': return 'Terminé';
-      case 'cancelled': return 'Annulé';
-      default: return status;
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy', { locale: fr });
+    } catch {
+      return dateString;
     }
   };
 
@@ -77,34 +69,27 @@ const RepairsTable = ({ repairs }: RepairsTableProps) => {
         <TableBody>
           {repairs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-gray-500">
+              <TableCell colSpan={8} className="text-center">
                 Aucune réparation trouvée
               </TableCell>
             </TableRow>
           ) : (
-            repairs.map((repair, index) => (
-              <TableRow key={repair.id || index}>
-                <TableCell>
-                  {repair.date ? format(new Date(repair.date), 'dd/MM/yyyy', { locale: fr }) : ''}
-                </TableCell>
+            repairs.map((repair) => (
+              <TableRow key={repair.id}>
+                <TableCell>{formatDate(repair.date)}</TableCell>
                 <TableCell>{repair.clientName}</TableCell>
                 <TableCell>{repair.vehicleName || repair.vehicleInfo}</TableCell>
                 <TableCell>{repair.description}</TableCell>
                 <TableCell>{repair.mechanicName}</TableCell>
-                <TableCell>{getStatusLabel(repair.status)}</TableCell>
+                <TableCell>{repair.status}</TableCell>
                 <TableCell>{repair.progress}%</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleView(repair)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(repair)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(repair)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <TableCell>
+                  <RepairsTableActions
+                    repair={repair}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
                 </TableCell>
               </TableRow>
             ))
@@ -122,14 +107,14 @@ const RepairsTable = ({ repairs }: RepairsTableProps) => {
         repair={selectedRepair}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        onUpdate={handleUpdate}
+        onUpdate={onRepairModified}
       />
 
       <DeleteRepairDialog
-        repairId={selectedRepair?.id || null}
+        repairId={selectedRepair?.id ?? null}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onDelete={handleUpdate}
+        onDelete={onRepairModified}
       />
     </>
   );
