@@ -17,16 +17,12 @@ const GarageServicesDashboard = () => {
       header: "Date",
     },
     {
-      accessorKey: "name",
-      header: "Service",
+      accessorKey: "vehicleInfo",
+      header: "Véhicule",
     },
     {
-      accessorKey: "category",
-      header: "Catégorie",
-    },
-    {
-      accessorKey: "duration",
-      header: "Durée",
+      accessorKey: "description",
+      header: "Description",
     },
     {
       accessorKey: "mechanicName",
@@ -45,42 +41,42 @@ const GarageServicesDashboard = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Services</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Réparations</h2>
         <Button onClick={() => setOpenAddDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Nouveau service
+          Nouvelle réparation
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4 bg-blue-50">
-          <h3 className="font-medium mb-2">Services aujourd'hui</h3>
-          <p className="text-2xl font-bold">{servicesStats?.today || 0}</p>
-          <p className="text-sm text-gray-500">Planifiés pour aujourd'hui</p>
+          <h3 className="font-medium mb-2">Réparations aujourd'hui</h3>
+          <p className="text-2xl font-bold">{servicesStats.today}</p>
+          <p className="text-sm text-gray-500">Planifiées pour aujourd'hui</p>
         </Card>
 
         <Card className="p-4 bg-yellow-50">
           <h3 className="font-medium mb-2">En cours</h3>
-          <p className="text-2xl font-bold">{servicesStats?.inProgress || 0}</p>
-          <p className="text-sm text-gray-500">Services actifs</p>
+          <p className="text-2xl font-bold">{servicesStats.inProgress}</p>
+          <p className="text-sm text-gray-500">Réparations actives</p>
         </Card>
 
         <Card className="p-4 bg-purple-50">
           <h3 className="font-medium mb-2">En attente de pièces</h3>
-          <p className="text-2xl font-bold">{servicesStats?.waitingParts || 0}</p>
+          <p className="text-2xl font-bold">{servicesStats.waitingParts}</p>
           <p className="text-sm text-gray-500">Commandes en attente</p>
         </Card>
 
         <Card className="p-4 bg-green-50">
-          <h3 className="font-medium mb-2">Total services</h3>
-          <p className="text-2xl font-bold">{servicesStats?.total || 0}</p>
-          <p className="text-sm text-gray-500">Tous les services</p>
+          <h3 className="font-medium mb-2">Total réparations</h3>
+          <p className="text-2xl font-bold">{servicesStats.total}</p>
+          <p className="text-sm text-gray-500">Toutes les réparations</p>
         </Card>
       </div>
 
       <Card>
         <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Derniers services</h3>
+          <h3 className="text-lg font-semibold mb-4">Dernières réparations</h3>
           <DataTable 
             columns={columns} 
             data={services} 

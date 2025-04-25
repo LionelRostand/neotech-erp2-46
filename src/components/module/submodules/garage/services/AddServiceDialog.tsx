@@ -26,10 +26,9 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
 const serviceFormSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
+  vehicleInfo: z.string().min(1, "Les informations du véhicule sont requises"),
   description: z.string().min(1, "La description est requise"),
-  duration: z.string().min(1, "La durée est requise"),
-  price: z.string().min(1, "Le prix est requis"),
+  mechanicName: z.string().min(1, "Le nom du mécanicien est requis"),
 });
 
 type ServiceFormData = z.infer<typeof serviceFormSchema>;
@@ -43,10 +42,9 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(serviceFormSchema),
     defaultValues: {
-      name: '',
+      vehicleInfo: '',
       description: '',
-      duration: '',
-      price: '',
+      mechanicName: '',
     },
   });
 
@@ -56,14 +54,15 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
     try {
       await add({
         ...data,
-        status: 'active',
-        createdAt: new Date().toISOString(),
+        date: new Date().toISOString(),
+        status: 'pending',
+        progress: 0,
       });
-      toast.success('Service ajouté avec succès');
+      toast.success('Réparation ajoutée avec succès');
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      toast.error('Erreur lors de l\'ajout du service');
+      toast.error("Erreur lors de l'ajout de la réparation");
     }
   };
 
@@ -71,18 +70,18 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un service</DialogTitle>
+          <DialogTitle>Ajouter une réparation</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="vehicleInfo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom du service</FormLabel>
+                  <FormLabel>Véhicule</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Vidange" {...field} />
+                    <Input placeholder="Ex: Peugeot 308 2020" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -95,7 +94,7 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Description du service" {...field} />
+                    <Textarea placeholder="Description de la réparation" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,25 +102,12 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
             />
             <FormField
               control={form.control}
-              name="duration"
+              name="mechanicName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Durée (en minutes)</FormLabel>
+                  <FormLabel>Mécanicien</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="60" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prix (€)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="50" {...field} />
+                    <Input placeholder="Nom du mécanicien" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

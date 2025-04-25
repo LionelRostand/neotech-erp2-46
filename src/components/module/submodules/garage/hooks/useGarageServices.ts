@@ -6,9 +6,8 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 interface GarageService {
   id: string;
   date: string;
-  name: string;
-  category: string;
-  duration: string;
+  vehicleInfo: string;
+  description: string;
   mechanicName: string;
   status: string;
   progress: number;
@@ -23,7 +22,7 @@ interface ServiceStats {
 
 export const useGarageServices = () => {
   const { data: services = [], isLoading } = useQuery({
-    queryKey: ['garage', 'services'],
+    queryKey: ['garage', 'repairs'],
     queryFn: () => fetchCollectionData<GarageService>(COLLECTIONS.GARAGE.SERVICES),
   });
 
