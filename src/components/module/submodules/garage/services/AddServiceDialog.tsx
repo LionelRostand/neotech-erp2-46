@@ -1,68 +1,43 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
 import { useFirestore } from '@/hooks/useFirestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-
-const serviceFormSchema = z.object({
-  vehicleInfo: z.string().min(1, "Les informations du véhicule sont requises"),
-  description: z.string().min(1, "La description est requise"),
-  mechanicName: z.string().min(1, "Le nom du mécanicien est requis"),
-});
-
-type ServiceFormData = z.infer<typeof serviceFormSchema>;
 
 interface AddServiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) {
-  const form = useForm<ServiceFormData>({
-    resolver: zodResolver(serviceFormSchema),
-    defaultValues: {
-      vehicleInfo: '',
-      description: '',
-      mechanicName: '',
-    },
-  });
+interface ServiceFormData {
+  name: string;
+  description: string;
+  cost: number;
+  duration: number;
+}
 
-  const { add } = useFirestore(COLLECTIONS.GARAGE.SERVICES);
+export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) {
+  const { add } = useFirestore('services');
+  
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ServiceFormData>();
 
   const onSubmit = async (data: ServiceFormData) => {
     try {
       await add({
         ...data,
         date: new Date().toISOString(),
-        status: 'pending',
-        progress: 0,
+        status: 'active'
       });
-      toast.success('Réparation ajoutée avec succès');
-      form.reset();
+      toast.success('Service ajouté avec succès');
+      reset();
       onOpenChange(false);
     } catch (error) {
-      toast.error("Erreur lors de l'ajout de la réparation");
+      toast.error("Erreur lors de l'ajout du service");
     }
   };
 
@@ -70,54 +45,58 @@ export function AddServiceDialog({ open, onOpenChange }: AddServiceDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Ajouter une réparation</DialogTitle>
+          <DialogTitle>Ajouter un service</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="vehicleInfo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Véhicule</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Peugeot 308 2020" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nom du service</Label>
+            <Input
+              id="name"
+              {...register("name", { required: "Ce champ est requis" })}
             />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Description de la réparation" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              {...register("description")}
             />
-            <FormField
-              control={form.control}
-              name="mechanicName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mécanicien</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nom du mécanicien" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="cost">Coût (€)</Label>
+              <Input
+                id="cost"
+                type="number"
+                {...register("cost", { required: "Ce champ est requis" })}
+              />
+              {errors.cost && (
+                <p className="text-sm text-destructive">{errors.cost.message}</p>
               )}
-            />
-            <DialogFooter>
-              <Button type="submit">Ajouter</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="duration">Durée (min)</Label>
+              <Input
+                id="duration"
+                type="number"
+                {...register("duration", { required: "Ce champ est requis" })}
+              />
+              {errors.duration && (
+                <p className="text-sm text-destructive">{errors.duration.message}</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="submit">Ajouter</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
