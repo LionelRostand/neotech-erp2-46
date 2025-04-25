@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
@@ -94,7 +93,7 @@ const GarageRepairsDashboard = () => {
         </div>
         <div className="p-4">
           <RepairsTable 
-            repairs={safeRepairs}
+            repairs={repairs}
             onRepairModified={refetch}
           />
         </div>
@@ -103,6 +102,7 @@ const GarageRepairsDashboard = () => {
       <AddRepairDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+        onRepairAdded={refetch}
       />
     </div>
   );

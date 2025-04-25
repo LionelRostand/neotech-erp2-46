@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import ServicesSelector from './ServicesSelector';
 import { RepairFormData, RepairService } from './types';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useGarageData } from '@/hooks/garage/useGarageData';
+import { toast } from 'sonner';
 
 interface AddRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRepairAdded?: () => void;
 }
 
 const initialFormData: RepairFormData = {
@@ -35,8 +41,10 @@ const initialFormData: RepairFormData = {
 const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
   open,
   onOpenChange,
+  onRepairAdded
 }) => {
   const [formData, setFormData] = useState<RepairFormData>(initialFormData);
+  const { clients, vehicles, mechanics, services } = useGarageData();
 
   const handleChange = (field: keyof RepairFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -44,16 +52,47 @@ const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
 
   const handleServicesChange = (services: RepairService[]) => {
     setFormData(prev => ({ ...prev, services }));
+    
+    // Calculate total cost from services
+    const totalCost = services.reduce((sum, service) => sum + (service.cost || 0), 0);
+    handleChange('estimatedCost', totalCost);
   };
 
-  const handleCostChange = (totalCost: number) => {
-    setFormData(prev => ({ ...prev, estimatedCost: totalCost }));
+  const resetForm = () => {
+    setFormData(initialFormData);
   };
 
-  const handleSubmit = () => {
-    console.log('Form data:', formData);
-    // Add your submit logic here
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    try {
+      // Get client and vehicle names for display
+      const selectedClient = clients.find(c => c.id === formData.clientId);
+      const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId);
+      const selectedMechanic = mechanics.find(m => m.id === formData.mechanicId);
+
+      const repairData = {
+        ...formData,
+        date: formData.startDate,
+        clientName: selectedClient?.name || 'Unknown Client',
+        vehicleName: selectedVehicle?.name || 'Unknown Vehicle',
+        vehicleInfo: selectedVehicle?.model || '',
+        mechanicName: selectedMechanic?.name || 'Unknown Mechanic',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const repairsRef = collection(db, COLLECTIONS.GARAGE.REPAIRS);
+      await addDoc(repairsRef, repairData);
+      
+      toast.success('Réparation ajoutée avec succès');
+      if (onRepairAdded) {
+        onRepairAdded();
+      }
+      onOpenChange(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error adding repair:', error);
+      toast.error('Erreur lors de l\'ajout de la réparation');
+    }
   };
 
   return (
@@ -74,8 +113,11 @@ const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Jean Dupont</SelectItem>
-                <SelectItem value="2">Marie Martin</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -90,8 +132,11 @@ const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
                 <SelectValue placeholder="Sélectionner un véhicule" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Peugeot 208</SelectItem>
-                <SelectItem value="2">Renault Clio</SelectItem>
+                {vehicles.map((vehicle) => (
+                  <SelectItem key={vehicle.id} value={vehicle.id}>
+                    {vehicle.name || vehicle.model}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -106,8 +151,11 @@ const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
                 <SelectValue placeholder="Sélectionner un mécanicien" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Pierre Dubois</SelectItem>
-                <SelectItem value="2">Jacques Martin</SelectItem>
+                {mechanics.map((mechanic) => (
+                  <SelectItem key={mechanic.id} value={mechanic.id}>
+                    {mechanic.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -124,6 +172,7 @@ const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
               <SelectContent>
                 <SelectItem value="awaiting_approval">En attente d'approbation</SelectItem>
                 <SelectItem value="in_progress">En cours</SelectItem>
+                <SelectItem value="awaiting_parts">En attente de pièces</SelectItem>
                 <SelectItem value="completed">Terminé</SelectItem>
               </SelectContent>
             </Select>
@@ -147,21 +196,11 @@ const AddRepairDialog: React.FC<AddRepairDialogProps> = ({
             />
           </div>
 
-          <div className="col-span-2 space-y-2">
+          <div className="col-span-2">
             <ServicesSelector
               services={formData.services}
               onChange={handleServicesChange}
-              onCostChange={handleCostChange}
-            />
-          </div>
-
-          <div className="col-span-2 space-y-2">
-            <label>Coût estimé (€)</label>
-            <Input
-              type="number"
-              value={formData.estimatedCost}
-              disabled
-              className="bg-gray-100"
+              availableServices={services}
             />
           </div>
 
