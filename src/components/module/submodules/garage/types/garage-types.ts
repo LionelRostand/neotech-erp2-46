@@ -38,18 +38,3 @@ export interface Repair {
   licensePlate?: string;
   vehicleInfo?: string;
 }
-
-export interface Mechanic {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-  specialization?: string[] | string;
-  status?: string;
-  photo?: string;
-  hireDate?: string;
-  certifications?: string[];
-  ratings?: number;
-  assignedRepairs?: string[];
-}

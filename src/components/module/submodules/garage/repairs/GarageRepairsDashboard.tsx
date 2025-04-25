@@ -1,17 +1,14 @@
-
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
 import { Plus, Wrench, Clock, PackageSearch, Settings } from 'lucide-react';
 import { Card } from "@/components/ui/card";
-import RepairsTable from './components/RepairsTable';
 import AddRepairDialog from './AddRepairDialog';
+import RepairsTable from './components/RepairsTable';
 import { format } from 'date-fns';
-import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading, refetch } = useGarageData();
-  const { mechanics } = useGarageMechanics();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   if (isLoading) {
