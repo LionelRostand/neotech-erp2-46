@@ -52,7 +52,9 @@ export function RepairKanban() {
       });
       
       // Update the local data via refetch
-      refetch();
+      if (typeof refetch === 'function') {
+        refetch();
+      }
       toast.success('Statut de réparation mis à jour');
     } catch (error) {
       console.error('Error updating repair status:', error);
@@ -77,7 +79,9 @@ export function RepairKanban() {
 
   const handleUpdate = () => {
     // Call refetch to update the data
-    refetch();
+    if (typeof refetch === 'function') {
+      refetch();
+    }
   };
 
   if (isLoading) {

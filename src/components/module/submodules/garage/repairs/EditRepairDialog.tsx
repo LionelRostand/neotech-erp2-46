@@ -44,10 +44,12 @@ const EditRepairDialog = ({ repair, open, onOpenChange, onUpdate }: EditRepairDi
         lastUpdated: new Date().toISOString()
       });
       toast.success('Réparation mise à jour avec succès');
-      // Call the onUpdate callback to refresh data in parent component
+      
+      // Ensure onUpdate is only called if it's a function
       if (typeof onUpdate === 'function') {
         onUpdate();
       }
+      
       onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error);

@@ -33,7 +33,7 @@ const DeleteRepairDialog = ({ repairId, open, onOpenChange, onDelete }: DeleteRe
       await deleteDoc(doc(db, COLLECTIONS.GARAGE.REPAIRS, repairId));
       toast.success('Réparation supprimée avec succès');
       
-      // Call the onDelete callback to refresh the data
+      // Ensure onDelete is only called if it's a function
       if (typeof onDelete === 'function') {
         onDelete();
       }
