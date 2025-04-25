@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import WelcomeHeader from '@/components/welcome/WelcomeHeader';
 import ModuleAnimation from '@/components/welcome/ModuleAnimation';
 import StatisticsSection from '@/components/welcome/StatisticsSection';
+import ExportConfigButton from '@/components/ExportConfigButton';
 import { modules } from '@/data/modules';
 
 const Welcome = () => {
@@ -43,16 +44,16 @@ const Welcome = () => {
     <DashboardLayout>
       <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center p-4 bg-gradient-to-b from-white to-gray-100">
         <div className="max-w-6xl w-full mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left column: Text and CTA */}
-            <WelcomeHeader />
-            
-            {/* Right column: Animated modules */}
-            <ModuleAnimation 
-              installedModules={installedModules}
-              visibleModules={visibleModules}
-              animationStep={animationStep}
-            />
+          <div className="flex justify-between items-center mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <WelcomeHeader />
+              <ModuleAnimation 
+                installedModules={installedModules}
+                visibleModules={visibleModules}
+                animationStep={animationStep}
+              />
+            </div>
+            <ExportConfigButton />
           </div>
           
           <StatisticsSection 
