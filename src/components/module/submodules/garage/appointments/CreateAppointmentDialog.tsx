@@ -1,197 +1,190 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Appointment } from '../types/garage-types';
+import { toast } from 'sonner';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { GarageClient, Vehicle } from '../types/garage-types';
 
 interface CreateAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clientId: string;
-  clientName: string;
-  onAppointmentCreated: () => void;
+  clients: GarageClient[];
+  vehicles: Vehicle[];
 }
 
-const serviceTypes = [
-  { id: "maintenance", label: "Maintenance régulière" },
-  { id: "repair", label: "Réparation" },
-  { id: "diagnostic", label: "Diagnostic" },
-  { id: "tire", label: "Changement de pneus" },
-  { id: "oil", label: "Vidange d'huile" },
-  { id: "brake", label: "Système de freinage" },
-  { id: "other", label: "Autre" }
-];
+const CreateAppointmentDialog = ({ open, onOpenChange, clients, vehicles }: CreateAppointmentDialogProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<string>('');
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+  const [date, setDate] = useState<string>('');
+  const [time, setTime] = useState<string>('');
+  const [service, setService] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
 
-const timeSlots = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", 
-  "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"
-];
-
-const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
-  open,
-  onOpenChange,
-  clientId,
-  clientName,
-  onAppointmentCreated
-}) => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const [date, setDate] = useState<string>(format(tomorrow, 'yyyy-MM-dd'));
-  const [time, setTime] = useState<string>("09:00");
-  const [serviceType, setServiceType] = useState<string>("maintenance");
-  const [vehicleId, setVehicleId] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [duration, setDuration] = useState<string>("60");
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here you would normally save the appointment to your backend
-    console.log("Creating appointment:", {
-      clientId,
-      clientName,
-      date,
-      time,
-      serviceType,
-      vehicleId,
-      description,
-      duration: parseInt(duration),
-    });
-    
-    onAppointmentCreated();
+    if (!selectedClient || !selectedVehicle || !date || !time || !service) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Trouver les données du client
+      const client = clients.find(c => c.id === selectedClient);
+      
+      // Trouver les données du véhicule
+      const vehicle = vehicles.find(v => v.id === selectedVehicle);
+      
+      const appointmentData = {
+        clientId: selectedClient,
+        clientName: client?.name || 'Client inconnu',
+        vehicleId: selectedVehicle,
+        vehicleMake: vehicle?.make || 'Non spécifié',
+        vehicleModel: vehicle?.model || 'Non spécifié',
+        date,
+        time,
+        service,
+        notes,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      };
+      
+      await addDoc(collection(db, COLLECTIONS.GARAGE.APPOINTMENTS), appointmentData);
+      
+      toast.success('Rendez-vous créé avec succès');
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erreur lors de la création du rendez-vous:', error);
+      toast.error('Erreur lors de la création du rendez-vous');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedClient('');
+    setSelectedVehicle('');
+    setDate('');
+    setTime('');
+    setService('');
+    setNotes('');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Prendre un rendez-vous</DialogTitle>
+          <DialogTitle>Nouveau rendez-vous</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleCreateAppointment} className="space-y-4">
           <div className="space-y-2">
-            <Label>Client</Label>
-            <div className="p-2 bg-muted rounded-md">
-              {clientName} (ID: {clientId})
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  min={format(new Date(), 'yyyy-MM-dd')}
-                  required
-                />
-                <CalendarIcon className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="time">Heure</Label>
-              <Select value={time || timeSlots[0]} onValueChange={setTime}>
-                <SelectTrigger id="time">
-                  <SelectValue placeholder="Sélectionner une heure" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map(slot => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="serviceType">Type de service</Label>
-            <Select value={serviceType || serviceTypes[0].id} onValueChange={setServiceType}>
-              <SelectTrigger id="serviceType">
-                <SelectValue placeholder="Sélectionner un type de service" />
+            <Label htmlFor="client">Client</Label>
+            <Select 
+              value={selectedClient} 
+              onValueChange={setSelectedClient}
+            >
+              <SelectTrigger id="client">
+                <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
-                {serviceTypes.map(service => (
-                  <SelectItem key={service.id} value={service.id}>
-                    {service.label}
-                  </SelectItem>
-                ))}
+                {clients.length > 0 ? (
+                  clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-clients">Aucun client disponible</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="vehicle">Véhicule</Label>
-            <Select value={vehicleId || "no-selection"} onValueChange={setVehicleId} required>
+            <Select 
+              value={selectedVehicle} 
+              onValueChange={setSelectedVehicle}
+              disabled={!selectedClient}
+            >
               <SelectTrigger id="vehicle">
                 <SelectValue placeholder="Sélectionner un véhicule" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="no-selection" disabled>Sélectionner un véhicule</SelectItem>
-                <SelectItem value="VH001">Peugeot 208 (VH001)</SelectItem>
-                <SelectItem value="VH002">Renault Clio (VH002)</SelectItem>
-                <SelectItem value="VH003">Citroën C3 (VH003)</SelectItem>
+                {selectedClient && vehicles.filter(v => v.clientId === selectedClient).length > 0 ? (
+                  vehicles
+                    .filter(v => v.clientId === selectedClient)
+                    .map((vehicle) => (
+                      <SelectItem key={vehicle.id} value={vehicle.id}>
+                        {vehicle.make} {vehicle.model} ({vehicle.licensePlate || 'Non immatriculé'})
+                      </SelectItem>
+                    ))
+                ) : (
+                  <SelectItem value="no-vehicles">Aucun véhicule disponible</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="duration">Durée (minutes)</Label>
-            <Select value={duration || "60"} onValueChange={setDuration}>
-              <SelectTrigger id="duration">
-                <SelectValue placeholder="Sélectionner une durée" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">1 heure</SelectItem>
-                <SelectItem value="90">1 heure 30</SelectItem>
-                <SelectItem value="120">2 heures</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description / Commentaires</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Décrivez le problème ou la raison du rendez-vous"
-              rows={3}
+            <Label htmlFor="date">Date</Label>
+            <Input 
+              id="date" 
+              type="date" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)}
             />
           </div>
-          
-          <DialogFooter>
+
+          <div className="space-y-2">
+            <Label htmlFor="time">Heure</Label>
+            <Input 
+              id="time" 
+              type="time" 
+              value={time} 
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="service">Service</Label>
+            <Input 
+              id="service" 
+              type="text" 
+              placeholder="Ex: Révision, Changement de pneus..." 
+              value={service} 
+              onChange={(e) => setService(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (optionnel)</Label>
+            <Textarea 
+              id="notes" 
+              placeholder="Notes supplémentaires..." 
+              value={notes} 
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit">
-              Confirmer le rendez-vous
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Création...' : 'Créer le rendez-vous'}
             </Button>
           </DialogFooter>
         </form>

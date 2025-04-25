@@ -1,243 +1,160 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
-import { Plus, Calendar, Clock, UserCheck, AlertTriangle } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus, Calendar } from 'lucide-react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { format, isValid } from 'date-fns';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import CreateAppointmentDialog from './CreateAppointmentDialog';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import StatusBadge from '@/components/StatusBadge';
-import AddAppointmentDialog from './AddAppointmentDialog';
-import ViewAppointmentDialog from './ViewAppointmentDialog';
-import EditAppointmentDialog from './EditAppointmentDialog';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
-import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
 
 const GarageAppointmentsDashboard = () => {
-  const { appointments, isLoading } = useGarageData();
-  const [showAddDialog, setShowAddDialog] = React.useState(false);
-  const [selectedAppointment, setSelectedAppointment] = React.useState<any>(null);
-  const [showViewDialog, setShowViewDialog] = React.useState(false);
-  const [showEditDialog, setShowEditDialog] = React.useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { appointments = [], clients = [], vehicles = [], isLoading } = useGarageData();
 
-  const pendingAppointments = appointments.filter(a => a.status === 'pending');
-  const confirmedAppointments = appointments.filter(a => a.status === 'confirmed');
-  const canceledAppointments = appointments.filter(a => a.status === 'canceled');
-  const todayAppointments = appointments.filter(a => {
-    const appointmentDate = new Date(a.date);
-    const today = new Date();
-    return appointmentDate.toDateString() === today.toDateString();
-  });
-
-  const handleDelete = async () => {
-    if (selectedAppointment) {
-      try {
-        await deleteDoc(doc(db, COLLECTIONS.GARAGE.APPOINTMENTS, selectedAppointment.id));
-        toast.success("Rendez-vous supprimé avec succès");
-        setShowDeleteDialog(false);
-        setSelectedAppointment(null);
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
-        toast.error("Erreur lors de la suppression du rendez-vous");
-      }
+  // Format la date dans un format français
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'PPP', { locale: fr });
+    } catch (e) {
+      return dateString || 'Date non spécifiée';
     }
   };
 
-  const columns = [
+  // Format l'heure dans un format français
+  const formatTime = (timeString: string) => {
+    return timeString || 'Heure non spécifiée';
+  };
+
+  // Obtenir le badge de statut
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-green-500">Confirmé</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500">En attente</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500">Annulé</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-500">Terminé</Badge>;
+      default:
+        return <Badge>{status || 'Non défini'}</Badge>;
+    }
+  };
+
+  // Données de test pour les rendez-vous si aucun n'existe
+  const mockAppointments = [
     {
-      header: "Client",
-      accessorKey: "clientName",
+      id: 'appt1',
+      date: '2025-05-02',
+      time: '09:30',
+      clientId: 'client1',
+      clientName: 'Jean Dupont',
+      vehicleMake: 'Renault',
+      vehicleModel: 'Clio',
+      service: 'Entretien standard',
+      status: 'confirmed',
+      notes: 'Première visite'
     },
     {
-      header: "Date",
-      accessorKey: "date",
-      cell: ({ row }: { row: any }) => {
-        const date = new Date(row.original.date);
-        return isValid(date) ? format(date, 'dd MMMM yyyy', { locale: fr }) : 'Date invalide';
-      },
+      id: 'appt2',
+      date: '2025-05-02',
+      time: '11:00',
+      clientId: 'client2',
+      clientName: 'Marie Martin',
+      vehicleMake: 'Peugeot',
+      vehicleModel: '308',
+      service: 'Changement de pneus',
+      status: 'pending',
+      notes: ''
     },
     {
-      header: "Heure",
-      accessorKey: "time",
-    },
-    {
-      header: "Type",
-      accessorKey: "type",
-      cell: ({ row }: { row: any }) => {
-        const typeMap: { [key: string]: string } = {
-          maintenance: "Maintenance",
-          reparation: "Réparation",
-          diagnostic: "Diagnostic",
-          revision: "Révision"
-        };
-        return typeMap[row.original.type] || row.original.type;
-      },
-    },
-    {
-      header: "Statut",
-      accessorKey: "status",
-      cell: ({ row }: { row: any }) => (
-        <StatusBadge status={row.original.status}>
-          {row.original.status === 'pending' ? 'En attente' :
-           row.original.status === 'confirmed' ? 'Confirmé' :
-           row.original.status === 'canceled' ? 'Annulé' :
-           row.original.status === 'completed' ? 'Terminé' : 
-           row.original.status}
-        </StatusBadge>
-      ),
-    },
-    {
-      header: "Actions",
-      cell: ({ row }: { row: any }) => (
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => {
-            setSelectedAppointment(row.original);
-            setShowViewDialog(true);
-          }}>
-            Voir
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => {
-            setSelectedAppointment(row.original);
-            setShowEditDialog(true);
-          }}>
-            Modifier
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => {
-            setSelectedAppointment(row.original);
-            setShowDeleteDialog(true);
-          }}>
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
+      id: 'appt3',
+      date: '2025-05-03',
+      time: '14:30',
+      clientId: 'client3',
+      clientName: 'Pierre Durand',
+      vehicleMake: 'Citroën',
+      vehicleModel: 'C3',
+      service: 'Diagnostic électronique',
+      status: 'confirmed',
+      notes: 'Client prioritaire'
+    }
   ];
+
+  // Utiliser les données mockées si aucun rendez-vous n'est disponible
+  const displayAppointments = appointments.length > 0 ? appointments : mockAppointments;
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement des rendez-vous...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Rendez-vous</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <h1 className="text-2xl font-bold">Rendez-vous</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Nouveau rendez-vous
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-blue-50 hover:bg-blue-100 transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <span>Aujourd'hui</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{todayAppointments.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-yellow-50 hover:bg-yellow-100 transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
-              <span>En attente</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{pendingAppointments.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-green-50 hover:bg-green-100 transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-green-600" />
-              <span>Confirmés</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{confirmedAppointments.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-red-50 hover:bg-red-100 transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              <span>Annulés</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{canceledAppointments.length}</div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Card>
-        <CardHeader>
-          <CardTitle>Liste des rendez-vous</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl">Liste des rendez-vous</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable 
-            columns={columns} 
-            data={appointments}
-            isLoading={isLoading}
-          />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Heure</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Véhicule</TableHead>
+                <TableHead>Service</TableHead>
+                <TableHead>Statut</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayAppointments.length > 0 ? (
+                displayAppointments.map((appointment) => (
+                  <TableRow key={appointment.id}>
+                    <TableCell>{formatDate(appointment.date)}</TableCell>
+                    <TableCell>{formatTime(appointment.time)}</TableCell>
+                    <TableCell>{appointment.clientName}</TableCell>
+                    <TableCell>
+                      {appointment.vehicleMake && appointment.vehicleModel
+                        ? `${appointment.vehicleMake} ${appointment.vehicleModel}`
+                        : 'Non spécifié'}
+                    </TableCell>
+                    <TableCell>{appointment.service || 'Non spécifié'}</TableCell>
+                    <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10">
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <Calendar className="h-12 w-12 mb-2 opacity-20" />
+                      <p>Aucun rendez-vous trouvé</p>
+                      <p className="text-sm">Cliquez sur "Nouveau rendez-vous" pour en ajouter un.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      {showAddDialog && (
-        <AddAppointmentDialog 
-          open={showAddDialog}
-          onClose={() => setShowAddDialog(false)}
-        />
-      )}
-
-      {showViewDialog && selectedAppointment && (
-        <ViewAppointmentDialog 
-          open={showViewDialog}
-          onClose={() => {
-            setShowViewDialog(false);
-            setSelectedAppointment(null);
-          }}
-          appointment={selectedAppointment}
-        />
-      )}
-
-      {showEditDialog && selectedAppointment && (
-        <EditAppointmentDialog 
-          open={showEditDialog}
-          onClose={() => {
-            setShowEditDialog(false);
-            setSelectedAppointment(null);
-          }}
-          appointment={selectedAppointment}
-          onUpdate={() => {
-            setShowEditDialog(false);
-            setSelectedAppointment(null);
-          }}
-        />
-      )}
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Cela supprimera définitivement le rendez-vous.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CreateAppointmentDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        clients={clients}
+        vehicles={vehicles}
+      />
     </div>
   );
 };

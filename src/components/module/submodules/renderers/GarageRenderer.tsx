@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SubModule } from "@/data/types/modules";
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';

@@ -1,87 +1,100 @@
 
 export interface GarageClient {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
+  name: string;
+  email?: string;
+  phone?: string;
   address?: string;
-  createdAt: string;
-  updatedAt: string;
-  status: 'active' | 'inactive';
+  city?: string;
+  postalCode?: string;
+  status?: 'active' | 'inactive';
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Vehicle {
   id: string;
-  brand: string;
-  model: string;
-  year: number;
-  licensePlate: string;
   clientId: string;
-  type: string;
-  status: 'available' | 'maintenance' | 'repair';
+  make: string;
+  model: string;
+  year?: number;
+  color?: string;
+  licensePlate?: string;
+  vin?: string;
+  fuelType?: string;
+  status?: 'active' | 'maintenance' | 'repair' | 'sold';
+  mileage?: number;
+  lastService?: string;
+  nextServiceDue?: string;
+  purchaseDate?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Mechanic {
   id: string;
   name: string;
-  specialization: string;
-  experience: string;
-  status: 'available' | 'busy' | 'onBreak';
+  email?: string;
+  phone?: string;
+  specialization?: string;
+  status?: 'active' | 'inactive' | 'on_leave';
+  hourlyRate?: number;
+  startDate?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Repair {
   id: string;
-  clientId: string;
   vehicleId: string;
-  mechanicId: string;
-  licensePlate: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  estimatedCost: number;
-  status: 'pending' | 'in_progress' | 'awaiting_parts' | 'awaiting_approval' | 'completed' | 'cancelled';
-  createdAt: string;
-  // Additional fields that appear to be used but were not defined in the original interface
-  clientName?: string;
   vehicleName?: string;
+  vehicleModel?: string;
+  clientId: string;
+  clientName?: string;
+  mechanicId?: string;
   mechanicName?: string;
+  service?: string;
+  description: string;
+  status: 'in_progress' | 'awaiting_parts' | 'completed' | 'cancelled';
+  startDate: string;
+  estimatedEndDate?: string;
+  actualEndDate?: string;
+  estimatedCost?: number;
+  actualCost?: number;
+  partsUsed?: RepairPart[];
+  laborHours?: number;
+  notes?: string;
   progress?: number;
+  invoiceId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  licensePlate?: string;
 }
 
-export interface GarageService {
+export interface RepairPart {
   id: string;
   name: string;
-  description: string;
-  price: number;
-  duration: number; // in minutes
-  category: string;
-  status: 'active' | 'inactive';
+  partNumber?: string;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
 }
 
-export interface Invoice {
+export interface GarageAppointment {
   id: string;
   clientId: string;
   clientName: string;
   vehicleId: string;
-  vehicleName: string;
+  vehicleMake?: string;
+  vehicleModel?: string;
   date: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  total: number;
-  subtotal: number;
-  tax: number;
-  discount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
-  notes: string;
+  time: string;
+  service: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  notes?: string;
   createdAt: string;
-  updatedAt: string;
-}
-
-export interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  amount: number;
+  updatedAt?: string;
 }

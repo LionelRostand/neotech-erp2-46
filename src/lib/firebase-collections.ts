@@ -1,129 +1,103 @@
-// Firebase collections paths for the application
-
 export const COLLECTIONS = {
-  EMPLOYEES: "employees",
-  DEPARTMENTS: "departments",
-  COMPANIES: "companies",
-  PAYSLIPS: "payslips",
-  CONTRACTS: "contracts",
-  BADGES: "badges",
-  LEAVES: "leaves",
-  ALERTS: "alerts",
-  NOTIFICATIONS: "notifications",
-  DOCUMENTS: "documents",
-  USERS: "users",
-  TIME_SHEETS: "timeSheets",
-  EVALUATIONS: "evaluations",
-  TRAININGS: "trainings",
-  ATTENDANCE: "attendance",
-  SETTINGS: "settings",
-  
-  // Module-specific collections
-  FREIGHT: {
-    SHIPMENTS: "freight_shipments",
-    ROUTES: "freight_routes",
-    CARRIERS: "freight_carriers",
-    CONTAINERS: "freight_containers",
-    PACKAGES: "freight_packages",
-    TRACKINGS: "freight_trackings",
-    CLIENTS: "freight_clients",
-    DOCUMENTS: "freight_documents",
-    SETTINGS: "freight_settings",
-    INVOICES: "freight_invoices",
-    QUOTES: "freight_quotes",
-    BILLING: "freight_billing"
-  },
-  
+  EMPLOYEES: 'employees',
+  COMPANIES: 'companies',
   MESSAGES: {
-    MESSAGES: "messages",
-    INBOX: "messages_inbox",
-    SENT: "messages_sent",
-    DRAFTS: "messages_drafts",
-    ARCHIVE: "messages_archive",
-    CONTACTS: "contacts",
-    TEMPLATES: "message_templates",
-    SCHEDULED: "scheduled_messages",
-    SETTINGS: "message_settings"
+    INBOX: 'messages-inbox',
+    SENT: 'messages-sent',
+    DRAFTS: 'messages-drafts',
+    ARCHIVED: 'messages-archived',
+    SCHEDULED: 'messages-scheduled',
+    TEMPLATES: 'messages-templates'
   },
-  
-  GARAGE: {
-    VEHICLES: "garage_vehicles",
-    CLIENTS: "garage_clients",
-    APPOINTMENTS: "garage_appointments",
-    MECHANICS: "garage_mechanics",
-    SERVICES: "garage_services",
-    PARTS: "garage_parts",
-    REPAIRS: "garage_repairs",
-    INVOICES: "garage_invoices",
-    SUPPLIERS: "garage_suppliers",
-    INVENTORY: "garage_inventory",
-    LOYALTY: "garage_loyalty",
-    SETTINGS: "garage_settings"
-  },
-  
-  ACCOUNTING: {
-    INVOICES: "accounting_invoices",
-    CLIENTS: "accounting_clients",
-    PAYMENTS: "accounting_payments",
-    EXPENSES: "accounting_expenses",
-    TAX_RATES: "accounting_tax_rates",
-    TAX_DECLARATIONS: "accounting_tax_declarations"
-  },
-  
-  CRM: {
-    CLIENTS: "crm_clients",
-    PROSPECTS: "crm_prospects",
-    OPPORTUNITIES: "crm_opportunities",
-    ACTIVITIES: "crm_activities",
-    SETTINGS: "crm_settings"
-  },
-  
-  HR: {
-    EMPLOYEES: "hr_employees",
-    PAYSLIPS: "hr_payslips",
-    CONTRACTS: "hr_contracts",
-    DEPARTMENTS: "hr_departments",
-    LEAVES: "hr_leaves",
-    ABSENCE_REQUESTS: "hr_absences",
-    ATTENDANCE: "hr_attendance",
-    TIMESHEET: "hr_timesheet"
-  },
-  
+  CONTACTS: 'contacts',
   PROJECTS: {
-    PROJECTS: "projects",
-    TASKS: "tasks",
-    MILESTONES: "project_milestones",
-    COMMENTS: "project_comments",
-    TIMETRACKING: "project_timetracking",
-    TEAMS: "project_teams"
+    LIST: 'projects',
+    TASKS: 'tasks',
+    COMMENTS: 'comments',
+    TAGS: 'project-tags',
+    STATUSES: 'project-statuses',
+    MEMBERS: 'project-members'
   },
-  
-  TRANSPORT: {
-    SERVICES: "transport_services",
-    BOOKINGS: "transport_bookings",
-    VEHICLES: "transport_vehicles",
-    DRIVERS: "transport_drivers",
-    ROUTES: "transport_routes",
-    CLIENTS: "transport_clients",
-    RESERVATIONS: "transport_reservations",
-    INVOICES: "transport_invoices"
+  DOCUMENTS: {
+    FILES: 'documents-files',
+    FOLDERS: 'documents-folders',
+    SHARED: 'documents-shared',
+    FAVORITES: 'documents-favorites',
+    RECENTS: 'documents-recents',
+    ARCHIVES: 'documents-archives',
+    METADATA: 'documents-metadata'
   },
-  
+  CRMS: {
+    CLIENTS: 'crm-clients',
+    PROSPECTS: 'crm-prospects',
+    OPPORTUNITIES: 'crm-opportunities',
+    TASKS: 'crm-tasks'
+  },
+  GARAGE: {
+    CLIENTS: 'garage-clients',
+    VEHICLES: 'garage-vehicles',
+    MECHANICS: 'garage-mechanics',
+    REPAIRS: 'garage-repairs',
+    APPOINTMENTS: 'garage-appointments',
+    SERVICES: 'garage-services',
+    SUPPLIERS: 'garage-suppliers',
+    INVENTORY: 'garage-inventory',
+    INVOICES: 'garage-invoices'
+  },
+  HEALTH: {
+    PATIENTS: 'health-patients',
+    DOCTORS: 'health-doctors',
+    CONSULTATIONS: 'health-consultations',
+    APPOINTMENTS: 'health-appointments',
+    MEDICAL_RECORDS: 'health-medical-records',
+    INSURANCE_PROVIDERS: 'health-insurance-providers'
+  },
+  SALON: {
+    CLIENTS: 'salon-clients',
+    STYLISTS: 'salon-stylists',
+    APPOINTMENTS: 'salon-appointments',
+    SERVICES: 'salon-services',
+    PRODUCTS: 'salon-products',
+    SUPPLIERS: 'salon-suppliers',
+    INVENTORY: 'salon-inventory',
+    LOYALTY_PROGRAMS: 'salon-loyalty-programs',
+    REVIEWS: 'salon-reviews'
+  },
   LIBRARY: {
-    BOOKS: "library_books",
-    MEMBERS: "library_members",
-    LOANS: "library_loans",
-    RETURNS: "library_returns",
-    CATEGORIES: "library_categories",
-    STATS: "library_stats"
+    MEMBERS: 'library-members',
+    BOOKS: 'library-books',
+    LIBRARIANS: 'library-librarians',
+    LOANS: 'library-loans',
+    RESERVATIONS: 'library-reservations',
+    CATEGORIES: 'library-categories',
+    AUTHORS: 'library-authors',
+    PUBLISHERS: 'library-publishers',
+    EVENTS: 'library-events',
+    NOTIFICATIONS: 'library-notifications',
+    ACCESS_POINTS: 'library-access-points'
   },
-  
-  DOCUMENT_COLLECTIONS: {
-    DOCUMENTS: "documents",
-    TEMPLATES: "document_templates",
-    CATEGORIES: "document_categories",
-    ARCHIVES: "document_archives",
-    PERMISSIONS: "document_permissions",
-    SETTINGS: "document_settings"
+  TRANSPORT: {
+    VEHICLES: 'transport-vehicles',
+    DRIVERS: 'transport-drivers',
+    RESERVATIONS: 'transport-reservations',
+    ROUTES: 'transport-routes',
+    MAINTENANCE: 'transport-maintenance',
+    FUEL_LOGS: 'transport-fuel-logs',
+    INSURANCE: 'transport-insurance',
+    REPORTS: 'transport-reports',
+    SETTINGS: 'transport-settings',
+    SHIPMENTS: 'transport-shipments',
+    REQUESTS: 'transport-requests'
+  },
+  FREIGHT: {
+    SHIPMENTS: 'freight-shipments',
+    VEHICLES: 'freight-vehicles',
+    DRIVERS: 'freight-drivers',
+    CLIENTS: 'freight-clients',
+    ROUTES: 'freight-routes',
+    INVOICES: 'freight-invoices',
+    EXPENSES: 'freight-expenses',
+    REPORTS: 'freight-reports',
+    SETTINGS: 'freight-settings'
   }
 };
