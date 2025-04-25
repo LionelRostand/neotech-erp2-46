@@ -10,7 +10,7 @@ export const useGarageServicesList = () => {
     queryFn: () => fetchCollectionData<Service>(COLLECTIONS.GARAGE.SERVICES),
   });
 
-  // Transformer les services pour le format du MultiSelect
+  // Format services for dropdown options if needed
   const servicesOptions = services.map(service => ({
     value: service.id,
     label: `${service.name} - ${service.cost}€`
