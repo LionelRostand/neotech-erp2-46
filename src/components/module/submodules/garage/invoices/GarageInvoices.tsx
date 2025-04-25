@@ -1,11 +1,12 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Receipt } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2, Receipt } from "lucide-react";
 import StatCard from '@/components/StatCard';
-import { useGarageData } from '@/hooks/garage/useGarageData';
+import { useGarageInvoices } from '@/hooks/garage/useGarageInvoices';
 import { Invoice } from '../types/garage-types';
-import CreateInvoiceDialog from './CreateInvoiceDialog';
+import ViewInvoiceDialog from './ViewInvoiceDialog';
+import EditInvoiceDialog from './EditInvoiceDialog';
+import DeleteInvoiceDialog from './DeleteInvoiceDialog';
 import {
   Table,
   TableBody,
@@ -15,10 +16,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from 'sonner';
+import CreateInvoiceDialog from './CreateInvoiceDialog';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 
 const GarageInvoices = () => {
-  const { invoices, clients, vehicles, repairs, isLoading } = useGarageData();
+  const { invoices, isLoading, updateInvoice, deleteInvoice } = useGarageInvoices();
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const { clients, vehicles, repairs } = useGarageData();
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -74,6 +82,7 @@ const GarageInvoices = () => {
               <TableHead>Véhicule</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,11 +104,74 @@ const GarageInvoices = () => {
                      invoice.status === 'sent' ? 'Envoyée' : 'Brouillon'}
                   </span>
                 </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedInvoice(invoice);
+                        setShowViewDialog(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedInvoice(invoice);
+                        setShowEditDialog(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedInvoice(invoice);
+                        setShowDeleteDialog(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <ViewInvoiceDialog
+        invoice={selectedInvoice}
+        isOpen={showViewDialog}
+        onClose={() => {
+          setShowViewDialog(false);
+          setSelectedInvoice(null);
+        }}
+      />
+
+      <EditInvoiceDialog
+        invoice={selectedInvoice}
+        isOpen={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setSelectedInvoice(null);
+        }}
+        onUpdate={updateInvoice}
+      />
+
+      <DeleteInvoiceDialog
+        invoice={selectedInvoice}
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setSelectedInvoice(null);
+        }}
+        onDelete={deleteInvoice}
+      />
 
       <CreateInvoiceDialog 
         open={showAddDialog}
