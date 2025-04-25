@@ -41,13 +41,25 @@ const GarageMechanicsDashboard = () => {
     setIsDeleteOpen(true);
   };
 
+  const formatSpecialization = (specialization: string | string[] | undefined) => {
+    if (!specialization) return 'Non spécifié';
+    
+    if (Array.isArray(specialization)) {
+      return specialization.join(', ');
+    }
+    
+    return specialization;
+  };
+
   const columns: Column[] = [
     { header: "Prénom", accessorKey: "firstName" },
     { header: "Nom", accessorKey: "lastName" },
     { header: "Email", accessorKey: "email" },
     { header: "Téléphone", accessorKey: "phone" },
-    { header: "Spécialisation", 
-      accessorFn: (row: Mechanic) => (row.specialization || []).join(', ') 
+    { 
+      header: "Spécialisation", 
+      accessorKey: "specialization",
+      cell: ({ row }) => formatSpecialization(row.original.specialization)
     },
     { header: "Statut", accessorKey: "status",
       cell: ({ row }) => {
