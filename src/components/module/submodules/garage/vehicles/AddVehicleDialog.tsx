@@ -41,21 +41,23 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
 
   const handleSubmit = async () => {
     try {
-      await createVehicle(formData);
-      onVehicleAdded();
-      onOpenChange(false);
-      setFormData({
-        make: '',
-        model: '',
-        year: new Date().getFullYear(),
-        licensePlate: '',
-        clientId: '',
-        services: [],
-        repairs: [],
-        status: 'available',
-        mileage: 0,
-        lastCheckDate: ''
-      });
+      const success = await createVehicle(formData);
+      if (success) {
+        onVehicleAdded();
+        onOpenChange(false);
+        setFormData({
+          make: '',
+          model: '',
+          year: new Date().getFullYear(),
+          licensePlate: '',
+          clientId: '',
+          services: [],
+          repairs: [],
+          status: 'available',
+          mileage: 0,
+          lastCheckDate: ''
+        });
+      }
     } catch (error) {
       console.error('Erreur lors de l\'ajout du véhicule:', error);
     }
