@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,11 +9,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+} from '@/components/ui/alert-dialog';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface DeleteRepairDialogProps {
   repairId: string | null;
@@ -22,17 +22,17 @@ interface DeleteRepairDialogProps {
   onDelete: () => void;
 }
 
-export const DeleteRepairDialog: React.FC<DeleteRepairDialogProps> = ({
+const DeleteRepairDialog: React.FC<DeleteRepairDialogProps> = ({
   repairId,
   open,
   onOpenChange,
-  onDelete
+  onDelete,
 }) => {
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (!repairId) return;
-
+    
     setIsDeleting(true);
     try {
       const repairRef = doc(db, COLLECTIONS.GARAGE.REPAIRS, repairId);
@@ -42,7 +42,7 @@ export const DeleteRepairDialog: React.FC<DeleteRepairDialogProps> = ({
       onDelete();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error deleting repair:', error);
+      console.error('Erreur lors de la suppression de la réparation:', error);
       toast.error('Erreur lors de la suppression de la réparation');
     } finally {
       setIsDeleting(false);
@@ -53,14 +53,18 @@ export const DeleteRepairDialog: React.FC<DeleteRepairDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+          <AlertDialogTitle>Supprimer cette réparation ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer cette réparation ? Cette action ne peut pas être annulée.
+            Cette action est irréversible. La réparation sera définitivement supprimée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleDelete} 
+            disabled={isDeleting}
+            className="bg-red-600 hover:bg-red-700"
+          >
             {isDeleting ? 'Suppression...' : 'Supprimer'}
           </AlertDialogAction>
         </AlertDialogFooter>

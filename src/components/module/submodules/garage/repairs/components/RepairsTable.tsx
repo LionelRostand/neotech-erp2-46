@@ -14,6 +14,8 @@ import ViewRepairDialog from '../ViewRepairDialog';
 import EditRepairDialog from '../EditRepairDialog';
 import DeleteRepairDialog from '../DeleteRepairDialog';
 import { Repair } from '../../../types/garage-types';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface RepairsTableProps {
   repairs: Repair[];
@@ -45,6 +47,18 @@ const RepairsTable = ({ repairs }: RepairsTableProps) => {
     window.location.reload();
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'awaiting_approval': return 'En attente d\'approbation';
+      case 'approved': return 'Approuvé';
+      case 'in_progress': return 'En cours';
+      case 'awaiting_parts': return 'En attente de pièces';
+      case 'completed': return 'Terminé';
+      case 'cancelled': return 'Annulé';
+      default: return status;
+    }
+  };
+
   return (
     <>
       <Table>
@@ -70,12 +84,14 @@ const RepairsTable = ({ repairs }: RepairsTableProps) => {
           ) : (
             repairs.map((repair, index) => (
               <TableRow key={repair.id || index}>
-                <TableCell>{repair.startDate}</TableCell>
+                <TableCell>
+                  {repair.date ? format(new Date(repair.date), 'dd/MM/yyyy', { locale: fr }) : ''}
+                </TableCell>
                 <TableCell>{repair.clientName}</TableCell>
-                <TableCell>{repair.vehicleInfo}</TableCell>
+                <TableCell>{repair.vehicleName || repair.vehicleInfo}</TableCell>
                 <TableCell>{repair.description}</TableCell>
                 <TableCell>{repair.mechanicName}</TableCell>
-                <TableCell>{repair.status}</TableCell>
+                <TableCell>{getStatusLabel(repair.status)}</TableCell>
                 <TableCell>{repair.progress}%</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

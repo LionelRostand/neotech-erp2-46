@@ -17,3 +17,24 @@ export interface Service {
     inventory: boolean;
   };
 }
+
+export interface Repair {
+  id: string;
+  vehicleId: string;
+  vehicleName?: string;
+  clientId: string;
+  clientName?: string;
+  mechanicId: string;
+  mechanicName?: string;
+  startDate: string;
+  date?: string;
+  estimatedEndDate?: string;
+  endDate?: string;
+  status: string;
+  description: string;
+  progress: number;
+  estimatedCost: number;
+  actualCost?: number;
+  licensePlate?: string;
+  vehicleInfo?: string;
+}

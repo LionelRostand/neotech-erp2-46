@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
-import { Wrench, Clock, Package, Cog, Plus } from 'lucide-react';
-import StatCard from '@/components/StatCard';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus } from 'lucide-react';
 import { AddRepairDialog } from './AddRepairDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import RepairsStats from './components/RepairsStats';
+import RepairsTable from './components/RepairsTable';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading } = useGarageData();
@@ -20,7 +21,7 @@ const GarageRepairsDashboard = () => {
   // Calculer les statistiques
   const today = new Date();
   const todaysRepairs = repairs.filter(r => {
-    const repairDate = new Date(r.date);
+    const repairDate = new Date(r.date || r.startDate);
     return repairDate.toDateString() === today.toDateString();
   });
 
@@ -29,9 +30,11 @@ const GarageRepairsDashboard = () => {
   const allRepairs = repairs.length;
 
   // Trier les réparations par date pour avoir les plus récentes
-  const sortedRepairs = [...repairs].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sortedRepairs = [...repairs].sort((a, b) => {
+    const dateA = new Date(a.date || a.startDate || Date.now());
+    const dateB = new Date(b.date || b.startDate || Date.now());
+    return dateB.getTime() - dateA.getTime();
+  });
 
   return (
     <div className="p-6">
@@ -43,81 +46,23 @@ const GarageRepairsDashboard = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          title="Réparations aujourd'hui"
-          value={todaysRepairs.length.toString()}
-          icon={<Wrench className="h-8 w-8 text-blue-500" />}
-          description="Planifiées pour aujourd'hui"
-        />
-        <StatCard
-          title="En cours"
-          value={inProgress.length.toString()}
-          icon={<Clock className="h-8 w-8 text-amber-500" />}
-          description="Réparations actives"
-        />
-        <StatCard
-          title="En attente de pièces"
-          value={awaitingParts.length.toString()}
-          icon={<Package className="h-8 w-8 text-purple-500" />}
-          description="Commandes en attente"
-        />
-        <StatCard
-          title="Total réparations"
-          value={allRepairs.toString()}
-          icon={<Cog className="h-8 w-8 text-emerald-500" />}
-          description="Toutes les réparations"
-        />
-      </div>
+      <RepairsStats 
+        todayCount={todaysRepairs.length}
+        activeCount={inProgress.length}
+        pendingPartsCount={awaitingParts.length}
+        totalCount={allRepairs}
+      />
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="mt-6 bg-white rounded-lg shadow">
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold">Derniers services</h2>
         </div>
         <div className="p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Véhicule</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Mécanicien</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Progression</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedRepairs.map((repair) => (
-                <TableRow key={repair.id}>
-                  <TableCell>
-                    {format(new Date(repair.date), 'yyyy-MM-dd', { locale: fr })}
-                  </TableCell>
-                  <TableCell>{repair.clientName}</TableCell>
-                  <TableCell>{repair.vehicleName}</TableCell>
-                  <TableCell>{repair.description}</TableCell>
-                  <TableCell>{repair.mechanicName}</TableCell>
-                  <TableCell>{repair.status}</TableCell>
-                  <TableCell>{repair.progress}%</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="sm">
-                      <span className="sr-only">Voir</span>
-                      👁️
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <span className="sr-only">Modifier</span>
-                      ✏️
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <span className="sr-only">Supprimer</span>
-                      🗑️
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <RepairsTable repairs={sortedRepairs.map(repair => ({
+            ...repair,
+            date: repair.date || repair.startDate,
+            vehicleInfo: repair.vehicleName || repair.vehicleId
+          }))} />
         </div>
       </div>
 
