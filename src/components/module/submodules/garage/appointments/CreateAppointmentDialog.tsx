@@ -16,13 +16,22 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   clients = [],
   vehicles = []
 }) => {
-  // Ensure we pass valid default values
+  // Use the callback format for onOpenChange to ensure consistent behavior
+  const handleOpenChange = (value: boolean) => {
+    // If onOpenChange is provided, call it
+    if (typeof onOpenChange === 'function') {
+      onOpenChange(value);
+    } else {
+      console.error("onOpenChange is not a function in CreateAppointmentDialog");
+    }
+  };
+
   return (
     <AddAppointmentDialog
       open={open}
-      onOpenChange={onOpenChange}
-      clients={clients || []}
-      vehicles={vehicles || []}
+      onOpenChange={handleOpenChange}
+      clients={clients}
+      vehicles={vehicles}
     />
   );
 };

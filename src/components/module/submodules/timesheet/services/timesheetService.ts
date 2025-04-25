@@ -15,7 +15,19 @@ export interface TimesheetEntry {
     breakDuration?: number;
 }
 
-const timesheetCollection = collection(db, COLLECTIONS.HR.TIMESHEET);
+// Ensure we have a valid collection path for timesheets
+const getTimesheetCollection = () => {
+  if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+    return collection(db, COLLECTIONS.HR.TIMESHEET);
+  } else {
+    console.error("Timesheet collection path is not defined in COLLECTIONS");
+    toast.error("Erreur: Impossible d'accéder à la collection des feuilles de temps");
+    return collection(db, 'hr-timesheet'); // Fallback path
+  }
+};
+
+// Use the function to get the collection reference
+const timesheetCollection = getTimesheetCollection();
 
 export const addTimesheetEntry = async (entry: TimesheetEntry) => {
     try {
@@ -47,9 +59,13 @@ export const getTimesheetEntriesByEmployeeId = async (employeeId: string): Promi
 
 export const updateTimesheetEntry = async (id: string, updates: Partial<TimesheetEntry>) => {
     try {
-        const entryDoc = doc(db, COLLECTIONS.HR.TIMESHEET, id);
-        await updateDoc(entryDoc, updates);
-        toast.success("Timesheet entry updated successfully!");
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const entryDoc = doc(db, COLLECTIONS.HR.TIMESHEET, id);
+            await updateDoc(entryDoc, updates);
+            toast.success("Timesheet entry updated successfully!");
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error updating timesheet entry:", error);
         toast.error(`Failed to update timesheet entry: ${error.message}`);
@@ -59,9 +75,13 @@ export const updateTimesheetEntry = async (id: string, updates: Partial<Timeshee
 
 export const deleteTimesheetEntry = async (id: string) => {
     try {
-        const entryDoc = doc(db, COLLECTIONS.HR.TIMESHEET, id);
-        await deleteDoc(entryDoc);
-        toast.success("Timesheet entry deleted successfully!");
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const entryDoc = doc(db, COLLECTIONS.HR.TIMESHEET, id);
+            await deleteDoc(entryDoc);
+            toast.success("Timesheet entry deleted successfully!");
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error deleting timesheet entry:", error);
         toast.error(`Failed to delete timesheet entry: ${error.message}`);
@@ -72,8 +92,12 @@ export const deleteTimesheetEntry = async (id: string) => {
 // Add the missing functions for timesheet management
 export const addTimeSheet = async (data: any) => {
     try {
-        const docRef = await addDoc(collection(db, COLLECTIONS.HR.TIMESHEET), data);
-        return docRef.id;
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const docRef = await addDoc(collection(db, COLLECTIONS.HR.TIMESHEET), data);
+            return docRef.id;
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error adding timesheet:", error);
         toast.error(`Failed to add timesheet: ${error.message}`);
@@ -83,12 +107,16 @@ export const addTimeSheet = async (data: any) => {
 
 export const getAllTimeSheets = async () => {
     try {
-        const querySnapshot = await getDocs(collection(db, COLLECTIONS.HR.TIMESHEET));
-        const timeSheets: any[] = [];
-        querySnapshot.forEach((doc) => {
-            timeSheets.push({ id: doc.id, ...doc.data() });
-        });
-        return timeSheets;
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const querySnapshot = await getDocs(collection(db, COLLECTIONS.HR.TIMESHEET));
+            const timeSheets: any[] = [];
+            querySnapshot.forEach((doc) => {
+                timeSheets.push({ id: doc.id, ...doc.data() });
+            });
+            return timeSheets;
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error fetching timesheets:", error);
         toast.error(`Failed to fetch timesheets: ${error.message}`);
@@ -98,14 +126,18 @@ export const getAllTimeSheets = async () => {
 
 export const approveTimeSheet = async (id: string) => {
     try {
-        const timeSheetRef = doc(db, COLLECTIONS.HR.TIMESHEET, id);
-        await updateDoc(timeSheetRef, {
-            status: "Validé",
-            approvedAt: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-            lastUpdateText: new Date().toLocaleDateString('fr-FR')
-        });
-        return true;
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const timeSheetRef = doc(db, COLLECTIONS.HR.TIMESHEET, id);
+            await updateDoc(timeSheetRef, {
+                status: "Validé",
+                approvedAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+                lastUpdateText: new Date().toLocaleDateString('fr-FR')
+            });
+            return true;
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error approving timesheet:", error);
         toast.error(`Failed to approve timesheet: ${error.message}`);
@@ -115,14 +147,18 @@ export const approveTimeSheet = async (id: string) => {
 
 export const rejectTimeSheet = async (id: string) => {
     try {
-        const timeSheetRef = doc(db, COLLECTIONS.HR.TIMESHEET, id);
-        await updateDoc(timeSheetRef, {
-            status: "Rejeté",
-            rejectedAt: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-            lastUpdateText: new Date().toLocaleDateString('fr-FR')
-        });
-        return true;
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const timeSheetRef = doc(db, COLLECTIONS.HR.TIMESHEET, id);
+            await updateDoc(timeSheetRef, {
+                status: "Rejeté",
+                rejectedAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+                lastUpdateText: new Date().toLocaleDateString('fr-FR')
+            });
+            return true;
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error rejecting timesheet:", error);
         toast.error(`Failed to reject timesheet: ${error.message}`);
@@ -132,14 +168,18 @@ export const rejectTimeSheet = async (id: string) => {
 
 export const submitTimeSheet = async (id: string) => {
     try {
-        const timeSheetRef = doc(db, COLLECTIONS.HR.TIMESHEET, id);
-        await updateDoc(timeSheetRef, {
-            status: "Soumis",
-            submittedAt: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-            lastUpdateText: new Date().toLocaleDateString('fr-FR')
-        });
-        return true;
+        if (COLLECTIONS.HR && COLLECTIONS.HR.TIMESHEET) {
+            const timeSheetRef = doc(db, COLLECTIONS.HR.TIMESHEET, id);
+            await updateDoc(timeSheetRef, {
+                status: "Soumis",
+                submittedAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+                lastUpdateText: new Date().toLocaleDateString('fr-FR')
+            });
+            return true;
+        } else {
+            throw new Error("Timesheet collection path is not defined");
+        }
     } catch (error: any) {
         console.error("Error submitting timesheet:", error);
         toast.error(`Failed to submit timesheet: ${error.message}`);

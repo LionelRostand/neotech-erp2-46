@@ -1,5 +1,6 @@
 
 export const COLLECTIONS = {
+  USERS: 'users',
   EMPLOYEES: 'employees',
   COMPANIES: 'companies',
   MESSAGES: {
@@ -53,7 +54,8 @@ export const COLLECTIONS = {
     SERVICES: 'garage-services',
     SUPPLIERS: 'garage-suppliers',
     INVENTORY: 'garage-inventory',
-    INVOICES: 'garage-invoices'
+    INVOICES: 'garage-invoices',
+    LOYALTY: 'garage-loyalty'
   },
   HR: {
     EMPLOYEES: 'hr-employees',
@@ -68,7 +70,8 @@ export const COLLECTIONS = {
     EVALUATIONS: 'hr-evaluations',
     TRAININGS: 'hr-trainings',
     REPORTS: 'hr-reports',
-    ALERTS: 'hr-alerts'
+    ALERTS: 'hr-alerts',
+    RECRUITMENT: 'hr-recruitment'
   },
   HEALTH: {
     PATIENTS: 'health-patients',
@@ -87,7 +90,8 @@ export const COLLECTIONS = {
     SUPPLIERS: 'salon-suppliers',
     INVENTORY: 'salon-inventory',
     LOYALTY_PROGRAMS: 'salon-loyalty-programs',
-    REVIEWS: 'salon-reviews'
+    REVIEWS: 'salon-reviews',
+    DOCUMENTS: 'salon-documents'
   },
   LIBRARY: {
     MEMBERS: 'library-members',
@@ -113,7 +117,8 @@ export const COLLECTIONS = {
     REPORTS: 'transport-reports',
     SETTINGS: 'transport-settings',
     SHIPMENTS: 'transport-shipments',
-    REQUESTS: 'transport-requests'
+    REQUESTS: 'transport-requests',
+    CLIENTS: 'transport-clients'
   },
   FREIGHT: {
     SHIPMENTS: 'freight-shipments',
@@ -124,6 +129,14 @@ export const COLLECTIONS = {
     INVOICES: 'freight-invoices',
     EXPENSES: 'freight-expenses',
     REPORTS: 'freight-reports',
-    SETTINGS: 'freight-settings'
+    SETTINGS: 'freight-settings',
+    DOCUMENTS: 'freight-documents',
+    PACKAGES: 'freight-packages',
+    TRACKING_EVENTS: 'freight-tracking-events'
+  },
+  ACCOUNTING: {
+    INVOICES: 'accounting-invoices',
+    PAYMENTS: 'accounting-payments',
+    TRANSACTIONS: 'accounting-transactions'
   }
 };
