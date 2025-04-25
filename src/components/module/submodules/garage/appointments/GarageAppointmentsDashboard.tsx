@@ -1,23 +1,23 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import AppointmentsStats from './components/AppointmentsStats';
 import ViewAppointmentDialog from './ViewAppointmentDialog';
 import EditAppointmentDialog from './EditAppointmentDialog';
 import DeleteAppointmentDialog from './DeleteAppointmentDialog';
+import AddAppointmentDialog from './AddAppointmentDialog';
 import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import AppointmentsStats from './components/AppointmentsStats';
 
 const GarageAppointmentsDashboard = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
   
   const { appointments = [], isLoading } = useGarageData();
   
@@ -53,7 +53,6 @@ const GarageAppointmentsDashboard = () => {
     // La fonction useGarageData va automatiquement rafraîchir les données
   };
 
-  // Safe format date function
   const safeFormatDate = (dateString: string) => {
     try {
       const date = parseISO(dateString);
@@ -74,7 +73,7 @@ const GarageAppointmentsDashboard = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Rendez-vous</h1>
-        <Button>
+        <Button onClick={() => setOpenCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau rendez-vous
         </Button>
@@ -161,6 +160,11 @@ const GarageAppointmentsDashboard = () => {
           />
         </>
       )}
+
+      <AddAppointmentDialog 
+        open={openCreateDialog} 
+        onOpenChange={setOpenCreateDialog}
+      />
     </div>
   );
 };
