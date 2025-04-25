@@ -10,10 +10,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from 'sonner';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 interface DeleteRepairDialogProps {
   repairId: string | null;
@@ -22,25 +22,27 @@ interface DeleteRepairDialogProps {
   onDelete: () => void;
 }
 
-const DeleteRepairDialog = ({ repairId, open, onOpenChange, onDelete }: DeleteRepairDialogProps) => {
+export const DeleteRepairDialog: React.FC<DeleteRepairDialogProps> = ({
+  repairId,
+  open,
+  onOpenChange,
+  onDelete
+}) => {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const handleDelete = async () => {
     if (!repairId) return;
 
+    setIsDeleting(true);
     try {
-      setIsDeleting(true);
-      await deleteDoc(doc(db, COLLECTIONS.GARAGE.REPAIRS, repairId));
+      const repairRef = doc(db, COLLECTIONS.GARAGE.REPAIRS, repairId);
+      await deleteDoc(repairRef);
+      
       toast.success('Réparation supprimée avec succès');
-      
-      // Ensure onDelete is only called if it's a function
-      if (typeof onDelete === 'function') {
-        onDelete();
-      }
-      
+      onDelete();
       onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      console.error('Error deleting repair:', error);
       toast.error('Erreur lors de la suppression de la réparation');
     } finally {
       setIsDeleting(false);
@@ -53,7 +55,7 @@ const DeleteRepairDialog = ({ repairId, open, onOpenChange, onDelete }: DeleteRe
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer cette réparation ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer cette réparation ? Cette action ne peut pas être annulée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

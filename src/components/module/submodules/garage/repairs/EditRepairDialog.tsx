@@ -1,15 +1,22 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Repair } from '../../types/garage-types';
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Repair } from '../types/garage-types';
-import { toast } from 'sonner';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 interface EditRepairDialogProps {
   repair: Repair | null;
@@ -18,128 +25,98 @@ interface EditRepairDialogProps {
   onUpdate: () => void;
 }
 
-const EditRepairDialog = ({ repair, open, onOpenChange, onUpdate }: EditRepairDialogProps) => {
-  const { services = [] } = useGarageData();
-  const [formData, setFormData] = React.useState<Partial<Repair>>({});
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  React.useEffect(() => {
-    if (repair) {
-      setFormData(repair);
+export const EditRepairDialog: React.FC<EditRepairDialogProps> = ({
+  repair,
+  open,
+  onOpenChange,
+  onUpdate
+}) => {
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+    defaultValues: {
+      description: repair?.description || '',
+      status: repair?.status || 'pending',
+      startDate: repair?.startDate || '',
+      endDate: repair?.endDate || '',
+      cost: repair?.cost || 0,
+      notes: repair?.notes || ''
     }
-  }, [repair]);
+  });
+
+  const onSubmit = async (data: any) => {
+    if (!repair?.id) return;
+
+    try {
+      const repairRef = doc(db, COLLECTIONS.GARAGE.REPAIRS, repair.id);
+      await updateDoc(repairRef, {
+        ...data,
+        lastUpdated: new Date().toISOString()
+      });
+
+      toast.success('Réparation mise à jour avec succès');
+      onUpdate();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error updating repair:', error);
+      toast.error('Erreur lors de la mise à jour de la réparation');
+    }
+  };
 
   if (!repair) return null;
 
-  const handleChange = (field: keyof Repair, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      const repairRef = doc(db, COLLECTIONS.GARAGE.REPAIRS, repair.id);
-      await updateDoc(repairRef, {
-        ...formData,
-        lastUpdated: new Date().toISOString()
-      });
-      toast.success('Réparation mise à jour avec succès');
-      
-      // Ensure onUpdate is only called if it's a function
-      if (typeof onUpdate === 'function') {
-        onUpdate();
-      }
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-      toast.error('Erreur lors de la mise à jour de la réparation');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Modifier la réparation</DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Description</label>
-            <Input
-              value={formData.description || ''}
-              onChange={(e) => handleChange('description', e.target.value)}
-            />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                className="col-span-3"
+                {...register('description')}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status">Statut</Label>
+              <Select {...register('status')}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="in_progress">En cours</SelectItem>
+                  <SelectItem value="completed">Terminé</SelectItem>
+                  <SelectItem value="cancelled">Annulé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="cost">Coût</Label>
+              <Input
+                id="cost"
+                type="number"
+                className="col-span-3"
+                {...register('cost')}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="notes">Notes</Label>
+              <Input
+                id="notes"
+                className="col-span-3"
+                {...register('notes')}
+              />
+            </div>
           </div>
-
-          <div>
-            <label className="text-sm font-medium">Service</label>
-            <Select 
-              value={formData.service} 
-              onValueChange={(value) => {
-                const selectedService = services.find(s => s.name === value);
-                if (selectedService) {
-                  setFormData(prev => ({
-                    ...prev,
-                    service: value,
-                    estimatedCost: selectedService.cost || prev.estimatedCost
-                  }));
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un service" />
-              </SelectTrigger>
-              <SelectContent>
-                {services.map((service) => (
-                  <SelectItem key={service.id} value={service.name}>
-                    {service.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Statut</label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => handleChange('status', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner le statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="in_progress">En cours</SelectItem>
-                <SelectItem value="awaiting_parts">En attente de pièces</SelectItem>
-                <SelectItem value="completed">Terminé</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Progression (%)</label>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              value={formData.progress || 0}
-              onChange={(e) => handleChange('progress', parseInt(e.target.value))}
-            />
-          </div>
-        </div>
-
-        <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
