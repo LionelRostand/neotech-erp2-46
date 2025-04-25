@@ -1,4 +1,3 @@
-
 export const COLLECTIONS = {
   USERS: 'users',
   EMPLOYEES: 'employees',

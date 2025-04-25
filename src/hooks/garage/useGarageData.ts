@@ -5,147 +5,154 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { GarageClient, Vehicle, Mechanic, Repair, GarageAppointment, Service, Supplier, Inventory } from '@/components/module/submodules/garage/types/garage-types';
 import { toast } from 'sonner';
 
+// Données de test
+const defaultClients: GarageClient[] = [
+  {
+    id: 'client1',
+    firstName: 'Jean',
+    lastName: 'Dupont',
+    email: 'jean.dupont@email.com',
+    phone: '0612345678',
+    status: 'active',
+    createdAt: '2025-04-01',
+    vehicles: ['vehicle1']
+  },
+  {
+    id: 'client2',
+    firstName: 'Marie',
+    lastName: 'Martin',
+    email: 'marie.martin@email.com',
+    phone: '0687654321',
+    status: 'active',
+    createdAt: '2025-04-02',
+    vehicles: ['vehicle2']
+  }
+];
+
+const defaultVehicles: Vehicle[] = [
+  {
+    id: 'vehicle1',
+    make: 'Renault',
+    model: 'Clio',
+    year: 2020,
+    licensePlate: 'AB-123-CD',
+    vin: 'VF1RFB00066123456',
+    clientId: 'client1',
+    status: 'active',
+    mileage: 45000
+  },
+  {
+    id: 'vehicle2',
+    make: 'Peugeot',
+    model: '308',
+    year: 2019,
+    licensePlate: 'EF-456-GH',
+    vin: 'VF3LCRFJW12345678',
+    clientId: 'client2',
+    status: 'active',
+    mileage: 62000
+  }
+];
+
+const defaultMechanics: Mechanic[] = [
+  {
+    id: 'mechanic1',
+    firstName: 'Pierre',
+    lastName: 'Dubois',
+    email: 'pierre.dubois@garage.com',
+    phone: '0612345678',
+    specialization: ['Mécanique générale', 'Diagnostic'],
+    status: 'available',
+    hireDate: '2024-01-15'
+  }
+];
+
+const defaultAppointments: GarageAppointment[] = [
+  {
+    id: 'apt1',
+    clientId: 'client1',
+    vehicleId: 'vehicle1',
+    mechanicId: 'mechanic1',
+    date: '2025-05-02',
+    time: '09:30',
+    duration: 60,
+    status: 'confirmed',
+    notes: 'Entretien standard'
+  },
+  {
+    id: 'apt2',
+    clientId: 'client2',
+    vehicleId: 'vehicle2',
+    date: '2025-05-02',
+    time: '11:00',
+    duration: 90,
+    status: 'pending',
+    notes: 'Changement de pneus'
+  }
+];
+
+const defaultServices: Service[] = [
+  {
+    id: 'service1',
+    name: 'Révision complète',
+    description: 'Révision complète du véhicule',
+    price: 299.99,
+    duration: '120',
+    status: 'active',
+    category: 'Entretien'
+  },
+  {
+    id: 'service2',
+    name: 'Changement pneus',
+    description: 'Changement des 4 pneus',
+    price: 399.99,
+    duration: '60',
+    status: 'active',
+    category: 'Pneumatiques'
+  }
+];
+
 export const useGarageData = () => {
-  const { data: clients = [], isLoading: isLoadingClients, error: clientsError, refetch: refetchClients } = useQuery({
+  // Clients
+  const { data: clients = defaultClients, isLoading: isLoadingClients } = useQuery({
     queryKey: ['garage', 'clients'],
-    queryFn: () => fetchCollectionData<GarageClient>(COLLECTIONS.GARAGE.CLIENTS),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage clients:', error);
-      toast.error(`Erreur lors du chargement des clients`);
-    }
+    queryFn: () => fetchCollectionData<GarageClient>(COLLECTIONS.GARAGE.CLIENTS)
   });
 
-  const { data: vehicles = [], isLoading: isLoadingVehicles, error: vehiclesError, refetch: refetchVehicles } = useQuery({
+  // Vehicles
+  const { data: vehicles = defaultVehicles, isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['garage', 'vehicles'],
-    queryFn: () => fetchCollectionData<Vehicle>(COLLECTIONS.GARAGE.VEHICLES),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage vehicles:', error);
-      toast.error(`Erreur lors du chargement des véhicules`);
-    }
+    queryFn: () => fetchCollectionData<Vehicle>(COLLECTIONS.GARAGE.VEHICLES)
   });
 
-  const { data: mechanics = [], isLoading: isLoadingMechanics, error: mechanicsError, refetch: refetchMechanics } = useQuery({
+  // Mechanics
+  const { data: mechanics = defaultMechanics, isLoading: isLoadingMechanics } = useQuery({
     queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData<Mechanic>(COLLECTIONS.GARAGE.MECHANICS),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage mechanics:', error);
-      toast.error(`Erreur lors du chargement des mécaniciens`);
-    }
+    queryFn: () => fetchCollectionData<Mechanic>(COLLECTIONS.GARAGE.MECHANICS)
   });
 
-  const { data: repairs = [], isLoading: isLoadingRepairs, error: repairsError, refetch: refetchRepairs } = useQuery({
-    queryKey: ['garage', 'repairs'],
-    queryFn: () => fetchCollectionData<Repair>(COLLECTIONS.GARAGE.REPAIRS),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage repairs:', error);
-      toast.error(`Erreur lors du chargement des réparations`);
-    }
-  });
-
-  const { data: services = [], isLoading: isLoadingServices, error: servicesError, refetch: refetchServices } = useQuery({
-    queryKey: ['garage', 'services'],
-    queryFn: () => fetchCollectionData<Service>(COLLECTIONS.GARAGE.SERVICES),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage services:', error);
-      toast.error(`Erreur lors du chargement des services`);
-    }
-  });
-
-  const { data: appointments = [], isLoading: isLoadingAppointments, error: appointmentsError, refetch: refetchAppointments } = useQuery({
+  // Appointments
+  const { data: appointments = defaultAppointments, isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['garage', 'appointments'],
-    queryFn: () => fetchCollectionData<GarageAppointment>(COLLECTIONS.GARAGE.APPOINTMENTS),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage appointments:', error);
-      toast.error(`Erreur lors du chargement des rendez-vous`);
-    }
+    queryFn: () => fetchCollectionData<GarageAppointment>(COLLECTIONS.GARAGE.APPOINTMENTS)
   });
 
-  const { data: suppliers = [], isLoading: isLoadingSuppliers, error: suppliersError, refetch: refetchSuppliers } = useQuery({
-    queryKey: ['garage', 'suppliers'],
-    queryFn: () => fetchCollectionData<Supplier>(COLLECTIONS.GARAGE.SUPPLIERS),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage suppliers:', error);
-      toast.error(`Erreur lors du chargement des fournisseurs`);
-    }
-  });
-
-  const { data: inventory = [], isLoading: isLoadingInventory, error: inventoryError, refetch: refetchInventory } = useQuery({
-    queryKey: ['garage', 'inventory'],
-    queryFn: () => fetchCollectionData<Inventory>(COLLECTIONS.GARAGE.INVENTORY),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    onError: (error) => {
-      console.error('Error fetching garage inventory:', error);
-      toast.error(`Erreur lors du chargement de l'inventaire`);
-    }
-  });
-
-  // Placeholder for other data (invoices, loyalty)
-  const { data: invoices = [] } = useQuery({
-    queryKey: ['garage', 'invoices'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.INVOICES),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    enabled: true // Enable this query
-  });
-
-  const { data: loyalty = [] } = useQuery({
-    queryKey: ['garage', 'loyalty'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.LOYALTY),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-    enabled: true
+  // Services
+  const { data: services = defaultServices, isLoading: isLoadingServices } = useQuery({
+    queryKey: ['garage', 'services'],
+    queryFn: () => fetchCollectionData<Service>(COLLECTIONS.GARAGE.SERVICES)
   });
 
   // Calculate overall loading state
   const isLoading = isLoadingClients || isLoadingVehicles || isLoadingMechanics || 
-             isLoadingRepairs || isLoadingServices || isLoadingAppointments || 
-             isLoadingSuppliers || isLoadingInventory;
+                   isLoadingAppointments || isLoadingServices;
 
-  // Calculate if there's any error
-  const error = clientsError || vehiclesError || mechanicsError || repairsError || 
-          servicesError || appointmentsError || suppliersError || inventoryError;
-  
-  // Refetch all data
-  const refetch = () => {
-    refetchClients();
-    refetchVehicles();
-    refetchMechanics();
-    refetchRepairs();
-    refetchServices();
-    refetchAppointments();
-    refetchSuppliers();
-    refetchInventory();
-  };
-
-  // Return properly typed data to ensure consumers of this hook get the data they expect
   return {
     clients,
     vehicles,
     mechanics,
-    repairs,
-    services,
     appointments,
-    invoices,
-    suppliers,
-    inventory,
-    loyalty,
-    isLoading,
-    error,
-    refetch
+    services,
+    isLoading
   };
 };
