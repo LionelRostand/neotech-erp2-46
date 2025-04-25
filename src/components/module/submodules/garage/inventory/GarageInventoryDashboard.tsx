@@ -9,15 +9,25 @@ import { Button } from '@/components/ui/button';
 import NewInventoryDialog from './NewInventoryDialog';
 
 const GarageInventoryDashboard = () => {
-  const { inventory, isLoading, refetch } = useGarageData();
+  const { inventory = [], isLoading, refetch } = useGarageData();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const lowStock = inventory.filter(item => item.quantity <= item.minQuantity);
-  const outOfStock = inventory.filter(item => item.quantity === 0);
+  // Ensure inventory is always an array
+  const safeInventory = Array.isArray(inventory) ? inventory : [];
+  
+  // Now safely filter with null checks
+  const lowStock = safeInventory.filter(item => 
+    item && item.quantity !== undefined && item.minQuantity !== undefined && 
+    item.quantity <= item.minQuantity
+  );
+  
+  const outOfStock = safeInventory.filter(item => 
+    item && item.quantity === 0
+  );
 
   const columns = [
     {
@@ -35,20 +45,26 @@ const GarageInventoryDashboard = () => {
     {
       accessorKey: "price",
       header: "Prix",
-      cell: ({ row }) => `${row.original.price.toLocaleString()} €`
+      cell: ({ row }) => {
+        const price = row.original.price || 0;
+        return `${price.toLocaleString()} €`;
+      }
     },
     {
       accessorKey: "status",
       header: "Statut",
-      cell: ({ row }) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium
-          ${row.original.status === 'in_stock' ? 'bg-green-100 text-green-800' :
-          row.original.status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'}`}>
-          {row.original.status === 'in_stock' ? 'En stock' :
-           row.original.status === 'low_stock' ? 'Stock bas' : 'Rupture'}
-        </span>
-      )
+      cell: ({ row }) => {
+        const status = row.original.status || 'unknown';
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium
+            ${status === 'in_stock' ? 'bg-green-100 text-green-800' :
+            status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'}`}>
+            {status === 'in_stock' ? 'En stock' :
+             status === 'low_stock' ? 'Stock bas' : 'Rupture'}
+          </span>
+        );
+      }
     }
   ];
 
@@ -65,7 +81,7 @@ const GarageInventoryDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Total Articles"
-          value={inventory.length.toString()}
+          value={safeInventory.length.toString()}
           icon={<Package className="h-4 w-4 text-blue-500" />}
           description="Tous les articles"
           className="bg-blue-50 hover:bg-blue-100"
@@ -93,7 +109,7 @@ const GarageInventoryDashboard = () => {
           <CardTitle>Liste des Articles</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable columns={columns} data={inventory} />
+          <DataTable columns={columns} data={safeInventory} />
         </CardContent>
       </Card>
 
