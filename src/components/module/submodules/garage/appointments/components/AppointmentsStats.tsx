@@ -1,68 +1,69 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Calendar } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Clock, CheckCircle, Activity } from 'lucide-react';
 
 interface AppointmentsStatsProps {
-  todayCount: number;
-  activeCount: number;
-  pendingCount: number;
+  scheduledCount: number;
+  inProgressCount: number;
+  completedCount: number;
   totalCount: number;
 }
 
-const AppointmentsStats = ({ todayCount, activeCount, pendingCount, totalCount }: AppointmentsStatsProps) => {
+const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({
+  scheduledCount,
+  inProgressCount,
+  completedCount,
+  totalCount
+}) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <Card className="bg-blue-50">
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            <Calendar className="h-8 w-8 text-blue-600" />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center">
+            <Calendar className="h-8 w-8 text-blue-500 mr-4" />
             <div>
-              <div className="text-2xl font-bold">{todayCount}</div>
-              <p className="text-sm text-gray-600">Rendez-vous du jour</p>
-              <p className="text-xs text-gray-500">Planifiés aujourd'hui</p>
+              <p className="text-sm font-medium text-muted-foreground">Rendez-vous prévus</p>
+              <h3 className="text-2xl font-bold">{scheduledCount}</h3>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
-
-      <Card className="bg-green-50">
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            <Calendar className="h-8 w-8 text-green-600" />
+      
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center">
+            <Clock className="h-8 w-8 text-yellow-500 mr-4" />
             <div>
-              <div className="text-2xl font-bold">{activeCount}</div>
-              <p className="text-sm text-gray-600">En cours</p>
-              <p className="text-xs text-gray-500">Rendez-vous confirmés</p>
+              <p className="text-sm font-medium text-muted-foreground">En cours</p>
+              <h3 className="text-2xl font-bold">{inProgressCount}</h3>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
-
-      <Card className="bg-yellow-50">
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            <Calendar className="h-8 w-8 text-yellow-600" />
+      
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center">
+            <CheckCircle className="h-8 w-8 text-green-500 mr-4" />
             <div>
-              <div className="text-2xl font-bold">{pendingCount}</div>
-              <p className="text-sm text-gray-600">En attente</p>
-              <p className="text-xs text-gray-500">À confirmer</p>
+              <p className="text-sm font-medium text-muted-foreground">Terminés</p>
+              <h3 className="text-2xl font-bold">{completedCount}</h3>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
-
-      <Card className="bg-purple-50">
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            <Calendar className="h-8 w-8 text-purple-600" />
+      
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center">
+            <Activity className="h-8 w-8 text-purple-500 mr-4" />
             <div>
-              <div className="text-2xl font-bold">{totalCount}</div>
-              <p className="text-sm text-gray-600">Total rendez-vous</p>
-              <p className="text-xs text-gray-500">Tous les rendez-vous</p>
+              <p className="text-sm font-medium text-muted-foreground">Total</p>
+              <h3 className="text-2xl font-bold">{totalCount}</h3>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );

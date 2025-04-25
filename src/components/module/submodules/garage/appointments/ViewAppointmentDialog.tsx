@@ -1,50 +1,87 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import StatusBadge from '@/components/StatusBadge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ViewAppointmentDialogProps {
   appointment: any;
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
+  getClientName: (clientId: string) => string;
+  getVehicleInfo: (vehicleId: string) => string;
+  getMechanicName: (mechanicId: string) => string;
+  getServiceName: (serviceId: string) => string;
 }
 
-const ViewAppointmentDialog = ({ appointment, open, onClose }: ViewAppointmentDialogProps) => {
+const ViewAppointmentDialog = ({ 
+  appointment, 
+  isOpen, 
+  onClose,
+  getClientName,
+  getVehicleInfo,
+  getMechanicName,
+  getServiceName
+}: ViewAppointmentDialogProps) => {
+  if (!appointment) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Détails du rendez-vous</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 mt-4">
-          <div>
-            <label className="font-medium">Client:</label>
-            <p>{appointment.clientName}</p>
+        
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Client:</span>
+            <span className="col-span-2">{getClientName(appointment.clientId)}</span>
           </div>
-          <div>
-            <label className="font-medium">Date:</label>
-            <p>{format(new Date(appointment.date), 'dd MMMM yyyy', { locale: fr })}</p>
+          
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Véhicule:</span>
+            <span className="col-span-2">{getVehicleInfo(appointment.vehicleId)}</span>
           </div>
-          <div>
-            <label className="font-medium">Heure:</label>
-            <p>{appointment.time}</p>
+          
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Date:</span>
+            <span className="col-span-2">{appointment.date}</span>
           </div>
-          <div>
-            <label className="font-medium">Type:</label>
-            <p>{appointment.type}</p>
+          
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Heure:</span>
+            <span className="col-span-2">{appointment.time}</span>
           </div>
-          <div>
-            <label className="font-medium">Statut:</label>
-            <StatusBadge status={appointment.status}>
-              {appointment.status === 'pending' ? 'En attente' :
-               appointment.status === 'confirmed' ? 'Confirmé' :
-               appointment.status === 'canceled' ? 'Annulé' :
-               appointment.status === 'completed' ? 'Terminé' : 
-               appointment.status}
-            </StatusBadge>
+          
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Mécanicien:</span>
+            <span className="col-span-2">{getMechanicName(appointment.mechanicId)}</span>
           </div>
+          
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Service:</span>
+            <span className="col-span-2">{getServiceName(appointment.serviceId)}</span>
+          </div>
+          
+          <div className="grid grid-cols-3 items-center gap-4">
+            <span className="font-medium">Statut:</span>
+            <span className="col-span-2">
+              {appointment.status === 'scheduled' ? 'Prévu' :
+               appointment.status === 'in-progress' ? 'En cours' :
+               appointment.status === 'completed' ? 'Terminé' :
+               appointment.status === 'cancelled' ? 'Annulé' : appointment.status}
+            </span>
+          </div>
+
+          {appointment.notes && (
+            <div className="grid grid-cols-3 items-start gap-4">
+              <span className="font-medium">Notes:</span>
+              <span className="col-span-2">{appointment.notes}</span>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
