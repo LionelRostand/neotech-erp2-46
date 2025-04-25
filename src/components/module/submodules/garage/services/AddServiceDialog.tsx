@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { MechanicSelector } from '../repairs/components/MechanicSelector';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useFirestore } from '@/hooks/useFirestore';
+import { toast } from 'sonner';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
 
 interface AddServiceDialogProps {
   open: boolean;
@@ -26,8 +32,7 @@ interface ServiceFormData {
   description: string;
   cost: number;
   duration: number;
-  status: string;
-  mechanicId: string;
+  status?: string;
 }
 
 export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServiceDialogProps) {
@@ -38,15 +43,18 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
       description: '',
       cost: 0,
       duration: 0,
-      status: 'active',
-      mechanicId: ''
+      status: 'active'
     }
   });
 
+  const status = watch('status');
+
   const onSubmit = async (data: ServiceFormData) => {
     try {
+      console.log("Submitting service data:", data);
       await add({
         ...data,
+        status: status || 'active',
         createdAt: new Date().toISOString()
       });
       toast.success('Service ajouté avec succès');
@@ -59,8 +67,8 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
     }
   };
 
-  const handleMechanicChange = (mechanicId: string) => {
-    setValue('mechanicId', mechanicId);
+  const handleStatusChange = (value: string) => {
+    setValue('status', value);
   };
 
   return (
@@ -112,11 +120,19 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="mechanic">Mécanicien</Label>
-            <MechanicSelector
-              value={watch('mechanicId')}
-              onChange={handleMechanicChange}
-            />
+            <Label htmlFor="status">Statut</Label>
+            <Select 
+              value={status} 
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Sélectionner un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end space-x-2">
@@ -134,4 +150,3 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
     </Dialog>
   );
 }
-
