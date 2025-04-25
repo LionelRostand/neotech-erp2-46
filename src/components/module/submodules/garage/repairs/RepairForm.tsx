@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 import { useForm } from "react-hook-form";
@@ -47,7 +48,7 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
   const { mechanics } = useGarageMechanics();
 
   // Filter only available mechanics
-  const availableMechanics = mechanics.filter(m => m.status === 'available');
+  const availableMechanics = mechanics?.filter(m => m.status === 'available') || [];
 
   return (
     <Form {...form}>
