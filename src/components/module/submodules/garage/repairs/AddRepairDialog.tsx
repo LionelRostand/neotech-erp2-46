@@ -1,13 +1,14 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Repair } from '@/components/module/submodules/garage/types/garage-types';
 import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
+import { useGarageServices } from '@/hooks/garage/useGarageServices';
+import { Plus, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface AddRepairDialogProps {
   open: boolean;
@@ -15,29 +16,50 @@ interface AddRepairDialogProps {
   onRepairAdded?: () => void;
 }
 
+interface ServiceLine {
+  serviceId: string;
+  quantity: number;
+  cost: number;
+}
+
 const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogProps) => {
   const { addRepair, clients = [], vehicles = [] } = useGarageData();
   const { mechanics = [] } = useGarageMechanics();
-  const { register, handleSubmit, setValue, reset, watch } = useForm<Repair>();
+  const { services = [] } = useGarageServices();
+  const [formData, setFormData] = useState({
+    clientId: '',
+    vehicleId: '',
+    mechanicId: '',
+    status: 'pending',
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    estimatedEndDate: '',
+    description: '',
+    estimatedCost: 0,
+  });
+  const [serviceLines, setServiceLines] = useState<ServiceLine[]>([{
+    serviceId: '',
+    quantity: 1,
+    cost: 0
+  }]);
 
-  const onSubmit = async (data: Partial<Repair>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const vehicleInfo = vehicles.find(v => v.id === data.vehicleId);
-      const clientInfo = clients.find(c => c.id === data.clientId);
-      const mechanicInfo = mechanics.find(m => m.id === data.mechanicId);
+      const vehicleInfo = vehicles.find(v => v.id === formData.vehicleId);
+      const clientInfo = clients.find(c => c.id === formData.clientId);
+      const mechanicInfo = mechanics.find(m => m.id === formData.mechanicId);
 
       const repairData = {
-        ...data,
+        ...formData,
         date: new Date().toISOString(),
         progress: 0,
-        status: 'pending',
         vehicleName: vehicleInfo ? `${vehicleInfo.make} ${vehicleInfo.model}` : undefined,
         clientName: clientInfo?.name,
         mechanicName: mechanicInfo ? `${mechanicInfo.firstName} ${mechanicInfo.lastName}` : undefined,
+        services: serviceLines,
       };
 
       await addRepair.mutateAsync(repairData);
-      reset();
       onOpenChange(false);
       if (onRepairAdded) {
         onRepairAdded();
@@ -47,18 +69,50 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
     }
   };
 
+  const addServiceLine = () => {
+    setServiceLines([...serviceLines, { serviceId: '', quantity: 1, cost: 0 }]);
+  };
+
+  const removeServiceLine = (index: number) => {
+    setServiceLines(serviceLines.filter((_, i) => i !== index));
+  };
+
+  const updateServiceLine = (index: number, field: keyof ServiceLine, value: string | number) => {
+    const updatedLines = [...serviceLines];
+    updatedLines[index] = { ...updatedLines[index], [field]: value };
+    
+    if (field === 'serviceId') {
+      const service = services.find(s => s.id === value);
+      if (service) {
+        updatedLines[index].cost = service.cost * updatedLines[index].quantity;
+      }
+    } else if (field === 'quantity') {
+      const service = services.find(s => s.id === updatedLines[index].serviceId);
+      if (service) {
+        updatedLines[index].cost = service.cost * Number(value);
+      }
+    }
+    
+    setServiceLines(updatedLines);
+    // Update total estimated cost
+    const total = updatedLines.reduce((sum, line) => sum + line.cost, 0);
+    setFormData({ ...formData, estimatedCost: total });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Nouvelle réparation</DialogTitle>
+          <DialogTitle>Ajouter une réparation</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-4">
-            <div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <label className="text-sm font-medium">Client</label>
-              <Select onValueChange={(value) => setValue('clientId', value)}>
+              <Select 
+                onValueChange={(value) => setFormData({ ...formData, clientId: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
@@ -72,9 +126,11 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
               </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <label className="text-sm font-medium">Véhicule</label>
-              <Select onValueChange={(value) => setValue('vehicleId', value)}>
+              <Select
+                onValueChange={(value) => setFormData({ ...formData, vehicleId: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un véhicule" />
                 </SelectTrigger>
@@ -87,10 +143,14 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <label className="text-sm font-medium">Mécanicien</label>
-              <Select onValueChange={(value) => setValue('mechanicId', value)}>
+              <Select
+                onValueChange={(value) => setFormData({ ...formData, mechanicId: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un mécanicien" />
                 </SelectTrigger>
@@ -104,26 +164,126 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
               </Select>
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <Input
-                {...register('description')}
-                placeholder="Description de la réparation"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Statut</label>
+              <Select
+                defaultValue="pending"
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="En attente d'approbation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente d'approbation</SelectItem>
+                  <SelectItem value="approved">Approuvé</SelectItem>
+                  <SelectItem value="in_progress">En cours</SelectItem>
+                  <SelectItem value="completed">Terminé</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <label className="text-sm font-medium">Coût estimé</label>
-              <Input
-                type="number"
-                {...register('estimatedCost', { valueAsNumber: true })}
-                placeholder="Coût estimé"
-              />
-            </div>
-
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date de début</label>
+              <Input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date de fin estimée</label>
+              <Input
+                type="date"
+                value={formData.estimatedEndDate}
+                onChange={(e) => setFormData({ ...formData, estimatedEndDate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-lg font-medium">Services</label>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={addServiceLine}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Ajouter un service
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              {serviceLines.map((line, index) => (
+                <div key={index} className="flex gap-2 items-start">
+                  <Select
+                    value={line.serviceId}
+                    onValueChange={(value) => updateServiceLine(index, 'serviceId', value)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Sélectionner un service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.isArray(services) && services.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Input
+                    type="number"
+                    min="1"
+                    value={line.quantity}
+                    onChange={(e) => updateServiceLine(index, 'quantity', Number(e.target.value))}
+                    className="w-20"
+                  />
+                  
+                  <Input
+                    type="number"
+                    value={line.cost}
+                    readOnly
+                    className="w-24"
+                  />
+                  
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeServiceLine(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Coût estimé (€)</label>
+            <Input
+              type="number"
+              value={formData.estimatedCost}
+              readOnly
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Description</label>
+            <textarea
+              className="w-full min-h-[100px] p-2 border rounded-md"
+              placeholder="Détails de la réparation..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
             <Button 
               type="button" 
               variant="outline" 
@@ -131,8 +291,11 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
             >
               Annuler
             </Button>
-            <Button type="submit">
-              Ajouter
+            <Button 
+              type="submit" 
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              Ajouter la réparation
             </Button>
           </div>
         </form>
