@@ -9,13 +9,13 @@ export const useGarageVehiclesOperations = () => {
 
   const createVehicle = async (vehicleData: Omit<Vehicle, 'id'>) => {
     try {
-      const result = await add(vehicleData);
+      await add(vehicleData);
       toast.success('Véhicule ajouté avec succès');
-      return result;
+      return true;
     } catch (error) {
       console.error('Error creating vehicle:', error);
       toast.error('Erreur lors de l\'ajout du véhicule');
-      throw error;
+      return false;
     }
   };
 
@@ -27,7 +27,7 @@ export const useGarageVehiclesOperations = () => {
     } catch (error) {
       console.error('Error updating vehicle:', error);
       toast.error('Erreur lors de la mise à jour du véhicule');
-      throw error;
+      return false;
     }
   };
 
@@ -39,7 +39,7 @@ export const useGarageVehiclesOperations = () => {
     } catch (error) {
       console.error('Error deleting vehicle:', error);
       toast.error('Erreur lors de la suppression du véhicule');
-      throw error;
+      return false;
     }
   };
 
