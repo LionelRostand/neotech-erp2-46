@@ -1,121 +1,114 @@
 
 import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Vehicle } from '../../../types/garage-types';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 import ViewVehicleDialog from './ViewVehicleDialog';
 import EditVehicleDialog from './EditVehicleDialog';
 import DeleteVehicleDialog from './DeleteVehicleDialog';
+import { Vehicle } from '../../../types/garage-types';
 
 const MaintenanceTable = () => {
-  const { vehicles = [], isLoading } = useGarageData();
+  const { vehicles = [], refetchVehicles } = useGarageVehicles();
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  if (isLoading) {
-    return <div>Chargement...</div>;
-  }
+  const handleView = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleRefresh = () => {
+    refetchVehicles();
+  };
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Marque/Modèle</TableHead>
-            <TableHead>Immatriculation</TableHead>
-            <TableHead>Propriétaire</TableHead>
-            <TableHead>Kilométrage</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Dernier contrôle</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {vehicles.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center">
-                Aucun véhicule trouvé
-              </TableCell>
-            </TableRow>
-          ) : (
-            vehicles.map((vehicle) => (
-              <TableRow key={vehicle.id}>
-                <TableCell>{vehicle.brand} {vehicle.model}</TableCell>
-                <TableCell>{vehicle.registrationNumber}</TableCell>
-                <TableCell>{vehicle.clientId}</TableCell>
-                <TableCell>{vehicle.mileage} km</TableCell>
-                <TableCell>{vehicle.status}</TableCell>
-                <TableCell>{vehicle.lastServiceDate || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setViewDialogOpen(true);
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setEditDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-red-500"
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-
+    <div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left p-2">Marque/Modèle</th>
+              <th className="text-left p-2">Immatriculation</th>
+              <th className="text-left p-2">Propriétaire</th>
+              <th className="text-left p-2">Kilométrage</th>
+              <th className="text-left p-2">Statut</th>
+              <th className="text-left p-2">Dernier contrôle</th>
+              <th className="text-right p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {vehicles.map((vehicle) => (
+              <tr key={vehicle.id} className="border-b hover:bg-gray-50">
+                <td className="p-2">{vehicle.brand || vehicle.make} {vehicle.model}</td>
+                <td className="p-2">{vehicle.registrationNumber || vehicle.licensePlate}</td>
+                <td className="p-2">{vehicle.clientId}</td>
+                <td className="p-2">{vehicle.mileage} km</td>
+                <td className="p-2">{vehicle.status}</td>
+                <td className="p-2">{vehicle.lastServiceDate || vehicle.lastCheckDate || '-'}</td>
+                <td className="p-2 text-right space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleView(vehicle)}
+                  >
+                    Voir
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleEdit(vehicle)}
+                  >
+                    Modifier
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => handleDelete(vehicle)}
+                  >
+                    Supprimer
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
       <ViewVehicleDialog
         vehicle={selectedVehicle}
         open={viewDialogOpen}
         onOpenChange={setViewDialogOpen}
       />
-
+      
       <EditVehicleDialog
         vehicle={selectedVehicle}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
+        onSuccess={handleRefresh}
       />
-
+      
       <DeleteVehicleDialog
         vehicle={selectedVehicle}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
+        onSuccess={handleRefresh}
       />
-    </>
+    </div>
   );
 };
 

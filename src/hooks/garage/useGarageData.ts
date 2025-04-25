@@ -1,86 +1,111 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
+import { Vehicle } from '@/components/module/submodules/garage/types/garage-types';
 
 export const useGarageData = () => {
-  // Assurer des chemins de collection valides
-  const appointmentsPath = COLLECTIONS.GARAGE.APPOINTMENTS || 'garage_appointments';
-  const clientsPath = COLLECTIONS.GARAGE.CLIENTS || 'garage_clients';
-  const vehiclesPath = COLLECTIONS.GARAGE.VEHICLES || 'garage_vehicles';
-  const mechanicsPath = COLLECTIONS.GARAGE.MECHANICS || 'garage_mechanics';
-  const servicesPath = COLLECTIONS.GARAGE.SERVICES || 'garage_services';
-  const repairsPath = COLLECTIONS.GARAGE.REPAIRS || 'garage_repairs';
-  const invoicesPath = COLLECTIONS.GARAGE.INVOICES || 'garage_invoices';
-  const partsPath = COLLECTIONS.GARAGE.PARTS || 'garage_parts';
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [maintenance, setMaintenance] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [mechanics, setMechanics] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   
-  // Fetch appointments
-  const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
-    queryKey: ['garage', 'appointments'],
-    queryFn: () => fetchCollectionData(appointmentsPath),
-  });
-  
-  // Fetch clients
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
-    queryKey: ['garage', 'clients'],
-    queryFn: () => fetchCollectionData(clientsPath),
-  });
-  
-  // Fetch vehicles
-  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
-    queryKey: ['garage', 'vehicles'],
-    queryFn: () => fetchCollectionData(vehiclesPath),
-  });
-  
-  // Fetch mechanics
-  const { data: mechanics = [], isLoading: isLoadingMechanics } = useQuery({
-    queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData(mechanicsPath),
-  });
-  
-  // Fetch services
-  const { data: services = [], isLoading: isLoadingServices } = useQuery({
-    queryKey: ['garage', 'services'],
-    queryFn: () => fetchCollectionData(servicesPath),
-  });
-  
-  // Fetch repairs
-  const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
-    queryKey: ['garage', 'repairs'],
-    queryFn: () => fetchCollectionData(repairsPath),
-  });
-  
-  // Fetch invoices
-  const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
-    queryKey: ['garage', 'invoices'],
-    queryFn: () => fetchCollectionData(invoicesPath),
-  });
-  
-  // Fetch parts
-  const { data: parts = [], isLoading: isLoadingParts } = useQuery({
-    queryKey: ['garage', 'parts'],
-    queryFn: () => fetchCollectionData(partsPath),
-  });
-  
-  const isLoading = 
-    isLoadingAppointments || 
-    isLoadingClients || 
-    isLoadingVehicles || 
-    isLoadingMechanics ||
-    isLoadingServices ||
-    isLoadingRepairs ||
-    isLoadingInvoices ||
-    isLoadingParts;
+  useEffect(() => {
+    const fetchGarageData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch vehicles
+        const vehiclesRef = collection(db, COLLECTIONS.GARAGE.VEHICLES);
+        const vehiclesSnapshot = await getDocs(vehiclesRef);
+        const vehiclesData = vehiclesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setVehicles(vehiclesData as Vehicle[]);
+        
+        // Fetch maintenance
+        const maintenanceRef = collection(db, COLLECTIONS.GARAGE.MAINTENANCE);
+        const maintenanceSnapshot = await getDocs(maintenanceRef);
+        const maintenanceData = maintenanceSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMaintenance(maintenanceData);
+        
+        // Fetch clients
+        const clientsRef = collection(db, COLLECTIONS.GARAGE.CLIENTS);
+        const clientsSnapshot = await getDocs(clientsRef);
+        const clientsData = clientsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setClients(clientsData);
+        
+        // Fetch mechanics
+        const mechanicsRef = collection(db, COLLECTIONS.GARAGE.MECHANICS);
+        const mechanicsSnapshot = await getDocs(mechanicsRef);
+        const mechanicsData = mechanicsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMechanics(mechanicsData);
+        
+      } catch (error: any) {
+        console.error("Error fetching garage data:", error);
+        setError(error instanceof Error ? error : new Error('An unknown error occurred'));
+        toast.error(`Erreur lors du chargement des données: ${error.message}`);
+        
+        // Set default data for development/testing
+        setVehicles([
+          {
+            id: "1",
+            make: "Peugeot",
+            model: "308",
+            registrationNumber: "AB-123-CD",
+            clientId: "client1",
+            mileage: 45000,
+            status: "active",
+            lastCheckDate: "2023-04-15"
+          },
+          {
+            id: "2",
+            make: "Renault",
+            model: "Clio",
+            registrationNumber: "EF-456-GH",
+            clientId: "client2",
+            mileage: 28000,
+            status: "active",
+            lastCheckDate: "2023-06-20"
+          },
+          {
+            id: "3",
+            make: "Citroen",
+            model: "C3",
+            registrationNumber: "IJ-789-KL",
+            clientId: "client1",
+            mileage: 62000,
+            status: "maintenance",
+            lastCheckDate: "2023-02-10"
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchGarageData();
+  }, []);
   
   return {
-    appointments,
-    clients,
     vehicles,
+    maintenance,
+    clients,
     mechanics,
-    services,
-    repairs,
-    invoices,
-    parts,
-    isLoading
+    isLoading,
+    error
   };
 };

@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,20 +27,20 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
   const { vehicles, loading: isLoadingVehicles } = useGarageVehicles();
   const { mechanics, isLoading: isLoadingMechanics } = useGarageMechanics();
   const { services, servicesOptions, isLoading: isLoadingServices } = useGarageServicesList();
-  
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(new Date());
-  const [clientId, setClientId] = useState<string>("");
-  const [vehicleId, setVehicleId] = useState<string>("");
-  const [mechanicId, setMechanicId] = useState<string>("");
+  const [clientId, setClientId] = useState("");
+  const [vehicleId, setVehicleId] = useState("");
+  const [mechanicId, setMechanicId] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [description, setDescription] = useState<string>("");
-  const [estimatedCost, setEstimatedCost] = useState<number>(0);
-  const [notes, setNotes] = useState<string>("");
+  const [description, setDescription] = useState("");
+  const [estimatedCost, setEstimatedCost] = useState(0);
+  const [notes, setNotes] = useState("");
 
   // Filtrer les véhicules par client
   const filteredVehicles = vehicles.filter(vehicle => vehicle.clientId === clientId);
-
+  
   const { add } = useFirestore(COLLECTIONS.GARAGE.MAINTENANCE);
 
   // Calculer le coût total en fonction des services sélectionnés
@@ -59,7 +58,7 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!clientId || !vehicleId || !mechanicId || selectedServices.length === 0 || !selectedDate) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
@@ -99,7 +98,7 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
               <SelectValue placeholder="Sélectionner un client" />
             </SelectTrigger>
             <SelectContent>
-              {clients.map((client) => (
+              {clients.map(client => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.firstName} {client.lastName}
                 </SelectItem>
@@ -107,7 +106,6 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="vehicle">Véhicule</Label>
           <Select value={vehicleId} onValueChange={setVehicleId} disabled={!clientId}>
@@ -115,9 +113,9 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
               <SelectValue placeholder={clientId ? "Sélectionner un véhicule" : "Sélectionnez d'abord un client"} />
             </SelectTrigger>
             <SelectContent>
-              {filteredVehicles.map((vehicle) => (
+              {filteredVehicles.map(vehicle => (
                 <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.brand} {vehicle.model} - {vehicle.registrationNumber}
+                  {vehicle.brand || vehicle.make} {vehicle.model} - {vehicle.registrationNumber || vehicle.licensePlate}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -131,7 +129,7 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant={"outline"}
+                variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
                   !selectedDate && "text-muted-foreground"
@@ -151,13 +149,12 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
             </PopoverContent>
           </Popover>
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="endDate">Date de fin estimée</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant={"outline"}
+                variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
                   !selectedEndDate && "text-muted-foreground"
@@ -178,7 +175,7 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
           </Popover>
         </div>
       </div>
-
+        
       <div className="space-y-2">
         <Label htmlFor="mechanic">Mécanicien</Label>
         <Select value={mechanicId} onValueChange={setMechanicId}>
@@ -186,21 +183,21 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
             <SelectValue placeholder="Sélectionner un mécanicien" />
           </SelectTrigger>
           <SelectContent>
-            {mechanics.map((mechanic) => (
+            {mechanics.map(mechanic => (
               <SelectItem key={mechanic.id} value={mechanic.id}>
-                {mechanic.firstName} {mechanic.lastName} - {mechanic.specialization}
+                {mechanic.firstName} {mechanic.lastName} - {Array.isArray(mechanic.specialization) ? mechanic.specialization.join(', ') : mechanic.specialization}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-
+        
       <div className="space-y-2">
         <Label htmlFor="services">Services</Label>
         <div className="flex flex-wrap gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
-          {services.map((service) => (
+          {services.map(service => (
             <label key={service.id} className="flex items-center space-x-2 p-1 border rounded cursor-pointer hover:bg-gray-100 w-full">
-              <input 
+              <input
                 type="checkbox"
                 checked={selectedServices.includes(service.id)}
                 onChange={(e) => {
@@ -221,20 +218,20 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
 
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea 
-          id="description" 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Description des travaux à effectuer"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes supplémentaires</Label>
-        <Textarea 
-          id="notes" 
-          value={notes} 
-          onChange={(e) => setNotes(e.target.value)} 
+        <Textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes supplémentaires (facultatif)"
         />
       </div>
@@ -245,10 +242,16 @@ const MaintenanceForm = ({ onCancel }: MaintenanceFormProps) => {
           <span className="text-xl font-bold">{estimatedCost}€</span>
         </div>
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
             Annuler
           </Button>
-          <Button type="submit">
+          <Button
+            type="submit"
+          >
             Créer la maintenance
           </Button>
         </div>

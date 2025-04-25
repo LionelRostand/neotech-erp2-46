@@ -25,12 +25,16 @@ const ViewVehicleDialog = ({ vehicle, open, onOpenChange }: ViewVehicleDialogPro
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div>
-            <span className="font-bold">Marque/Modèle : </span>
-            <span>{vehicle.brand} {vehicle.model}</span>
+            <span className="font-bold">Marque : </span>
+            <span>{vehicle.brand || vehicle.make}</span>
+          </div>
+          <div>
+            <span className="font-bold">Modèle : </span>
+            <span>{vehicle.model}</span>
           </div>
           <div>
             <span className="font-bold">Immatriculation : </span>
-            <span>{vehicle.registrationNumber}</span>
+            <span>{vehicle.registrationNumber || vehicle.licensePlate}</span>
           </div>
           <div>
             <span className="font-bold">Propriétaire : </span>
@@ -46,7 +50,7 @@ const ViewVehicleDialog = ({ vehicle, open, onOpenChange }: ViewVehicleDialogPro
           </div>
           <div>
             <span className="font-bold">Dernier contrôle : </span>
-            <span>{vehicle.lastServiceDate || '-'}</span>
+            <span>{vehicle.lastServiceDate || vehicle.lastCheckDate || '-'}</span>
           </div>
         </div>
       </DialogContent>
