@@ -9,14 +9,16 @@ import { Button } from '@/components/ui/button';
 import NewSupplierDialog from './NewSupplierDialog';
 
 const GarageSuppliersDashboard = () => {
-  const { suppliers, isLoading, refetch } = useGarageData();
+  const { suppliers = [], isLoading, refetch } = useGarageData();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const activeSuppliers = suppliers.filter(s => s.status === 'active');
+  // Ensure suppliers is an array even if it's undefined from useGarageData
+  const suppliersArray = Array.isArray(suppliers) ? suppliers : [];
+  const activeSuppliers = suppliersArray.filter(s => s.status === 'active');
 
   const columns = [
     {
@@ -60,7 +62,7 @@ const GarageSuppliersDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Total Fournisseurs"
-          value={suppliers.length.toString()}
+          value={suppliersArray.length.toString()}
           icon={<Truck className="h-4 w-4 text-primary-500" />}
           description="Tous les fournisseurs"
           className="bg-soft-purple hover:bg-soft-purple-100"
@@ -76,7 +78,7 @@ const GarageSuppliersDashboard = () => {
         
         <StatCard
           title="Catégories"
-          value={Array.from(new Set(suppliers.map(s => s.category))).length.toString()}
+          value={Array.from(new Set(suppliersArray.map(s => s.category))).length.toString()}
           icon={<Truck className="h-4 w-4 text-amber-500" />}
           description="Types de fournisseurs"
           className="bg-amber-50 hover:bg-amber-100"
@@ -88,7 +90,7 @@ const GarageSuppliersDashboard = () => {
           <CardTitle>Liste des Fournisseurs</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable columns={columns} data={suppliers} />
+          <DataTable columns={columns} data={suppliersArray} />
         </CardContent>
       </Card>
 
