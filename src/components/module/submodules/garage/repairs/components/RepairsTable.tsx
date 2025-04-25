@@ -41,6 +41,11 @@ const RepairsTable = ({ repairs, onRepairModified }: RepairsTableProps) => {
     setSelectedRepair(repair);
     setDeleteDialogOpen(true);
   };
+  
+  const handleDeleteComplete = () => {
+    // Call the parent's onRepairModified function to refresh data
+    onRepairModified();
+  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -114,7 +119,7 @@ const RepairsTable = ({ repairs, onRepairModified }: RepairsTableProps) => {
         repairId={selectedRepair?.id ?? null}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onDelete={onRepairModified}
+        onDelete={handleDeleteComplete}
       />
     </>
   );

@@ -39,7 +39,12 @@ const DeleteRepairDialog: React.FC<DeleteRepairDialogProps> = ({
       await deleteDoc(repairRef);
       
       toast.success('Réparation supprimée avec succès');
-      onDelete();
+      
+      // Call onDelete callback function to refresh data
+      if (typeof onDelete === 'function') {
+        onDelete();
+      }
+      
       onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de la suppression de la réparation:', error);
