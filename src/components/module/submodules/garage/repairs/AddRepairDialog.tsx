@@ -1,102 +1,73 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 import { useGarageServices } from '@/hooks/garage/useGarageServices';
-import { Plus, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useVehicleClientMapping } from '@/hooks/garage/useVehicleClientMapping';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface AddRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRepairAdded?: () => void;
-}
-
-interface ServiceLine {
-  serviceId: string;
-  quantity: number;
-  cost: number;
+  onRepairAdded: () => void;
 }
 
 const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogProps) => {
-  const { addRepair, clients = [], vehicles = [] } = useGarageData();
-  const { mechanics = [] } = useGarageMechanics();
-  const { services = [] } = useGarageServices();
-  const [formData, setFormData] = useState({
-    clientId: '',
-    vehicleId: '',
-    mechanicId: '',
-    status: 'pending',
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    estimatedEndDate: '',
-    description: '',
-    estimatedCost: 0,
-  });
-  const [serviceLines, setServiceLines] = useState<ServiceLine[]>([{
-    serviceId: '',
-    quantity: 1,
-    cost: 0
-  }]);
+  const { clients, vehicles } = useGarageData();
+  const { mechanics } = useGarageMechanics();
+  const { services } = useGarageServices();
+  const { getClientForVehicle } = useVehicleClientMapping();
+  
+  const [selectedClient, setSelectedClient] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedMechanic, setSelectedMechanic] = useState('');
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [description, setDescription] = useState('');
+  const [estimatedCost, setEstimatedCost] = useState('');
+
+  const handleVehicleChange = (vehicleId: string) => {
+    setSelectedVehicle(vehicleId);
+    const clientId = getClientForVehicle(vehicleId);
+    setSelectedClient(clientId);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
-      const vehicleInfo = vehicles.find(v => v.id === formData.vehicleId);
-      const clientInfo = clients.find(c => c.id === formData.clientId);
-      const mechanicInfo = mechanics.find(m => m.id === formData.mechanicId);
-
-      const repairData = {
-        ...formData,
+      const repair = {
+        vehicleId: selectedVehicle,
+        vehicleName: vehicles.find(v => v.id === selectedVehicle)?.make,
+        clientId: selectedClient,
+        clientName: clients.find(c => c.id === selectedClient)?.name,
+        mechanicId: selectedMechanic,
+        mechanicName: mechanics.find(m => m.id === selectedMechanic)?.firstName + ' ' + mechanics.find(m => m.id === selectedMechanic)?.lastName,
+        startDate: new Date().toISOString(),
         date: new Date().toISOString(),
+        status: 'pending',
+        description,
         progress: 0,
-        vehicleName: vehicleInfo ? `${vehicleInfo.make} ${vehicleInfo.model}` : undefined,
-        clientName: clientInfo?.name,
-        mechanicName: mechanicInfo ? `${mechanicInfo.firstName} ${mechanicInfo.lastName}` : undefined,
-        services: serviceLines,
+        estimatedCost: Number(estimatedCost),
+        services: selectedServices,
       };
 
-      await addRepair.mutateAsync(repairData);
+      await addDoc(collection(db, COLLECTIONS.GARAGE.REPAIRS), repair);
+      toast.success('Réparation ajoutée avec succès');
+      onRepairAdded();
       onOpenChange(false);
-      if (onRepairAdded) {
-        onRepairAdded();
-      }
     } catch (error) {
       console.error('Error adding repair:', error);
+      toast.error('Erreur lors de l\'ajout de la réparation');
     }
-  };
-
-  const addServiceLine = () => {
-    setServiceLines([...serviceLines, { serviceId: '', quantity: 1, cost: 0 }]);
-  };
-
-  const removeServiceLine = (index: number) => {
-    setServiceLines(serviceLines.filter((_, i) => i !== index));
-  };
-
-  const updateServiceLine = (index: number, field: keyof ServiceLine, value: string | number) => {
-    const updatedLines = [...serviceLines];
-    updatedLines[index] = { ...updatedLines[index], [field]: value };
-    
-    if (field === 'serviceId') {
-      const service = services.find(s => s.id === value);
-      if (service) {
-        updatedLines[index].cost = service.cost * updatedLines[index].quantity;
-      }
-    } else if (field === 'quantity') {
-      const service = services.find(s => s.id === updatedLines[index].serviceId);
-      if (service) {
-        updatedLines[index].cost = service.cost * Number(value);
-      }
-    }
-    
-    setServiceLines(updatedLines);
-    // Update total estimated cost
-    const total = updatedLines.reduce((sum, line) => sum + line.cost, 0);
-    setFormData({ ...formData, estimatedCost: total });
   };
 
   return (
@@ -109,33 +80,13 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Client</label>
-              <Select 
-                onValueChange={(value) => setFormData({ ...formData, clientId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.isArray(clients) && clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Véhicule</label>
-              <Select
-                onValueChange={(value) => setFormData({ ...formData, vehicleId: value })}
-              >
+              <Label>Véhicule</Label>
+              <Select value={selectedVehicle} onValueChange={handleVehicleChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un véhicule" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.isArray(vehicles) && vehicles.map((vehicle) => (
+                  {vehicles?.map(vehicle => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
                       {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
                     </SelectItem>
@@ -143,159 +94,81 @@ const AddRepairDialog = ({ open, onOpenChange, onRepairAdded }: AddRepairDialogP
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Mécanicien</label>
-              <Select
-                onValueChange={(value) => setFormData({ ...formData, mechanicId: value })}
-              >
+              <Label>Client</Label>
+              <Select value={selectedClient} onValueChange={setSelectedClient} disabled>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un mécanicien" />
+                  <SelectValue placeholder="Client associé au véhicule" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.isArray(mechanics) && mechanics.map((mechanic) => (
-                    <SelectItem key={mechanic.id} value={mechanic.id}>
-                      {mechanic.firstName} {mechanic.lastName}
+                  {clients?.map(client => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Statut</label>
-              <Select
-                defaultValue="pending"
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="En attente d'approbation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">En attente d'approbation</SelectItem>
-                  <SelectItem value="approved">Approuvé</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Terminé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de début</label>
-              <Input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de fin estimée</label>
-              <Input
-                type="date"
-                value={formData.estimatedEndDate}
-                onChange={(e) => setFormData({ ...formData, estimatedEndDate: e.target.value })}
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-lg font-medium">Services</label>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={addServiceLine}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Ajouter un service
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              {serviceLines.map((line, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <Select
-                    value={line.serviceId}
-                    onValueChange={(value) => updateServiceLine(index, 'serviceId', value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Sélectionner un service" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(services) && services.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Input
-                    type="number"
-                    min="1"
-                    value={line.quantity}
-                    onChange={(e) => updateServiceLine(index, 'quantity', Number(e.target.value))}
-                    className="w-20"
-                  />
-                  
-                  <Input
-                    type="number"
-                    value={line.cost}
-                    readOnly
-                    className="w-24"
-                  />
-                  
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeServiceLine(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <Label>Mécanicien</Label>
+            <Select value={selectedMechanic} onValueChange={setSelectedMechanic}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un mécanicien" />
+              </SelectTrigger>
+              <SelectContent>
+                {mechanics?.map(mechanic => (
+                  <SelectItem key={mechanic.id} value={mechanic.id}>
+                    {mechanic.firstName} {mechanic.lastName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Coût estimé (€)</label>
+            <Label>Services</Label>
+            <Select value={selectedServices[0]} onValueChange={(value) => setSelectedServices([value])}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner les services" />
+              </SelectTrigger>
+              <SelectContent>
+                {services?.map(service => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description de la réparation"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Coût estimé</Label>
             <Input
               type="number"
-              value={formData.estimatedCost}
-              readOnly
+              value={estimatedCost}
+              onChange={(e) => setEstimatedCost(e.target.value)}
+              placeholder="Coût estimé en €"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
-            <textarea
-              className="w-full min-h-[100px] p-2 border rounded-md"
-              placeholder="Détails de la réparation..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-            >
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button 
-              type="submit" 
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              Ajouter la réparation
+            <Button type="submit">
+              Ajouter
             </Button>
           </div>
         </form>
