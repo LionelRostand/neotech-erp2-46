@@ -3,11 +3,8 @@ import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
 import { Plus, Wrench, Clock, PackageSearch, Settings, Eye, Pencil, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { AddRepairDialog } from './AddRepairDialog';
 import { Card } from "@/components/ui/card";
-import { formatDate } from '@/lib/formatters';
+import { AddRepairDialog } from './AddRepairDialog';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading } = useGarageData();
@@ -34,21 +31,6 @@ const GarageRepairsDashboard = () => {
     return dateB.getTime() - dateA.getTime();
   });
 
-  // Helper function to safely format dates
-  const safeFormatDate = (dateValue: string | undefined): string => {
-    if (!dateValue) return 'N/A';
-    
-    try {
-      const date = new Date(dateValue);
-      // Check if date is valid
-      if (isNaN(date.getTime())) return 'Date invalide';
-      return format(date, 'yyyy-MM-dd');
-    } catch (error) {
-      console.error('Error formatting date:', error, dateValue);
-      return 'Date invalide';
-    }
-  };
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -64,9 +46,9 @@ const GarageRepairsDashboard = () => {
           <div className="flex items-start gap-4">
             <Wrench className="h-6 w-6 text-blue-600" />
             <div>
-              <div className="text-2xl font-bold">{todaysRepairs.length}</div>
-              <div className="text-sm text-gray-600">Réparations aujourd'hui</div>
-              <div className="text-xs text-gray-500">Planifiées pour aujourd'hui</div>
+              <p className="text-2xl font-bold">{todaysRepairs.length}</p>
+              <p className="text-sm text-gray-600">Réparations aujourd'hui</p>
+              <p className="text-xs text-gray-500">Planifiées pour aujourd'hui</p>
             </div>
           </div>
         </Card>
@@ -75,9 +57,9 @@ const GarageRepairsDashboard = () => {
           <div className="flex items-start gap-4">
             <Clock className="h-6 w-6 text-yellow-600" />
             <div>
-              <div className="text-2xl font-bold">{inProgress.length}</div>
-              <div className="text-sm text-gray-600">En cours</div>
-              <div className="text-xs text-gray-500">Réparations actives</div>
+              <p className="text-2xl font-bold">{inProgress.length}</p>
+              <p className="text-sm text-gray-600">En cours</p>
+              <p className="text-xs text-gray-500">Réparations actives</p>
             </div>
           </div>
         </Card>
@@ -86,9 +68,9 @@ const GarageRepairsDashboard = () => {
           <div className="flex items-start gap-4">
             <PackageSearch className="h-6 w-6 text-purple-600" />
             <div>
-              <div className="text-2xl font-bold">{awaitingParts.length}</div>
-              <div className="text-sm text-gray-600">En attente de pièces</div>
-              <div className="text-xs text-gray-500">Commandes en attente</div>
+              <p className="text-2xl font-bold">{awaitingParts.length}</p>
+              <p className="text-sm text-gray-600">En attente de pièces</p>
+              <p className="text-xs text-gray-500">Commandes en attente</p>
             </div>
           </div>
         </Card>
@@ -97,9 +79,9 @@ const GarageRepairsDashboard = () => {
           <div className="flex items-start gap-4">
             <Settings className="h-6 w-6 text-green-600" />
             <div>
-              <div className="text-2xl font-bold">{allRepairs}</div>
-              <div className="text-sm text-gray-600">Total réparations</div>
-              <div className="text-xs text-gray-500">Toutes les réparations</div>
+              <p className="text-2xl font-bold">{allRepairs}</p>
+              <p className="text-sm text-gray-600">Total réparations</p>
+              <p className="text-xs text-gray-500">Toutes les réparations</p>
             </div>
           </div>
         </Card>
@@ -126,7 +108,7 @@ const GarageRepairsDashboard = () => {
             <tbody>
               {sortedRepairs.map((repair) => (
                 <tr key={repair.id} className="border-t">
-                  <td className="py-3">{safeFormatDate(repair.date || repair.startDate)}</td>
+                  <td className="py-3">{repair.date ? new Date(repair.date).toLocaleDateString('fr-FR') : 'N/A'}</td>
                   <td>{repair.clientName}</td>
                   <td>{repair.vehicleName}</td>
                   <td>{repair.description}</td>
