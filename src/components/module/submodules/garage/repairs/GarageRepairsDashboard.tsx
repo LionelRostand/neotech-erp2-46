@@ -15,15 +15,10 @@ const GarageRepairsDashboard = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  // Ensure repairs is an array
   const safeRepairs = Array.isArray(repairs) ? repairs : [];
-
-  // Calculate today's date in ISO format (YYYY-MM-DD)
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  // Filter repairs by different states
   const todaysRepairs = safeRepairs.filter(repair => {
-    // Check if repair has a date and if it matches today's date
     return repair.date && repair.date.startsWith(today);
   });
 
