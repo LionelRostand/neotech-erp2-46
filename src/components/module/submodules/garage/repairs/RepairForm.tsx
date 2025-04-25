@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ServicesSelector from './ServicesSelector';
 import type { RepairFormData } from './types';
+import { toast } from "sonner";
 
 interface RepairFormProps {
   onSubmit: (data: RepairFormData) => void;
@@ -45,10 +46,14 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
     }
   });
 
-  const { mechanics } = useGarageMechanics();
+  // Get mechanics data from the hook
+  const { mechanics, isLoading: isLoadingMechanics } = useGarageMechanics();
 
   // Filter only available mechanics
   const availableMechanics = mechanics?.filter(m => m.status === 'available') || [];
+  
+  // Log for debugging
+  console.log("Available mechanics:", availableMechanics);
 
   return (
     <Form {...form}>
@@ -59,7 +64,9 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Client</FormLabel>
-              <Input placeholder="Client ID" {...field} />
+              <FormControl>
+                <Input placeholder="Client ID" {...field} />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -70,7 +77,9 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Véhicule</FormLabel>
-              <Input placeholder="Vehicle ID" {...field} />
+              <FormControl>
+                <Input placeholder="Vehicle ID" {...field} />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -81,18 +90,24 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Mécanicien</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un mécanicien" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {availableMechanics.map((mechanic) => (
-                    <SelectItem key={mechanic.id} value={mechanic.id}>
-                      {mechanic.firstName} {mechanic.lastName}
-                    </SelectItem>
-                  ))}
+                  {isLoadingMechanics ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : availableMechanics.length > 0 ? (
+                    availableMechanics.map((mechanic) => (
+                      <SelectItem key={mechanic.id} value={mechanic.id}>
+                        {mechanic.firstName} {mechanic.lastName}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>Aucun mécanicien disponible</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </FormItem>
@@ -105,7 +120,9 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Date de début</FormLabel>
-              <Input type="date" {...field} />
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -116,7 +133,9 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Date de fin estimée</FormLabel>
-              <Input type="date" {...field} />
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -127,7 +146,7 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Statut</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un statut" />
@@ -150,7 +169,9 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Coût estimé</FormLabel>
-              <Input type="number" placeholder="Coût estimé" {...field} />
+              <FormControl>
+                <Input type="number" placeholder="Coût estimé" {...field} />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -161,11 +182,13 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Progression (%)</FormLabel>
-              <Input
-                type="number"
-                placeholder="Progression en pourcentage"
-                {...field}
-              />
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Progression en pourcentage"
+                  {...field}
+                />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -176,7 +199,9 @@ const RepairForm = ({ onSubmit, defaultValues, isLoading }: RepairFormProps) => 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
-              <Textarea placeholder="Description de la réparation" {...field} />
+              <FormControl>
+                <Textarea placeholder="Description de la réparation" {...field} />
+              </FormControl>
             </FormItem>
           )}
         />
