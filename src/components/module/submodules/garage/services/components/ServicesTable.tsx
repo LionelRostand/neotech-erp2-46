@@ -23,6 +23,8 @@ interface Service {
   duration: number;
   status: string;
   createdAt: string;
+  mechanicId?: string;
+  mechanicName?: string;
 }
 
 interface ServicesTableProps {
@@ -49,6 +51,7 @@ const ServicesTable: React.FC<ServicesTableProps> = ({ services, onServiceModifi
               <TableHead>Description</TableHead>
               <TableHead>Coût</TableHead>
               <TableHead>Durée (min)</TableHead>
+              <TableHead>Mécanicien</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -61,6 +64,7 @@ const ServicesTable: React.FC<ServicesTableProps> = ({ services, onServiceModifi
                   <TableCell className="max-w-[200px] truncate">{service.description}</TableCell>
                   <TableCell>{service.cost}€</TableCell>
                   <TableCell>{service.duration}</TableCell>
+                  <TableCell>{service.mechanicName || "Non assigné"}</TableCell>
                   <TableCell>
                     <Badge 
                       variant={service.status === 'active' ? 'default' : 'secondary'}
@@ -101,7 +105,7 @@ const ServicesTable: React.FC<ServicesTableProps> = ({ services, onServiceModifi
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-6 text-gray-500">
                   Aucun service trouvé
                 </TableCell>
               </TableRow>
