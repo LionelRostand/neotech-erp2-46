@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
   onOpenChange,
   onSave
 }) => {
-  const { clients = [], vehicles = [], mechanics = [] } = useGarageData();
+  const { clients = [], vehicles = [], mechanics = [], services = [] } = useGarageData();
   const [formData, setFormData] = React.useState<Partial<Repair>>({
     startDate: new Date().toISOString().split('T')[0],
     status: 'pending',
@@ -39,6 +38,15 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
       ...prev,
       vehicleId,
       licensePlate: selectedVehicle?.licensePlate || ''
+    }));
+  };
+
+  const handleServiceChange = (serviceId: string) => {
+    const selectedService = services.find(s => s.id === serviceId);
+    setFormData(prev => ({
+      ...prev,
+      serviceId,
+      estimatedCost: selectedService?.price || prev.estimatedCost
     }));
   };
 
@@ -97,6 +105,25 @@ const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
                 readOnly
                 className="bg-gray-100"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="service">Service</Label>
+              <Select
+                value={formData.serviceId}
+                onValueChange={handleServiceChange}
+              >
+                <SelectTrigger id="service">
+                  <SelectValue placeholder="Sélectionner un service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name} ({service.price}€)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

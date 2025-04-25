@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -19,13 +18,17 @@ export const useGarageData = () => {
     queryKey: ['garage', 'mechanics'],
     queryFn: () => fetchCollectionData<Mechanic>(COLLECTIONS.GARAGE.MECHANICS)
   });
-  
+
   const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
     queryKey: ['garage', 'repairs'],
     queryFn: () => fetchCollectionData<Repair>(COLLECTIONS.GARAGE.REPAIRS)
   });
-  
-  // Mock data for other collections that might be used in the dashboard
+
+  const { data: services = [], isLoading: isLoadingServices } = useQuery({
+    queryKey: ['garage', 'services'],
+    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.SERVICES)
+  });
+
   const appointments = [];
   const invoices = [];
   const suppliers = [];
@@ -36,12 +39,13 @@ export const useGarageData = () => {
     clients,
     vehicles,
     mechanics,
-    repairs, // Now we're properly returning the repairs data
+    repairs,
+    services,
     appointments,
     invoices,
     suppliers,
     inventory,
     loyalty,
-    isLoading: isLoadingClients || isLoadingVehicles || isLoadingMechanics || isLoadingRepairs
+    isLoading: isLoadingClients || isLoadingVehicles || isLoadingMechanics || isLoadingRepairs || isLoadingServices
   };
 };
