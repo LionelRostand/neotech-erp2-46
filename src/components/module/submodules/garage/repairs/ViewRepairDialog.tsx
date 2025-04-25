@@ -40,6 +40,14 @@ const ViewRepairDialog = ({ repair, open, onOpenChange }: ViewRepairDialogProps)
     }
   };
 
+  // Safely display vehicle name and prevent undefined from showing
+  const displayVehicleName = () => {
+    if (!repair.vehicleName || repair.vehicleName === 'undefined') {
+      return repair.vehicleModel || 'Véhicule non spécifié';
+    }
+    return repair.vehicleName;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -53,18 +61,18 @@ const ViewRepairDialog = ({ repair, open, onOpenChange }: ViewRepairDialogProps)
         <div className="space-y-4">
           <div>
             <h3 className="font-medium mb-1">Client</h3>
-            <p>{repair.clientName}</p>
+            <p>{repair.clientName || 'Client non spécifié'}</p>
           </div>
 
           <div>
             <h3 className="font-medium mb-1">Véhicule</h3>
-            <p>{repair.vehicleName}</p>
-            <p className="text-sm text-gray-500">Immatriculation: {repair.licensePlate}</p>
+            <p>{displayVehicleName()} {repair.vehicleModel || ''}</p>
+            <p className="text-sm text-gray-500">Immatriculation: {repair.licensePlate || 'Non spécifiée'}</p>
           </div>
 
           <div>
             <h3 className="font-medium mb-1">Service</h3>
-            <p>{repair.service}</p>
+            <p>{repair.service || 'Non spécifié'}</p>
           </div>
 
           <div>
@@ -75,17 +83,17 @@ const ViewRepairDialog = ({ repair, open, onOpenChange }: ViewRepairDialogProps)
 
           <div>
             <h3 className="font-medium mb-1">Description</h3>
-            <p className="text-sm">{repair.description}</p>
+            <p className="text-sm">{repair.description || 'Aucune description'}</p>
           </div>
 
           <div>
-            <h3 className="font-medium mb-1">Progression ({repair.progress}%)</h3>
-            <Progress value={repair.progress} className="h-2" />
+            <h3 className="font-medium mb-1">Progression ({repair.progress || 0}%)</h3>
+            <Progress value={repair.progress || 0} className="h-2" />
           </div>
 
           <div>
             <h3 className="font-medium mb-1">Coût estimé</h3>
-            <p>{formatCurrency(repair.estimatedCost)}</p>
+            <p>{formatCurrency(repair.estimatedCost || 0)}</p>
           </div>
         </div>
       </DialogContent>
