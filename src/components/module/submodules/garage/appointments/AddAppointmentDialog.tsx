@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useGarageClients } from '@/hooks/garage/useGarageClients';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 import {
   Form,
   FormControl,
@@ -26,9 +26,11 @@ import { toast } from "sonner";
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Textarea } from "@/components/ui/textarea";
 
 const appointmentFormSchema = z.object({
   clientId: z.string().min(1, "Veuillez sélectionner un client"),
+  vehicleId: z.string().optional(),
   date: z.string().min(1, "La date est requise"),
   time: z.string().min(1, "L'heure est requise"),
   type: z.string().min(1, "Le type de rendez-vous est requis"),
@@ -38,36 +40,58 @@ const appointmentFormSchema = z.object({
 interface AddAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  clients?: any[];
+  vehicles?: any[];
 }
 
 const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
   open,
-  onOpenChange
+  onOpenChange,
+  clients: providedClients,
+  vehicles: providedVehicles
 }) => {
-  const { clients } = useGarageClients();
+  const { clients = [], vehicles = [] } = useGarageData();
+  
+  const displayClients = providedClients || clients;
+  const displayVehicles = providedVehicles || vehicles;
+  
   const form = useForm<z.infer<typeof appointmentFormSchema>>({
     resolver: zodResolver(appointmentFormSchema),
+    defaultValues: {
+      notes: "",
+    }
   });
+
+  const watchedClientId = form.watch("clientId");
+  const clientVehicles = watchedClientId 
+    ? displayVehicles.filter(v => v.clientId === watchedClientId) 
+    : [];
 
   const onSubmit = async (data: z.infer<typeof appointmentFormSchema>) => {
     try {
-      const selectedClient = clients.find(c => c.id === data.clientId);
+      const selectedClient = displayClients.find(c => c.id === data.clientId);
       if (!selectedClient) {
         toast.error("Client non trouvé");
         return;
       }
 
+      const selectedVehicle = data.vehicleId 
+        ? displayVehicles.find(v => v.id === data.vehicleId)
+        : null;
+
       const appointmentData = {
         ...data,
-        clientName: `${selectedClient.firstName} ${selectedClient.lastName}`,
+        clientName: selectedClient.name || `${selectedClient.firstName} ${selectedClient.lastName}`,
+        vehicleMake: selectedVehicle?.make || '',
+        vehicleModel: selectedVehicle?.model || '',
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
 
       await addDoc(collection(db, COLLECTIONS.GARAGE.APPOINTMENTS), appointmentData);
       toast.success("Rendez-vous créé avec succès");
-      onOpenChange(false);
       form.reset();
+      onOpenChange(false);
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast.error("Erreur lors de la création du rendez-vous");
@@ -96,9 +120,9 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clients.map((client) => (
+                      {displayClients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
-                          {client.firstName} {client.lastName}
+                          {client.name || `${client.firstName || ''} ${client.lastName || ''}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -107,6 +131,33 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
                 </FormItem>
               )}
             />
+
+            {watchedClientId && clientVehicles.length > 0 && (
+              <FormField
+                control={form.control}
+                name="vehicleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Véhicule</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un véhicule" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clientVehicles.map((vehicle) => (
+                          <SelectItem key={vehicle.id} value={vehicle.id}>
+                            {vehicle.make} {vehicle.model} {vehicle.licensePlate ? `(${vehicle.licensePlate})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -155,6 +206,20 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
                       <SelectItem value="revision">Révision</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Notes supplémentaires..." {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

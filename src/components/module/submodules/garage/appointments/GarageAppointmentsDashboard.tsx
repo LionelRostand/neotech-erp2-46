@@ -129,7 +129,7 @@ const GarageAppointmentsDashboard = () => {
                         ? `${appointment.vehicleMake} ${appointment.vehicleModel}`
                         : 'Non spécifié'}
                     </TableCell>
-                    <TableCell>{appointment.service || 'Non spécifié'}</TableCell>
+                    <TableCell>{appointment.type || appointment.service || 'Non spécifié'}</TableCell>
                     <TableCell>{getStatusBadge(appointment.status)}</TableCell>
                   </TableRow>
                 ))

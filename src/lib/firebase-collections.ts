@@ -8,9 +8,19 @@ export const COLLECTIONS = {
     DRAFTS: 'messages-drafts',
     ARCHIVED: 'messages-archived',
     SCHEDULED: 'messages-scheduled',
-    TEMPLATES: 'messages-templates'
+    TEMPLATES: 'messages-templates',
+    CONTACTS: 'contacts' // Added for message contacts
   },
   CONTACTS: 'contacts',
+  DOCUMENT_COLLECTIONS: {
+    FILES: 'documents-files',
+    FOLDERS: 'documents-folders',
+    SHARED: 'documents-shared',
+    FAVORITES: 'documents-favorites',
+    RECENTS: 'documents-recents',
+    ARCHIVES: 'documents-archives',
+    METADATA: 'documents-metadata'
+  },
   PROJECTS: {
     LIST: 'projects',
     TASKS: 'tasks',

@@ -1,7 +1,9 @@
 
 export interface GarageClient {
   id: string;
-  name: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -87,12 +89,12 @@ export interface GarageAppointment {
   id: string;
   clientId: string;
   clientName: string;
-  vehicleId: string;
+  vehicleId?: string;
   vehicleMake?: string;
   vehicleModel?: string;
   date: string;
   time: string;
-  service: string;
+  type: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
   createdAt: string;

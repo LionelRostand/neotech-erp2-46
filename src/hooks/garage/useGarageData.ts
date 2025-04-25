@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { GarageClient, Vehicle, Mechanic, Repair } from '@/components/module/submodules/garage/types/garage-types';
+import { GarageClient, Vehicle, Mechanic, Repair, GarageAppointment } from '@/components/module/submodules/garage/types/garage-types';
 
 export const useGarageData = () => {
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
@@ -32,7 +32,7 @@ export const useGarageData = () => {
 
   const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['garage', 'appointments'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.APPOINTMENTS)
+    queryFn: () => fetchCollectionData<GarageAppointment>(COLLECTIONS.GARAGE.APPOINTMENTS)
   });
 
   const invoices = [];
