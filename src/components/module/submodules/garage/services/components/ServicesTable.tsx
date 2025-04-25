@@ -10,99 +10,131 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { GarageService } from '../../types/garage-types';
-import ViewServiceDialog from '../ViewServiceDialog';
-import EditServiceDialog from '../EditServiceDialog';
-import DeleteServiceDialog from '../DeleteServiceDialog';
+import { ViewServiceDialog } from "../ViewServiceDialog";
+import { EditServiceDialog } from "../EditServiceDialog";
+import { DeleteServiceDialog } from "../DeleteServiceDialog";
+import { Badge } from "@/components/ui/badge";
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  duration: number;
+  status: string;
+  createdAt: string;
+}
 
 interface ServicesTableProps {
-  services: GarageService[];
+  services: Service[];
   onServiceModified: () => void;
 }
 
-const ServicesTable = ({ services, onServiceModified }: ServicesTableProps) => {
-  const [selectedService, setSelectedService] = useState<GarageService | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+const ServicesTable: React.FC<ServicesTableProps> = ({ services, onServiceModified }) => {
+  const [viewingService, setViewingService] = useState<Service | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [deletingService, setDeletingService] = useState<Service | null>(null);
+
+  const sortedServices = [...services].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nom du service</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Coût (€)</TableHead>
-            <TableHead>Durée (min)</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {services.map((service) => (
-            <TableRow key={service.id}>
-              <TableCell>{service.name}</TableCell>
-              <TableCell>{service.description}</TableCell>
-              <TableCell>{service.cost}€</TableCell>
-              <TableCell>{service.duration}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => {
-                      setSelectedService(service);
-                      setViewDialogOpen(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => {
-                      setSelectedService(service);
-                      setEditDialogOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => {
-                      setSelectedService(service);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
+      <div className="rounded-md border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Coût</TableHead>
+              <TableHead>Durée (min)</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sortedServices.length > 0 ? (
+              sortedServices.map((service) => (
+                <TableRow key={service.id}>
+                  <TableCell className="font-medium">{service.name}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">{service.description}</TableCell>
+                  <TableCell>{service.cost}€</TableCell>
+                  <TableCell>{service.duration}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={service.status === 'active' ? 'default' : 'secondary'}
+                      className={service.status === 'active' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}
+                    >
+                      {service.status === 'active' ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setViewingService(service)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setEditingService(service)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setDeletingService(service)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                  Aucun service trouvé
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      <ViewServiceDialog
-        service={selectedService}
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-      />
+      {viewingService && (
+        <ViewServiceDialog
+          service={viewingService}
+          open={!!viewingService}
+          onOpenChange={() => setViewingService(null)}
+        />
+      )}
 
-      <EditServiceDialog
-        service={selectedService}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onServiceUpdated={onServiceModified}
-      />
+      {editingService && (
+        <EditServiceDialog
+          service={editingService}
+          open={!!editingService}
+          onOpenChange={() => setEditingService(null)}
+          onServiceUpdated={onServiceModified}
+        />
+      )}
 
-      <DeleteServiceDialog
-        service={selectedService}
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onServiceDeleted={onServiceModified}
-      />
+      {deletingService && (
+        <DeleteServiceDialog
+          service={deletingService}
+          open={!!deletingService}
+          onOpenChange={() => setDeletingService(null)}
+          onServiceDeleted={onServiceModified}
+        />
+      )}
     </>
   );
 };

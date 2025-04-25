@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -10,89 +10,154 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GarageService } from '../types/garage-types';
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  duration: number;
+  status: string;
+  createdAt: string;
+}
 
 interface EditServiceDialogProps {
-  service: GarageService | null;
+  service: Service;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onServiceUpdated: () => void;
 }
 
-const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
-  service,
-  open,
-  onOpenChange,
-  onServiceUpdated,
-}) => {
-  const { update } = useFirestore('garage_services');
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
-    defaultValues: service || {}
-  });
+interface ServiceFormData {
+  name: string;
+  description: string;
+  cost: number;
+  duration: number;
+  status: string;
+}
 
-  const onSubmit = async (data: Partial<GarageService>) => {
-    if (!service?.id) return;
+export function EditServiceDialog({ service, open, onOpenChange, onServiceUpdated }: EditServiceDialogProps) {
+  const { update } = useFirestore('garage_services');
+  const { register, handleSubmit, reset, setValue, watch } = useForm<ServiceFormData>();
+
+  const status = watch('status', service.status);
+
+  useEffect(() => {
+    if (service) {
+      reset({
+        name: service.name,
+        description: service.description,
+        cost: service.cost,
+        duration: service.duration,
+        status: service.status
+      });
+    }
+  }, [service, reset]);
+
+  const onSubmit = async (data: ServiceFormData) => {
     try {
-      await update(service.id, data);
+      console.log("Updating service:", service.id, data);
+      await update(service.id, {
+        ...data,
+        updatedAt: new Date().toISOString()
+      });
       toast.success('Service mis à jour avec succès');
-      onServiceUpdated();
       onOpenChange(false);
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour du service');
+      onServiceUpdated();
+    } catch (error: any) {
+      console.error("Error updating service:", error);
+      toast.error(`Erreur lors de la mise à jour du service: ${error.message}`);
     }
   };
 
-  if (!service) return null;
+  const handleStatusChange = (value: string) => {
+    setValue('status', value);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Modifier le service</DialogTitle>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Nom</label>
-            <Input {...register('name')} defaultValue={service.name} />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Description</label>
-            <Input {...register('description')} defaultValue={service.description} />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Coût (€)</label>
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nom du service</Label>
             <Input
-              type="number"
-              {...register('cost')}
-              defaultValue={service.cost}
+              id="name"
+              {...register("name", { required: true })}
             />
           </div>
-          <div>
-            <label className="text-sm font-medium">Durée (minutes)</label>
-            <Input
-              type="number"
-              {...register('duration')}
-              defaultValue={service.duration}
+
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              {...register("description")}
+              rows={3}
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="cost">Coût (€)</Label>
+              <Input
+                id="cost"
+                type="number"
+                {...register("cost", { required: true, min: 0 })}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="duration">Durée (min)</Label>
+              <Input
+                id="duration"
+                type="number"
+                {...register("duration", { required: true, min: 0 })}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="status">Statut</Label>
+            <Select 
+              value={status} 
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Sélectionner un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
+            <Button 
+              type="button" 
+              variant="outline" 
               onClick={() => onOpenChange(false)}
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              Enregistrer
-            </Button>
+            <Button type="submit">Enregistrer</Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default EditServiceDialog;
+}

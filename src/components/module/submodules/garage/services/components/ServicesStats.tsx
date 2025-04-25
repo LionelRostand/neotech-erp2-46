@@ -6,15 +6,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Euro, Clock, Wrench, TrendingUp } from 'lucide-react';
 
-const ServicesStats = () => {
-  const { services = [] } = useGarageData();
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  duration: number;
+  status: string;
+}
 
+interface ServicesStatsProps {
+  services: Service[];
+}
+
+const ServicesStats: React.FC<ServicesStatsProps> = ({ services }) => {
   const totalServices = services.length;
-  const averageCost = services.reduce((acc, service) => acc + service.cost, 0) / (services.length || 1);
-  const averageDuration = services.reduce((acc, service) => acc + service.duration, 0) / (services.length || 1);
+  const averageCost = services.length > 0 
+    ? services.reduce((acc, service) => acc + (service.cost || 0), 0) / services.length 
+    : 0;
+  const averageDuration = services.length > 0 
+    ? services.reduce((acc, service) => acc + (service.duration || 0), 0) / services.length 
+    : 0;
   const activeServices = services.filter(service => service.status === 'active').length;
 
   return (

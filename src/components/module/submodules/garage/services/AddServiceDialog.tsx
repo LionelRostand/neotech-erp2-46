@@ -13,6 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
 
 interface AddServiceDialogProps {
   open: boolean;
@@ -25,31 +32,48 @@ interface ServiceFormData {
   description: string;
   cost: number;
   duration: number;
+  status?: string;
 }
 
 export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServiceDialogProps) {
   const { add } = useFirestore('garage_services');
-  const { register, handleSubmit, reset } = useForm<ServiceFormData>();
+  const { register, handleSubmit, reset, setValue, watch } = useForm<ServiceFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+      cost: 0,
+      duration: 0,
+      status: 'active'
+    }
+  });
+
+  const status = watch('status');
 
   const onSubmit = async (data: ServiceFormData) => {
     try {
+      console.log("Submitting service data:", data);
       await add({
         ...data,
-        status: 'active',
+        status: status || 'active',
         createdAt: new Date().toISOString()
       });
       toast.success('Service ajouté avec succès');
       reset();
       onOpenChange(false);
       onServiceAdded();
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout du service");
+    } catch (error: any) {
+      console.error("Error adding service:", error);
+      toast.error(`Erreur lors de l'ajout du service: ${error.message}`);
     }
+  };
+
+  const handleStatusChange = (value: string) => {
+    setValue('status', value);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Ajouter un service</DialogTitle>
         </DialogHeader>
@@ -59,6 +83,7 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
             <Input
               id="name"
               {...register("name", { required: true })}
+              placeholder="Ex: Changement d'huile"
             />
           </div>
 
@@ -67,6 +92,8 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
             <Textarea
               id="description"
               {...register("description")}
+              placeholder="Description détaillée du service"
+              rows={3}
             />
           </div>
 
@@ -77,6 +104,7 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
                 id="cost"
                 type="number"
                 {...register("cost", { required: true, min: 0 })}
+                placeholder="45"
               />
             </div>
 
@@ -86,8 +114,25 @@ export function AddServiceDialog({ open, onOpenChange, onServiceAdded }: AddServ
                 id="duration"
                 type="number"
                 {...register("duration", { required: true, min: 0 })}
+                placeholder="60"
               />
             </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="status">Statut</Label>
+            <Select 
+              value={status} 
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Sélectionner un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end space-x-2">

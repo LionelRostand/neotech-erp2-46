@@ -12,32 +12,37 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useFirestore } from '@/hooks/useFirestore';
 import { toast } from 'sonner';
-import { GarageService } from '../types/garage-types';
+
+interface Service {
+  id: string;
+  name: string;
+}
 
 interface DeleteServiceDialogProps {
-  service: GarageService | null;
+  service: Service;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onServiceDeleted: () => void;
 }
 
-const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
-  service,
-  open,
-  onOpenChange,
-  onServiceDeleted,
-}) => {
+export function DeleteServiceDialog({ 
+  service, 
+  open, 
+  onOpenChange, 
+  onServiceDeleted 
+}: DeleteServiceDialogProps) {
   const { remove } = useFirestore('garage_services');
 
   const handleDelete = async () => {
-    if (!service?.id) return;
     try {
+      console.log("Deleting service:", service.id);
       await remove(service.id);
       toast.success('Service supprimé avec succès');
-      onServiceDeleted();
       onOpenChange(false);
-    } catch (error) {
-      toast.error('Erreur lors de la suppression du service');
+      onServiceDeleted();
+    } catch (error: any) {
+      console.error("Error deleting service:", error);
+      toast.error(`Erreur lors de la suppression du service: ${error.message}`);
     }
   };
 
@@ -45,19 +50,18 @@ const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+          <AlertDialogTitle>Supprimer le service</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action ne peut pas être annulée. Cela supprimera définitivement le service
-            {service?.name ? ` "${service.name}"` : ''}.
+            Êtes-vous sûr de vouloir supprimer le service "{service.name}" ? Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
+          <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
+            Supprimer
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
-};
-
-export default DeleteServiceDialog;
+}
