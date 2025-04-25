@@ -1,14 +1,8 @@
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Repair } from '../../types/garage-types';
+import { Repair } from '../types/garage-types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -24,6 +18,17 @@ export const ViewRepairDialog: React.FC<ViewRepairDialogProps> = ({
   onOpenChange 
 }) => {
   if (!repair) return null;
+
+  // Safe number conversion function
+  const formatCurrency = (value?: number | string): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    return numValue && !isNaN(numValue) 
+      ? numValue.toLocaleString('fr-FR', { 
+          style: 'currency', 
+          currency: 'EUR' 
+        }) 
+      : 'Non défini';
+  };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -96,13 +101,13 @@ export const ViewRepairDialog: React.FC<ViewRepairDialogProps> = ({
           
           <div className="grid grid-cols-4 items-center gap-4">
             <p className="font-medium">Coût estimé:</p>
-            <p className="col-span-3">{repair.estimatedCost.toFixed(2)} €</p>
+            <p className="col-span-3">{formatCurrency(repair.estimatedCost)}</p>
           </div>
 
           {repair.actualCost !== undefined && (
             <div className="grid grid-cols-4 items-center gap-4">
               <p className="font-medium">Coût réel:</p>
-              <p className="col-span-3">{repair.actualCost.toFixed(2)} €</p>
+              <p className="col-span-3">{formatCurrency(repair.actualCost)}</p>
             </div>
           )}
           
