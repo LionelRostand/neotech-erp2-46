@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { addDoc, updateDoc, deleteDoc, doc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -21,8 +21,9 @@ export const useGarageClients = () => {
   const addClient = useMutation({
     mutationFn: async (newClient: Omit<GarageClient, 'id'>) => {
       try {
-        const collection = doc(db, COLLECTIONS.GARAGE.CLIENTS);
-        const docRef = await addDoc(collection, {
+        // Correction: Use collection() instead of doc() for the collection reference
+        const collectionRef = collection(db, COLLECTIONS.GARAGE.CLIENTS);
+        const docRef = await addDoc(collectionRef, {
           ...newClient,
           createdAt: new Date().toISOString(),
         });
