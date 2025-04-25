@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import ClientsTable from './components/ClientsTable';
 import ClientsStats from './components/ClientsStats';
+import AddClientDialog from './components/AddClientDialog';
 
 const GarageClientsDashboard = () => {
   const { clients = [], isLoading } = useGarageClients();
+  const [showAddDialog, setShowAddDialog] = React.useState(false);
   
   const today = new Date().toISOString().split('T')[0];
   
@@ -28,7 +30,7 @@ const GarageClientsDashboard = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Clients</h1>
-        <Button>
+        <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau client
         </Button>
@@ -45,6 +47,11 @@ const GarageClientsDashboard = () => {
         <h2 className="text-xl font-semibold mb-4">Liste des clients</h2>
         <ClientsTable clients={clients} />
       </Card>
+
+      <AddClientDialog 
+        isOpen={showAddDialog}
+        onOpenChange={setShowAddDialog}
+      />
     </div>
   );
 };
