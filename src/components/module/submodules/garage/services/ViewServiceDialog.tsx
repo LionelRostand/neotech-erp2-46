@@ -29,10 +29,26 @@ interface ViewServiceDialogProps {
 }
 
 export function ViewServiceDialog({ service, open, onOpenChange }: ViewServiceDialogProps) {
+  // Ensure we have a valid service object
+  const safeService = service || {
+    id: '',
+    name: '',
+    description: '',
+    cost: 0,
+    duration: 0,
+    status: '',
+    createdAt: ''
+  };
+  
   // Format the creation date if it exists
-  const formattedDate = service.createdAt ? 
-    format(new Date(service.createdAt), 'PPP', { locale: fr }) : 
-    'Date inconnue';
+  let formattedDate = 'Date inconnue';
+  if (safeService.createdAt) { 
+    try {
+      formattedDate = format(new Date(safeService.createdAt), 'PPP', { locale: fr });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,14 +59,14 @@ export function ViewServiceDialog({ service, open, onOpenChange }: ViewServiceDi
 
         <div className="space-y-4 py-4">
           <div>
-            <h3 className="text-lg font-semibold">{service.name}</h3>
+            <h3 className="text-lg font-semibold">{safeService.name}</h3>
             
             <div className="flex items-center mt-2">
               <Badge 
-                variant={service.status === 'active' ? 'default' : 'secondary'}
-                className={service.status === 'active' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}
+                variant={safeService.status === 'active' ? 'default' : 'secondary'}
+                className={safeService.status === 'active' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}
               >
-                {service.status === 'active' ? 'Actif' : 'Inactif'}
+                {safeService.status === 'active' ? 'Actif' : 'Inactif'}
               </Badge>
             </div>
           </div>
@@ -58,18 +74,18 @@ export function ViewServiceDialog({ service, open, onOpenChange }: ViewServiceDi
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
               <p className="text-sm text-gray-500">Coût</p>
-              <p className="text-lg font-medium">{service.cost}€</p>
+              <p className="text-lg font-medium">{safeService.cost}€</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Durée</p>
-              <p className="text-lg font-medium">{service.duration} minutes</p>
+              <p className="text-lg font-medium">{safeService.duration} minutes</p>
             </div>
           </div>
 
-          {service.description && (
+          {safeService.description && (
             <div className="mt-4">
               <p className="text-sm text-gray-500">Description</p>
-              <p className="mt-1">{service.description}</p>
+              <p className="mt-1">{safeService.description}</p>
             </div>
           )}
 

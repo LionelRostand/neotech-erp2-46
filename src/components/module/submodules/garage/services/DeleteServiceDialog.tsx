@@ -32,11 +32,14 @@ export function DeleteServiceDialog({
   onServiceDeleted 
 }: DeleteServiceDialogProps) {
   const { remove } = useFirestore('garage_services');
+  
+  // Ensure we have a valid service object
+  const validService = service || { id: '', name: 'ce service' };
 
   const handleDelete = async () => {
     try {
-      console.log("Deleting service:", service.id);
-      await remove(service.id);
+      console.log("Deleting service:", validService.id);
+      await remove(validService.id);
       toast.success('Service supprimé avec succès');
       onOpenChange(false);
       onServiceDeleted();
@@ -52,7 +55,7 @@ export function DeleteServiceDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Supprimer le service</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer le service "{service.name}" ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer le service "{validService.name}" ? Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

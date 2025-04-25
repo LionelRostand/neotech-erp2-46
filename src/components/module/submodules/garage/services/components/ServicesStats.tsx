@@ -21,15 +21,18 @@ interface ServicesStatsProps {
   services: Service[];
 }
 
-const ServicesStats: React.FC<ServicesStatsProps> = ({ services }) => {
-  const totalServices = services.length;
-  const averageCost = services.length > 0 
-    ? services.reduce((acc, service) => acc + (service.cost || 0), 0) / services.length 
+const ServicesStats: React.FC<ServicesStatsProps> = ({ services = [] }) => {
+  // Ensure services is always an array
+  const safeServices = Array.isArray(services) ? services : [];
+
+  const totalServices = safeServices.length;
+  const averageCost = safeServices.length > 0 
+    ? safeServices.reduce((acc, service) => acc + (service.cost || 0), 0) / safeServices.length 
     : 0;
-  const averageDuration = services.length > 0 
-    ? services.reduce((acc, service) => acc + (service.duration || 0), 0) / services.length 
+  const averageDuration = safeServices.length > 0 
+    ? safeServices.reduce((acc, service) => acc + (service.duration || 0), 0) / safeServices.length 
     : 0;
-  const activeServices = services.filter(service => service.status === 'active').length;
+  const activeServices = safeServices.filter(service => service?.status === 'active').length;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

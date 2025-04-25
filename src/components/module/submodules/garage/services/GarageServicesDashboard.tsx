@@ -5,7 +5,6 @@ import { Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import ServicesTable from './components/ServicesTable';
 import ServicesStats from './components/ServicesStats';
 import { AddServiceDialog } from './AddServiceDialog';
@@ -34,6 +33,9 @@ const GarageServicesDashboard = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
+  // Ensure services is always an array
+  const safeServices = Array.isArray(services) ? services : [];
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -44,11 +46,11 @@ const GarageServicesDashboard = () => {
         </Button>
       </div>
 
-      <ServicesStats services={services} />
+      <ServicesStats services={safeServices} />
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4 text-gray-700">Derniers services</h2>
-        <ServicesTable services={services} onServiceModified={refetch} />
+        <ServicesTable services={safeServices} onServiceModified={refetch} />
       </Card>
 
       <AddServiceDialog 
