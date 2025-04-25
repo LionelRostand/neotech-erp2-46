@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Plus, Wrench, Clock, PackageSearch, Settings } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import AddRepairDialog from './AddRepairDialog';
 import RepairsTable from './components/RepairsTable';
+import { format } from 'date-fns';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading, refetch } = useGarageData();
@@ -16,6 +18,19 @@ const GarageRepairsDashboard = () => {
 
   // Ensure repairs is an array
   const safeRepairs = Array.isArray(repairs) ? repairs : [];
+
+  // Calculate today's date in ISO format (YYYY-MM-DD)
+  const today = format(new Date(), 'yyyy-MM-dd');
+
+  // Filter repairs by different states
+  const todaysRepairs = safeRepairs.filter(repair => {
+    // Check if repair has a date and if it matches today's date
+    return repair.date && repair.date.startsWith(today);
+  });
+
+  const inProgress = safeRepairs.filter(repair => repair.status === 'in_progress');
+  const awaitingParts = safeRepairs.filter(repair => repair.status === 'awaiting_parts');
+  const allRepairs = safeRepairs.length;
 
   return (
     <div className="p-6">
