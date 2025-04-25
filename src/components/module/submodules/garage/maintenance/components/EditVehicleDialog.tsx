@@ -14,51 +14,26 @@ import { Button } from "@/components/ui/button";
 import { Vehicle } from '../../../types/garage-types';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EditVehicleDialogProps {
   vehicle: Vehicle | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
 }
 
-const EditVehicleDialog = ({ vehicle, open, onOpenChange, onSuccess }: EditVehicleDialogProps) => {
+const EditVehicleDialog = ({ vehicle, open, onOpenChange }: EditVehicleDialogProps) => {
   const { updateVehicle } = useGarageVehicles();
-  const { register, handleSubmit, setValue } = useForm<Vehicle>({
+  const { register, handleSubmit } = useForm<Vehicle>({
     defaultValues: vehicle || {}
   });
 
-  React.useEffect(() => {
-    if (vehicle) {
-      // Set form values when vehicle changes
-      setValue('brand', vehicle.brand || vehicle.make || '');
-      setValue('model', vehicle.model || '');
-      setValue('registrationNumber', vehicle.registrationNumber || vehicle.licensePlate || '');
-      setValue('mileage', vehicle.mileage || 0);
-      setValue('status', vehicle.status || 'active');
-    }
-  }, [vehicle, setValue]);
-
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: Vehicle) => {
     if (!vehicle?.id) return;
     
     try {
-      // Normalize the data to match the expected format
-      const normalizedData = {
-        brand: data.brand,
-        make: data.brand, // Also update the make field if it exists
-        model: data.model,
-        registrationNumber: data.registrationNumber,
-        licensePlate: data.registrationNumber, // Also update licensePlate if it exists
-        mileage: Number(data.mileage),
-        status: data.status
-      };
-
-      await updateVehicle(vehicle.id, normalizedData);
+      await updateVehicle(vehicle.id, data);
       toast.success('Véhicule mis à jour avec succès');
       onOpenChange(false);
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error);
       toast.error('Erreur lors de la mise à jour du véhicule');
@@ -105,24 +80,8 @@ const EditVehicleDialog = ({ vehicle, open, onOpenChange, onSuccess }: EditVehic
                 id="mileage"
                 type="number"
                 className="col-span-3"
-                {...register('mileage', { valueAsNumber: true })}
+                {...register('mileage')}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                onValueChange={(value) => setValue('status', value)}
-                defaultValue={vehicle.status}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Sélectionner un statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="maintenance">En maintenance</SelectItem>
-                  <SelectItem value="unavailable">Indisponible</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>

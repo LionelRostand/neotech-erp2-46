@@ -18,10 +18,9 @@ interface DeleteVehicleDialogProps {
   vehicle: Vehicle | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
 }
 
-const DeleteVehicleDialog = ({ vehicle, open, onOpenChange, onSuccess }: DeleteVehicleDialogProps) => {
+const DeleteVehicleDialog = ({ vehicle, open, onOpenChange }: DeleteVehicleDialogProps) => {
   const { deleteVehicle } = useGarageVehicles();
 
   const handleDelete = async () => {
@@ -31,16 +30,11 @@ const DeleteVehicleDialog = ({ vehicle, open, onOpenChange, onSuccess }: DeleteV
       await deleteVehicle(vehicle.id);
       toast.success('Véhicule supprimé avec succès');
       onOpenChange(false);
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
       toast.error('Erreur lors de la suppression du véhicule');
     }
   };
-
-  const vehicleName = vehicle ? 
-    `${vehicle.brand || vehicle.make || ''} ${vehicle.model || ''} (${vehicle.registrationNumber || vehicle.licensePlate || ''})` 
-    : '';
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -49,7 +43,7 @@ const DeleteVehicleDialog = ({ vehicle, open, onOpenChange, onSuccess }: DeleteV
           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
             Cette action ne peut pas être annulée. Cela supprimera définitivement le véhicule
-            {vehicle && ` ${vehicleName}`} de la base de données.
+            {vehicle && ` ${vehicle.brand} ${vehicle.model} (${vehicle.registrationNumber})`} de la base de données.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
