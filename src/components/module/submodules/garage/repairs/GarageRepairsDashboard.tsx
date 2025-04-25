@@ -2,12 +2,11 @@
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
-import { Plus } from 'lucide-react';
+import { Plus, Wrench, Clock, PackageSearch, Settings, Eye, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AddRepairDialog } from './AddRepairDialog';
 import { Card } from "@/components/ui/card";
-import { Wrench, Clock, PackageSearch, Settings } from 'lucide-react';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading } = useGarageData();
