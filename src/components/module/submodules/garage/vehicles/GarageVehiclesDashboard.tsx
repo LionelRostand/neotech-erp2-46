@@ -1,117 +1,91 @@
 
-import React, { useState } from 'react';
-import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Plus } from 'lucide-react';
+import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
+import { Card } from "@/components/ui/card";
 import AddVehicleDialog from './AddVehicleDialog';
+import VehiclesStats from './components/VehiclesStats';
 
 const GarageVehiclesDashboard = () => {
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const { vehicles, loading, refetchVehicles } = useGarageVehicles();
-
-  const handleVehicleAdded = async () => {
-    await refetchVehicles();
-    setShowAddDialog(false);
-  };
+  const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const { vehicles = [], loading } = useGarageVehicles();
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  const newVehicles = vehicles.filter(v => {
+    const createdDate = v.createdAt ? new Date(v.createdAt).toISOString().split('T')[0] : '';
+    return createdDate === today;
+  });
+  
+  const activeVehicles = vehicles.filter(v => v.status === 'active');
+  const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance');
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Chargement...</div>;
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Véhicules</h2>
+        <h1 className="text-2xl font-bold">Véhicules</h1>
         <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau véhicule
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Véhicules</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{vehicles.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>En Maintenance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {vehicles.filter(v => v.status === 'maintenance').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Disponibles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {vehicles.filter(v => v.status === 'available').length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <VehiclesStats
+        todayCount={newVehicles.length}
+        activeCount={activeVehicles.length}
+        maintenanceCount={maintenanceVehicles.length}
+        totalCount={vehicles.length}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des Véhicules</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Véhicule</TableHead>
-                <TableHead>Immatriculation</TableHead>
-                <TableHead>Kilométrage</TableHead>
-                <TableHead>Dernier contrôle</TableHead>
-                <TableHead>Statut</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Liste des véhicules</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Marque/Modèle</th>
+                <th className="text-left p-2">Immatriculation</th>
+                <th className="text-left p-2">Propriétaire</th>
+                <th className="text-left p-2">Kilométrage</th>
+                <th className="text-left p-2">Statut</th>
+                <th className="text-left p-2">Dernier contrôle</th>
+                <th className="text-right p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
               {vehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell>
-                    {vehicle.make} {vehicle.model} ({vehicle.year})
-                  </TableCell>
-                  <TableCell>{vehicle.licensePlate}</TableCell>
-                  <TableCell>
-                    {vehicle.mileage != null && typeof vehicle.mileage === 'number' 
-                      ? vehicle.mileage.toLocaleString() + ' km'
-                      : 'Non renseigné'}
-                  </TableCell>
-                  <TableCell>
-                    {vehicle.lastCheckDate ? new Date(vehicle.lastCheckDate).toLocaleDateString() : 'Non renseigné'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={vehicle.status === 'available' ? 'default' : 'secondary'}
-                    >
-                      {vehicle.status === 'available' ? 'Disponible' : 'En maintenance'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                <tr key={vehicle.id} className="border-b">
+                  <td className="p-2">{vehicle.make} {vehicle.model}</td>
+                  <td className="p-2">{vehicle.licensePlate}</td>
+                  <td className="p-2">{vehicle.clientId}</td>
+                  <td className="p-2">{vehicle.mileage} km</td>
+                  <td className="p-2">{vehicle.status}</td>
+                  <td className="p-2">{vehicle.lastCheckDate || '-'}</td>
+                  <td className="p-2 text-right">
+                    <Button variant="ghost" size="sm">
+                      Voir
+                    </Button>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <AddVehicleDialog 
-        isOpen={showAddDialog} 
+        isOpen={showAddDialog}
         onOpenChange={setShowAddDialog}
-        onVehicleAdded={handleVehicleAdded}
+        onVehicleAdded={() => {
+          setShowAddDialog(false);
+        }}
       />
     </div>
   );
