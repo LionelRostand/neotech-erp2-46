@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -16,6 +17,7 @@ import { CompaniesRoutes } from './modules/companiesRoutes';
 import { HealthRoutes } from './modules/healthRoutes';
 import { RentalRoutes } from './modules/rentalRoutes';
 import { TransportRoutes } from './modules/transportRoutes';
+import { GarageRoutes } from './modules/garageRoutes';
 import { OtherModulesRoutes } from './modules/otherModulesRoutes';
 import { WebsiteRoutes } from './modules/websiteRoutes';
 import NotFound from '@/pages/NotFound';
@@ -43,6 +45,7 @@ const AppRoutes = () => (
     {HealthRoutes}
     {RentalRoutes}
     {TransportRoutes}
+    {GarageRoutes}
     {WebsiteRoutes}
     
     {/* Other module routes */}
