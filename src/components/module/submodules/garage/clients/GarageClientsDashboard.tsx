@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Plus } from 'lucide-react';
@@ -6,7 +7,7 @@ import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import ClientsTable from './components/ClientsTable';
 import ClientsStats from './components/ClientsStats';
 import AddClientDialog from './components/AddClientDialog';
-import ViewClientDialog from './components/ViewClientDialog';
+import ViewClientDialog from '../dialogs/ViewClientDialog';
 import EditClientDialog from '../dialogs/EditClientDialog';
 import DeleteClientDialog from '../dialogs/DeleteClientDialog';
 import { GarageClient } from '../types/garage-types';
@@ -22,9 +23,18 @@ const GarageClientsDashboard = () => {
   const today = new Date().toISOString().split('T')[0];
   
   const newClients = clients.filter(c => {
-    const createdDate = new Date(c.createdAt).toISOString().split('T')[0];
-    return createdDate === today;
+    // Vérifie si createdAt est une chaîne valide avant de la convertir en Date
+    if (!c.createdAt || typeof c.createdAt !== 'string') return false;
+    
+    try {
+      const createdDate = new Date(c.createdAt).toISOString().split('T')[0];
+      return createdDate === today;
+    } catch (error) {
+      console.error('Date invalide détectée:', c.createdAt, error);
+      return false;
+    }
   });
+
   const activeClients = clients.filter(c => c.status === 'active');
   const inactiveClients = clients.filter(c => c.status === 'inactive');
   const allClients = clients;

@@ -21,13 +21,16 @@ export const useGarageClients = () => {
   const addClient = useMutation({
     mutationFn: async (newClient: Omit<GarageClient, 'id'>) => {
       try {
-        // Correction: Use collection() instead of doc() for the collection reference
-        const collectionRef = collection(db, COLLECTIONS.GARAGE.CLIENTS);
-        const docRef = await addDoc(collectionRef, {
+        // S'assurer que createdAt est une chaîne de date ISO valide
+        const clientWithDate = {
           ...newClient,
           createdAt: new Date().toISOString(),
-        });
-        return { id: docRef.id, ...newClient };
+          status: newClient.status || 'active', // Valeur par défaut si non définie
+        };
+        
+        const collectionRef = collection(db, COLLECTIONS.GARAGE.CLIENTS);
+        const docRef = await addDoc(collectionRef, clientWithDate);
+        return { id: docRef.id, ...clientWithDate };
       } catch (error) {
         console.error('Error adding client:', error);
         throw error;
@@ -47,6 +50,11 @@ export const useGarageClients = () => {
   const updateClient = useMutation({
     mutationFn: async (updatedClient: GarageClient) => {
       try {
+        // S'assurer que si createdAt n'est pas valide, on la met à jour
+        if (!updatedClient.createdAt || isNaN(new Date(updatedClient.createdAt).getTime())) {
+          updatedClient.createdAt = new Date().toISOString();
+        }
+        
         const clientDoc = doc(db, COLLECTIONS.GARAGE.CLIENTS, updatedClient.id);
         await updateDoc(clientDoc, updatedClient);
         return updatedClient;
