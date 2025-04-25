@@ -18,14 +18,12 @@ interface MechanicSelectorProps {
 export const MechanicSelector: React.FC<MechanicSelectorProps> = ({ value, onChange }) => {
   const { mechanics, isLoading } = useGarageMechanics();
 
-  console.log("Mechanics data:", mechanics); // Debug log
-
   return (
     <Select value={value} onValueChange={onChange} disabled={isLoading}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Sélectionner un mécanicien" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white">
         {isLoading ? (
           <div className="flex items-center justify-center p-2">
             <Loader className="h-4 w-4 animate-spin" />
