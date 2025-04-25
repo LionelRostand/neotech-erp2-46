@@ -1,17 +1,23 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import CreateAppointmentDialog from './CreateAppointmentDialog';
-import AppointmentsStats from './components/AppointmentsStats';
+import ViewAppointmentDialog from './ViewAppointmentDialog';
+import EditAppointmentDialog from './EditAppointmentDialog';
+import DeleteAppointmentDialog from './DeleteAppointmentDialog';
+import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const GarageAppointmentsDashboard = () => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { appointments = [], clients = [], vehicles = [], isLoading } = useGarageData();
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const { appointments = [], isLoading } = useGarageData();
   
   const today = new Date().toISOString().split('T')[0];
   
@@ -19,22 +25,41 @@ const GarageAppointmentsDashboard = () => {
   const activeAppointments = appointments.filter(a => a.status === 'confirmed');
   const pendingAppointments = appointments.filter(a => a.status === 'pending');
 
-  // Helper function to safely format dates
-  const safeFormatDate = (dateStr: string) => {
+  const handleViewAppointment = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEditAppointment = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteAppointment = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleUpdate = () => {
+    toast.success("Rendez-vous mis à jour avec succès");
+    // La fonction useGarageData va automatiquement rafraîchir les données
+  };
+
+  const handleDelete = () => {
+    toast.success("Rendez-vous supprimé avec succès");
+    setIsDeleteDialogOpen(false);
+    // La fonction useGarageData va automatiquement rafraîchir les données
+  };
+
+  // Safe format date function
+  const safeFormatDate = (dateString: string) => {
     try {
-      // First check if the date string is valid
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
+      const date = parseISO(dateString);
+      if (!isValid(date)) {
         return "Date invalide";
       }
-      // Format the date as dd/MM/yyyy
-      return new Intl.DateTimeFormat('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date);
+      return format(date, 'dd/MM/yyyy', { locale: fr });
     } catch (error) {
-      console.error("Erreur lors du formatage de la date:", dateStr, error);
       return "Date invalide";
     }
   };
@@ -47,7 +72,7 @@ const GarageAppointmentsDashboard = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Rendez-vous</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau rendez-vous
         </Button>
@@ -86,24 +111,54 @@ const GarageAppointmentsDashboard = () => {
                   <TableCell>{appointment.vehicleMake} {appointment.vehicleModel}</TableCell>
                   <TableCell>{appointment.service || appointment.type}</TableCell>
                   <TableCell>{appointment.status}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
-                      Voir
-                    </Button>
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewAppointment(appointment)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleEditAppointment(appointment)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteAppointment(appointment)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
+              {appointments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    Aucun rendez-vous trouvé
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
       </Card>
 
-      <CreateAppointmentDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        clients={clients}
-        vehicles={vehicles}
-      />
+      {selectedAppointment && (
+        <>
+          <ViewAppointmentDialog 
+            open={isViewDialogOpen}
+            onClose={() => setIsViewDialogOpen(false)}
+            appointment={selectedAppointment}
+          />
+          <EditAppointmentDialog
+            open={isEditDialogOpen}
+            onClose={() => setIsEditDialogOpen(false)}
+            appointment={selectedAppointment}
+            onUpdate={handleUpdate}
+          />
+          <DeleteAppointmentDialog
+            open={isDeleteDialogOpen}
+            onClose={() => setIsDeleteDialogOpen(false)}
+            appointment={selectedAppointment}
+            onDelete={handleDelete}
+          />
+        </>
+      )}
     </div>
   );
 };
