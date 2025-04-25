@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
@@ -10,6 +11,7 @@ import DeleteAppointmentDialog from './DeleteAppointmentDialog';
 import { format, isValid, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import AppointmentsStats from './components/AppointmentsStats';
 
 const GarageAppointmentsDashboard = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
