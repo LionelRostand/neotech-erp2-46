@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench } from "lucide-react";
+import { Plus, Wrench, Eye, Pencil, Trash2 } from "lucide-react";
 import StatCard from '@/components/StatCard';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import CreateRepairDialog from './CreateRepairDialog';
+import ViewRepairDialog from './ViewRepairDialog';
+import EditRepairDialog from './EditRepairDialog';
+import DeleteRepairDialog from './DeleteRepairDialog';
 import {
   Table,
   TableBody,
@@ -19,7 +22,12 @@ import { Repair } from '../types/garage-types';
 
 const GarageRepairsDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { repairs = [], vehicles = [], clients = [], isLoading } = useGarageData();
+  const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  const { repairs = [], vehicles = [], clients = [], isLoading, refetch } = useGarageData();
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -53,8 +61,23 @@ const GarageRepairsDashboard = () => {
     }
   };
 
-  const handleAddRepair = (repair: Repair) => {
-    console.log('New repair created:', repair);
+  const handleViewRepair = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setShowViewDialog(true);
+  };
+
+  const handleEditRepair = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteRepair = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setShowDeleteDialog(true);
+  };
+
+  const handleUpdate = () => {
+    refetch();
   };
 
   return (
@@ -113,6 +136,7 @@ const GarageRepairsDashboard = () => {
                 <TableHead>Mécanicien</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Progression</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -142,6 +166,29 @@ const GarageRepairsDashboard = () => {
                       ></div>
                     </div>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleViewRepair(repair)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditRepair(repair)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteRepair(repair)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -152,7 +199,27 @@ const GarageRepairsDashboard = () => {
       <CreateRepairDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
-        onSave={handleAddRepair}
+        onSave={handleUpdate}
+      />
+
+      <ViewRepairDialog
+        repair={selectedRepair}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+      />
+
+      <EditRepairDialog
+        repair={selectedRepair}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onUpdate={handleUpdate}
+      />
+
+      <DeleteRepairDialog
+        repairId={selectedRepair?.id || null}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onDelete={handleUpdate}
       />
     </div>
   );
