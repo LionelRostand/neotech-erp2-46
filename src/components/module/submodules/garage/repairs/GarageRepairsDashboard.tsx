@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Button } from "@/components/ui/button";
@@ -34,10 +33,10 @@ const GarageRepairsDashboard = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Services</h1>
+        <h1 className="text-2xl font-semibold">Réparations</h1>
         <Button onClick={() => setShowAddDialog(true)} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau service
+          Nouvelle réparation
         </Button>
       </div>
 
@@ -89,7 +88,7 @@ const GarageRepairsDashboard = () => {
 
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Derniers services</h2>
+          <h2 className="text-lg font-semibold">Liste de réparations</h2>
         </div>
         <div className="p-4">
           <table className="w-full">
