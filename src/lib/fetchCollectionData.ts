@@ -1,4 +1,3 @@
-
 import { collection, getDocs, query, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
@@ -136,6 +135,32 @@ function getDefaultData<T>(collectionPath: string): T[] {
         status: 'unpaid',
         clientName: 'Jean Dupont',
         number: 'INV-2025-001'
+      }
+    ] as unknown as T[];
+  }
+  
+  // Default repairs data
+  if (collectionPath === 'garage-repairs') {
+    return [
+      {
+        id: 'repair1',
+        date: new Date().toISOString().split('T')[0],
+        clientName: 'Jean Dupont',
+        vehicleInfo: 'Peugeot 308 2020',
+        description: 'Révision complète',
+        mechanicName: 'Pierre Dubois',
+        status: 'in_progress',
+        progress: 60
+      },
+      {
+        id: 'repair2',
+        date: new Date().toISOString().split('T')[0],
+        clientName: 'Marie Martin',
+        vehicleInfo: 'Renault Clio 2019',
+        description: 'Changement plaquettes',
+        mechanicName: 'Sophie Martin',
+        status: 'waiting_parts',
+        progress: 30
       }
     ] as unknown as T[];
   }
