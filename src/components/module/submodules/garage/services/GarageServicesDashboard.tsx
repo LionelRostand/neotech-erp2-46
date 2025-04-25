@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,10 @@ import { DeleteServiceDialog } from './DeleteServiceDialog';
 import { ServiceStats } from './ServiceStats';
 import { updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
 import { toast } from 'sonner';
+import { useGarageServices } from '@/hooks/garage/useGarageServices';
 
 const GarageServicesDashboard = () => {
+  const { services, isLoading } = useGarageServices();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
