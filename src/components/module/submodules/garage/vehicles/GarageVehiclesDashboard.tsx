@@ -6,27 +6,22 @@ import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 import { Card } from "@/components/ui/card";
 import AddVehicleDialog from './AddVehicleDialog';
 import VehiclesStats from './components/VehiclesStats';
-import ViewVehicleDialog from './components/ViewVehicleDialog';
-import EditVehicleDialog from './components/EditVehicleDialog';
-import DeleteVehicleDialog from './components/DeleteVehicleDialog';
-import { Vehicle } from '../types/garage-types';
 
 const GarageVehiclesDashboard = () => {
   const [showAddDialog, setShowAddDialog] = React.useState(false);
-  const [selectedVehicle, setSelectedVehicle] = React.useState<Vehicle | null>(null);
-  const [showViewDialog, setShowViewDialog] = React.useState(false);
-  const [showEditDialog, setShowEditDialog] = React.useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-  const { vehicles = [], loading, refetchVehicles } = useGarageVehicles();
+  const { vehicles = [], loading } = useGarageVehicles();
   
   const today = new Date().toISOString().split('T')[0];
   
+  // Fix: Safely handle potentially invalid dates
   const newVehicles = vehicles.filter(v => {
     if (!v.createdAt) return false;
     
     try {
+      // Check if the date is valid before converting
       const createdDate = new Date(v.createdAt);
       
+      // Check if the date is valid (Invalid dates will return NaN for getTime())
       if (isNaN(createdDate.getTime())) return false;
       
       return createdDate.toISOString().split('T')[0] === today;
@@ -86,37 +81,9 @@ const GarageVehiclesDashboard = () => {
                   <td className="p-2">{vehicle.mileage} km</td>
                   <td className="p-2">{vehicle.status}</td>
                   <td className="p-2">{vehicle.lastCheckDate || '-'}</td>
-                  <td className="p-2 text-right space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setShowViewDialog(true);
-                      }}
-                    >
+                  <td className="p-2 text-right">
+                    <Button variant="ghost" size="sm">
                       Voir
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setShowEditDialog(true);
-                      }}
-                    >
-                      Modifier
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setShowDeleteDialog(true);
-                      }}
-                    >
-                      Supprimer
                     </Button>
                   </td>
                 </tr>
@@ -132,26 +99,6 @@ const GarageVehiclesDashboard = () => {
         onVehicleAdded={() => {
           setShowAddDialog(false);
         }}
-      />
-
-      <ViewVehicleDialog
-        vehicle={selectedVehicle}
-        open={showViewDialog}
-        onOpenChange={setShowViewDialog}
-      />
-
-      <EditVehicleDialog
-        vehicle={selectedVehicle}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onSuccess={() => refetchVehicles()}
-      />
-
-      <DeleteVehicleDialog
-        vehicle={selectedVehicle}
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onSuccess={() => refetchVehicles()}
       />
     </div>
   );

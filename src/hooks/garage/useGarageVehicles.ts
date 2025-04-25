@@ -1,10 +1,9 @@
+
 import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Vehicle } from '@/components/module/submodules/garage/types/garage-types';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 export const useGarageVehicles = () => {
   const { add, getAll, loading, error } = useFirestore(COLLECTIONS.GARAGE.VEHICLES);
@@ -41,39 +40,11 @@ export const useGarageVehicles = () => {
     }
   });
 
-  const updateVehicle = async (id: string, data: Partial<Vehicle>) => {
-    try {
-      const docRef = doc(db, COLLECTIONS.GARAGE.VEHICLES, id);
-      await updateDoc(docRef, data);
-      toast.success('Véhicule mis à jour avec succès');
-      return true;
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du véhicule:', err);
-      toast.error('Erreur lors de la mise à jour du véhicule');
-      throw err;
-    }
-  };
-
-  const deleteVehicle = async (id: string) => {
-    try {
-      const docRef = doc(db, COLLECTIONS.GARAGE.VEHICLES, id);
-      await deleteDoc(docRef);
-      toast.success('Véhicule supprimé avec succès');
-      return true;
-    } catch (err) {
-      console.error('Erreur lors de la suppression du véhicule:', err);
-      toast.error('Erreur lors de la suppression du véhicule');
-      throw err;
-    }
-  };
-
   return {
     vehicles,
     addVehicle,
     refetchVehicles: refetch,
     loading,
-    error,
-    updateVehicle,
-    deleteVehicle,
+    error
   };
 };
