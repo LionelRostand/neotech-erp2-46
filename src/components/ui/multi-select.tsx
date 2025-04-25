@@ -1,9 +1,11 @@
 
+"use client";
+
 import * as React from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
+import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 
 type Option = {
   value: string;
@@ -78,10 +80,10 @@ export function MultiSelect({
               </button>
             </Badge>
           ))}
-          <CommandPrimitive.Input
+          <input
             ref={inputRef}
             value={inputValue}
-            onValueChange={setInputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             onBlur={() => setOpen(false)}
             onFocus={() => setOpen(true)}
             onKeyDown={handleKeyDown}
@@ -90,49 +92,47 @@ export function MultiSelect({
           />
         </div>
       </div>
-      <div className="relative">
-        {open && (
-          <div className="absolute w-full z-10 top-1 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-            <Command className="w-full">
-              <CommandGroup>
-                {options
-                  .filter((option) =>
-                    option.label.toLowerCase().includes(inputValue.toLowerCase())
-                  )
-                  .map((option) => (
-                    <CommandItem
-                      key={option.value}
-                      onSelect={() => handleSelect(option.value)}
-                      className="cursor-pointer"
+      {open && options.length > 0 && (
+        <div className="absolute w-full z-10 top-1 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+          <Command>
+            <CommandGroup>
+              {options
+                .filter((option) =>
+                  option.label.toLowerCase().includes(inputValue.toLowerCase())
+                )
+                .map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => handleSelect(option.value)}
+                    className="cursor-pointer"
+                  >
+                    <div
+                      className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border ${
+                        selected.includes(option.value)
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50 [&_svg]:invisible"
+                      }`}
                     >
-                      <div
-                        className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border ${
-                          selected.includes(option.value)
-                            ? "bg-primary text-primary-foreground"
-                            : "opacity-50 [&_svg]:invisible"
-                        }`}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3 w-3"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-3 w-3"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </div>
-                      <span>{option.label}</span>
-                    </CommandItem>
-                  ))}
-              </CommandGroup>
-            </Command>
-          </div>
-        )}
-      </div>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                    <span>{option.label}</span>
+                  </CommandItem>
+                ))}
+            </CommandGroup>
+          </Command>
+        </div>
+      )}
     </div>
   );
 }

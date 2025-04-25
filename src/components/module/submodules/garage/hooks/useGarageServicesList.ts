@@ -5,12 +5,12 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Service } from '@/components/module/submodules/garage/types/garage-types';
 
 export const useGarageServicesList = () => {
-  const { data: services = [], isLoading } = useQuery({
+  const { data: services = [], isLoading, error } = useQuery({
     queryKey: ['garage', 'services-list'],
     queryFn: () => fetchCollectionData<Service>(COLLECTIONS.GARAGE.SERVICES),
   });
 
-  // Transformer les services pour le format du MultiSelect
+  // Transform services into the format needed for MultiSelect
   const servicesOptions = services.map(service => ({
     value: service.id,
     label: `${service.name} - ${service.cost}€`
@@ -19,6 +19,7 @@ export const useGarageServicesList = () => {
   return {
     services,
     servicesOptions,
-    isLoading
+    isLoading,
+    error
   };
 };
