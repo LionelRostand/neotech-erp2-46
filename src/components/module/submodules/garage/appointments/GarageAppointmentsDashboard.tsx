@@ -1,101 +1,130 @@
 
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Calendar, Clock, CheckCircle } from "lucide-react";
+import StatCard from '@/components/StatCard';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 import CreateAppointmentDialog from './CreateAppointmentDialog';
-import { DataTable } from "@/components/ui/data-table";
-import { useGarageAppointments } from '@/hooks/garage/useGarageAppointments';
-import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { useGarageServices } from '@/hooks/garage/useGarageServices';
-import { Column } from '@/types/table-types';
-import StatusBadge from '@/components/StatusBadge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 const GarageAppointmentsDashboard = () => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { appointments, isLoading } = useGarageAppointments();
-  const { clients } = useGarageClients();
-  const { services } = useGarageServices();
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const { appointments, vehicles, clients, isLoading } = useGarageData();
 
-  const columns: Column[] = [
-    {
-      header: "Client",
-      accessorKey: "clientId",
-      cell: ({ row }) => {
-        const client = clients.find(c => c.id === row.original.clientId);
-        return client ? `${client.firstName} ${client.lastName}` : row.original.clientId;
-      }
-    },
-    {
-      header: "Service",
-      accessorKey: "serviceId", 
-      cell: ({ row }) => {
-        const service = services.find(s => s.id === row.original.serviceId);
-        return service ? service.name : row.original.serviceId;
-      }
-    },
-    {
-      header: "Date",
-      accessorKey: "date"
-    },
-    {
-      header: "Heure",
-      accessorKey: "time"
-    },
-    {
-      header: "Statut",
-      accessorKey: "status",
-      cell: ({ row }) => {
-        const statusMap = {
-          pending: { label: "En attente", variant: "warning" },
-          confirmed: { label: "Confirmé", variant: "success" },
-          cancelled: { label: "Annulé", variant: "destructive" },
-          completed: { label: "Terminé", variant: "default" }
-        };
-        
-        // Extract the status from the row
-        const statusKey = row.original.status as keyof typeof statusMap;
-        
-        // Provide a fallback for unknown status values
-        const status = statusMap[statusKey] || { 
-          label: statusKey || "Inconnu", 
-          variant: "default" 
-        };
-        
-        return <StatusBadge status={status.variant}>{status.label}</StatusBadge>;
-      }
-    }
-  ];
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
 
-  const handleCreateAppointment = async (data: any) => {
-    console.log('Creating new appointment:', data);
-    // TODO: Implement appointment creation
-  };
+  const todayAppointments = appointments.filter(a => {
+    const today = new Date().toISOString().split('T')[0];
+    return a.date === today;
+  });
+
+  const upcomingAppointments = appointments.filter(a => 
+    a.status === 'scheduled' && new Date(a.date) >= new Date()
+  );
+
+  const completedAppointments = appointments.filter(a => 
+    a.status === 'completed'
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Rendez-vous</h2>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          <span>Nouveau Rendez-vous</span>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Rendez-vous</h1>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau rendez-vous
         </Button>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={appointments}
-        isLoading={isLoading}
-        emptyMessage="Aucun rendez-vous trouvé"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard
+          title="Rendez-vous aujourd'hui"
+          value={todayAppointments.length.toString()}
+          icon={<Calendar className="h-4 w-4 text-blue-500" />}
+          description="Planifiés pour aujourd'hui"
+          className="bg-blue-50 hover:bg-blue-100"
+        />
+        <StatCard
+          title="Rendez-vous à venir"
+          value={upcomingAppointments.length.toString()}
+          icon={<Clock className="h-4 w-4 text-amber-500" />}
+          description="En attente"
+          className="bg-amber-50 hover:bg-amber-100"
+        />
+        <StatCard
+          title="Rendez-vous terminés"
+          value={completedAppointments.length.toString()}
+          icon={<CheckCircle className="h-4 w-4 text-emerald-500" />}
+          description="Ce mois-ci"
+          className="bg-emerald-50 hover:bg-emerald-100"
+        />
+      </div>
 
-      <CreateAppointmentDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSubmit={handleCreateAppointment}
+      <Card>
+        <CardHeader>
+          <CardTitle>Prochains rendez-vous</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Heure</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Service</TableHead>
+                <TableHead>Véhicule</TableHead>
+                <TableHead>Statut</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {upcomingAppointments.slice(0, 5).map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell>{appointment.date}</TableCell>
+                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>{appointment.clientName}</TableCell>
+                  <TableCell>{appointment.service}</TableCell>
+                  <TableCell>
+                    {vehicles.find(v => v.id === appointment.vehicleId)?.licensePlate || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge 
+                      className={
+                        appointment.status === 'scheduled' 
+                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                          : appointment.status === 'completed'
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }
+                    >
+                      {appointment.status === 'scheduled' ? 'Planifié' 
+                       : appointment.status === 'completed' ? 'Terminé'
+                       : 'Annulé'}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <CreateAppointmentDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
       />
     </div>
   );
 };
 
 export default GarageAppointmentsDashboard;
-

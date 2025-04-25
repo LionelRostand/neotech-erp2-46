@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { useGarageVehiclesOperations } from '@/hooks/garage/useGarageVehiclesOperations';
+import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 
 interface AddVehicleDialogProps {
   isOpen: boolean;
@@ -19,9 +19,9 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
   onOpenChange,
   onVehicleAdded
 }) => {
-  const { createVehicle } = useGarageVehiclesOperations();
+  const { addVehicle } = useGarageVehicles();
   const { clients } = useGarageClients();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = React.useState({
     make: '',
     model: '',
     year: new Date().getFullYear(),
@@ -41,23 +41,21 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
 
   const handleSubmit = async () => {
     try {
-      const success = await createVehicle(formData);
-      if (success) {
-        onVehicleAdded();
-        onOpenChange(false);
-        setFormData({
-          make: '',
-          model: '',
-          year: new Date().getFullYear(),
-          licensePlate: '',
-          clientId: '',
-          services: [],
-          repairs: [],
-          status: 'available',
-          mileage: 0,
-          lastCheckDate: ''
-        });
-      }
+      await addVehicle(formData);
+      onVehicleAdded();
+      onOpenChange(false);
+      setFormData({
+        make: '',
+        model: '',
+        year: new Date().getFullYear(),
+        licensePlate: '',
+        clientId: '',
+        services: [],
+        repairs: [],
+        status: 'available',
+        mileage: 0,
+        lastCheckDate: ''
+      });
     } catch (error) {
       console.error('Erreur lors de l\'ajout du véhicule:', error);
     }

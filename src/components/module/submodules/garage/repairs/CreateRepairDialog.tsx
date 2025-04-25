@@ -1,135 +1,217 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { useGarageVehiclesByClient } from '@/hooks/garage/useGarageVehiclesByClient';
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CreateRepairDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => void;
+  onSave: (repair: any) => void;
+  clientsMap?: Record<string, string>;
+  vehiclesMap?: Record<string, string>;
+  mechanicsMap?: Record<string, string>;
 }
 
 const CreateRepairDialog: React.FC<CreateRepairDialogProps> = ({
   open,
   onOpenChange,
-  onSubmit
+  onSave,
+  clientsMap = {},
+  vehiclesMap = {},
+  mechanicsMap = {}
 }) => {
-  const [formData, setFormData] = React.useState({
-    clientId: '',
-    vehicleId: '',
-    description: '',
-    estimatedTime: '',
-    status: 'pending' as const
-  });
+  const [clientId, setClientId] = useState<string>('');
+  const [vehicleId, setVehicleId] = useState<string>('');
+  const [mechanicId, setMechanicId] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [estimatedCost, setEstimatedCost] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [estimatedEndDate, setEstimatedEndDate] = useState<string>(
+    new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [licensePlate, setLicensePlate] = useState<string>('');
 
-  const { clients } = useGarageClients();
-  const { clientVehicles } = useGarageVehiclesByClient(formData.clientId);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleInputChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      ...(name === 'clientId' ? { vehicleId: '' } : {})
-    }));
+    if (!clientId || !vehicleId || !mechanicId || !description || !estimatedCost || !startDate || !estimatedEndDate) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    const vehicleName = vehiclesMap[vehicleId] || '';
+    const clientName = clientsMap[clientId] || '';
+    const mechanicName = mechanicsMap[mechanicId] || '';
+
+    const newRepair = {
+      vehicleId,
+      vehicleName,
+      clientId,
+      clientName,
+      mechanicId,
+      mechanicName,
+      startDate,
+      estimatedEndDate,
+      status: "in_progress",
+      description,
+      progress: 0,
+      estimatedCost: parseFloat(estimatedCost),
+      licensePlate
+    };
+
+    onSave(newRepair);
+    resetForm();
+    onOpenChange(false);
   };
 
-  const handleSubmit = () => {
-    onSubmit(formData);
-    onOpenChange(false);
-    setFormData({
-      clientId: '',
-      vehicleId: '',
-      description: '',
-      estimatedTime: '',
-      status: 'pending'
-    });
+  const resetForm = () => {
+    setClientId('');
+    setVehicleId('');
+    setMechanicId('');
+    setDescription('');
+    setEstimatedCost('');
+    setStartDate(new Date().toISOString().split('T')[0]);
+    setEstimatedEndDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    setLicensePlate('');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Nouvelle Réparation</DialogTitle>
+          <DialogTitle>Créer une nouvelle réparation</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="client">Client</Label>
-            <Select 
-              value={formData.clientId}
-              onValueChange={(value) => handleInputChange('clientId', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.firstName} {client.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="client">Client</Label>
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger id="client">
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(clientsMap || {}).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="vehicle">Véhicule</Label>
+              <Select value={vehicleId} onValueChange={setVehicleId}>
+                <SelectTrigger id="vehicle">
+                  <SelectValue placeholder="Sélectionner un véhicule" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(vehiclesMap || {}).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="license">Immatriculation</Label>
+              <Input 
+                id="license" 
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value)}
+                placeholder="Ex: AB-123-CD" 
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="mechanic">Mécanicien</Label>
+              <Select value={mechanicId} onValueChange={setMechanicId}>
+                <SelectTrigger id="mechanic">
+                  <SelectValue placeholder="Sélectionner un mécanicien" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(mechanicsMap || {}).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="startDate">Date de début</Label>
+              <div className="relative">
+                <Input 
+                  id="startDate" 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="endDate">Date de fin estimée</Label>
+              <div className="relative">
+                <Input 
+                  id="endDate" 
+                  type="date" 
+                  value={estimatedEndDate}
+                  onChange={(e) => setEstimatedEndDate(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="vehicle">Véhicule</Label>
-            <Select
-              value={formData.vehicleId}
-              onValueChange={(value) => handleInputChange('vehicleId', value)}
-              disabled={!formData.clientId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={formData.clientId ? "Sélectionner un véhicule" : "Sélectionnez d'abord un client"} />
-              </SelectTrigger>
-              <SelectContent>
-                {clientVehicles.map((vehicle) => (
-                  <SelectItem key={vehicle.id} value={vehicle.id}>
-                    {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              rows={4}
+          
+          <div>
+            <Label htmlFor="description">Description de la réparation</Label>
+            <Textarea 
+              id="description" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Décrivez la réparation à effectuer..." 
+              rows={3}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="estimatedTime">Temps estimé (heures)</Label>
-            <Input
-              id="estimatedTime"
-              type="number"
-              value={formData.estimatedTime}
-              onChange={(e) => handleInputChange('estimatedTime', e.target.value)}
+          
+          <div>
+            <Label htmlFor="cost">Coût estimé (€)</Label>
+            <Input 
+              id="cost" 
+              type="number" 
+              min="0" 
+              step="0.01"
+              value={estimatedCost}
+              onChange={(e) => setEstimatedCost(e.target.value)}
+              placeholder="0.00" 
             />
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={!formData.clientId || !formData.vehicleId || !formData.description}
-          >
-            Créer la réparation
-          </Button>
-        </DialogFooter>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">Créer la réparation</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

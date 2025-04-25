@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
@@ -71,10 +72,6 @@ export const OtherModulesRoutes = [
     <Route 
       path="appointments" 
       element={<SubmodulePage moduleId={6} submoduleId="garage-appointments" />} 
-    />
-    <Route 
-      path="services" 
-      element={<SubmodulePage moduleId={6} submoduleId="garage-services" />} 
     />
     <Route 
       path="repairs" 
