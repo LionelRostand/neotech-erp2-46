@@ -43,8 +43,10 @@ const RepairsTable = ({ repairs, onRepairModified }: RepairsTableProps) => {
   };
   
   const handleDeleteComplete = () => {
-    // Call the parent's onRepairModified function to refresh data
-    onRepairModified();
+    // Make sure onRepairModified is a function before calling it
+    if (typeof onRepairModified === 'function') {
+      onRepairModified();
+    }
   };
 
   const formatDate = (dateString?: string) => {

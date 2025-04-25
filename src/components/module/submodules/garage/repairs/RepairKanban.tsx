@@ -83,6 +83,13 @@ export function RepairKanban() {
       refetch();
     }
   };
+  
+  const handleDeleteComplete = () => {
+    // Call refetch to update the data after deletion
+    if (typeof refetch === 'function') {
+      refetch();
+    }
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -150,7 +157,7 @@ export function RepairKanban() {
         repairId={selectedRepair?.id ?? null} 
         open={deleteDialogOpen} 
         onOpenChange={setDeleteDialogOpen} 
-        onDelete={handleUpdate}
+        onDelete={handleDeleteComplete}
       />
     </div>
   );
