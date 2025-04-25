@@ -23,14 +23,6 @@ export const RepairCard = ({ repair }: RepairCardProps) => {
     transition,
   };
 
-  // Format vehicle display name
-  const getVehicleDisplay = () => {
-    const makeModel = [];
-    if (repair.vehicleMake) makeModel.push(repair.vehicleMake);
-    if (repair.vehicleModel) makeModel.push(repair.vehicleModel);
-    return makeModel.length > 0 ? makeModel.join(' ') : 'Véhicule non spécifié';
-  };
-
   return (
     <Card
       ref={setNodeRef}
@@ -41,12 +33,12 @@ export const RepairCard = ({ repair }: RepairCardProps) => {
     >
       <CardContent className="p-4 space-y-2">
         <div>
-          <div className="font-medium">{getVehicleDisplay()}</div>
-          <div className="text-sm text-gray-500">{repair.clientName || 'Client non spécifié'}</div>
+          <div className="font-medium">{repair.vehicleName}</div>
+          <div className="text-sm text-gray-500">{repair.clientName}</div>
         </div>
-        <div className="text-sm">{repair.description || 'Aucune description'}</div>
+        <div className="text-sm">{repair.description}</div>
         <div className="flex justify-between text-sm text-gray-500">
-          <span>{repair.mechanicName || 'Non assigné'}</span>
+          <span>{repair.mechanicName}</span>
           <span>{new Date(repair.startDate).toLocaleDateString('fr-FR')}</span>
         </div>
       </CardContent>
