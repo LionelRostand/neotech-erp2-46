@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AddRepairDialog } from './AddRepairDialog';
 import { Card } from "@/components/ui/card";
+import { formatDate } from '@/lib/formatters';
 
 const GarageRepairsDashboard = () => {
   const { repairs, isLoading } = useGarageData();
@@ -14,8 +15,9 @@ const GarageRepairsDashboard = () => {
 
   const today = new Date();
   const todaysRepairs = repairs.filter(r => {
+    if (!r.date && !r.startDate) return false;
     const repairDate = new Date(r.date || r.startDate);
-    return repairDate.toDateString() === today.toDateString();
+    return !isNaN(repairDate.getTime()) && repairDate.toDateString() === today.toDateString();
   });
 
   const inProgress = repairs.filter(r => r.status === 'in_progress');
@@ -27,10 +29,25 @@ const GarageRepairsDashboard = () => {
   }
 
   const sortedRepairs = [...repairs].sort((a, b) => {
-    const dateA = new Date(a.date || a.startDate);
-    const dateB = new Date(b.date || b.startDate);
+    const dateA = new Date(a.date || a.startDate || 0);
+    const dateB = new Date(b.date || b.startDate || 0);
     return dateB.getTime() - dateA.getTime();
   });
+
+  // Helper function to safely format dates
+  const safeFormatDate = (dateValue: string | undefined): string => {
+    if (!dateValue) return 'N/A';
+    
+    try {
+      const date = new Date(dateValue);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'Date invalide';
+      return format(date, 'yyyy-MM-dd');
+    } catch (error) {
+      console.error('Error formatting date:', error, dateValue);
+      return 'Date invalide';
+    }
+  };
 
   return (
     <div className="p-6">
@@ -109,7 +126,7 @@ const GarageRepairsDashboard = () => {
             <tbody>
               {sortedRepairs.map((repair) => (
                 <tr key={repair.id} className="border-t">
-                  <td className="py-3">{format(new Date(repair.date || repair.startDate), 'yyyy-MM-dd')}</td>
+                  <td className="py-3">{safeFormatDate(repair.date || repair.startDate)}</td>
                   <td>{repair.clientName}</td>
                   <td>{repair.vehicleName}</td>
                   <td>{repair.description}</td>
