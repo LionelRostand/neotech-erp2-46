@@ -10,10 +10,18 @@ import { GarageClient } from '@/components/module/submodules/garage/types/garage
 export const useGarageClients = () => {
   const queryClient = useQueryClient();
   
-  // Fetch clients data
+  // Vérifier que le chemin de collection est défini et non vide
+  const garageClientsPath = COLLECTIONS.GARAGE.CLIENTS || '';
+  
+  // S'assurer que le chemin existe avant de faire la requête
+  const validCollectionPath = garageClientsPath && garageClientsPath.trim() !== '' 
+    ? garageClientsPath 
+    : 'garage_clients'; // Fallback à une valeur par défaut si nécessaire
+  
+  // Fetch clients data avec un chemin garanti
   const { data: clients = [], isLoading, error, refetch } = useQuery({
     queryKey: ['garage', 'clients'],
-    queryFn: () => fetchCollectionData<GarageClient>(COLLECTIONS.GARAGE.CLIENTS),
+    queryFn: () => fetchCollectionData<GarageClient>(validCollectionPath),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
@@ -28,7 +36,7 @@ export const useGarageClients = () => {
           status: newClient.status || 'active', // Valeur par défaut si non définie
         };
         
-        const collectionRef = collection(db, COLLECTIONS.GARAGE.CLIENTS);
+        const collectionRef = collection(db, validCollectionPath);
         const docRef = await addDoc(collectionRef, clientWithDate);
         return { id: docRef.id, ...clientWithDate };
       } catch (error) {
@@ -55,7 +63,7 @@ export const useGarageClients = () => {
           updatedClient.createdAt = new Date().toISOString();
         }
         
-        const clientDoc = doc(db, COLLECTIONS.GARAGE.CLIENTS, updatedClient.id);
+        const clientDoc = doc(db, validCollectionPath, updatedClient.id);
         await updateDoc(clientDoc, updatedClient);
         return updatedClient;
       } catch (error) {
@@ -77,7 +85,7 @@ export const useGarageClients = () => {
   const deleteClient = useMutation({
     mutationFn: async (clientId: string) => {
       try {
-        const clientDoc = doc(db, COLLECTIONS.GARAGE.CLIENTS, clientId);
+        const clientDoc = doc(db, validCollectionPath, clientId);
         await deleteDoc(clientDoc);
         return clientId;
       } catch (error) {

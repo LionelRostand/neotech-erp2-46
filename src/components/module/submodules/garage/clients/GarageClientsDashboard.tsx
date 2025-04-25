@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Plus } from 'lucide-react';
@@ -24,19 +25,24 @@ const GarageClientsDashboard = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Assurer des chemins de collection valides
+  const vehiclesPath = COLLECTIONS.GARAGE.VEHICLES || 'garage_vehicles';
+  const mechanicsPath = COLLECTIONS.GARAGE.MECHANICS || 'garage_mechanics';
+  const servicesPath = COLLECTIONS.GARAGE.SERVICES || 'garage_services';
+
   const { data: vehicles = [] } = useQuery({
     queryKey: ['garage', 'vehicles'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.VEHICLES)
+    queryFn: () => fetchCollectionData(vehiclesPath)
   });
 
   const { data: mechanics = [] } = useQuery({
     queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.MECHANICS)
+    queryFn: () => fetchCollectionData(mechanicsPath)
   });
 
   const { data: services = [] } = useQuery({
     queryKey: ['garage', 'services'],
-    queryFn: () => fetchCollectionData(COLLECTIONS.GARAGE.SERVICES)
+    queryFn: () => fetchCollectionData(servicesPath)
   });
 
   const handleCreateAppointment = (client: GarageClient) => {
