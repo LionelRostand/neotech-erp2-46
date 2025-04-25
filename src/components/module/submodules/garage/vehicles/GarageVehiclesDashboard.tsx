@@ -13,9 +13,22 @@ const GarageVehiclesDashboard = () => {
   
   const today = new Date().toISOString().split('T')[0];
   
+  // Fix: Safely handle potentially invalid dates
   const newVehicles = vehicles.filter(v => {
-    const createdDate = v.createdAt ? new Date(v.createdAt).toISOString().split('T')[0] : '';
-    return createdDate === today;
+    if (!v.createdAt) return false;
+    
+    try {
+      // Check if the date is valid before converting
+      const createdDate = new Date(v.createdAt);
+      
+      // Check if the date is valid (Invalid dates will return NaN for getTime())
+      if (isNaN(createdDate.getTime())) return false;
+      
+      return createdDate.toISOString().split('T')[0] === today;
+    } catch (error) {
+      console.error("Error processing vehicle date:", v.createdAt, error);
+      return false;
+    }
   });
   
   const activeVehicles = vehicles.filter(v => v.status === 'active');

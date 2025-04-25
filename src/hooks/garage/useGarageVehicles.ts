@@ -10,7 +10,13 @@ export const useGarageVehicles = () => {
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id'>) => {
     try {
-      const result = await add(vehicleData);
+      // Make sure createdAt is a valid ISO string
+      const vehicleWithValidDate = {
+        ...vehicleData,
+        createdAt: new Date().toISOString()
+      };
+      
+      const result = await add(vehicleWithValidDate);
       toast.success('Véhicule ajouté avec succès');
       return result;
     } catch (err) {
