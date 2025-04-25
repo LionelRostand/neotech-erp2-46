@@ -17,6 +17,21 @@ interface ViewMechanicDialogProps {
 const ViewMechanicDialog = ({ mechanic, isOpen, onClose }: ViewMechanicDialogProps) => {
   if (!mechanic) return null;
 
+  // Ensure specialization is properly formatted for display
+  const formatSpecialization = (specialization: any): string => {
+    if (!specialization) return 'Aucune spécialisation';
+    
+    if (Array.isArray(specialization)) {
+      return specialization.length > 0 ? specialization.join(', ') : 'Aucune spécialisation';
+    }
+    
+    if (typeof specialization === 'string') {
+      return specialization || 'Aucune spécialisation';
+    }
+    
+    return 'Aucune spécialisation';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -42,7 +57,7 @@ const ViewMechanicDialog = ({ mechanic, isOpen, onClose }: ViewMechanicDialogPro
           
           <div className="grid grid-cols-3 items-center gap-4">
             <span className="font-medium">Spécialisation:</span>
-            <span className="col-span-2">{Array.isArray(mechanic.specialization) ? mechanic.specialization.join(', ') : mechanic.specialization}</span>
+            <span className="col-span-2">{formatSpecialization(mechanic.specialization)}</span>
           </div>
           
           <div className="grid grid-cols-3 items-center gap-4">
