@@ -1,109 +1,81 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from '@tanstack/react-query';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Card } from "@/components/ui/card";
+import { Plus } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
+import MechanicsStats from './components/MechanicsStats';
 import { DataTable } from "@/components/ui/data-table";
-import { UserCog, Clock, CheckCircle, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import StatCard from '@/components/StatCard';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { AddMechanicDialog } from './AddMechanicDialog';
-import { Mechanic } from '@/components/module/submodules/garage/types/garage-types';
+import type { Column } from "@/types/table-types";
+import type { Mechanic } from '@/components/module/submodules/garage/types/garage-types';
 
 const GarageMechanicsDashboard = () => {
+  const { mechanics = [], isLoading } = useGarageMechanics();
   const [openAddDialog, setOpenAddDialog] = useState(false);
   
-  const { data: mechanics = [], isLoading } = useQuery({
-    queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData<Mechanic>(COLLECTIONS.GARAGE.MECHANICS)
-  });
+  const today = new Date().toISOString().split('T')[0];
+  
+  const availableMechanics = mechanics.filter(m => m.status === 'available');
+  const busyMechanics = mechanics.filter(m => m.status === 'in_service');
+  const onBreakMechanics = mechanics.filter(m => m.status === 'on_break');
 
-  // Filter mechanics by status
-  const availableMechanics = mechanics.filter(m => m.status === 'available' || m.status === 'Disponible');
-  const busyMechanics = mechanics.filter(m => m.status === 'in_service' || m.status === 'busy');
-  const onBreakMechanics = mechanics.filter(m => m.status === 'on_break' || m.status === 'onBreak');
-
-  const columns = [
-    {
-      accessorKey: 'firstName',
-      header: 'Prénom',
+  const columns: Column[] = [
+    { header: "Prénom", accessorKey: "firstName" },
+    { header: "Nom", accessorKey: "lastName" },
+    { header: "Email", accessorKey: "email" },
+    { header: "Téléphone", accessorKey: "phone" },
+    { header: "Spécialisation", 
+      accessorFn: (row: Mechanic) => (row.specialization || []).join(', ') 
     },
-    {
-      accessorKey: 'lastName',
-      header: 'Nom',
-    },
-    {
-      accessorFn: (row: Mechanic) => (row.specialization || []).join(', '),
-      header: 'Spécialisation',
-    },
-    {
-      accessorKey: 'phone',
-      header: 'Téléphone',
-    },
-    {
-      accessorKey: 'status',
-      header: 'Statut',
-      cell: ({ row }: { row: any }) => {
+    { header: "Statut", accessorKey: "status",
+      cell: ({ row }) => {
         const status = row.original.status;
         return status === 'available' ? 'Disponible' :
-               status === 'in_service' || status === 'busy' ? 'Occupé' :
-               status === 'on_break' || status === 'onBreak' ? 'En pause' : status;
-      },
+               status === 'in_service' ? 'En service' :
+               status === 'on_break' ? 'En pause' : status;
+      }
     },
+    { 
+      header: "Actions",
+      cell: () => (
+        <Button variant="ghost" size="sm">
+          Voir
+        </Button>
+      )
+    }
   ];
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Mécaniciens</h2>
+        <h1 className="text-2xl font-bold">Mécaniciens</h1>
         <Button onClick={() => setOpenAddDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un mécanicien
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau mécanicien
         </Button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Disponibles"
-          value={availableMechanics.length.toString()}
-          icon={<UserCog className="h-4 w-4" />}
-          description="Mécaniciens disponibles"
-          className="bg-green-50 hover:bg-green-100"
-        />
-        <StatCard
-          title="En service"
-          value={busyMechanics.length.toString()}
-          icon={<Clock className="h-4 w-4" />}
-          description="Mécaniciens occupés"
-          className="bg-blue-50 hover:bg-blue-100"
-        />
-        <StatCard
-          title="En pause"
-          value={onBreakMechanics.length.toString()}
-          icon={<CheckCircle className="h-4 w-4" />}
-          description="Mécaniciens en pause"
-          className="bg-yellow-50 hover:bg-yellow-100"
-        />
-      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des mécaniciens</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable 
-            columns={columns}
-            data={mechanics}
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
-
-      <AddMechanicDialog 
-        open={openAddDialog}
-        onOpenChange={setOpenAddDialog}
+      <MechanicsStats
+        availableCount={availableMechanics.length}
+        busyCount={busyMechanics.length}
+        onBreakCount={onBreakMechanics.length}
+        totalCount={mechanics.length}
       />
+
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Liste des mécaniciens</h2>
+        </div>
+        <DataTable 
+          columns={columns}
+          data={mechanics}
+          isLoading={isLoading}
+        />
+      </Card>
     </div>
   );
 };
