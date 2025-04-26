@@ -1,144 +1,49 @@
+
+// Define all Firestore collection paths here for consistency
 export const COLLECTIONS = {
+  // User collections
   USERS: 'users',
-  EMPLOYEES: 'employees',
-  COMPANIES: 'companies',
+  USER_PREFERENCES: 'user_preferences',
+  USER_SETTINGS: 'user_settings',
+  
+  // Module collections
+  MODULES: 'modules',
+  SUBMODULES: 'submodules',
+  
+  // Message module collections
   MESSAGES: {
-    INBOX: 'messages-inbox',
-    SENT: 'messages-sent',
-    DRAFTS: 'messages-drafts',
-    ARCHIVED: 'messages-archived',
-    SCHEDULED: 'messages-scheduled',
-    TEMPLATES: 'messages-templates',
-    CONTACTS: 'contacts'
+    INBOX: 'messages_inbox',
+    SENT: 'messages_sent',
+    DRAFTS: 'messages_drafts',
+    ARCHIVED: 'messages_archived',
+    SCHEDULED: 'messages_scheduled',
+    TEMPLATES: 'messages_templates',
+    CONTACTS: 'messages_contacts',
   },
-  CONTACTS: 'contacts',
+  
+  // Document module collections
   DOCUMENTS: {
-    FILES: 'documents-files',
-    FOLDERS: 'documents-folders',
-    SHARED: 'documents-shared',
-    FAVORITES: 'documents-favorites',
-    RECENTS: 'documents-recents',
-    ARCHIVES: 'documents-archives',
-    METADATA: 'documents-metadata'
+    FILES: 'documents_files',
+    FOLDERS: 'documents_folders',
+    SHARED: 'documents_shared',
+    FAVORITES: 'documents_favorites',
+    RECENTS: 'documents_recents',
+    ARCHIVES: 'documents_archives',
+    METADATA: 'documents_metadata',
   },
-  DOCUMENT_COLLECTIONS: {
-    FILES: 'documents-files',
-    FOLDERS: 'documents-folders',
-    SHARED: 'documents-shared',
-    FAVORITES: 'documents-favorites', 
-    RECENTS: 'documents-recents',
-    ARCHIVES: 'documents-archives',
-    METADATA: 'documents-metadata'
-  },
-  PROJECTS: {
-    LIST: 'projects',
-    TASKS: 'tasks',
-    COMMENTS: 'comments',
-    TAGS: 'project-tags',
-    STATUSES: 'project-statuses',
-    MEMBERS: 'project-members'
-  },
-  CRMS: {
-    CLIENTS: 'crm-clients',
-    PROSPECTS: 'crm-prospects',
-    OPPORTUNITIES: 'crm-opportunities',
-    TASKS: 'crm-tasks'
-  },
+
+  // Garage module collections
   GARAGE: {
+    APPOINTMENTS: 'garage_appointments',
     CLIENTS: 'garage_clients',
-    APPOINTMENTS: 'garage_appointments', 
-    INVOICES: 'garage_invoices',
-    LOYALTY: 'garage_loyalty',
+    VEHICLES: 'garage_vehicles',
     MECHANICS: 'garage_mechanics',
-    PARTS: 'garage_parts',
-    PERMISSIONS: 'garage_permissions',
-    REPAIRS: 'garage_repairs',
     SERVICES: 'garage_services',
-    VEHICLES: 'garage_vehicles'
+    REPAIRS: 'garage_repairs',
+    MAINTENANCE: 'garage_maintenance', // Add the maintenance collection path
+    INVOICES: 'garage_invoices',
+    PARTS: 'garage_parts',
+    SUPPLIERS: 'garage_suppliers',
+    INVENTORY: 'garage_inventory',
   },
-  HR: {
-    EMPLOYEES: 'hr-employees',
-    PAYSLIPS: 'hr-payslips',
-    CONTRACTS: 'hr-contracts',
-    DEPARTMENTS: 'hr-departments',
-    LEAVE_REQUESTS: 'hr-leave-requests',
-    ATTENDANCE: 'hr-attendance',
-    ABSENCE_REQUESTS: 'hr-absence-requests',
-    DOCUMENTS: 'hr-documents',
-    TIMESHEET: 'hr-timesheet',
-    EVALUATIONS: 'hr-evaluations',
-    TRAININGS: 'hr-trainings',
-    REPORTS: 'hr-reports',
-    ALERTS: 'hr-alerts',
-    RECRUITMENT: 'hr-recruitment'
-  },
-  HEALTH: {
-    PATIENTS: 'health-patients',
-    DOCTORS: 'health-doctors',
-    CONSULTATIONS: 'health-consultations',
-    APPOINTMENTS: 'health-appointments',
-    MEDICAL_RECORDS: 'health-medical-records',
-    INSURANCE_PROVIDERS: 'health-insurance-providers'
-  },
-  SALON: {
-    CLIENTS: 'salon-clients',
-    STYLISTS: 'salon-stylists',
-    APPOINTMENTS: 'salon-appointments',
-    SERVICES: 'salon-services',
-    PRODUCTS: 'salon-products',
-    SUPPLIERS: 'salon-suppliers',
-    INVENTORY: 'salon-inventory',
-    LOYALTY_PROGRAMS: 'salon-loyalty-programs',
-    REVIEWS: 'salon-reviews',
-    DOCUMENTS: 'salon-documents'
-  },
-  LIBRARY: {
-    MEMBERS: 'library-members',
-    BOOKS: 'library-books',
-    LIBRARIANS: 'library-librarians',
-    LOANS: 'library-loans',
-    RESERVATIONS: 'library-reservations',
-    CATEGORIES: 'library-categories',
-    AUTHORS: 'library-authors',
-    PUBLISHERS: 'library-publishers',
-    EVENTS: 'library-events',
-    NOTIFICATIONS: 'library-notifications',
-    ACCESS_POINTS: 'library-access-points'
-  },
-  TRANSPORT: {
-    VEHICLES: 'transport-vehicles',
-    DRIVERS: 'transport-drivers',
-    RESERVATIONS: 'transport-reservations',
-    ROUTES: 'transport-routes',
-    MAINTENANCE: 'transport-maintenance',
-    FUEL_LOGS: 'transport-fuel-logs',
-    INSURANCE: 'transport-insurance',
-    REPORTS: 'transport-reports',
-    SETTINGS: 'transport-settings',
-    SHIPMENTS: 'transport-shipments',
-    REQUESTS: 'transport-requests',
-    CLIENTS: 'transport-clients'
-  },
-  FREIGHT: {
-    BILLING: 'freight_billing',
-    CARRIERS: 'freight_carriers',
-    CLIENTS: 'freight_clients',
-    CONTAINERS: 'freight_containers',
-    DOCUMENTS: 'freight_documents',
-    PACKAGE_TYPES: 'freight_package_types',
-    PACKAGES: 'freight_packages',
-    PRICING: 'freight_pricing',
-    QUOTES: 'freight_quotes',
-    ROUTES: 'freight_routes',
-    SETTINGS: 'freight_settings',
-    SHIPMENTS: 'freight_shipments',
-    TRACKING: 'freight_tracking',
-    TRACKING_EVENTS: 'freight_tracking_events',
-    USERS: 'freight_users'
-  },
-  ACCOUNTING: {
-    INVOICES: 'accounting-invoices',
-    PAYMENTS: 'accounting-payments',
-    TRANSACTIONS: 'accounting-transactions'
-  }
 };

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import MaintenanceForm from './MaintenanceForm';
 import { useQueryClient } from '@tanstack/react-query';
-import { doc, collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
