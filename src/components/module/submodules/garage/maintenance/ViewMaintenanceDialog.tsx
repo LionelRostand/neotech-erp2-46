@@ -24,7 +24,6 @@ const ViewMaintenanceDialog = ({
 }: ViewMaintenanceDialogProps) => {
   const { vehicles = [], services: garageServices = [] } = useGarageData();
 
-  // If maintenance is undefined or null, don't render the content
   if (!maintenance) return null;
 
   const getVehicleInfo = (vehicleId: string) => {

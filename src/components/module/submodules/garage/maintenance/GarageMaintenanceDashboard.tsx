@@ -8,11 +8,18 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChartBarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 import AddMaintenanceDialog from './AddMaintenanceDialog';
+import ViewMaintenanceDialog from './ViewMaintenanceDialog';
+import EditMaintenanceDialog from './EditMaintenanceDialog';
+import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
 
 const GarageMaintenanceDashboard = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { maintenances = [], vehicles = [], clients = [] } = useGarageData();
 
   // Calculate statistics
@@ -93,6 +100,7 @@ const GarageMaintenanceDashboard = () => {
               <TableHead>Client</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Coût</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -117,6 +125,40 @@ const GarageMaintenanceDashboard = () => {
                 <TableCell className="text-right">
                   {formatCurrency(maintenance.totalCost)}
                 </TableCell>
+                <TableCell>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedMaintenance(maintenance);
+                        setIsViewDialogOpen(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedMaintenance(maintenance);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedMaintenance(maintenance);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -127,9 +169,30 @@ const GarageMaintenanceDashboard = () => {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
+
+      {selectedMaintenance && (
+        <>
+          <ViewMaintenanceDialog
+            open={isViewDialogOpen}
+            onOpenChange={setIsViewDialogOpen}
+            maintenance={selectedMaintenance}
+          />
+
+          <EditMaintenanceDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            maintenance={selectedMaintenance}
+          />
+
+          <DeleteMaintenanceDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            maintenanceId={selectedMaintenance.id}
+          />
+        </>
+      )}
     </div>
   );
 };
 
 export default GarageMaintenanceDashboard;
-
