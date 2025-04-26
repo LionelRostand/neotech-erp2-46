@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -10,7 +9,25 @@ export interface GarageService {
   cost: number;
   description?: string;
   category?: string;
-  duration?: number; // in minutes
+  duration?: number;
+}
+
+export interface GarageMaintenance {
+  id: string;
+  vehicleId: string;
+  clientId: string;
+  mechanicId: string;
+  date: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  services: Array<{
+    serviceId: string;
+    quantity: number;
+    cost: number;
+  }>;
+  totalCost: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const useGarageData = () => {
@@ -80,11 +97,29 @@ export const useGarageData = () => {
     }
   });
 
+  // Add maintenance query
+  const { data: maintenances = [], isLoading: maintenancesLoading } = useQuery({
+    queryKey: ['garage', 'maintenances'],
+    queryFn: async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'garage_maintenances'));
+        return snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        })) as GarageMaintenance[];
+      } catch (error) {
+        console.error("Error fetching maintenances:", error);
+        return [];
+      }
+    }
+  });
+
   return {
     services,
     mechanics,
     clients,
     vehicles,
-    isLoading: servicesLoading || mechanicsLoading || clientsLoading || vehiclesLoading
+    maintenances,
+    isLoading: servicesLoading || mechanicsLoading || clientsLoading || vehiclesLoading || maintenancesLoading
   };
 };
