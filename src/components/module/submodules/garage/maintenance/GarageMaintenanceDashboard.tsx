@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Wrench, Clock, CheckCircle, AlertCircle } from "lucide-react";
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { 
   Table, 
   TableBody, 
@@ -13,19 +14,44 @@ import {
 } from "@/components/ui/table";
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import StatCard from '@/components/StatCard';
+import { formatDate } from '@/lib/utils';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { maintenances = [], isLoading } = useGarageData();
+
+  // Helper function to safely format dates
+  const formatDateSafely = (dateStr: string): string => {
+    try {
+      const date = new Date(dateStr);
+      if (!isValid(date)) {
+        return 'Date invalide';
+      }
+      return format(date, 'dd/MM/yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error, dateStr);
+      return 'Date invalide';
+    }
+  };
+
+  // Helper function to safely check if a date is in the past
+  const isDatePast = (dateStr: string): boolean => {
+    try {
+      const date = new Date(dateStr);
+      if (!isValid(date)) return false;
+      const today = new Date();
+      return date < today;
+    } catch (error) {
+      return false;
+    }
+  };
 
   // Statistics calculations
   const scheduledCount = maintenances.filter(m => m.status === 'scheduled').length;
   const inProgressCount = maintenances.filter(m => m.status === 'in_progress').length;
   const completedCount = maintenances.filter(m => m.status === 'completed').length;
   const urgentCount = maintenances.filter(m => {
-    const date = new Date(m.date);
-    const today = new Date();
-    return date < today && m.status !== 'completed';
+    return isDatePast(m.date) && m.status !== 'completed';
   }).length;
 
   if (isLoading) {
@@ -87,7 +113,7 @@ const GarageMaintenanceDashboard = () => {
           <TableBody>
             {maintenances.map((maintenance) => (
               <TableRow key={maintenance.id}>
-                <TableCell>{format(new Date(maintenance.date), 'dd/MM/yyyy')}</TableCell>
+                <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
                 <TableCell>{maintenance.vehicleId}</TableCell>
                 <TableCell>{maintenance.clientId}</TableCell>
                 <TableCell>{maintenance.mechanicId}</TableCell>
