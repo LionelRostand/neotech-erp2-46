@@ -10,7 +10,7 @@ import MaintenanceForm from './MaintenanceForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 
 interface AddMaintenanceDialogProps {
   open: boolean;
@@ -37,18 +37,26 @@ const AddMaintenanceDialog = ({ open, onOpenChange }: AddMaintenanceDialogProps)
       // Add to Firestore
       await addDoc(collection(db, 'garage_maintenances'), cleanData);
       
-      toast.success("Maintenance ajoutée avec succès");
+      toast({
+        title: "Succès",
+        description: "Maintenance ajoutée avec succès",
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });
       onOpenChange(false);
     } catch (error) {
       console.error("Error adding maintenance:", error);
-      toast.error("Erreur lors de l'ajout de la maintenance");
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'ajout de la maintenance",
+        variant: "destructive",
+      });
     }
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Ajouter une maintenance</DialogTitle>
         </DialogHeader>

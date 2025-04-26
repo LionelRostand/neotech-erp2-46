@@ -1,87 +1,89 @@
 
 import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { 
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { CalendarIcon } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import ServicesSelector from './ServicesSelector';
+import { useForm } from 'react-hook-form';
 
-interface MaintenanceFormProps {
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-  defaultValues?: any;
+interface RepairService {
+  serviceId: string;
+  quantity: number;
+  cost: number;
 }
 
-const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
-  onSubmit,
-  onCancel,
-  defaultValues
-}) => {
-  const { vehicles = [], clients = [], mechanics = [], services = [], isLoading } = useGarageData();
-  const [selectedServices, setSelectedServices] = useState<{serviceId: string; quantity: number; cost: number}[]>(
-    defaultValues?.services || []
-  );
-  
+interface MaintenanceFormProps {
+  onSubmit: (data: any) => Promise<void>;
+  onCancel: () => void;
+  initialData?: any;
+}
+
+const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onSubmit, onCancel, initialData }) => {
+  const { vehicles, clients, mechanics } = useGarageData();
+  const [services, setServices] = useState<RepairService[]>(initialData?.services || []);
+  const [totalCost, setTotalCost] = useState<number>(initialData?.totalCost || 0);
+
   const form = useForm({
     defaultValues: {
-      date: defaultValues?.date ? new Date(defaultValues.date) : new Date(),
-      clientId: defaultValues?.clientId || '',
-      vehicleId: defaultValues?.vehicleId || '',
-      mechanicId: defaultValues?.mechanicId || '',
-      status: defaultValues?.status || 'scheduled',
-      notes: defaultValues?.notes || '',
-      ...defaultValues
-    },
+      date: initialData?.date ? new Date(initialData.date) : new Date(),
+      clientId: initialData?.clientId || "",
+      vehicleId: initialData?.vehicleId || "",
+      mechanicId: initialData?.mechanicId || "",
+      description: initialData?.description || "",
+      status: initialData?.status || "scheduled",
+      totalCost: initialData?.totalCost || 0
+    }
   });
 
-  const handleServiceChange = (services: {serviceId: string; quantity: number; cost: number}[]) => {
-    setSelectedServices(services);
-    const totalCost = services.reduce((sum, service) => sum + service.cost, 0);
-    form.setValue('totalCost', totalCost);
-  };
-
-  const handleSubmit = (data: any) => {
-    // Combine form data with selected services
-    const formData = {
+  const handleSubmit = async (data: any) => {
+    // Include services in the data to submit
+    const submitData = {
       ...data,
-      date: data.date instanceof Date ? data.date.toISOString().split('T')[0] : data.date,
-      services: selectedServices,
-      totalCost: selectedServices.reduce((sum, service) => sum + service.cost, 0),
+      services,
+      totalCost,
+      date: data.date.toISOString()
     };
     
-    onSubmit(formData);
+    await onSubmit(submitData);
   };
 
-  if (isLoading) {
-    return <div>Chargement...</div>;
-  }
+  // Update form's totalCost field when services change
+  const handleCostChange = (cost: number) => {
+    setTotalCost(cost);
+    form.setValue("totalCost", cost);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Date Field */}
           <FormField
             control={form.control}
             name="date"
@@ -94,12 +96,12 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full pl-3 text-left font-normal",
+                          "pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
                       >
                         {field.value ? (
-                          format(new Date(field.value), "P", { locale: fr })
+                          format(field.value, "PPP", { locale: fr })
                         ) : (
                           <span>Sélectionner une date</span>
                         )}
@@ -112,7 +114,10 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      locale={fr}
+                      disabled={(date) =>
+                        date < new Date(new Date().setDate(new Date().getDate() - 30))
+                      }
+                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -121,13 +126,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             )}
           />
 
+          {/* Client Selection */}
           <FormField
             control={form.control}
             name="clientId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Client</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un client" />
@@ -146,13 +152,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             )}
           />
 
+          {/* Vehicle Selection */}
           <FormField
             control={form.control}
             name="vehicleId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Véhicule</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un véhicule" />
@@ -171,13 +178,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             )}
           />
 
+          {/* Mechanic Selection */}
           <FormField
             control={form.control}
             name="mechanicId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Mécanicien</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un mécanicien" />
@@ -196,13 +204,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             )}
           />
 
+          {/* Status Selection */}
           <FormField
             control={form.control}
             name="status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Statut</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un statut" />
@@ -220,6 +229,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
             )}
           />
 
+          {/* Total Cost Display */}
           <FormField
             control={form.control}
             name="totalCost"
@@ -235,32 +245,39 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({
           />
         </div>
 
-        <ServicesSelector 
-          services={services}
-          value={selectedServices}
-          onChange={handleServiceChange}
-        />
-
+        {/* Description */}
         <FormField
           control={form.control}
-          name="notes"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Notes supplémentaires..." />
+                <Textarea
+                  placeholder="Détails de la maintenance..."
+                  {...field}
+                  rows={4}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end space-x-2 pt-4">
+        {/* Services Selector */}
+        <ServicesSelector 
+          services={services} 
+          onChange={setServices}
+          onCostChange={handleCostChange}
+        />
+
+        {/* Form Actions */}
+        <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
           <Button type="submit">
-            {defaultValues ? 'Mettre à jour' : 'Ajouter'}
+            {initialData ? "Mettre à jour" : "Créer"}
           </Button>
         </div>
       </form>
