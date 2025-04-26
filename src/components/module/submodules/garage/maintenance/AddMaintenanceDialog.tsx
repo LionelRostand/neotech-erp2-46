@@ -24,7 +24,6 @@ const AddMaintenanceDialog = ({ open, onOpenChange }: AddMaintenanceDialogProps)
 
   const handleSubmit = async (data: any) => {
     try {
-      // Ajout du document dans la collection garage_maintenances
       await addDoc(collection(db, 'garage_maintenances'), {
         ...data,
         date: data.date.toISOString(),
