@@ -1,89 +1,71 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useForm } from "react-hook-form";
+import ServicesSelector from './ServicesSelector';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGarageClients } from '@/hooks/garage/useGarageClients';
+import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
+import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
 
 interface MaintenanceFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  mechanics: any[];
-  clients: any[];
-  vehicles: any[];
-  services: any[];
 }
 
-const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, services }: MaintenanceFormProps) => {
-  const [selectedServices, setSelectedServices] = useState<Array<{ serviceId: string, quantity: number, cost: number }>>([]);
-  const [totalCost, setTotalCost] = useState(0);
-
+const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
   const form = useForm({
     defaultValues: {
       clientId: '',
       mechanicId: '',
       vehicleId: '',
-      date: new Date(),
-      endDate: new Date(),
       description: '',
-      services: [],
-      status: 'scheduled' as 'scheduled' | 'in_progress' | 'completed' | 'cancelled',
-      totalCost: 0,
+      startDate: undefined,
+      endDate: undefined,
+      services: []
     }
   });
 
-  const handleServiceAdd = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId);
-    if (service) {
-      const newService = {
-        serviceId: service.id,
-        quantity: 1,
-        cost: service.cost
-      };
-      setSelectedServices([...selectedServices, newService]);
-      updateTotalCost([...selectedServices, newService]);
-    }
-  };
-
-  const updateTotalCost = (services: Array<{ serviceId: string, quantity: number, cost: number }>) => {
-    const total = services.reduce((sum, service) => sum + (service.cost * service.quantity), 0);
-    setTotalCost(total);
-    form.setValue('totalCost', total);
-  };
+  const { clients } = useGarageClients();
+  const { mechanics } = useGarageMechanics();
+  const { vehicles } = useGarageVehicles();
+  const [totalCost, setTotalCost] = React.useState(0);
 
   const handleSubmit = (data: any) => {
-    const formData = {
+    onSubmit({
       ...data,
-      services: selectedServices,
       totalCost,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    onSubmit(formData);
+    });
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="clientId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Client</FormLabel>
-              <Select onValueChange={field.onChange}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {clients?.map((client) => (
+                  {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.name}
+                      {client.firstName} {client.lastName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -98,16 +80,16 @@ const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, ser
           render={({ field }) => (
             <FormItem>
               <FormLabel>Mécanicien</FormLabel>
-              <Select onValueChange={field.onChange}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un mécanicien" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {mechanics?.map((mechanic) => (
+                  {mechanics.map((mechanic) => (
                     <SelectItem key={mechanic.id} value={mechanic.id}>
-                      {mechanic.name}
+                      {mechanic.firstName} {mechanic.lastName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -122,16 +104,16 @@ const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, ser
           render={({ field }) => (
             <FormItem>
               <FormLabel>Véhicule</FormLabel>
-              <Select onValueChange={field.onChange}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un véhicule" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {vehicles?.map((vehicle) => (
+                  {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.model}
+                      {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -140,61 +122,22 @@ const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, ser
           )}
         />
 
-        <div className="space-y-4">
-          <FormLabel>Services</FormLabel>
-          <Select onValueChange={handleServiceAdd}>
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Ajouter un service" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {services?.map((service) => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name} - {service.cost}€
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {selectedServices.length > 0 && (
-            <div className="space-y-2">
-              {selectedServices.map((service, index) => {
-                const serviceDetails = services.find(s => s.id === service.serviceId);
-                return (
-                  <div key={index} className="flex items-center gap-4">
-                    <span className="flex-1">{serviceDetails?.name}</span>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={service.quantity}
-                      onChange={(e) => {
-                        const newServices = [...selectedServices];
-                        newServices[index].quantity = parseInt(e.target.value);
-                        setSelectedServices(newServices);
-                        updateTotalCost(newServices);
-                      }}
-                      className="w-24"
-                    />
-                    <span>{service.cost * service.quantity}€</span>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        const newServices = selectedServices.filter((_, i) => i !== index);
-                        setSelectedServices(newServices);
-                        updateTotalCost(newServices);
-                      }}
-                    >
-                      Supprimer
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
+        <FormField
+          control={form.control}
+          name="services"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Services</FormLabel>
+              <FormControl>
+                <ServicesSelector
+                  services={field.value}
+                  onChange={field.onChange}
+                  onCostChange={setTotalCost}
+                />
+              </FormControl>
+            </FormItem>
           )}
-        </div>
+        />
 
         <FormField
           control={form.control}
@@ -203,7 +146,10 @@ const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, ser
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Description de la maintenance" />
+                <Textarea
+                  placeholder="Description de la maintenance"
+                  {...field}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -212,16 +158,14 @@ const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, ser
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="date"
+            name="startDate"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Date de début</FormLabel>
-                <FormControl>
-                  <DatePicker
-                    date={field.value}
-                    onSelect={field.onChange}
-                  />
-                </FormControl>
+                <DatePicker
+                  date={field.value}
+                  onSelect={field.onChange}
+                />
               </FormItem>
             )}
           />
@@ -230,24 +174,22 @@ const MaintenanceForm = ({ onSubmit, onCancel, mechanics, clients, vehicles, ser
             control={form.control}
             name="endDate"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Date de fin</FormLabel>
-                <FormControl>
-                  <DatePicker
-                    date={field.value}
-                    onSelect={field.onChange}
-                  />
-                </FormControl>
+                <DatePicker
+                  date={field.value}
+                  onSelect={field.onChange}
+                />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex justify-between items-center">
-          <div className="text-lg font-semibold">
-            Coût total: {totalCost}€
+        <div className="flex justify-between space-x-4 pt-4">
+          <div className="text-lg">
+            <strong>Coût total: {totalCost}€</strong>
           </div>
-          <div className="space-x-2">
+          <div className="flex space-x-4">
             <Button type="button" variant="outline" onClick={onCancel}>
               Annuler
             </Button>
