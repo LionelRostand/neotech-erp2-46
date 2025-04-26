@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Wrench, Clock, CheckCircle, AlertCircle } from "lucide-react";
-import { format, isValid } from 'date-fns';
+import { format } from 'date-fns';
 import { 
   Table, 
   TableBody, 
@@ -24,30 +23,14 @@ const GarageMaintenanceDashboard = () => {
   const inProgressCount = maintenances.filter(m => m.status === 'in_progress').length;
   const completedCount = maintenances.filter(m => m.status === 'completed').length;
   const urgentCount = maintenances.filter(m => {
-    try {
-      const date = new Date(m.date);
-      const today = new Date();
-      return isValid(date) && date < today && m.status !== 'completed';
-    } catch (error) {
-      console.error('Invalid date:', m.date, error);
-      return false;
-    }
+    const date = new Date(m.date);
+    const today = new Date();
+    return date < today && m.status !== 'completed';
   }).length;
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
-
-  // Helper function to format date safely
-  const formatDateSafely = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return isValid(date) ? format(date, 'dd/MM/yyyy') : 'Date invalide';
-    } catch (error) {
-      console.error('Error formatting date:', dateString, error);
-      return 'Date invalide';
-    }
-  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -104,7 +87,7 @@ const GarageMaintenanceDashboard = () => {
           <TableBody>
             {maintenances.map((maintenance) => (
               <TableRow key={maintenance.id}>
-                <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
+                <TableCell>{format(new Date(maintenance.date), 'dd/MM/yyyy')}</TableCell>
                 <TableCell>{maintenance.vehicleId}</TableCell>
                 <TableCell>{maintenance.clientId}</TableCell>
                 <TableCell>{maintenance.mechanicId}</TableCell>
