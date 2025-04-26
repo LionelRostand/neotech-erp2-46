@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 import { SubmoduleProps } from '@/types/module-types';
@@ -10,7 +9,7 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleProp
   if (submoduleId === 'garage-dashboard') {
     return <GarageDashboard />;
   }
-
+  
   if (submoduleId === 'garage-maintenance') {
     return <GarageMaintenanceDashboard />;
   }
