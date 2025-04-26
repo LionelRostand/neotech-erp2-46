@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
@@ -16,9 +15,16 @@ import AddMaintenanceDialog from './AddMaintenanceDialog';
 import StatCard from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import ViewMaintenanceDialog from './ViewMaintenanceDialog';
+import EditMaintenanceDialog from './EditMaintenanceDialog';
+import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null);
   const { maintenances = [], vehicles, clients, mechanics, isLoading } = useGarageData();
 
   const formatDateSafely = (dateStr: string): string => {
@@ -57,6 +63,91 @@ const GarageMaintenanceDashboard = () => {
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
+
+  const handleView = (maintenance: any) => {
+    setSelectedMaintenance(maintenance);
+    setShowViewDialog(true);
+  };
+
+  const handleEdit = (maintenance: any) => {
+    setSelectedMaintenance(maintenance);
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = (maintenance: any) => {
+    setSelectedMaintenance(maintenance);
+    setShowDeleteDialog(true);
+  };
+
+  const columns = [
+    {
+      key: 'date',
+      header: 'Date',
+      cell: ({ row }) => <TableCell>{formatDateSafely(row.original.date)}</TableCell>,
+    },
+    {
+      key: 'vehicle',
+      header: 'Véhicule',
+      cell: ({ row }) => <TableCell>{getVehicleInfo(row.original.vehicleId)}</TableCell>,
+    },
+    {
+      key: 'client',
+      header: 'Client',
+      cell: ({ row }) => <TableCell>{getClientInfo(row.original.clientId)}</TableCell>,
+    },
+    {
+      key: 'mechanic',
+      header: 'Mécanicien',
+      cell: ({ row }) => <TableCell>{getMechanicInfo(row.original.mechanicId)}</TableCell>,
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      cell: ({ row }) => (
+        <TableCell>
+          {row.original.status === 'scheduled' && 'Programmée'}
+          {row.original.status === 'in_progress' && 'En cours'}
+          {row.original.status === 'completed' && 'Terminée'}
+          {row.original.status === 'cancelled' && 'Annulée'}
+          {!row.original.status && 'Non défini'}
+        </TableCell>
+      ),
+    },
+    {
+      key: 'cost',
+      header: 'Coût Total',
+      cell: ({ row }) => <TableCell>{row.original.totalCost}€</TableCell>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleView(row.original)}
+          >
+            Voir
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleEdit(row.original)}
+          >
+            Modifier
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleDelete(row.original)}
+          >
+            Supprimer
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -105,36 +196,24 @@ const GarageMaintenanceDashboard = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Véhicule</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Mécanicien</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Coût Total</TableHead>
+                {columns.map((column) => (
+                  <TableHead key={column.key}>{column.header}</TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {maintenances.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={columns.length} className="text-center py-8 text-gray-500">
                     Aucune maintenance trouvée
                   </TableCell>
                 </TableRow>
               ) : (
                 maintenances.map((maintenance) => (
                   <TableRow key={maintenance.id}>
-                    <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
-                    <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
-                    <TableCell>{getClientInfo(maintenance.clientId)}</TableCell>
-                    <TableCell>{getMechanicInfo(maintenance.mechanicId)}</TableCell>
-                    <TableCell>
-                      {maintenance.status === 'scheduled' && 'Programmée'}
-                      {maintenance.status === 'in_progress' && 'En cours'}
-                      {maintenance.status === 'completed' && 'Terminée'}
-                      {maintenance.status === 'cancelled' && 'Annulée'}
-                      {!maintenance.status && 'Non défini'}
-                    </TableCell>
-                    <TableCell>{maintenance.totalCost}€</TableCell>
+                    {columns.map((column) => (
+                      <TableCell key={column.key}>{column.cell({ row: maintenance })}</TableCell>
+                    ))}
                   </TableRow>
                 ))
               )}
@@ -147,6 +226,40 @@ const GarageMaintenanceDashboard = () => {
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
       />
+
+      {selectedMaintenance && (
+        <>
+          <ViewMaintenanceDialog
+            open={showViewDialog}
+            onClose={() => {
+              setShowViewDialog(false);
+              setSelectedMaintenance(null);
+            }}
+            maintenance={selectedMaintenance}
+            vehicleInfo={getVehicleInfo(selectedMaintenance.vehicleId)}
+            clientInfo={getClientInfo(selectedMaintenance.clientId)}
+            mechanicInfo={getMechanicInfo(selectedMaintenance.mechanicId)}
+          />
+
+          <EditMaintenanceDialog
+            open={showEditDialog}
+            onOpenChange={(open) => {
+              setShowEditDialog(open);
+              if (!open) setSelectedMaintenance(null);
+            }}
+            maintenance={selectedMaintenance}
+          />
+
+          <DeleteMaintenanceDialog
+            open={showDeleteDialog}
+            onOpenChange={(open) => {
+              setShowDeleteDialog(open);
+              if (!open) setSelectedMaintenance(null);
+            }}
+            maintenanceId={selectedMaintenance.id}
+          />
+        </>
+      )}
     </div>
   );
 };
