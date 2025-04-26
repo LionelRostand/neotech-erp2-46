@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Wrench, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import StatCard from '@/components/StatCard';
-import { LineChart } from '@/components/ui/line-chart';
+import LineChart from '@/components/ui/line-chart'; // Fix: Changed import from named to default
 
 const GarageMaintenanceDashboard = () => {
   const { maintenances = [], vehicles = [], mechanics = [], clients = [], isLoading } = useGarageData();
