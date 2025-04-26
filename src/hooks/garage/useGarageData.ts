@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -98,7 +97,7 @@ export const useGarageData = () => {
     }
   });
 
-  // Add maintenance query - CORRECTION: utiliser garage_maintenances comme nom de collection
+  // Fetch maintenances data
   const { data: maintenances = [], isLoading: maintenancesLoading } = useQuery({
     queryKey: ['garage', 'maintenances'],
     queryFn: async () => {
@@ -110,43 +109,6 @@ export const useGarageData = () => {
           ...doc.data() 
         })) as GarageMaintenance[];
         console.log("Fetched maintenances:", results);
-        
-        // Si pas de résultats, ajouter des données de test pour le développement
-        if (results.length === 0) {
-          console.log("No maintenances found, returning mock data");
-          return [
-            {
-              id: "maint1",
-              vehicleId: "Peugeot 308",
-              clientId: "Jean Dupont",
-              mechanicId: "Pierre Martin",
-              date: "2025-04-20",
-              status: "scheduled",
-              services: [
-                { serviceId: "service1", quantity: 1, cost: 65 }
-              ],
-              totalCost: 65,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
-            {
-              id: "maint2",
-              vehicleId: "Renault Clio",
-              clientId: "Marie Durand",
-              mechanicId: "Sophie Leclerc",
-              date: "2025-04-18",
-              status: "completed",
-              services: [
-                { serviceId: "service2", quantity: 1, cost: 150 },
-                { serviceId: "service5", quantity: 1, cost: 80 }
-              ],
-              totalCost: 230,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ];
-        }
-        
         return results;
       } catch (error) {
         console.error("Error fetching maintenances:", error);
