@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Plus, Wrench, Clock, CheckCircle, AlertCircle, Database } from "lucide-react";
+import { Wrench, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { format } from 'date-fns';
 import { 
   Table, 
@@ -14,152 +13,94 @@ import {
 } from "@/components/ui/table";
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import StatCard from '@/components/StatCard';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { maintenances, vehicles, clients, mechanics, isLoading } = useGarageData();
+  const { maintenances = [], isLoading } = useGarageData();
 
-  // Statistiques des maintenances
-  const scheduledMaintenances = maintenances.filter(m => m.status === 'scheduled');
-  const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress');
-  const completedMaintenances = maintenances.filter(m => m.status === 'completed');
-  const urgentMaintenances = maintenances.filter(m => m.status === 'scheduled' && new Date(m.date) <= new Date());
+  // Statistics calculations
+  const scheduledCount = maintenances.filter(m => m.status === 'scheduled').length;
+  const inProgressCount = maintenances.filter(m => m.status === 'in_progress').length;
+  const completedCount = maintenances.filter(m => m.status === 'completed').length;
+  const urgentCount = maintenances.filter(m => {
+    const date = new Date(m.date);
+    const today = new Date();
+    return date < today && m.status !== 'completed';
+  }).length;
 
-  const getVehicleInfo = (vehicleId: string) => {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})` : 'Véhicule inconnu';
-  };
-
-  const getClientName = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : 'Client inconnu';
-  };
-
-  const getMechanicName = (mechanicId: string) => {
-    const mechanic = mechanics.find(m => m.id === mechanicId);
-    return mechanic ? `${mechanic.firstName} ${mechanic.lastName}` : 'Mécanicien inconnu';
-  };
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Section Liste des maintenances */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Liste des maintenances</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Maintenance
-        </Button>
-      </div>
-
-      {/* Informations sur le stockage des données */}
-      <div className="bg-blue-50 p-4 rounded-lg flex items-center space-x-4 mb-4">
-        <Database className="h-6 w-6 text-blue-600" />
-        <div>
-          <p className="font-semibold text-blue-800">Stockage des données</p>
-          <p className="text-sm text-blue-700">
-            Les données de maintenance sont stockées dans la collection Firestore : 
-            <code className="bg-blue-100 px-2 py-1 rounded ml-2">
-              {COLLECTIONS.GARAGE.MAINTENANCE}
-            </code>
-          </p>
-        </div>
+      {/* Section title */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Maintenances</h1>
       </div>
 
       {/* Section Tableau de bord */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Planifiées"
-          value={scheduledMaintenances.length.toString()}
-          icon={<Clock className="h-4 w-4" />}
+          title="Programmées"
+          value={scheduledCount.toString()}
+          icon={<Clock className="h-6 w-6 text-blue-600" />}
           description="Maintenances à venir"
-          className="bg-blue-50 hover:bg-blue-100"
+          className="bg-blue-50"
         />
         <StatCard
           title="En cours"
-          value={inProgressMaintenances.length.toString()}
-          icon={<Wrench className="h-4 w-4" />}
-          description="Maintenances actives"
-          className="bg-amber-50 hover:bg-amber-100"
+          value={inProgressCount.toString()}
+          icon={<Wrench className="h-6 w-6 text-yellow-600" />}
+          description="Maintenances en cours"
+          className="bg-yellow-50"
         />
         <StatCard
           title="Terminées"
-          value={completedMaintenances.length.toString()}
-          icon={<CheckCircle className="h-4 w-4" />}
+          value={completedCount.toString()}
+          icon={<CheckCircle className="h-6 w-6 text-green-600" />}
           description="Maintenances complétées"
-          className="bg-green-50 hover:bg-green-100"
+          className="bg-green-50"
         />
         <StatCard
           title="Urgentes"
-          value={urgentMaintenances.length.toString()}
-          icon={<AlertCircle className="h-4 w-4" />}
+          value={urgentCount.toString()}
+          icon={<AlertCircle className="h-6 w-6 text-red-600" />}
           description="Nécessitent attention"
-          className="bg-red-50 hover:bg-red-100"
+          className="bg-red-50"
         />
       </div>
 
-      {/* Section Liste des maintenances */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Liste des maintenances</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Maintenance
-        </Button>
+      {/* Tableau des maintenances */}
+      <div className="bg-white rounded-lg shadow">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Véhicule</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Mécanicien</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Coût Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {maintenances.map((maintenance) => (
+              <TableRow key={maintenance.id}>
+                <TableCell>{format(new Date(maintenance.date), 'dd/MM/yyyy')}</TableCell>
+                <TableCell>{maintenance.vehicleId}</TableCell>
+                <TableCell>{maintenance.clientId}</TableCell>
+                <TableCell>{maintenance.mechanicId}</TableCell>
+                <TableCell>{maintenance.status}</TableCell>
+                <TableCell>{maintenance.totalCost}€</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des maintenances</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div>Chargement...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Véhicule</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Mécanicien</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {maintenances.map((maintenance) => (
-                  <TableRow key={maintenance.id}>
-                    <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
-                    <TableCell>{getClientName(maintenance.clientId)}</TableCell>
-                    <TableCell>{getMechanicName(maintenance.mechanicId)}</TableCell>
-                    <TableCell>
-                      {maintenance.date ? format(new Date(maintenance.date), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {maintenance.status === 'scheduled' ? 'Planifiée' :
-                       maintenance.status === 'in_progress' ? 'En cours' :
-                       maintenance.status === 'completed' ? 'Terminée' :
-                       maintenance.status === 'cancelled' ? 'Annulée' : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Voir</Button>
-                        <Button variant="outline" size="sm">Modifier</Button>
-                        <Button variant="outline" size="sm" className="text-red-600">
-                          Supprimer
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
       <AddMaintenanceDialog 
-        open={showAddDialog}
+        open={showAddDialog} 
         onOpenChange={setShowAddDialog}
       />
     </div>
