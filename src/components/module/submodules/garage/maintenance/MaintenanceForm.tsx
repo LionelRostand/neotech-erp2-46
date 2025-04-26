@@ -1,216 +1,208 @@
+
 import React, { useState } from 'react';
-import { Form } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
-import { DatePicker } from '@/components/ui/date-picker';
-import { useGarageServicesList } from '../hooks/useGarageServicesList';
-import { useFreightData } from '@/hooks/freight/useFreightData';
+import { useForm, Controller } from 'react-hook-form';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import ServicesSelector from '../repairs/ServicesSelector';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useGarageClients } from '@/hooks/garage/useGarageClients';
 import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
 import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
+import { toast } from 'sonner';
 
 interface MaintenanceFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
-const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
-  const [totalCost, setTotalCost] = useState(0);
-  const { servicesOptions } = useGarageServicesList();
-  const [selectedServices, setSelectedServices] = useState([]);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [selectedMechanic, setSelectedMechanic] = useState<string>('');
-  const [selectedClient, setSelectedClient] = useState<string>('');
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
-  const [selectedContainer, setSelectedContainer] = useState<string>('');
-  const [selectedShipment, setSelectedShipment] = useState<string>('');
+const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onSubmit, onCancel }) => {
+  const [services, setServices] = useState<any[]>([]);
+  const [totalServiceCost, setTotalServiceCost] = useState(0);
 
-  const { mechanics } = useGarageMechanics();
   const { clients } = useGarageClients();
+  const { mechanics } = useGarageMechanics();
   const { vehicles } = useGarageVehicles();
-  const { containers, shipments, isLoading } = useFreightData();
 
   const form = useForm({
     defaultValues: {
+      clientId: '',
+      mechanicId: '',
+      vehicleId: '',
+      date: new Date(),
       description: '',
       services: [],
-      startDate: null,
-      endDate: null,
       totalCost: 0,
-      mechanicId: '',
-      clientId: '',
-      vehicleId: '',
-      containerId: '',
-      shipmentId: ''
+      status: 'scheduled'
     }
   });
 
   const handleSubmit = (data: any) => {
-    const formData = {
+    const maintenanceData = {
       ...data,
-      services: selectedServices,
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-      totalCost,
-      mechanicId: selectedMechanic,
-      clientId: selectedClient,
-      vehicleId: selectedVehicle,
-      containerId: selectedContainer,
-      shipmentId: selectedShipment
+      services,
+      totalCost: totalServiceCost,
+      createdAt: new Date().toISOString()
     };
-    onSubmit(formData);
+    onSubmit(maintenanceData);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Services</label>
-            <ServicesSelector
-              services={[]}
-              onChange={setSelectedServices}
-              onCostChange={setTotalCost}
-            />
-          </div>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {/* Client Selection */}
+        <FormField
+          control={form.control}
+          name="clientId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Client</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un client" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Mechanic Selection */}
-          <div>
-            <label className="text-sm font-medium">Mécanicien</label>
-            <Select value={selectedMechanic} onValueChange={setSelectedMechanic}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionner un mécanicien" />
-              </SelectTrigger>
-              <SelectContent>
-                {mechanics?.map((mechanic: any) => (
-                  <SelectItem key={mechanic.id} value={mechanic.id}>
-                    {`${mechanic.firstName} ${mechanic.lastName}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Mechanic Selection */}
+        <FormField
+          control={form.control}
+          name="mechanicId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mécanicien</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un mécanicien" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {mechanics.map((mechanic) => (
+                    <SelectItem key={mechanic.id} value={mechanic.id}>
+                      {mechanic.firstName} {mechanic.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Client Selection */}
-          <div>
-            <label className="text-sm font-medium">Client</label>
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionner un client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients?.map((client: any) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {`${client.firstName} ${client.lastName}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Vehicle Selection */}
+        <FormField
+          control={form.control}
+          name="vehicleId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Véhicule</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un véhicule" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {vehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.make} {vehicle.model} ({vehicle.registrationNumber})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Vehicle Selection */}
-          <div>
-            <label className="text-sm font-medium">Véhicule</label>
-            <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionner un véhicule" />
-              </SelectTrigger>
-              <SelectContent>
-                {vehicles?.map((vehicle: any) => (
-                  <SelectItem key={vehicle.id} value={vehicle.id}>
-                    {`${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Date */}
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date de maintenance</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Choisir une date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Container Selection */}
-          <div>
-            <label className="text-sm font-medium">Conteneur</label>
-            <Select value={selectedContainer} onValueChange={setSelectedContainer}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionner un conteneur" />
-              </SelectTrigger>
-              <SelectContent>
-                {containers?.map((container: any) => (
-                  <SelectItem key={container.id} value={container.id}>
-                    {container.number || container.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Description */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Input placeholder="Description de la maintenance" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Shipment Selection */}
-          <div>
-            <label className="text-sm font-medium">Expédition</label>
-            <Select value={selectedShipment} onValueChange={setSelectedShipment}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionner une expédition" />
-              </SelectTrigger>
-              <SelectContent>
-                {shipments?.map((shipment: any) => (
-                  <SelectItem key={shipment.id} value={shipment.id}>
-                    {shipment.reference || shipment.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Services Selector */}
+        <ServicesSelector 
+          services={services} 
+          onChange={setServices}
+          onCostChange={setTotalServiceCost}
+        />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Date de début</label>
-              <DatePicker
-                date={startDate}
-                onSelect={setStartDate}
-                placeholder="Sélectionner une date de début"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Date de fin</label>
-              <DatePicker
-                date={endDate}
-                onSelect={setEndDate}
-                placeholder="Sélectionner une date de fin"
-                disabled={!startDate}
-                fromDate={startDate}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Description</label>
-            <textarea
-              {...form.register('description')}
-              className="w-full min-h-[100px] p-2 border rounded-md"
-              placeholder="Description de la maintenance"
-            />
-          </div>
-
-          <div className="text-right">
-            <p className="text-lg font-semibold">
-              Coût total: {totalCost}€
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-4">
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
           <Button type="submit">
-            Créer la maintenance
+            Enregistrer la maintenance
           </Button>
         </div>
       </form>
