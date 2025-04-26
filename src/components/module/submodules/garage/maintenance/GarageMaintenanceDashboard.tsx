@@ -19,7 +19,6 @@ const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { maintenances = [], isLoading } = useGarageData();
 
-  // Helper function to safely format dates
   const formatDateSafely = (dateStr: string): string => {
     try {
       const date = new Date(dateStr);
@@ -33,7 +32,6 @@ const GarageMaintenanceDashboard = () => {
     }
   };
 
-  // Helper function to safely check if a date is in the past
   const isDatePast = (dateStr: string): boolean => {
     try {
       const date = new Date(dateStr);
@@ -45,7 +43,6 @@ const GarageMaintenanceDashboard = () => {
     }
   };
 
-  // Statistics calculations
   const scheduledCount = maintenances.filter(m => m.status === 'scheduled').length;
   const inProgressCount = maintenances.filter(m => m.status === 'in_progress').length;
   const completedCount = maintenances.filter(m => m.status === 'completed').length;
@@ -98,31 +95,34 @@ const GarageMaintenanceDashboard = () => {
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Véhicule</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Mécanicien</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Coût Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {maintenances.map((maintenance) => (
-              <TableRow key={maintenance.id}>
-                <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
-                <TableCell>{maintenance.vehicleId}</TableCell>
-                <TableCell>{maintenance.clientId}</TableCell>
-                <TableCell>{maintenance.mechanicId}</TableCell>
-                <TableCell>{maintenance.status}</TableCell>
-                <TableCell>{maintenance.totalCost}€</TableCell>
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Liste des maintenances</h2>
+        <div className="bg-white rounded-lg shadow">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Véhicule</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Mécanicien</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Coût Total</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {maintenances.map((maintenance) => (
+                <TableRow key={maintenance.id}>
+                  <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
+                  <TableCell>{maintenance.vehicleId}</TableCell>
+                  <TableCell>{maintenance.clientId}</TableCell>
+                  <TableCell>{maintenance.mechanicId}</TableCell>
+                  <TableCell>{maintenance.status}</TableCell>
+                  <TableCell>{maintenance.totalCost}€</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <AddMaintenanceDialog 
