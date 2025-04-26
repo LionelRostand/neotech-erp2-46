@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Plus, Wrench, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Wrench, Clock, CheckCircle, AlertCircle, Database } from "lucide-react";
 import { format } from 'date-fns';
 import { 
   Table, 
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import StatCard from '@/components/StatCard';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -43,6 +43,29 @@ const GarageMaintenanceDashboard = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Section Liste des maintenances */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Liste des maintenances</h1>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle Maintenance
+        </Button>
+      </div>
+
+      {/* Informations sur le stockage des données */}
+      <div className="bg-blue-50 p-4 rounded-lg flex items-center space-x-4 mb-4">
+        <Database className="h-6 w-6 text-blue-600" />
+        <div>
+          <p className="font-semibold text-blue-800">Stockage des données</p>
+          <p className="text-sm text-blue-700">
+            Les données de maintenance sont stockées dans la collection Firestore : 
+            <code className="bg-blue-100 px-2 py-1 rounded ml-2">
+              {COLLECTIONS.GARAGE.MAINTENANCE}
+            </code>
+          </p>
+        </div>
+      </div>
+
       {/* Section Tableau de bord */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
