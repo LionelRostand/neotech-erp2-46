@@ -1,195 +1,105 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
-import { useGarageServicesList } from '@/components/module/submodules/garage/hooks/useGarageServicesList';
-import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
-import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import { Form } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { useForm } from 'react-hook-form';
+import { ServicesSelector } from '../services/ServicesSelector';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useGarageServicesList } from '../hooks/useGarageServicesList';
 
 interface MaintenanceFormProps {
+  onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
-const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onCancel }) => {
-  const { vehicles, loading: loadingVehicles } = useGarageVehicles();
-  const { mechanics, isLoading: loadingMechanics } = useGarageMechanics();
-  const { clients, isLoading: loadingClients } = useGarageClients();
-  const { servicesOptions, isLoading: loadingServices } = useGarageServicesList();
-  
-  const [formData, setFormData] = useState({
-    vehicleId: '',
-    clientId: '',
-    mechanicId: '',
-    date: new Date().toISOString().split('T')[0],
-    description: '',
-    selectedServices: [] as string[],
-    status: 'scheduled'
+const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
+  const [totalCost, setTotalCost] = useState(0);
+  const { servicesOptions } = useGarageServicesList();
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+
+  const form = useForm({
+    defaultValues: {
+      description: '',
+      services: [],
+      startDate: null,
+      endDate: null,
+      totalCost: 0
+    }
   });
-  
-  const [loading, setLoading] = useState(false);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+  const handleSubmit = (data: any) => {
+    const formData = {
+      ...data,
+      services: selectedServices,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      totalCost
+    };
+    onSubmit(formData);
   };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // If vehicle selected, auto-select the client
-    if (name === 'vehicleId') {
-      const selectedVehicle = vehicles.find(v => v.id === value);
-      if (selectedVehicle && selectedVehicle.clientId) {
-        setFormData(prev => ({ ...prev, clientId: selectedVehicle.clientId }));
-      }
-    }
-  };
-  
-  const handleServicesChange = (selectedValues: string[]) => {
-    setFormData(prev => ({ ...prev, selectedServices: selectedValues }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      setLoading(true);
-      
-      // Find related data
-      const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId);
-      const selectedClient = clients.find(c => c.id === formData.clientId);
-      const selectedMechanic = mechanics.find(m => m.id === formData.mechanicId);
-      
-      // Create maintenance record
-      const maintenanceData = {
-        vehicleId: formData.vehicleId,
-        vehicleName: selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model}` : '',
-        clientId: formData.clientId,
-        clientName: selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : '',
-        mechanicId: formData.mechanicId,
-        mechanicName: selectedMechanic ? `${selectedMechanic.firstName} ${selectedMechanic.lastName}` : '',
-        date: formData.date,
-        description: formData.description,
-        services: formData.selectedServices,
-        status: formData.status,
-        createdAt: new Date().toISOString()
-      };
-      
-      await addDoc(collection(db, COLLECTIONS.GARAGE.MAINTENANCE), maintenanceData);
-      toast.success('Maintenance planifiée avec succès');
-      onCancel();
-    } catch (error) {
-      console.error('Error adding maintenance:', error);
-      toast.error('Erreur lors de la création de la maintenance');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="vehicleId">Véhicule</Label>
-          <Select 
-            value={formData.vehicleId} 
-            onValueChange={value => handleSelectChange('vehicleId', value)}
-          >
-            <SelectTrigger id="vehicleId">
-              <SelectValue placeholder="Sélectionnez un véhicule" />
-            </SelectTrigger>
-            <SelectContent>
-              {vehicles.map(vehicle => (
-                <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Services</label>
+            <ServicesSelector
+              services={[]}
+              onChange={setSelectedServices}
+              onCostChange={setTotalCost}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Date de début</label>
+              <DatePicker
+                date={startDate}
+                onSelect={setStartDate}
+                placeholder="Sélectionner une date de début"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Date de fin</label>
+              <DatePicker
+                date={endDate}
+                onSelect={setEndDate}
+                placeholder="Sélectionner une date de fin"
+                disabled={!startDate}
+                fromDate={startDate}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Description</label>
+            <textarea
+              {...form.register('description')}
+              className="w-full min-h-[100px] p-2 border rounded-md"
+              placeholder="Description de la maintenance"
+            />
+          </div>
+
+          <div className="text-right">
+            <p className="text-lg font-semibold">
+              Coût total: {totalCost}€
+            </p>
+          </div>
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="clientId">Client</Label>
-          <Select 
-            value={formData.clientId} 
-            onValueChange={value => handleSelectChange('clientId', value)}
-            disabled={loadingClients}
-          >
-            <SelectTrigger id="clientId">
-              <SelectValue placeholder="Sélectionnez un client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map(client => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.firstName} {client.lastName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="mechanicId">Mécanicien</Label>
-          <Select 
-            value={formData.mechanicId} 
-            onValueChange={value => handleSelectChange('mechanicId', value)}
-            disabled={loadingMechanics}
-          >
-            <SelectTrigger id="mechanicId">
-              <SelectValue placeholder="Sélectionnez un mécanicien" />
-            </SelectTrigger>
-            <SelectContent>
-              {mechanics.map(mechanic => (
-                <SelectItem key={mechanic.id} value={mechanic.id}>
-                  {mechanic.firstName} {mechanic.lastName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            id="date"
-            name="date"
-            type="date"
-            value={formData.date}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={3}
-        />
-      </div>
-      
-      <div className="space-y-6 pt-4">
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onCancel} type="button">
+
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
+          <Button type="submit">
+            Créer la maintenance
           </Button>
         </div>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 
