@@ -19,18 +19,7 @@ import { toast } from '@/components/ui/use-toast';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { maintenances = [], isLoading } = useGarageData();
-  
-  useEffect(() => {
-    console.log("Maintenances in component:", maintenances);
-    if (maintenances.length === 0 && !isLoading) {
-      toast({
-        title: "Aucune maintenance trouvée",
-        description: "Aucune maintenance n'est disponible dans la base de données.",
-        variant: "destructive",
-      });
-    }
-  }, [maintenances, isLoading]);
+  const { maintenances = [], vehicles, clients, mechanics, isLoading } = useGarageData();
 
   const formatDateSafely = (dateStr: string): string => {
     try {
@@ -45,23 +34,25 @@ const GarageMaintenanceDashboard = () => {
     }
   };
 
-  const isDatePast = (dateStr: string): boolean => {
-    try {
-      const date = new Date(dateStr);
-      if (!isValid(date)) return false;
-      const today = new Date();
-      return date < today;
-    } catch (error) {
-      return false;
-    }
+  const getVehicleInfo = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    return vehicle ? `${vehicle.make} ${vehicle.model}` : vehicleId;
+  };
+
+  const getClientInfo = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? `${client.firstName} ${client.lastName}` : clientId;
+  };
+
+  const getMechanicInfo = (mechanicId: string) => {
+    const mechanic = mechanics.find(m => m.id === mechanicId);
+    return mechanic ? `${mechanic.firstName} ${mechanic.lastName}` : mechanicId;
   };
 
   const scheduledCount = maintenances.filter(m => m.status === 'scheduled').length;
   const inProgressCount = maintenances.filter(m => m.status === 'in_progress').length;
   const completedCount = maintenances.filter(m => m.status === 'completed').length;
-  const urgentCount = maintenances.filter(m => {
-    return isDatePast(m.date) && m.status !== 'completed';
-  }).length;
+  const urgentCount = maintenances.filter(m => m.status === 'scheduled' && new Date(m.date) < new Date()).length;
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -133,9 +124,9 @@ const GarageMaintenanceDashboard = () => {
                 maintenances.map((maintenance) => (
                   <TableRow key={maintenance.id}>
                     <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
-                    <TableCell>{maintenance.vehicleId}</TableCell>
-                    <TableCell>{maintenance.clientId}</TableCell>
-                    <TableCell>{maintenance.mechanicId}</TableCell>
+                    <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
+                    <TableCell>{getClientInfo(maintenance.clientId)}</TableCell>
+                    <TableCell>{getMechanicInfo(maintenance.mechanicId)}</TableCell>
                     <TableCell>
                       {maintenance.status === 'scheduled' && 'Programmée'}
                       {maintenance.status === 'in_progress' && 'En cours'}
