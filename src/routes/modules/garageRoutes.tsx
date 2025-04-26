@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
@@ -8,12 +7,13 @@ export const GarageRoutes = (
   <Route key="garage" path="/modules/garage" element={<ModuleLayout moduleId={6} />}>
     <Route index element={<SubmodulePage moduleId={6} submoduleId="garage-dashboard" />} />
     <Route path="dashboard" element={<SubmodulePage moduleId={6} submoduleId="garage-dashboard" />} />
+    <Route path="maintenance" element={<SubmodulePage moduleId={6} submoduleId="garage-maintenance" />} />
+    <Route path="maintenance/dashboard" element={<SubmodulePage moduleId={6} submoduleId="garage-maintenance-dashboard" />} />
     <Route path="clients" element={<SubmodulePage moduleId={6} submoduleId="garage-clients" />} />
     <Route path="vehicles" element={<SubmodulePage moduleId={6} submoduleId="garage-vehicles" />} />
     <Route path="appointments" element={<SubmodulePage moduleId={6} submoduleId="garage-appointments" />} />
     <Route path="services" element={<SubmodulePage moduleId={6} submoduleId="garage-services" />} />
     <Route path="mechanics" element={<SubmodulePage moduleId={6} submoduleId="garage-mechanics" />} />
-    <Route path="maintenance" element={<SubmodulePage moduleId={6} submoduleId="garage-maintenance" />} />
     <Route path="invoices" element={<SubmodulePage moduleId={6} submoduleId="garage-invoices" />} />
     <Route path="suppliers" element={<SubmodulePage moduleId={6} submoduleId="garage-suppliers" />} />
     <Route path="inventory" element={<SubmodulePage moduleId={6} submoduleId="garage-inventory" />} />
