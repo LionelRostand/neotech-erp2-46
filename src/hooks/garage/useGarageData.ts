@@ -97,16 +97,16 @@ export const useGarageData = () => {
     }
   });
 
-  // Fetch maintenances data
+  // Fetch maintenances
   const { data: maintenances = [], isLoading: maintenancesLoading } = useQuery({
     queryKey: ['garage', 'maintenances'],
     queryFn: async () => {
       try {
         console.log("Fetching maintenances from collection 'garage_maintenances'");
         const snapshot = await getDocs(collection(db, 'garage_maintenances'));
-        const results = snapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
+        const results = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
         })) as GarageMaintenance[];
         console.log("Fetched maintenances:", results);
         return results;
