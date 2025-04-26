@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Wrench, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Wrench, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { 
   Table, 
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import StatCard from '@/components/StatCard';
-import { formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -60,12 +59,14 @@ const GarageMaintenanceDashboard = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Section title */}
-      <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Maintenances</h1>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle Maintenance
+        </Button>
       </div>
 
-      {/* Section Tableau de bord */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Programmées"
@@ -97,7 +98,6 @@ const GarageMaintenanceDashboard = () => {
         />
       </div>
 
-      {/* Tableau des maintenances */}
       <div className="bg-white rounded-lg shadow">
         <Table>
           <TableHeader>
