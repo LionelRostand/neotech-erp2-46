@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Wrench, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
@@ -14,10 +15,22 @@ import {
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import StatCard from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { maintenances = [], isLoading } = useGarageData();
+  
+  useEffect(() => {
+    console.log("Maintenances in component:", maintenances);
+    if (maintenances.length === 0 && !isLoading) {
+      toast({
+        title: "Aucune maintenance trouvée",
+        description: "Aucune maintenance n'est disponible dans la base de données.",
+        variant: "destructive",
+      });
+    }
+  }, [maintenances, isLoading]);
 
   const formatDateSafely = (dateStr: string): string => {
     try {
@@ -110,16 +123,30 @@ const GarageMaintenanceDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {maintenances.map((maintenance) => (
-                <TableRow key={maintenance.id}>
-                  <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
-                  <TableCell>{maintenance.vehicleId}</TableCell>
-                  <TableCell>{maintenance.clientId}</TableCell>
-                  <TableCell>{maintenance.mechanicId}</TableCell>
-                  <TableCell>{maintenance.status}</TableCell>
-                  <TableCell>{maintenance.totalCost}€</TableCell>
+              {maintenances.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    Aucune maintenance trouvée
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                maintenances.map((maintenance) => (
+                  <TableRow key={maintenance.id}>
+                    <TableCell>{formatDateSafely(maintenance.date)}</TableCell>
+                    <TableCell>{maintenance.vehicleId}</TableCell>
+                    <TableCell>{maintenance.clientId}</TableCell>
+                    <TableCell>{maintenance.mechanicId}</TableCell>
+                    <TableCell>
+                      {maintenance.status === 'scheduled' && 'Programmée'}
+                      {maintenance.status === 'in_progress' && 'En cours'}
+                      {maintenance.status === 'completed' && 'Terminée'}
+                      {maintenance.status === 'cancelled' && 'Annulée'}
+                      {!maintenance.status && 'Non défini'}
+                    </TableCell>
+                    <TableCell>{maintenance.totalCost}€</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
