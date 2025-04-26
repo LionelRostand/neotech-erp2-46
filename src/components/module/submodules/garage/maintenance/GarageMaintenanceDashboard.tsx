@@ -1,14 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import StatCard from '@/components/StatCard';
 import { Card } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChartBarIcon, CalendarIcon } from 'lucide-react';
+import { ChartBarIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import AddMaintenanceDialog from './AddMaintenanceDialog';
 
 const GarageMaintenanceDashboard = () => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { maintenances = [], vehicles = [], clients = [] } = useGarageData();
 
   // Calculate statistics
@@ -44,6 +48,14 @@ const GarageMaintenanceDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Maintenances</h1>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle maintenance
+        </Button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard
           title="Total Maintenances"
@@ -110,8 +122,14 @@ const GarageMaintenanceDashboard = () => {
           </TableBody>
         </Table>
       </Card>
+
+      <AddMaintenanceDialog 
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      />
     </div>
   );
 };
 
 export default GarageMaintenanceDashboard;
+
