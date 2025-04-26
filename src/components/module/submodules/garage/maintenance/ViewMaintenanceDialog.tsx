@@ -33,7 +33,7 @@ const ViewMaintenanceDialog = ({
     try {
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: fr });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      console.error('Error formatting date:', error, { dateString });
       return dateString || 'Date invalide';
     }
   };

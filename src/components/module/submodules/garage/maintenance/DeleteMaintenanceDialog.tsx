@@ -16,7 +16,7 @@ import { toast } from "@/components/ui/use-toast";
 interface DeleteMaintenanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  maintenanceId: string;
+  maintenanceId: string | undefined;
 }
 
 const DeleteMaintenanceDialog = ({

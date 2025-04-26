@@ -60,19 +60,20 @@ const EditMaintenanceDialog = ({
     }
   };
 
+  // If maintenance is undefined or null, don't render the form
+  if (!maintenance) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Modifier la maintenance</DialogTitle>
         </DialogHeader>
-        {maintenance && (
-          <MaintenanceForm 
-            onSubmit={handleSubmit} 
-            onCancel={() => onOpenChange(false)}
-            initialData={maintenance}
-          />
-        )}
+        <MaintenanceForm 
+          onSubmit={handleSubmit} 
+          onCancel={() => onOpenChange(false)}
+          initialData={maintenance}
+        />
       </DialogContent>
     </Dialog>
   );
