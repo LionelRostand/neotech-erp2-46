@@ -41,7 +41,16 @@ const EditMaintenanceDialog = ({
       // Add update timestamp
       data.updatedAt = new Date().toISOString();
       
-      await updateDoc(maintenanceRef, data);
+      // Ensure data is not undefined
+      const safeData = {
+        ...data,
+        date: data.date || new Date().toISOString(),
+        status: data.status || 'pending',
+        description: data.description || '',
+        totalCost: data.totalCost !== undefined ? data.totalCost : 0,
+      };
+      
+      await updateDoc(maintenanceRef, safeData);
       
       toast({
         title: "Succès",

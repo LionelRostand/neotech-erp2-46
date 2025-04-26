@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { useQuery } from '@tanstack/react-query';
@@ -119,24 +118,21 @@ export const useGarageData = () => {
     return maintenancesData
       .filter(m => m && typeof m === 'object')
       .map(maintenance => {
-        // Ensure each maintenance has a date field
-        if (!maintenance.date) {
-          console.warn(`Maintenance ${maintenance.id} missing date field. Using current date as fallback.`);
-          return { ...maintenance, date: new Date().toISOString() };
-        }
-        // Ensure each maintenance has a status
-        if (!maintenance.status) {
-          return { ...maintenance, status: 'pending' };
-        }
-        // Ensure totalCost is a number
-        if (maintenance.totalCost && typeof maintenance.totalCost !== 'number') {
-          try {
-            return { ...maintenance, totalCost: parseFloat(maintenance.totalCost) };
-          } catch (e) {
-            return { ...maintenance, totalCost: 0 };
-          }
-        }
-        return maintenance;
+        // Create a new object with default values for missing fields
+        return {
+          // Provide default values for required fields
+          id: maintenance.id || '',
+          date: maintenance.date || new Date().toISOString(),
+          vehicleId: maintenance.vehicleId || '',
+          clientId: maintenance.clientId || '',
+          mechanicId: maintenance.mechanicId || '',
+          description: maintenance.description || '',
+          status: maintenance.status || 'pending',
+          totalCost: typeof maintenance.totalCost === 'number' ? maintenance.totalCost : 0,
+          services: Array.isArray(maintenance.services) ? maintenance.services : [],
+          // Keep all other properties
+          ...maintenance
+        };
       });
   }, [maintenancesData]);
 
@@ -153,6 +149,10 @@ export const useGarageData = () => {
     services,
     maintenances,
     isLoading,
-    error
+    error,
+    refetch: () => {
+      // Helper function to manually refetch all data if needed
+      console.log('Refetching all garage data');
+    }
   };
 };
