@@ -1,265 +1,279 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Wrench, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
-import { format, isValid } from 'date-fns';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Plus, FileEdit, Trash, Eye } from 'lucide-react';
+import { Card } from "@/components/ui/card";
 import AddMaintenanceDialog from './AddMaintenanceDialog';
-import StatCard from '@/components/StatCard';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
-import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import EditMaintenanceDialog from './EditMaintenanceDialog';
+import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
+import { DataTable } from "@/components/ui/data-table";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const GarageMaintenanceDashboard = () => {
+  const { maintenances = [], vehicles = [], clients = [], mechanics = [], isLoading, refetch } = useGarageData();
+  
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null);
-  const { maintenances = [], vehicles, clients, mechanics, isLoading } = useGarageData();
 
-  const formatDateSafely = (dateStr: string): string => {
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Non spécifié';
+    
     try {
-      const date = new Date(dateStr);
-      if (!isValid(date)) {
-        return 'Date invalide';
-      }
-      return format(date, 'dd/MM/yyyy');
+      return format(new Date(dateString), 'dd/MM/yyyy', { locale: fr });
     } catch (error) {
-      console.error('Error formatting date:', error, dateStr);
+      console.error('Error formatting date:', error, { dateString });
       return 'Date invalide';
     }
   };
 
-  const getVehicleInfo = (vehicleId: string) => {
+  const getVehicleInfo = (vehicleId) => {
+    if (!vehicleId) return 'Non spécifié';
+    
     const vehicle = vehicles.find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.make} ${vehicle.model}` : vehicleId;
+    if (!vehicle) return 'Véhicule inconnu';
+    
+    return `${vehicle.make || ''} ${vehicle.model || ''} (${vehicle.licensePlate || 'Sans plaque'})`;
   };
 
-  const getClientInfo = (clientId: string) => {
+  const getClientInfo = (clientId) => {
+    if (!clientId) return 'Non spécifié';
+    
     const client = clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : clientId;
+    if (!client) return 'Client inconnu';
+    
+    return `${client.firstName || ''} ${client.lastName || ''}`;
   };
 
-  const getMechanicInfo = (mechanicId: string) => {
+  const getMechanicInfo = (mechanicId) => {
+    if (!mechanicId) return 'Non spécifié';
+    
     const mechanic = mechanics.find(m => m.id === mechanicId);
-    return mechanic ? `${mechanic.firstName} ${mechanic.lastName}` : mechanicId;
+    if (!mechanic) return 'Mécanicien inconnu';
+    
+    return `${mechanic.firstName || ''} ${mechanic.lastName || ''}`;
   };
 
-  const scheduledCount = maintenances.filter(m => m.status === 'scheduled').length;
-  const inProgressCount = maintenances.filter(m => m.status === 'in_progress').length;
-  const completedCount = maintenances.filter(m => m.status === 'completed').length;
-  const urgentCount = maintenances.filter(m => m.status === 'scheduled' && new Date(m.date) < new Date()).length;
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
-  }
-
-  const handleView = (maintenance: any) => {
+  const handleView = (maintenance) => {
     setSelectedMaintenance(maintenance);
     setShowViewDialog(true);
   };
 
-  const handleEdit = (maintenance: any) => {
+  const handleEdit = (maintenance) => {
     setSelectedMaintenance(maintenance);
     setShowEditDialog(true);
   };
 
-  const handleDelete = (maintenance: any) => {
+  const handleDelete = (maintenance) => {
     setSelectedMaintenance(maintenance);
     setShowDeleteDialog(true);
   };
 
   const columns = [
     {
-      key: 'date',
-      header: 'Date',
-      cell: ({ row }) => <TableCell>{formatDateSafely(row.original.date)}</TableCell>,
+      header: "Date",
+      accessorKey: "date",
+      cell: ({ row }) => {
+        // Safe access to the date property with default value
+        const maintenance = row.original;
+        return maintenance && maintenance.date ? formatDate(maintenance.date) : 'Non spécifié';
+      }
     },
     {
-      key: 'vehicle',
-      header: 'Véhicule',
-      cell: ({ row }) => <TableCell>{getVehicleInfo(row.original.vehicleId)}</TableCell>,
+      header: "Véhicule",
+      accessorKey: "vehicleId",
+      cell: ({ row }) => {
+        const maintenance = row.original;
+        return maintenance ? getVehicleInfo(maintenance.vehicleId) : 'Non spécifié';
+      }
     },
     {
-      key: 'client',
-      header: 'Client',
-      cell: ({ row }) => <TableCell>{getClientInfo(row.original.clientId)}</TableCell>,
+      header: "Client",
+      accessorKey: "clientId",
+      cell: ({ row }) => {
+        const maintenance = row.original;
+        return maintenance ? getClientInfo(maintenance.clientId) : 'Non spécifié';
+      }
     },
     {
-      key: 'mechanic',
-      header: 'Mécanicien',
-      cell: ({ row }) => <TableCell>{getMechanicInfo(row.original.mechanicId)}</TableCell>,
+      header: "Mécanicien",
+      accessorKey: "mechanicId",
+      cell: ({ row }) => {
+        const maintenance = row.original;
+        return maintenance ? getMechanicInfo(maintenance.mechanicId) : 'Non spécifié';
+      }
     },
     {
-      key: 'status',
-      header: 'Statut',
-      cell: ({ row }) => (
-        <TableCell>
-          {row.original.status === 'scheduled' && 'Programmée'}
-          {row.original.status === 'in_progress' && 'En cours'}
-          {row.original.status === 'completed' && 'Terminée'}
-          {row.original.status === 'cancelled' && 'Annulée'}
-          {!row.original.status && 'Non défini'}
-        </TableCell>
-      ),
+      header: "Statut",
+      accessorKey: "status",
+      cell: ({ row }) => {
+        const maintenance = row.original;
+        if (!maintenance) return 'Non spécifié';
+        
+        const status = maintenance.status || 'pending';
+        
+        let statusDisplay = 'En attente';
+        let statusClass = 'bg-yellow-100 text-yellow-800';
+        
+        switch (status) {
+          case 'completed':
+            statusDisplay = 'Terminé';
+            statusClass = 'bg-green-100 text-green-800';
+            break;
+          case 'in_progress':
+            statusDisplay = 'En cours';
+            statusClass = 'bg-blue-100 text-blue-800';
+            break;
+          case 'cancelled':
+            statusDisplay = 'Annulé';
+            statusClass = 'bg-red-100 text-red-800';
+            break;
+        }
+        
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+            {statusDisplay}
+          </span>
+        );
+      }
     },
     {
-      key: 'cost',
-      header: 'Coût Total',
-      cell: ({ row }) => <TableCell>{row.original.totalCost}€</TableCell>,
+      header: "Coût",
+      accessorKey: "totalCost",
+      cell: ({ row }) => {
+        const maintenance = row.original;
+        if (!maintenance) return '0 €';
+        
+        const cost = maintenance.totalCost !== undefined ? maintenance.totalCost : 0;
+        return `${cost} €`;
+      }
     },
     {
-      key: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleView(row.original)}
-          >
-            Voir
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleEdit(row.original)}
-          >
-            Modifier
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleDelete(row.original)}
-          >
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
+      header: "Actions",
+      cell: ({ row }) => {
+        const maintenance = row.original;
+        return (
+          <div className="flex space-x-2">
+            <Button variant="ghost" size="icon" onClick={() => handleView(maintenance)}>
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(maintenance)}>
+              <FileEdit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(maintenance)}>
+              <Trash className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
+    }
   ];
 
+  // Safe guard for maintenances data
+  const safeMaintenances = Array.isArray(maintenances) ? maintenances.filter(m => m) : [];
+
+  const todayMaintenances = safeMaintenances.filter(m => {
+    if (!m || !m.date) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return m.date.startsWith(today);
+  }).length;
+
+  const completedMaintenances = safeMaintenances.filter(m => m && m.status === 'completed').length;
+  const inProgressMaintenances = safeMaintenances.filter(m => m && m.status === 'in_progress').length;
+  const pendingMaintenances = safeMaintenances.filter(m => m && (!m.status || m.status === 'pending')).length;
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Maintenances</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
+        <h1 className="text-2xl font-semibold">Maintenances</h1>
+        <Button onClick={() => setShowAddDialog(true)} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Maintenance
+          Nouvelle maintenance
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Programmées"
-          value={scheduledCount.toString()}
-          icon={<Clock className="h-6 w-6 text-blue-600" />}
-          description="Maintenances à venir"
-          className="bg-blue-50"
-        />
-        <StatCard
-          title="En cours"
-          value={inProgressCount.toString()}
-          icon={<Wrench className="h-6 w-6 text-yellow-600" />}
-          description="Maintenances en cours"
-          className="bg-yellow-50"
-        />
-        <StatCard
-          title="Terminées"
-          value={completedCount.toString()}
-          icon={<CheckCircle className="h-6 w-6 text-green-600" />}
-          description="Maintenances complétées"
-          className="bg-green-50"
-        />
-        <StatCard
-          title="Urgentes"
-          value={urgentCount.toString()}
-          icon={<AlertCircle className="h-6 w-6 text-red-600" />}
-          description="Nécessitent attention"
-          className="bg-red-50"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-blue-50 p-6">
+          <div className="flex flex-col">
+            <p className="text-sm text-gray-600">Aujourd'hui</p>
+            <p className="text-2xl font-bold">{todayMaintenances}</p>
+            <p className="text-xs text-gray-500">Maintenances du jour</p>
+          </div>
+        </Card>
+
+        <Card className="bg-green-50 p-6">
+          <div className="flex flex-col">
+            <p className="text-sm text-gray-600">Terminées</p>
+            <p className="text-2xl font-bold">{completedMaintenances}</p>
+            <p className="text-xs text-gray-500">Maintenances complétées</p>
+          </div>
+        </Card>
+
+        <Card className="bg-yellow-50 p-6">
+          <div className="flex flex-col">
+            <p className="text-sm text-gray-600">En cours</p>
+            <p className="text-2xl font-bold">{inProgressMaintenances}</p>
+            <p className="text-xs text-gray-500">Maintenances actives</p>
+          </div>
+        </Card>
+
+        <Card className="bg-purple-50 p-6">
+          <div className="flex flex-col">
+            <p className="text-sm text-gray-600">En attente</p>
+            <p className="text-2xl font-bold">{pendingMaintenances}</p>
+            <p className="text-xs text-gray-500">À traiter</p>
+          </div>
+        </Card>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Liste des maintenances</h2>
-        <div className="bg-white rounded-lg shadow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableHead key={column.key}>{column.header}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {maintenances.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center py-8 text-gray-500">
-                    Aucune maintenance trouvée
-                  </TableCell>
-                </TableRow>
-              ) : (
-                maintenances.map((maintenance) => (
-                  <TableRow key={maintenance.id}>
-                    {columns.map((column) => (
-                      <TableCell key={column.key}>{column.cell({ row: maintenance })}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">Liste des maintenances</h2>
+        </div>
+        <div className="p-4">
+          <DataTable 
+            columns={columns} 
+            data={safeMaintenances}
+            isLoading={isLoading}
+            emptyMessage="Aucune maintenance disponible"
+          />
         </div>
       </div>
 
       <AddMaintenanceDialog 
         open={showAddDialog} 
-        onOpenChange={setShowAddDialog}
+        onOpenChange={setShowAddDialog} 
       />
-
-      {selectedMaintenance && (
-        <>
-          <ViewMaintenanceDialog
-            open={showViewDialog}
-            onClose={() => {
-              setShowViewDialog(false);
-              setSelectedMaintenance(null);
-            }}
-            maintenance={selectedMaintenance}
-            vehicleInfo={getVehicleInfo(selectedMaintenance.vehicleId)}
-            clientInfo={getClientInfo(selectedMaintenance.clientId)}
-            mechanicInfo={getMechanicInfo(selectedMaintenance.mechanicId)}
-          />
-
-          <EditMaintenanceDialog
-            open={showEditDialog}
-            onOpenChange={(open) => {
-              setShowEditDialog(open);
-              if (!open) setSelectedMaintenance(null);
-            }}
-            maintenance={selectedMaintenance}
-          />
-
-          <DeleteMaintenanceDialog
-            open={showDeleteDialog}
-            onOpenChange={(open) => {
-              setShowDeleteDialog(open);
-              if (!open) setSelectedMaintenance(null);
-            }}
-            maintenanceId={selectedMaintenance.id}
-          />
-        </>
-      )}
+      
+      <EditMaintenanceDialog 
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog} 
+        maintenance={selectedMaintenance} 
+      />
+      
+      <ViewMaintenanceDialog 
+        open={showViewDialog} 
+        onClose={() => setShowViewDialog(false)} 
+        maintenance={selectedMaintenance}
+        vehicleInfo={selectedMaintenance ? getVehicleInfo(selectedMaintenance.vehicleId) : ''}
+        clientInfo={selectedMaintenance ? getClientInfo(selectedMaintenance.clientId) : ''}
+        mechanicInfo={selectedMaintenance ? getMechanicInfo(selectedMaintenance.mechanicId) : ''}
+      />
+      
+      <DeleteMaintenanceDialog 
+        open={showDeleteDialog} 
+        onOpenChange={setShowDeleteDialog} 
+        maintenanceId={selectedMaintenance?.id} 
+      />
     </div>
   );
 };

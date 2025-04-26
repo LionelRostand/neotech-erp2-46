@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { useQuery } from '@tanstack/react-query';
@@ -59,6 +60,23 @@ interface Maintenance {
   [key: string]: any;
 }
 
+interface Repair {
+  id: string;
+  date: string;
+  vehicleId: string;
+  clientId: string;
+  mechanicId: string;
+  description: string;
+  status: string;
+  totalCost: number;
+  services: Array<{
+    serviceId: string;
+    quantity: number;
+    cost: number;
+  }>;
+  [key: string]: any;
+}
+
 export const useGarageData = () => {
   // Vehicles
   const { data: vehiclesData = [], isLoading: isLoadingVehicles, error: vehiclesError } = useQuery({
@@ -88,6 +106,30 @@ export const useGarageData = () => {
   const { data: maintenancesData = [], isLoading: isLoadingMaintenances, error: maintenancesError } = useQuery({
     queryKey: ['garage', 'maintenances'],
     queryFn: () => fetchCollectionData<Maintenance>('garage_maintenances'),
+  });
+  
+  // Repairs
+  const { data: repairsData = [], isLoading: isLoadingRepairs, error: repairsError } = useQuery({
+    queryKey: ['garage', 'repairs'],
+    queryFn: () => fetchCollectionData<Repair>('garage_repairs'),
+  });
+  
+  // Appointments for dashboard
+  const { data: appointmentsData = [], isLoading: isLoadingAppointments, error: appointmentsError } = useQuery({
+    queryKey: ['garage', 'appointments'],
+    queryFn: () => fetchCollectionData('garage_appointments'),
+  });
+  
+  // Invoices for dashboard
+  const { data: invoicesData = [], isLoading: isLoadingInvoices, error: invoicesError } = useQuery({
+    queryKey: ['garage', 'invoices'],
+    queryFn: () => fetchCollectionData('garage_invoices'),
+  });
+  
+  // Inventory for dashboard
+  const { data: inventoryData = [], isLoading: isLoadingInventory, error: inventoryError } = useQuery({
+    queryKey: ['garage', 'inventory'],
+    queryFn: () => fetchCollectionData('garage_inventory'),
   });
 
   // Sanitize and validate data
@@ -135,11 +177,56 @@ export const useGarageData = () => {
         };
       });
   }, [maintenancesData]);
+  
+  const repairs = useMemo(() => {
+    if (!Array.isArray(repairsData)) return [];
+    
+    return repairsData
+      .filter(r => r && typeof r === 'object')
+      .map(repair => {
+        return {
+          id: repair.id || '',
+          date: repair.date || new Date().toISOString(),
+          vehicleId: repair.vehicleId || '',
+          clientId: repair.clientId || '',
+          mechanicId: repair.mechanicId || '',
+          description: repair.description || '',
+          status: repair.status || 'pending',
+          totalCost: typeof repair.totalCost === 'number' ? repair.totalCost : 0,
+          services: Array.isArray(repair.services) ? repair.services : [],
+          ...repair
+        };
+      });
+  }, [repairsData]);
+  
+  // Handle additional data for the dashboard
+  const appointments = useMemo(() => {
+    if (!Array.isArray(appointmentsData)) return [];
+    return appointmentsData.filter(a => a && typeof a === 'object');
+  }, [appointmentsData]);
+  
+  const invoices = useMemo(() => {
+    if (!Array.isArray(invoicesData)) return [];
+    return invoicesData.filter(i => i && typeof i === 'object');
+  }, [invoicesData]);
+  
+  const inventory = useMemo(() => {
+    if (!Array.isArray(inventoryData)) return [];
+    return inventoryData.filter(i => i && typeof i === 'object');
+  }, [inventoryData]);
+  
+  // Handle suppliers and loyalty programs for GarageDashboard
+  const suppliers = [];
+  const loyalty = [];
 
   // Track any error
-  const error = vehiclesError || clientsError || mechanicsError || servicesError || maintenancesError;
+  const error = vehiclesError || clientsError || mechanicsError || servicesError || 
+                maintenancesError || repairsError || appointmentsError || 
+                invoicesError || inventoryError;
 
-  const isLoading = isLoadingVehicles || isLoadingClients || isLoadingMechanics || isLoadingServices || isLoadingMaintenances;
+  const isLoading = isLoadingVehicles || isLoadingClients || isLoadingMechanics || 
+                   isLoadingServices || isLoadingMaintenances || isLoadingRepairs ||
+                   isLoadingAppointments || isLoadingInvoices || isLoadingInventory;
 
   // Return everything with default empty arrays in case of undefined
   return {
@@ -148,6 +235,12 @@ export const useGarageData = () => {
     mechanics,
     services,
     maintenances,
+    repairs,
+    appointments,
+    invoices,
+    suppliers,
+    inventory,
+    loyalty,
     isLoading,
     error,
     refetch: () => {
