@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 
 export interface SubModule {
@@ -25,3 +24,20 @@ export interface AppModule {
 
 // Helper function to create icon components
 export const createIcon = (Icon: any) => <Icon className="h-5 w-5" />;
+
+export interface GarageMaintenance {
+  id: string;
+  vehicleId: string;
+  clientId: string;
+  mechanicId: string;
+  description: string;
+  date: string;
+  status: string;
+  totalCost: number;
+  services: Array<{
+    serviceId: string;
+    quantity: number;
+    cost: number;
+  }>;
+  notes?: string;
+}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,8 @@ interface MaintenanceFormProps {
 const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormProps) => {
   const [formData, setFormData] = useState({
     vehicleId: '',
+    clientId: '',
+    mechanicId: '',
     description: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     status: 'pending',
@@ -32,17 +33,18 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
     notes: '',
   });
 
-  // Load initial data if provided
   useEffect(() => {
     if (initialData) {
       const dateValue = initialData.date
         ? typeof initialData.date === 'string'
-            ? initialData.date.substring(0, 10) // Extract YYYY-MM-DD from ISO string
+            ? initialData.date.substring(0, 10)
             : format(new Date(initialData.date), 'yyyy-MM-dd')
         : format(new Date(), 'yyyy-MM-dd');
 
       setFormData({
         vehicleId: initialData.vehicleId || '',
+        clientId: initialData.clientId || '',
+        mechanicId: initialData.mechanicId || '',
         description: initialData.description || '',
         date: dateValue,
         status: initialData.status || 'pending',
@@ -53,7 +55,7 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
     }
   }, [initialData]);
 
-  const { vehicles = [], isLoading } = useGarageData();
+  const { vehicles = [], clients = [], mechanics = [], isLoading } = useGarageData();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -97,6 +99,46 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
               {vehicles.map((vehicle: any) => (
                 <SelectItem key={vehicle.id} value={vehicle.id}>
                   {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clientId">Client</Label>
+          <Select 
+            value={formData.clientId} 
+            onValueChange={(value) => handleSelectChange('clientId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un client" />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map((client: any) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.firstName} {client.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="mechanicId">Mécanicien</Label>
+          <Select 
+            value={formData.mechanicId} 
+            onValueChange={(value) => handleSelectChange('mechanicId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un mécanicien" />
+            </SelectTrigger>
+            <SelectContent>
+              {mechanics.map((mechanic: any) => (
+                <SelectItem key={mechanic.id} value={mechanic.id}>
+                  {mechanic.firstName} {mechanic.lastName}
                 </SelectItem>
               ))}
             </SelectContent>
