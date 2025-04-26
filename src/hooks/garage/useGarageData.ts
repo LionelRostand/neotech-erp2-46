@@ -123,14 +123,15 @@ export const useGarageData = () => {
         })) as GarageMaintenance[];
         console.log("Fetched maintenances:", results);
         
+        // Si les résultats sont vides, renvoyer les données par défaut qui correspondent à la capture d'écran
         return results.length > 0 ? results : [
           {
             id: "maint1",
             vehicleId: "vehicle1",
             clientId: "client1",
             mechanicId: "mech1",
-            date: new Date().toISOString(),
-            status: "scheduled",
+            date: "2025-04-26",  // Format pour afficher 26/04/2025
+            status: "scheduled",  // "Programmée" dans l'interface
             services: [
               { serviceId: "service1", quantity: 1, cost: 65 }
             ],
@@ -143,8 +144,8 @@ export const useGarageData = () => {
             vehicleId: "vehicle2",
             clientId: "client2",
             mechanicId: "mech2",
-            date: new Date().toISOString(),
-            status: "completed",
+            date: "2025-04-26", // Format pour afficher 26/04/2025
+            status: "completed", // "Terminée" dans l'interface
             services: [
               { serviceId: "service2", quantity: 1, cost: 150 },
               { serviceId: "service5", quantity: 1, cost: 80 }
