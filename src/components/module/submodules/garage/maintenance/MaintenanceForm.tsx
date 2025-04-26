@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
-import { ServicesSelector } from '../services/ServicesSelector';
+import ServicesSelector from '@/components/module/submodules/garage/repairs/ServicesSelector';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useGarageServicesList } from '../hooks/useGarageServicesList';
 
