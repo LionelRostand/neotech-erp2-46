@@ -14,7 +14,17 @@ interface MaintenanceFormProps {
 }
 
 const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
-  const form = useForm();
+  const form = useForm({
+    defaultValues: {
+      clientId: '',
+      mechanicId: '',
+      vehicleId: '',
+      description: '',
+      startDate: undefined,
+      endDate: undefined,
+      services: []
+    }
+  });
   const [totalCost, setTotalCost] = React.useState(0);
 
   const handleSubmit = (data: any) => {
@@ -23,6 +33,11 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
       totalCost
     });
   };
+
+  // Memoize the services to prevent unnecessary re-renders
+  const services = React.useMemo(() => {
+    return form.watch('services') || [];
+  }, [form.watch('services')]);
 
   return (
     <Form {...form}>
@@ -91,9 +106,9 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
         />
 
         <ServicesSelector
-          services={form.watch('services') || []}
-          onChange={(services) => {
-            form.setValue('services', services);
+          services={services}
+          onChange={(updatedServices) => {
+            form.setValue('services', updatedServices, { shouldDirty: true });
           }}
           onCostChange={setTotalCost}
         />
@@ -148,13 +163,18 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
           />
         </div>
 
-        <div className="flex justify-end space-x-4 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Annuler
-          </Button>
-          <Button type="submit">
-            Ajouter la maintenance
-          </Button>
+        <div className="flex justify-between space-x-4 pt-4">
+          <div className="text-lg">
+            <strong>Coût total: {totalCost}€</strong>
+          </div>
+          <div className="flex space-x-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Annuler
+            </Button>
+            <Button type="submit">
+              Ajouter la maintenance
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

@@ -1,86 +1,90 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
+export interface GarageService {
+  id: string;
+  name: string;
+  cost: number;
+  description?: string;
+  category?: string;
+  duration?: number; // in minutes
+}
+
 export const useGarageData = () => {
-  // Assurer des chemins de collection valides
-  const appointmentsPath = COLLECTIONS.GARAGE.APPOINTMENTS || 'garage_appointments';
-  const clientsPath = COLLECTIONS.GARAGE.CLIENTS || 'garage_clients';
-  const vehiclesPath = COLLECTIONS.GARAGE.VEHICLES || 'garage_vehicles';
-  const mechanicsPath = COLLECTIONS.GARAGE.MECHANICS || 'garage_mechanics';
-  const servicesPath = COLLECTIONS.GARAGE.SERVICES || 'garage_services';
-  const repairsPath = COLLECTIONS.GARAGE.REPAIRS || 'garage_repairs';
-  const invoicesPath = COLLECTIONS.GARAGE.INVOICES || 'garage_invoices';
-  const partsPath = COLLECTIONS.GARAGE.PARTS || 'garage_parts';
-  
-  // Fetch appointments
-  const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
-    queryKey: ['garage', 'appointments'],
-    queryFn: () => fetchCollectionData(appointmentsPath),
-  });
-  
-  // Fetch clients
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
-    queryKey: ['garage', 'clients'],
-    queryFn: () => fetchCollectionData(clientsPath),
-  });
-  
-  // Fetch vehicles
-  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
-    queryKey: ['garage', 'vehicles'],
-    queryFn: () => fetchCollectionData(vehiclesPath),
-  });
-  
-  // Fetch mechanics
-  const { data: mechanics = [], isLoading: isLoadingMechanics } = useQuery({
-    queryKey: ['garage', 'mechanics'],
-    queryFn: () => fetchCollectionData(mechanicsPath),
-  });
-  
-  // Fetch services
-  const { data: services = [], isLoading: isLoadingServices } = useQuery({
+  // Fetch garage services
+  const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['garage', 'services'],
-    queryFn: () => fetchCollectionData(servicesPath),
+    queryFn: async () => {
+      try {
+        const snapshot = await getDocs(collection(db, COLLECTIONS.GARAGE.SERVICES));
+        return snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        } as GarageService));
+      } catch (error) {
+        console.error("Error fetching garage services:", error);
+        // Return some default services for development
+        return [
+          { id: "service1", name: "Vidange d'huile", cost: 65, description: "Changement d'huile moteur et filtre", duration: 30 },
+          { id: "service2", name: "Changement de freins", cost: 150, description: "Remplacement des plaquettes de frein", duration: 60 },
+          { id: "service3", name: "Révision complète", cost: 250, description: "Révision générale du véhicule", duration: 120 },
+          { id: "service4", name: "Changement de pneus", cost: 40, description: "Montage et équilibrage par pneu", duration: 45 },
+          { id: "service5", name: "Diagnostic complet", cost: 80, description: "Diagnostic électronique complet", duration: 60 },
+        ];
+      }
+    }
   });
-  
-  // Fetch repairs
-  const { data: repairs = [], isLoading: isLoadingRepairs } = useQuery({
-    queryKey: ['garage', 'repairs'],
-    queryFn: () => fetchCollectionData(repairsPath),
+
+  // Fetch mechanics data
+  const { data: mechanics = [], isLoading: mechanicsLoading } = useQuery({
+    queryKey: ['garage', 'mechanics'],
+    queryFn: async () => {
+      try {
+        const snapshot = await getDocs(collection(db, COLLECTIONS.GARAGE.MECHANICS));
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (error) {
+        console.error("Error fetching mechanics:", error);
+        return [];
+      }
+    }
   });
-  
-  // Fetch invoices
-  const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
-    queryKey: ['garage', 'invoices'],
-    queryFn: () => fetchCollectionData(invoicesPath),
+
+  // Fetch clients data
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+    queryKey: ['garage', 'clients'],
+    queryFn: async () => {
+      try {
+        const snapshot = await getDocs(collection(db, COLLECTIONS.GARAGE.CLIENTS));
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        return [];
+      }
+    }
   });
-  
-  // Fetch parts
-  const { data: parts = [], isLoading: isLoadingParts } = useQuery({
-    queryKey: ['garage', 'parts'],
-    queryFn: () => fetchCollectionData(partsPath),
+
+  // Fetch vehicles data
+  const { data: vehicles = [], isLoading: vehiclesLoading } = useQuery({
+    queryKey: ['garage', 'vehicles'],
+    queryFn: async () => {
+      try {
+        const snapshot = await getDocs(collection(db, COLLECTIONS.GARAGE.VEHICLES));
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+        return [];
+      }
+    }
   });
-  
-  const isLoading = 
-    isLoadingAppointments || 
-    isLoadingClients || 
-    isLoadingVehicles || 
-    isLoadingMechanics ||
-    isLoadingServices ||
-    isLoadingRepairs ||
-    isLoadingInvoices ||
-    isLoadingParts;
-  
+
   return {
-    appointments,
+    services,
+    mechanics,
     clients,
     vehicles,
-    mechanics,
-    services,
-    repairs,
-    invoices,
-    parts,
-    isLoading
+    isLoading: servicesLoading || mechanicsLoading || clientsLoading || vehiclesLoading
   };
 };

@@ -1,171 +1,156 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus } from "lucide-react";
+import { useGarageData } from '@/hooks/garage/useGarageData';
 
-interface Service {
-  id: string;
-  name: string;
-  price: number;
-  selected?: boolean;
-  quantity?: number;
+interface RepairService {
+  serviceId: string;
+  quantity: number;
+  cost: number;
 }
 
 interface ServicesSelectorProps {
-  services: Service[];
-  onChange: (services: Service[]) => void;
-  onCostChange: (cost: number) => void;
+  services: RepairService[];
+  onChange: (services: RepairService[]) => void;
+  onCostChange: (totalCost: number) => void;
 }
 
-const ServicesSelector = ({ services = [], onChange, onCostChange }: ServicesSelectorProps) => {
-  // Mock services data (in a real app, this would come from an API)
-  const [availableServices] = useState<Service[]>([
-    { id: "service1", name: "Vidange", price: 50 },
-    { id: "service2", name: "Changement filtres", price: 40 },
-    { id: "service3", name: "Changement freins", price: 120 },
-    { id: "service4", name: "Changement pneus", price: 200 },
-    { id: "service5", name: "Diagnostic complet", price: 80 },
-  ]);
-  
-  // Initialize selected services from props or empty array
-  const [selectedServices, setSelectedServices] = useState<Service[]>(
-    services.length > 0 ? services : []
-  );
-  
-  // Calculate total cost whenever selectedServices change
+const ServicesSelector: React.FC<ServicesSelectorProps> = ({
+  services,
+  onChange,
+  onCostChange,
+}) => {
+  const { services: garageServices = [], isLoading } = useGarageData();
+  // Use a local state to track services
+  const [localServices, setLocalServices] = useState<RepairService[]>(services || []);
+
+  // Update local services when props change, but only if different
   useEffect(() => {
-    const total = selectedServices.reduce((sum, service) => {
-      return sum + (service.price * (service.quantity || 1));
-    }, 0);
-    
+    if (JSON.stringify(services) !== JSON.stringify(localServices)) {
+      setLocalServices(services);
+    }
+  }, [services]);
+
+  // Calculate and update total cost whenever localServices changes
+  useEffect(() => {
+    const total = localServices.reduce((sum, service) => sum + service.cost, 0);
     onCostChange(total);
-  }, [selectedServices, onCostChange]);
+  }, [localServices, onCostChange]);
 
-  // This useEffect notifies parent component of changes to services,
-  // but only when selectedServices actually changes to avoid loops
+  // Update parent component but only when our local state changes
   useEffect(() => {
-    onChange(selectedServices);
-  }, [selectedServices, onChange]);
+    // Avoid calling onChange unnecessarily to prevent infinite loop
+    if (JSON.stringify(services) !== JSON.stringify(localServices)) {
+      onChange(localServices);
+    }
+  }, [localServices, onChange, services]);
 
-  // Toggle service selection
-  const toggleService = (service: Service) => {
-    let updatedServices;
+  const addService = () => {
+    const newServices = [...localServices, { serviceId: '', quantity: 1, cost: 0 }];
+    setLocalServices(newServices);
+  };
+
+  const removeService = (index: number) => {
+    const newServices = localServices.filter((_, i) => i !== index);
+    setLocalServices(newServices);
+  };
+
+  const updateService = (index: number, field: keyof RepairService, value: any) => {
+    const newServices = [...localServices];
+    newServices[index] = { ...newServices[index], [field]: value };
     
-    if (selectedServices.some(s => s.id === service.id)) {
-      // Remove service
-      updatedServices = selectedServices.filter(s => s.id !== service.id);
-    } else {
-      // Add service with default quantity 1
-      updatedServices = [...selectedServices, { ...service, quantity: 1 }];
+    if (field === 'serviceId') {
+      const selectedService = garageServices.find(s => s.id === value);
+      if (selectedService) {
+        newServices[index].cost = selectedService.cost * newServices[index].quantity;
+      }
     }
     
-    setSelectedServices(updatedServices);
+    if (field === 'quantity') {
+      const selectedService = garageServices.find(s => s.id === newServices[index].serviceId);
+      if (selectedService) {
+        newServices[index].cost = selectedService.cost * value;
+      }
+    }
+    
+    setLocalServices(newServices);
   };
 
-  // Update service quantity
-  const updateQuantity = (id: string, quantity: number) => {
-    const updatedServices = selectedServices.map(service => {
-      if (service.id === id) {
-        return { ...service, quantity: Math.max(1, quantity) };
-      }
-      return service;
-    });
-    
-    setSelectedServices(updatedServices);
-  };
+  if (isLoading) {
+    return <div>Chargement des services...</div>;
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Services</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {availableServices.map((service) => {
-              const isSelected = selectedServices.some(s => s.id === service.id);
-              return (
-                <div 
-                  key={service.id} 
-                  className={`border rounded-md p-3 cursor-pointer ${isSelected ? 'border-primary bg-primary/5' : 'border-input'}`}
-                  onClick={() => toggleService(service)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <Checkbox checked={isSelected} />
-                    <div className="flex-grow">
-                      <Label>{service.name}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {service.price} €
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Services</h3>
+        <Button 
+          onClick={addService}
+          variant="outline"
+          size="sm"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter un service
+        </Button>
+      </div>
 
-          {selectedServices.length > 0 && (
-            <div className="space-y-3 mt-6">
-              <h3 className="text-sm font-medium">Services sélectionnés</h3>
-              {selectedServices.map((service) => (
-                <div key={service.id} className="flex items-center justify-between bg-muted/50 rounded-md p-2">
-                  <div>
-                    <p className="font-medium">{service.name}</p>
-                    <p className="text-sm text-muted-foreground">{service.price} € par unité</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateQuantity(service.id, (service.quantity || 1) - 1);
-                      }}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <Input 
-                      type="number"
-                      className="w-16 text-center"
-                      value={service.quantity || 1}
-                      onChange={(e) => updateQuantity(service.id, parseInt(e.target.value) || 1)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <Button 
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateQuantity(service.id, (service.quantity || 1) + 1);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="border-t flex justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Services sélectionnés: {selectedServices.length}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Total:</p>
-          <p className="text-lg font-bold">
-            {selectedServices.reduce((sum, service) => sum + (service.price * (service.quantity || 1)), 0)} €
-          </p>
-        </div>
-      </CardFooter>
-    </Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Service</TableHead>
+            <TableHead>Quantité</TableHead>
+            <TableHead>Coût (€)</TableHead>
+            <TableHead></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {localServices.map((service, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <Select
+                  value={service.serviceId}
+                  onValueChange={(value) => updateService(index, 'serviceId', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {garageServices.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} - {s.cost}€
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  min={1}
+                  value={service.quantity}
+                  onChange={(e) => updateService(index, 'quantity', parseInt(e.target.value) || 1)}
+                  className="w-20"
+                />
+              </TableCell>
+              <TableCell>{service.cost}€</TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeService(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
