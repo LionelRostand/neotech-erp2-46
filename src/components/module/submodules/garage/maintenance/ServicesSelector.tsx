@@ -31,15 +31,25 @@ const ServicesSelector = ({ services = [], onChange, onCostChange }: ServicesSel
     { id: "service5", name: "Diagnostic complet", price: 80 },
   ]);
   
-  const [selectedServices, setSelectedServices] = useState<Service[]>(services);
+  // Initialize selected services from props or empty array
+  const [selectedServices, setSelectedServices] = useState<Service[]>(
+    services.length > 0 ? services : []
+  );
   
-  // Calculate total cost whenever selected services change
+  // Calculate total cost whenever selectedServices change
   useEffect(() => {
     const total = selectedServices.reduce((sum, service) => {
       return sum + (service.price * (service.quantity || 1));
     }, 0);
+    
     onCostChange(total);
   }, [selectedServices, onCostChange]);
+
+  // This useEffect notifies parent component of changes to services,
+  // but only when selectedServices actually changes to avoid loops
+  useEffect(() => {
+    onChange(selectedServices);
+  }, [selectedServices, onChange]);
 
   // Toggle service selection
   const toggleService = (service: Service) => {
@@ -54,7 +64,6 @@ const ServicesSelector = ({ services = [], onChange, onCostChange }: ServicesSel
     }
     
     setSelectedServices(updatedServices);
-    onChange(updatedServices);
   };
 
   // Update service quantity
@@ -67,7 +76,6 @@ const ServicesSelector = ({ services = [], onChange, onCostChange }: ServicesSel
     });
     
     setSelectedServices(updatedServices);
-    onChange(updatedServices);
   };
 
   return (

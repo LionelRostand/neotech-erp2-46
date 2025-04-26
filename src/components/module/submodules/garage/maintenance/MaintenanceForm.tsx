@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -93,7 +92,9 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
 
         <ServicesSelector
           services={form.watch('services') || []}
-          onChange={(services) => form.setValue('services', services)}
+          onChange={(services) => {
+            form.setValue('services', services);
+          }}
           onCostChange={setTotalCost}
         />
 
