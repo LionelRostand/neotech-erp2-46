@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
-import ServicesSelector from '@/components/module/submodules/garage/repairs/ServicesSelector';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useGarageServicesList } from '../hooks/useGarageServicesList';
+import { useFreightData } from '@/hooks/freight/useFreightData';
+import ServicesSelector from '../repairs/ServicesSelector';
 import { 
   Select,
   SelectContent,
@@ -31,10 +31,13 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
   const [selectedMechanic, setSelectedMechanic] = useState<string>('');
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+  const [selectedContainer, setSelectedContainer] = useState<string>('');
+  const [selectedShipment, setSelectedShipment] = useState<string>('');
 
   const { mechanics } = useGarageMechanics();
   const { clients } = useGarageClients();
   const { vehicles } = useGarageVehicles();
+  const { containers, shipments, isLoading } = useFreightData();
 
   const form = useForm({
     defaultValues: {
@@ -45,7 +48,9 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
       totalCost: 0,
       mechanicId: '',
       clientId: '',
-      vehicleId: ''
+      vehicleId: '',
+      containerId: '',
+      shipmentId: ''
     }
   });
 
@@ -58,7 +63,9 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
       totalCost,
       mechanicId: selectedMechanic,
       clientId: selectedClient,
-      vehicleId: selectedVehicle
+      vehicleId: selectedVehicle,
+      containerId: selectedContainer,
+      shipmentId: selectedShipment
     };
     onSubmit(formData);
   };
@@ -121,6 +128,40 @@ const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
                 {vehicles?.map((vehicle: any) => (
                   <SelectItem key={vehicle.id} value={vehicle.id}>
                     {`${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Container Selection */}
+          <div>
+            <label className="text-sm font-medium">Conteneur</label>
+            <Select value={selectedContainer} onValueChange={setSelectedContainer}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sélectionner un conteneur" />
+              </SelectTrigger>
+              <SelectContent>
+                {containers?.map((container: any) => (
+                  <SelectItem key={container.id} value={container.id}>
+                    {container.number || container.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Shipment Selection */}
+          <div>
+            <label className="text-sm font-medium">Expédition</label>
+            <Select value={selectedShipment} onValueChange={setSelectedShipment}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sélectionner une expédition" />
+              </SelectTrigger>
+              <SelectContent>
+                {shipments?.map((shipment: any) => (
+                  <SelectItem key={shipment.id} value={shipment.id}>
+                    {shipment.reference || shipment.id}
                   </SelectItem>
                 ))}
               </SelectContent>
