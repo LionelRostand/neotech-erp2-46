@@ -10,6 +10,7 @@ import MaintenanceForm from './MaintenanceForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
 interface AddMaintenanceDialogProps {
@@ -22,7 +23,7 @@ const AddMaintenanceDialog = ({ open, onOpenChange }: AddMaintenanceDialogProps)
   
   const handleSubmit = async (data: any) => {
     try {
-      await addDoc(collection(db, 'garage_maintenances'), {
+      await addDoc(collection(db, COLLECTIONS.GARAGE.MAINTENANCE), {
         ...data,
         status: 'scheduled',
         createdAt: new Date().toISOString()
