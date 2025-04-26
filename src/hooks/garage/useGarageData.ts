@@ -62,43 +62,60 @@ interface Maintenance {
 
 export const useGarageData = () => {
   // Vehicles
-  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
+  const { data: vehicles = [], isLoading: isLoadingVehicles, error: vehiclesError } = useQuery({
     queryKey: ['garage', 'vehicles'],
     queryFn: () => fetchCollectionData<Vehicle>('garage_vehicles'),
   });
 
   // Clients
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+  const { data: clients = [], isLoading: isLoadingClients, error: clientsError } = useQuery({
     queryKey: ['garage', 'clients'],
     queryFn: () => fetchCollectionData<Client>('garage_clients'),
   });
 
   // Mechanics
-  const { data: mechanics = [], isLoading: isLoadingMechanics } = useQuery({
+  const { data: mechanics = [], isLoading: isLoadingMechanics, error: mechanicsError } = useQuery({
     queryKey: ['garage', 'mechanics'],
     queryFn: () => fetchCollectionData<Mechanic>('garage_mechanics'),
   });
 
   // Services
-  const { data: services = [], isLoading: isLoadingServices } = useQuery({
+  const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useQuery({
     queryKey: ['garage', 'services'],
     queryFn: () => fetchCollectionData<Service>('garage_services'),
   });
 
   // Maintenances
-  const { data: maintenances = [], isLoading: isLoadingMaintenances } = useQuery({
+  const { data: maintenances = [], isLoading: isLoadingMaintenances, error: maintenancesError } = useQuery({
     queryKey: ['garage', 'maintenances'],
     queryFn: () => fetchCollectionData<Maintenance>('garage_maintenances'),
+    onSuccess: (data) => {
+      // Validate that each maintenance has required fields
+      if (Array.isArray(data)) {
+        const validatedData = data.map(maintenance => {
+          if (!maintenance.date) {
+            console.warn(`Maintenance ${maintenance.id} missing date field`, maintenance);
+            return { ...maintenance, date: new Date().toISOString() };
+          }
+          return maintenance;
+        });
+      }
+    },
   });
+
+  // Track any error
+  const error = vehiclesError || clientsError || mechanicsError || servicesError || maintenancesError;
 
   const isLoading = isLoadingVehicles || isLoadingClients || isLoadingMechanics || isLoadingServices || isLoadingMaintenances;
 
+  // Return everything with default empty arrays in case of undefined
   return {
-    vehicles,
-    clients,
-    mechanics,
-    services,
-    maintenances,
-    isLoading
+    vehicles: vehicles || [],
+    clients: clients || [],
+    mechanics: mechanics || [],
+    services: services || [],
+    maintenances: maintenances || [],
+    isLoading,
+    error
   };
 };

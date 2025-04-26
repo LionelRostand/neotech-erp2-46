@@ -27,6 +27,15 @@ const EditMaintenanceDialog = ({
 
   const handleSubmit = async (data: any) => {
     try {
+      if (!maintenance || !maintenance.id) {
+        toast({
+          title: "Erreur",
+          description: "ID de maintenance manquant",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const maintenanceRef = doc(db, 'garage_maintenances', maintenance.id);
       
       // Add update timestamp
@@ -57,11 +66,13 @@ const EditMaintenanceDialog = ({
         <DialogHeader>
           <DialogTitle>Modifier la maintenance</DialogTitle>
         </DialogHeader>
-        <MaintenanceForm 
-          onSubmit={handleSubmit} 
-          onCancel={() => onOpenChange(false)}
-          initialData={maintenance}
-        />
+        {maintenance && (
+          <MaintenanceForm 
+            onSubmit={handleSubmit} 
+            onCancel={() => onOpenChange(false)}
+            initialData={maintenance}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

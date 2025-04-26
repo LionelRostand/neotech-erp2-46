@@ -27,6 +27,15 @@ const DeleteMaintenanceDialog = ({
   const queryClient = useQueryClient();
 
   const handleDelete = async () => {
+    if (!maintenanceId) {
+      toast({
+        title: "Erreur",
+        description: "ID de maintenance manquant",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await deleteDocument('garage_maintenances', maintenanceId);
       
