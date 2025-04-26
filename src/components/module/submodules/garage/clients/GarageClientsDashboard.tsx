@@ -17,7 +17,7 @@ import { fetchCollectionData } from '@/lib/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const GarageClientsDashboard = () => {
-  const { clients = [], isLoading, updateClient, deleteClient } = useGarageClients();
+  const { clients = [], isLoading, refetch } = useGarageClients();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<GarageClient | null>(null);
@@ -66,14 +66,26 @@ const GarageClientsDashboard = () => {
   };
 
   const handleUpdate = async (updatedClient: GarageClient) => {
-    await updateClient.mutateAsync(updatedClient);
-    setShowEditDialog(false);
+    try {
+      const { updateClient } = useGarageClients();
+      await updateClient.mutateAsync(updatedClient);
+      setShowEditDialog(false);
+      refetch();
+    } catch (error) {
+      console.error('Error updating client:', error);
+    }
   };
 
   const handleDeleteConfirm = async () => {
     if (selectedClient) {
-      await deleteClient.mutateAsync(selectedClient.id);
-      setShowDeleteDialog(false);
+      try {
+        const { deleteClient } = useGarageClients();
+        await deleteClient.mutateAsync(selectedClient.id);
+        setShowDeleteDialog(false);
+        refetch();
+      } catch (error) {
+        console.error('Error deleting client:', error);
+      }
     }
   };
 
@@ -107,18 +119,9 @@ const GarageClientsDashboard = () => {
       <Card className="p-6">
         <ClientsTable 
           clients={clients}
-          onView={(client) => {
-            setSelectedClient(client);
-            setShowViewDialog(true);
-          }}
-          onEdit={(client) => {
-            setSelectedClient(client);
-            setShowEditDialog(true);
-          }}
-          onDelete={(client) => {
-            setSelectedClient(client);
-            setShowDeleteDialog(true);
-          }}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
           onCreateAppointment={handleCreateAppointment}
         />
       </Card>
@@ -139,7 +142,6 @@ const GarageClientsDashboard = () => {
         onOpenChange={setShowEditDialog}
         client={selectedClient}
         onSave={handleUpdate}
-        isLoading={updateClient.isPending}
       />
 
       <DeleteClientDialog
@@ -147,7 +149,6 @@ const GarageClientsDashboard = () => {
         onOpenChange={setShowDeleteDialog}
         client={selectedClient}
         onConfirm={handleDeleteConfirm}
-        isLoading={deleteClient.isPending}
       />
 
       <AddAppointmentDialog 

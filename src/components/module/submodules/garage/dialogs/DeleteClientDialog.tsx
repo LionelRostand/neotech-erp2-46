@@ -1,13 +1,15 @@
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { GarageClient } from '../types/garage-types';
 
 interface DeleteClientDialogProps {
@@ -15,42 +17,48 @@ interface DeleteClientDialogProps {
   onOpenChange: (open: boolean) => void;
   client: GarageClient | null;
   onConfirm: () => void;
-  isLoading?: boolean;
 }
 
-const DeleteClientDialog = ({
+const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
   open,
   onOpenChange,
   client,
-  onConfirm,
-  isLoading
-}: DeleteClientDialogProps) => {
+  onConfirm
+}) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!client) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Supprimer le client</DialogTitle>
-          <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer le client {client.firstName} {client.lastName} ? Cette action est irréversible.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button 
-            variant="destructive" 
-            onClick={onConfirm}
-            disabled={isLoading}
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Cette action supprimera définitivement le client <strong>{client.firstName} {client.lastName}</strong> et ne peut pas être annulée.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleConfirm}
+            className="bg-red-500 hover:bg-red-600 text-white"
+            disabled={loading}
           >
-            {isLoading ? "Suppression..." : "Supprimer"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {loading ? 'Suppression...' : 'Supprimer'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
