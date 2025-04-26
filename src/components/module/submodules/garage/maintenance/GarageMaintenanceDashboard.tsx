@@ -9,10 +9,8 @@ import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import EditMaintenanceDialog from './EditMaintenanceDialog';
 import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
 import { GarageMaintenance } from '@/types/module-types';
-import { useNavigate } from 'react-router-dom';
 
 const GarageMaintenanceDashboard = () => {
-  const navigate = useNavigate();
   const { maintenances = [], isLoading, refetch } = useGarageData();
   const [selectedMaintenance, setSelectedMaintenance] = useState<GarageMaintenance | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -43,18 +41,10 @@ const GarageMaintenanceDashboard = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Maintenances</h1>
-        <div className="flex gap-4">
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/modules/garage/maintenance/dashboard')}
-          >
-            Tableau de bord
-          </Button>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle maintenance
-          </Button>
-        </div>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle maintenance
+        </Button>
       </div>
 
       <MaintenanceTable 
@@ -82,14 +72,12 @@ const GarageMaintenanceDashboard = () => {
             open={showEditDialog}
             onOpenChange={setShowEditDialog}
             maintenance={selectedMaintenance}
-            onSuccess={refetch}
           />
 
           <DeleteMaintenanceDialog 
             open={showDeleteDialog}
             onOpenChange={setShowDeleteDialog}
             maintenanceId={selectedMaintenance.id}
-            onSuccess={refetch}
           />
         </>
       )}
