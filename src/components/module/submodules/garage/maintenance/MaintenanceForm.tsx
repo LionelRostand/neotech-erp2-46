@@ -1,11 +1,8 @@
 
-import React from 'react';
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
-import { useForm } from "react-hook-form";
-import ServicesSelector from './ServicesSelector';
 import {
   Select,
   SelectContent,
@@ -13,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGarageClients } from '@/hooks/garage/useGarageClients';
-import { useGarageMechanics } from '@/hooks/garage/useGarageMechanics';
-import { useGarageVehicles } from '@/hooks/garage/useGarageVehicles';
+import { DatePicker } from "@/components/ui/date-picker";
+import { Trash2, Plus } from "lucide-react";
+import { useGarageData } from '@/hooks/garage/useGarageData';
+import { format } from 'date-fns';
 
 interface MaintenanceFormProps {
   onSubmit: (data: any) => void;
@@ -23,183 +21,229 @@ interface MaintenanceFormProps {
 }
 
 const MaintenanceForm = ({ onSubmit, onCancel }: MaintenanceFormProps) => {
-  const form = useForm({
-    defaultValues: {
-      clientId: '',
-      mechanicId: '',
-      vehicleId: '',
-      description: '',
-      startDate: undefined,
-      endDate: undefined,
-      services: []
+  const { services, mechanics, clients, vehicles } = useGarageData();
+  const [date, setDate] = useState<Date>(new Date());
+  const [clientId, setClientId] = useState<string>("");
+  const [vehicleId, setVehicleId] = useState<string>("");
+  const [mechanicId, setMechanicId] = useState<string>("");
+  const [selectedServices, setSelectedServices] = useState<Array<{serviceId: string, quantity: number, cost: number}>>([]);
+  const [notes, setNotes] = useState<string>("");
+  const [totalCost, setTotalCost] = useState<number>(0);
+
+  // Calculate total cost when services change
+  useEffect(() => {
+    const total = selectedServices.reduce((sum, service) => sum + (service.cost * service.quantity), 0);
+    setTotalCost(total);
+  }, [selectedServices]);
+
+  // Add a service row
+  const addServiceRow = () => {
+    setSelectedServices([...selectedServices, { serviceId: "", quantity: 1, cost: 0 }]);
+  };
+
+  // Remove a service row
+  const removeServiceRow = (index: number) => {
+    const updatedServices = [...selectedServices];
+    updatedServices.splice(index, 1);
+    setSelectedServices(updatedServices);
+  };
+
+  // Update service details
+  const updateServiceRow = (index: number, field: string, value: any) => {
+    const updatedServices = [...selectedServices];
+    
+    if (field === 'serviceId') {
+      const selectedService = services.find(s => s.id === value);
+      if (selectedService) {
+        updatedServices[index] = {
+          ...updatedServices[index],
+          serviceId: value,
+          cost: selectedService.cost
+        };
+      }
+    } else {
+      updatedServices[index] = { ...updatedServices[index], [field]: value };
     }
-  });
+    
+    setSelectedServices(updatedServices);
+  };
 
-  const { clients } = useGarageClients();
-  const { mechanics } = useGarageMechanics();
-  const { vehicles } = useGarageVehicles();
-  const [totalCost, setTotalCost] = React.useState(0);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleSubmit = (data: any) => {
-    onSubmit({
-      ...data,
+    // Format date to ISO string for database storage
+    const maintenanceData = {
+      vehicleId,
+      clientId,
+      mechanicId,
+      date: date.toISOString(),
+      services: selectedServices,
       totalCost,
-    });
+      notes,
+      status: 'scheduled'
+    };
+
+    onSubmit(maintenanceData);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="clientId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Client</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un client" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.firstName} {client.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="mechanicId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mécanicien</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un mécanicien" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {mechanics.map((mechanic) => (
-                    <SelectItem key={mechanic.id} value={mechanic.id}>
-                      {mechanic.firstName} {mechanic.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="vehicleId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Véhicule</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un véhicule" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {vehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="services"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Services</FormLabel>
-              <FormControl>
-                <ServicesSelector
-                  services={field.value}
-                  onChange={field.onChange}
-                  onCostChange={setTotalCost}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Description de la maintenance"
-                  {...field}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date de début</FormLabel>
-                <DatePicker
-                  date={field.value}
-                  onSelect={field.onChange}
-                />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date de fin</FormLabel>
-                <DatePicker
-                  date={field.value}
-                  onSelect={field.onChange}
-                />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Client, vehicle and mechanic selection */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Client</label>
+          <Select value={clientId} onValueChange={setClientId} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un client" />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map(client => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name || `${client.firstName} ${client.lastName}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        <div className="flex justify-between space-x-4 pt-4">
-          <div className="text-lg">
-            <strong>Coût total: {totalCost}€</strong>
-          </div>
-          <div className="flex space-x-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Annuler
-            </Button>
-            <Button type="submit">
-              Ajouter la maintenance
-            </Button>
-          </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Véhicule</label>
+          <Select value={vehicleId} onValueChange={setVehicleId} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un véhicule" />
+            </SelectTrigger>
+            <SelectContent>
+              {vehicles.map(vehicle => (
+                <SelectItem key={vehicle.id} value={vehicle.id}>
+                  {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </form>
-    </Form>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Mécanicien</label>
+          <Select value={mechanicId} onValueChange={setMechanicId} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un mécanicien" />
+            </SelectTrigger>
+            <SelectContent>
+              {mechanics.map(mechanic => (
+                <SelectItem key={mechanic.id} value={mechanic.id}>
+                  {mechanic.firstName} {mechanic.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      {/* Date */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Date de maintenance</label>
+        <DatePicker 
+          date={date} 
+          onSelect={(newDate) => newDate && setDate(newDate)}
+          className="w-full" 
+        />
+      </div>
+      
+      {/* Services */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <label className="text-sm font-medium">Services</label>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm" 
+            onClick={addServiceRow}
+            className="text-xs"
+          >
+            <Plus className="h-4 w-4 mr-1" /> Ajouter un service
+          </Button>
+        </div>
+        
+        {selectedServices.length === 0 ? (
+          <div className="text-center py-4 border border-dashed rounded-md border-gray-300 text-gray-500">
+            Aucun service ajouté
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {selectedServices.map((service, index) => (
+              <div key={index} className="flex items-center gap-2 p-2 border rounded-md">
+                <div className="flex-grow">
+                  <Select 
+                    value={service.serviceId} 
+                    onValueChange={(value) => updateServiceRow(index, 'serviceId', value)}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name} - {s.cost}€</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-20">
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    value={service.quantity} 
+                    onChange={(e) => updateServiceRow(index, 'quantity', parseInt(e.target.value) || 1)}
+                    placeholder="Qté"
+                    required
+                  />
+                </div>
+                <div className="w-24 text-right">
+                  {(service.cost * service.quantity).toFixed(2)}€
+                </div>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => removeServiceRow(index)} 
+                  className="text-destructive hover:text-destructive/80"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Notes */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Notes</label>
+        <Textarea
+          placeholder="Notes sur la maintenance..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[100px]"
+        />
+      </div>
+      
+      {/* Total Cost */}
+      <div className="flex justify-end">
+        <div className="text-lg font-semibold">
+          Total: {totalCost.toFixed(2)}€
+        </div>
+      </div>
+      
+      {/* Form Actions */}
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button type="submit">
+          Ajouter la maintenance
+        </Button>
+      </div>
+    </form>
   );
 };
 

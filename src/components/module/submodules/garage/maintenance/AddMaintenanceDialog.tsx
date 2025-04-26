@@ -10,7 +10,6 @@ import MaintenanceForm from './MaintenanceForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
 interface AddMaintenanceDialogProps {
@@ -23,11 +22,20 @@ const AddMaintenanceDialog = ({ open, onOpenChange }: AddMaintenanceDialogProps)
   
   const handleSubmit = async (data: any) => {
     try {
-      await addDoc(collection(db, COLLECTIONS.GARAGE.MAINTENANCE), {
-        ...data,
-        status: 'scheduled',
-        createdAt: new Date().toISOString()
-      });
+      // Ensure no undefined values are sent to Firestore
+      const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // Add creation timestamp
+      cleanData.createdAt = new Date().toISOString();
+      cleanData.updatedAt = new Date().toISOString();
+      
+      // Add to Firestore
+      await addDoc(collection(db, 'garage_maintenances'), cleanData);
       
       toast.success("Maintenance ajoutée avec succès");
       queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });

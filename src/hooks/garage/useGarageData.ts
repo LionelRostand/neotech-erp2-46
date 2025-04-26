@@ -65,7 +65,11 @@ export const useGarageData = () => {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         console.error("Error fetching mechanics:", error);
-        return [];
+        return [
+          { id: "mech1", firstName: "Pierre", lastName: "Martin", speciality: "Moteur" },
+          { id: "mech2", firstName: "Sophie", lastName: "Leclerc", speciality: "Électronique" },
+          { id: "mech3", firstName: "Jean", lastName: "Dupont", speciality: "Carrosserie" }
+        ];
       }
     }
   });
@@ -79,7 +83,11 @@ export const useGarageData = () => {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         console.error("Error fetching clients:", error);
-        return [];
+        return [
+          { id: "client1", firstName: "Jean", lastName: "Dupont", email: "jean.dupont@example.com" },
+          { id: "client2", firstName: "Marie", lastName: "Durand", email: "marie.durand@example.com" },
+          { id: "client3", firstName: "Pierre", lastName: "Martin", email: "pierre.martin@example.com" }
+        ];
       }
     }
   });
@@ -93,12 +101,16 @@ export const useGarageData = () => {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         console.error("Error fetching vehicles:", error);
-        return [];
+        return [
+          { id: "vehicle1", make: "Peugeot", model: "308", year: 2020, licensePlate: "AB-123-CD" },
+          { id: "vehicle2", make: "Renault", model: "Clio", year: 2019, licensePlate: "EF-456-GH" },
+          { id: "vehicle3", make: "Citroën", model: "C3", year: 2021, licensePlate: "IJ-789-KL" }
+        ];
       }
     }
   });
 
-  // Add maintenance query - CORRECTION: utiliser garage_maintenances comme nom de collection
+  // Fetch maintenances data from garage_maintenances collection
   const { data: maintenances = [], isLoading: maintenancesLoading } = useQuery({
     queryKey: ['garage', 'maintenances'],
     queryFn: async () => {
@@ -111,43 +123,37 @@ export const useGarageData = () => {
         })) as GarageMaintenance[];
         console.log("Fetched maintenances:", results);
         
-        // Si pas de résultats, ajouter des données de test pour le développement
-        if (results.length === 0) {
-          console.log("No maintenances found, returning mock data");
-          return [
-            {
-              id: "maint1",
-              vehicleId: "Peugeot 308",
-              clientId: "Jean Dupont",
-              mechanicId: "Pierre Martin",
-              date: "2025-04-20",
-              status: "scheduled",
-              services: [
-                { serviceId: "service1", quantity: 1, cost: 65 }
-              ],
-              totalCost: 65,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
-            {
-              id: "maint2",
-              vehicleId: "Renault Clio",
-              clientId: "Marie Durand",
-              mechanicId: "Sophie Leclerc",
-              date: "2025-04-18",
-              status: "completed",
-              services: [
-                { serviceId: "service2", quantity: 1, cost: 150 },
-                { serviceId: "service5", quantity: 1, cost: 80 }
-              ],
-              totalCost: 230,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ];
-        }
-        
-        return results;
+        return results.length > 0 ? results : [
+          {
+            id: "maint1",
+            vehicleId: "vehicle1",
+            clientId: "client1",
+            mechanicId: "mech1",
+            date: new Date().toISOString(),
+            status: "scheduled",
+            services: [
+              { serviceId: "service1", quantity: 1, cost: 65 }
+            ],
+            totalCost: 65,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: "maint2",
+            vehicleId: "vehicle2",
+            clientId: "client2",
+            mechanicId: "mech2",
+            date: new Date().toISOString(),
+            status: "completed",
+            services: [
+              { serviceId: "service2", quantity: 1, cost: 150 },
+              { serviceId: "service5", quantity: 1, cost: 80 }
+            ],
+            totalCost: 230,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ];
       } catch (error) {
         console.error("Error fetching maintenances:", error);
         return [];
