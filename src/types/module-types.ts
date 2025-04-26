@@ -1,3 +1,4 @@
+
 import { ReactNode } from 'react';
 
 export interface SubModule {
@@ -40,4 +41,7 @@ export interface GarageMaintenance {
     cost: number;
   }>;
   notes?: string;
+  clientName?: string;
+  vehicleName?: string;
 }
+
