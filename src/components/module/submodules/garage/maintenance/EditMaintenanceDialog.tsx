@@ -69,6 +69,7 @@ const EditMaintenanceDialog = ({
     }
   };
 
+  // If maintenance is undefined or null, don't render the form
   if (!maintenance) return null;
 
   return (

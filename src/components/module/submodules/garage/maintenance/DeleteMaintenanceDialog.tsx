@@ -9,9 +9,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/components/ui/use-toast';
+import { deleteDocument } from "@/hooks/firestore/delete-operations";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/components/ui/use-toast";
 
 interface DeleteMaintenanceDialogProps {
   open: boolean;
