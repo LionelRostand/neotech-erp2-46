@@ -2,32 +2,51 @@
 import React from "react";
 import {
   AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Route } from "@/types/freight/route-types";
+import { deleteDocument } from "@/hooks/firestore/delete-operations";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { toast } from 'sonner';
 import { Loader2 } from "lucide-react";
-import { Route } from "@/types/freight";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   route: Route | null;
-  onDelete: () => Promise<void>;
-  deleting: boolean;
+  onSuccess: () => void;
 };
 
 const FreightRouteDeleteDialog: React.FC<Props> = ({
   open,
   onOpenChange,
   route,
-  onDelete,
-  deleting,
+  onSuccess,
 }) => {
+  const [deleting, setDeleting] = React.useState(false);
+
+  const handleDelete = async () => {
+    if (!route) return;
+    
+    try {
+      setDeleting(true);
+      await deleteDocument(COLLECTIONS.FREIGHT.ROUTES, route.id);
+      toast.success('Route supprimée avec succès');
+      onSuccess();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression de la route');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!route) return null;
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -42,7 +61,7 @@ const FreightRouteDeleteDialog: React.FC<Props> = ({
           <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 hover:bg-red-700"
-            onClick={onDelete}
+            onClick={handleDelete}
             disabled={deleting}
           >
             {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
