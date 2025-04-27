@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import AddLoyaltyProgramDialog from './AddLoyaltyProgramDialog';
 
 const GarageLoyaltyDashboard = () => {
-  const { loyalty, clients, isLoading } = useGarageData();
+  const { loyalty = [], clients = [], isLoading } = useGarageData();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -16,7 +16,8 @@ const GarageLoyaltyDashboard = () => {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
   }
 
-  const activePrograms = loyalty.filter(program => program.status === 'active');
+  // Make sure loyalty is not undefined before filtering
+  const activePrograms = loyalty?.filter(program => program.status === 'active') || [];
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -43,7 +44,7 @@ const GarageLoyaltyDashboard = () => {
         
         <StatCard
           title="Clients Inscrits"
-          value={clients.filter(c => c.loyaltyPoints && c.loyaltyPoints > 0).length.toString()}
+          value={(clients?.filter(c => c.loyaltyPoints && c.loyaltyPoints > 0).length || 0).toString()}
           icon={<BadgePercent className="h-4 w-4 text-emerald-500" />}
           description="Participants au programme"
           className="bg-emerald-50 hover:bg-emerald-100"
@@ -51,7 +52,11 @@ const GarageLoyaltyDashboard = () => {
         
         <StatCard
           title="Points Moyens"
-          value={Math.round(clients.reduce((acc, c) => acc + (c.loyaltyPoints || 0), 0) / clients.length).toString()}
+          value={Math.round(
+            clients?.length > 0 
+              ? clients.reduce((acc, c) => acc + (c.loyaltyPoints || 0), 0) / clients.length 
+              : 0
+          ).toString()}
           icon={<BadgePercent className="h-4 w-4 text-amber-500" />}
           description="Par client actif"
           className="bg-amber-50 hover:bg-amber-100"
