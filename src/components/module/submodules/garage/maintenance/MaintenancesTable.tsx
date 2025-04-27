@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { Maintenance } from './types';
+import { useGarageData } from '@/hooks/garage/useGarageData';
 
 interface MaintenancesTableProps {
   maintenances: Maintenance[];
@@ -19,7 +20,40 @@ interface MaintenancesTableProps {
   onDelete: (maintenance: Maintenance) => void;
 }
 
-const MaintenancesTable = ({ maintenances, onView, onEdit, onDelete }: MaintenancesTableProps) => {
+const MaintenancesTable = ({ 
+  maintenances, 
+  onView, 
+  onEdit, 
+  onDelete 
+}: MaintenancesTableProps) => {
+  // Get clients and vehicles data for name resolution
+  const { clients, vehicles } = useGarageData();
+  
+  // Helper function to get client name
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? `${client.firstName} ${client.lastName}` : clientId;
+  };
+
+  // Helper function to get vehicle info
+  const getVehicleInfo = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    return vehicle ? `${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate}` : vehicleId;
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -34,9 +68,9 @@ const MaintenancesTable = ({ maintenances, onView, onEdit, onDelete }: Maintenan
       <TableBody>
         {maintenances.map((maintenance) => (
           <TableRow key={maintenance.id}>
-            <TableCell>{maintenance.date}</TableCell>
-            <TableCell>{maintenance.clientId}</TableCell>
-            <TableCell>{maintenance.vehicleId}</TableCell>
+            <TableCell>{formatDate(maintenance.date)}</TableCell>
+            <TableCell>{getClientName(maintenance.clientId)}</TableCell>
+            <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
             <TableCell>{maintenance.status}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end space-x-2">
