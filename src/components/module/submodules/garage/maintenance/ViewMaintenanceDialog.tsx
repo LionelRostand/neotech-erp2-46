@@ -1,67 +1,60 @@
-
 import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Maintenance } from './types';
+import { FileInvoice } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface ViewMaintenanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  maintenance: Maintenance | null;
+  maintenance: any;
 }
 
-const ViewMaintenanceDialog = ({ open, onOpenChange, maintenance }: ViewMaintenanceDialogProps) => {
-  const { clients, vehicles, mechanics, services } = useGarageData();
+const ViewMaintenanceDialog = ({ 
+  open, 
+  onOpenChange, 
+  maintenance 
+}: ViewMaintenanceDialogProps) => {
+  const { clients, vehicles } = useGarageData();
+  const navigate = useNavigate();
 
-  if (!maintenance) return null;
-
-  // Helper functions to get names instead of IDs
+  // Helper function to get client name
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : clientId;
+    return client ? `${client.firstName} ${client.lastName}` : 'Client non assigné';
   };
 
-  const getVehicleInfo = (vehicleId: string) => {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate}` : vehicleId;
+  const handleCreateInvoice = () => {
+    // Create new invoice data
+    const invoiceData = {
+      clientId: maintenance.clientId,
+      clientName: getClientName(maintenance.clientId),
+      date: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Due in 30 days
+      amount: maintenance.totalCost,
+      maintenanceId: maintenance.id,
+      status: 'pending'
+    };
+
+    // Store the invoice data in sessionStorage to access it in the invoices page
+    sessionStorage.setItem('newInvoiceData', JSON.stringify(invoiceData));
+    
+    // Navigate to invoices page
+    navigate('/modules/garage/invoices');
+    
+    toast.success("Redirection vers la création de facture");
+    onOpenChange(false);
   };
 
-  const getMechanicName = (mechanicId: string) => {
-    const mechanic = mechanics.find(m => m.id === mechanicId);
-    return mechanic ? `${mechanic.firstName} ${mechanic.lastName}` : mechanicId;
-  };
-
-  const getServiceName = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId);
-    return service ? service.name : serviceId;
-  };
-
-  // Format status for display
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'Planifiée';
-      case 'in_progress': return 'En cours';
-      case 'completed': return 'Terminée';
-      case 'cancelled': return 'Annulée';
-      default: return status;
-    }
-  };
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'PPP', { locale: fr });
-    } catch (error) {
-      return dateString;
-    }
-  };
+  if (!maintenance) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,6 +110,19 @@ const ViewMaintenanceDialog = ({ open, onOpenChange, maintenance }: ViewMaintena
             </div>
           )}
         </div>
+        <DialogFooter className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handleCreateInvoice}
+            className="gap-2"
+          >
+            <FileInvoice className="h-4 w-4" />
+            Créer une facture
+          </Button>
+          <Button onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
