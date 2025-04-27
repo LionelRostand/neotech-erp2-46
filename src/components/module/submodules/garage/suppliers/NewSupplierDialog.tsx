@@ -2,9 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import NewSupplierForm from './NewSupplierForm';
-import { toast } from 'sonner';
-import { addDocument } from '@/hooks/firestore/firestore-utils';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useGarageSuppliers } from '@/hooks/garage/useGarageSuppliers';
 
 interface NewSupplierDialogProps {
   open: boolean;
@@ -13,15 +11,15 @@ interface NewSupplierDialogProps {
 }
 
 const NewSupplierDialog = ({ open, onOpenChange, onSuccess }: NewSupplierDialogProps) => {
-  const handleSave = async (supplier: any) => {
+  const { addSupplier } = useGarageSuppliers();
+
+  const handleSave = async (supplierData: any) => {
     try {
-      await addDocument(COLLECTIONS.GARAGE.SUPPLIERS, supplier);
-      toast.success("Fournisseur ajouté avec succès");
+      await addSupplier.mutateAsync(supplierData);
       onOpenChange(false);
       onSuccess();
     } catch (error) {
       console.error('Error saving supplier:', error);
-      toast.error("Erreur lors de l'ajout du fournisseur");
     }
   };
 

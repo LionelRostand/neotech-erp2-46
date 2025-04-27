@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useGarageData } from '@/hooks/garage/useGarageData';
+import { useGarageSuppliers } from '@/hooks/garage/useGarageSuppliers';
 import { Eye, Pencil, Trash, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NewSupplierDialog from './NewSupplierDialog';
@@ -16,7 +16,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const GarageSuppliersDashboard = () => {
-  const { suppliers = [], isLoading, refetch } = useGarageData();
+  const { suppliers = [], isLoading, refetch } = useGarageSuppliers();
   const [showAddDialog, setShowAddDialog] = React.useState(false);
 
   // Dashboard statistics
