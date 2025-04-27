@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
@@ -19,5 +18,6 @@ export const GarageRoutes = (
     <Route path="inventory" element={<SubmodulePage moduleId={6} submoduleId="garage-inventory" />} />
     <Route path="loyalty" element={<SubmodulePage moduleId={6} submoduleId="garage-loyalty" />} />
     <Route path="settings" element={<SubmodulePage moduleId={6} submoduleId="garage-settings" />} />
+    <Route path="maintenance/dashboard" element={<SubmodulePage moduleId={6} submoduleId="garage-maintenance-dashboard" />} />
   </Route>
 );
