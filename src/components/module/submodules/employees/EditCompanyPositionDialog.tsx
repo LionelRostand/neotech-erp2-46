@@ -67,25 +67,31 @@ export function EditCompanyPositionDialog({
 
     try {
       console.log("Mise à jour de l'employé avec les données:", { position, company: companyId });
+      console.log("Données de l'employé avant mise à jour:", employee);
       
-      // Force email generation by providing firstName and lastName
+      // Include firstName and lastName to force email regeneration
       const updatedEmployee = await updateEmployee(employee.id, {
         position,
         company: companyId,
-        firstName: employee.firstName, // Force email regeneration
-        lastName: employee.lastName    // Force email regeneration
+        firstName: employee.firstName,
+        lastName: employee.lastName
       });
       
       if (updatedEmployee) {
         console.log("Employé mis à jour avec succès:", updatedEmployee);
         
-        // Use the callback to update the UI
-        onEmployeeUpdated({
+        // Create a complete updated employee object
+        const completeUpdatedEmployee = {
           ...employee,
           position,
           company: companyId,
-          professionalEmail: updatedEmployee.professionalEmail // Ensure we use the newly generated email
-        });
+          professionalEmail: updatedEmployee.professionalEmail
+        };
+        
+        console.log("Employé complet mis à jour:", completeUpdatedEmployee);
+        
+        // Use the callback to update the UI
+        onEmployeeUpdated(completeUpdatedEmployee);
         
         toast.success("Informations mises à jour avec succès");
         onOpenChange(false);

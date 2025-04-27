@@ -34,15 +34,15 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     switch (currentEmployee.status) {
       case 'active':
       case 'Actif':
-        return <Badge variant="success">Actif</Badge>;
+        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
       case 'inactive':
       case 'Inactif':
         return <Badge variant="outline" className="text-gray-500 border-gray-300">Inactif</Badge>;
       case 'onLeave':
       case 'En congé':
-        return <Badge variant="warning">En congé</Badge>;
+        return <Badge className="bg-amber-500 hover:bg-amber-600">En congé</Badge>;
       case 'Suspendu':
-        return <Badge variant="destructive">Suspendu</Badge>;
+        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
       default:
         return <Badge variant="outline">{currentEmployee.status}</Badge>;
     }
@@ -99,7 +99,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-bold">{currentEmployee.firstName} {currentEmployee.lastName}</h2>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex items-center text-muted-foreground">
                     <Briefcase className="h-4 w-4 mr-2" />
                     <span className="text-sm">
@@ -110,11 +110,16 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowEditDialog(true)}
-                    className="ml-2"
+                    className="mt-1 sm:mt-0 sm:ml-2"
                   >
                     <Pencil className="h-4 w-4 mr-1" />
                     Modifier
                   </Button>
+                </div>
+                <div className="mt-2">
+                  <span className="text-sm text-muted-foreground">
+                    Email professionnel: {currentEmployee.professionalEmail || 'Non défini'}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
