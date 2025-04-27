@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench, Euro, Clock, TrendingUp } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import MaintenancesTable from './MaintenancesTable';
@@ -19,97 +19,95 @@ const GarageMaintenanceDashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Calculate statistics
-  const totalMaintenances = maintenances.length;
-  const averageCost = maintenances.length > 0 
-    ? maintenances.reduce((acc, m) => acc + (m.cost || 0), 0) / maintenances.length 
-    : 0;
-  const averageDuration = maintenances.length > 0
-    ? maintenances.reduce((acc, m) => acc + (m.duration || 0), 0) / maintenances.length
-    : 0;
-  const activeMaintenances = maintenances.filter(m => m.status === 'active').length;
+  const handleView = (maintenance: Maintenance) => {
+    setSelectedMaintenance(maintenance);
+    setViewDialogOpen(true);
+  };
 
-  if (isLoading) return <div className="p-6">Chargement...</div>;
+  const handleEdit = (maintenance: Maintenance) => {
+    setSelectedMaintenance(maintenance);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (maintenance: Maintenance) => {
+    setSelectedMaintenance(maintenance);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleMaintenanceAdded = () => {
+    console.log("Maintenance ajoutée, rechargement des données...");
+    refetch();
+  };
+
+  // Calculate maintenance stats
+  const completedMaintenances = maintenances.filter(m => m.status === 'completed').length;
+  const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress').length;
+  const scheduledMaintenances = maintenances.filter(m => m.status === 'scheduled').length;
+
+  if (isLoading) return <div>Chargement...</div>;
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50/50 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-          Services
-        </h2>
-        <Button 
-          onClick={() => setAddDialogOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
-        >
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold">Maintenances</h2>
+        <Button onClick={() => setAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau service
+          Nouvelle maintenance
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-indigo-200 bg-indigo-50/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-indigo-700">Total Services</CardTitle>
-            <Wrench className="h-4 w-4 text-indigo-500" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Maintenances terminées
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-indigo-900">{totalMaintenances}</div>
+            <div className="text-2xl font-bold">{completedMaintenances}</div>
           </CardContent>
         </Card>
-
-        <Card className="border-emerald-200 bg-emerald-50/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-emerald-700">Coût Moyen</CardTitle>
-            <Euro className="h-4 w-4 text-emerald-500" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Maintenances en cours
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-900">{averageCost.toFixed(2)}€</div>
+            <div className="text-2xl font-bold">{inProgressMaintenances}</div>
           </CardContent>
         </Card>
-
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Durée Moyenne</CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Maintenances planifiées
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{averageDuration.toFixed(0)} min</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-200 bg-amber-50/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-amber-700">Services Actifs</CardTitle>
-            <TrendingUp className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-900">{activeMaintenances}</div>
+            <div className="text-2xl font-bold">{scheduledMaintenances}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+      <Card>
         <CardHeader>
-          <CardTitle>Derniers services</CardTitle>
+          <CardTitle>Liste des maintenances</CardTitle>
         </CardHeader>
         <CardContent>
           <MaintenancesTable 
             maintenances={maintenances} 
-            onView={(maintenance) => {
-              setSelectedMaintenance(maintenance);
-              setViewDialogOpen(true);
-            }}
-            onEdit={(maintenance) => {
-              setSelectedMaintenance(maintenance);
-              setEditDialogOpen(true);
-            }}
-            onDelete={(maintenance) => {
-              setSelectedMaintenance(maintenance);
-              setDeleteDialogOpen(true);
-            }}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         </CardContent>
       </Card>
+
+      <AddMaintenanceDialog 
+        open={addDialogOpen} 
+        onOpenChange={setAddDialogOpen}
+        onMaintenanceAdded={handleMaintenanceAdded}
+      />
 
       {selectedMaintenance && (
         <>
@@ -132,12 +130,6 @@ const GarageMaintenanceDashboard = () => {
           />
         </>
       )}
-
-      <AddMaintenanceDialog 
-        open={addDialogOpen} 
-        onOpenChange={setAddDialogOpen}
-        onMaintenanceAdded={refetch}
-      />
     </div>
   );
 };
