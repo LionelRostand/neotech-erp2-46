@@ -5,7 +5,6 @@ import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import MaintenancesTable from './MaintenancesTable';
-import { BarChart } from '@/components/ui/charts';
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import EditMaintenanceDialog from './EditMaintenanceDialog';
@@ -39,18 +38,6 @@ const GarageMaintenanceDashboard = () => {
   const completedMaintenances = maintenances.filter(m => m.status === 'completed').length;
   const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress').length;
   const scheduledMaintenances = maintenances.filter(m => m.status === 'scheduled').length;
-
-  // Data for the status chart
-  const statusChartData = {
-    labels: ['Terminées', 'En cours', 'Planifiées'],
-    datasets: [
-      {
-        label: 'Maintenances par statut',
-        data: [completedMaintenances, inProgressMaintenances, scheduledMaintenances],
-        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6'],
-      },
-    ],
-  };
 
   if (isLoading) return <div>Chargement...</div>;
 
@@ -96,17 +83,6 @@ const GarageMaintenanceDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Répartition des maintenances</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <BarChart data={statusChartData} />
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
