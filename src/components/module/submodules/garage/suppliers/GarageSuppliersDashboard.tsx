@@ -3,24 +3,28 @@ import React, { useState } from 'react';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { Truck, Plus } from 'lucide-react';
-import StatCard from '@/components/StatCard';
+import { Truck, Plus, Eye, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NewSupplierDialog from './NewSupplierDialog';
+import StatCard from '@/components/StatCard';
 
 const GarageSuppliersDashboard = () => {
   const { suppliers = [], isLoading, refetch } = useGarageData();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  // Define table columns
+  // Define table columns to match the form fields
   const columns = [
     {
       accessorKey: "name",
-      header: "Nom",
+      header: "Nom de l'entreprise",
+    },
+    {
+      accessorKey: "category",
+      header: "Catégorie",
     },
     {
       accessorKey: "contactName",
-      header: "Contact",
+      header: "Nom du contact",
     },
     {
       accessorKey: "email",
@@ -35,6 +39,10 @@ const GarageSuppliersDashboard = () => {
       header: "Adresse",
     },
     {
+      accessorKey: "notes",
+      header: "Notes",
+    },
+    {
       accessorKey: "status",
       header: "Statut",
       cell: ({ row }) => (
@@ -43,6 +51,22 @@ const GarageSuppliersDashboard = () => {
           {row.original.status === 'active' ? 'Actif' : 'Inactif'}
         </span>
       )
+    },
+    {
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" title="Voir">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" title="Modifier">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" title="Supprimer">
+            <Trash className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
     }
   ];
 
