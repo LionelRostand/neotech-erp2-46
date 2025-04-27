@@ -4,32 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
+import { toast } from 'sonner';
+import { deleteDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import MaintenancesTable from './MaintenancesTable';
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import EditMaintenanceDialog from './EditMaintenanceDialog';
 import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
+import { Maintenance } from './types';
 
 const GarageMaintenanceDashboard = () => {
   const { maintenances, isLoading, refetch } = useGarageData();
-  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
+  const [selectedMaintenance, setSelectedMaintenance] = useState<Maintenance | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // Handlers for maintenance actions
-  const handleView = (maintenance) => {
+  const handleView = (maintenance: Maintenance) => {
     setSelectedMaintenance(maintenance);
     setViewDialogOpen(true);
   };
 
-  const handleEdit = (maintenance) => {
+  const handleEdit = (maintenance: Maintenance) => {
     setSelectedMaintenance(maintenance);
     setEditDialogOpen(true);
   };
 
-  const handleDelete = (maintenance) => {
+  const handleDelete = (maintenance: Maintenance) => {
     setSelectedMaintenance(maintenance);
     setDeleteDialogOpen(true);
   };

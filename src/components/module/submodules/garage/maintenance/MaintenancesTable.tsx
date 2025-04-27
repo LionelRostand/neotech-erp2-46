@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Maintenance } from './types';
 
 interface MaintenancesTableProps {
-  maintenances: any[];
-  onView: (maintenance: any) => void;
-  onEdit: (maintenance: any) => void;
-  onDelete: (maintenance: any) => void;
+  maintenances: Maintenance[];
+  onView: (maintenance: Maintenance) => void;
+  onEdit: (maintenance: Maintenance) => void;
+  onDelete: (maintenance: Maintenance) => void;
 }
 
 const MaintenancesTable = ({ maintenances, onView, onEdit, onDelete }: MaintenancesTableProps) => {
