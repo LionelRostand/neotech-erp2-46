@@ -1,33 +1,16 @@
 
 import React, { useState } from 'react';
-import { useGarageData } from '@/hooks/garage/useGarageData';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Package, Plus } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
 import NewInventoryDialog from './NewInventoryDialog';
+import { useGarageInventory } from '@/hooks/garage/useGarageInventory';
 
 const GarageInventoryDashboard = () => {
-  const { inventory = [], isLoading, refetch } = useGarageData();
+  const { inventory, lowStock, outOfStock, isLoading, refetch } = useGarageInventory();
   const [showAddDialog, setShowAddDialog] = useState(false);
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
-  }
-
-  // Ensure inventory is always an array
-  const safeInventory = Array.isArray(inventory) ? inventory : [];
-  
-  // Now safely filter with null checks
-  const lowStock = safeInventory.filter(item => 
-    item && item.quantity !== undefined && item.minQuantity !== undefined && 
-    item.quantity <= item.minQuantity
-  );
-  
-  const outOfStock = safeInventory.filter(item => 
-    item && item.quantity === 0
-  );
 
   const columns = [
     {
@@ -54,7 +37,7 @@ const GarageInventoryDashboard = () => {
       accessorKey: "status",
       header: "Statut",
       cell: ({ row }) => {
-        const status = row.original.status || 'unknown';
+        const status = row.original.status;
         return (
           <span className={`px-2 py-1 rounded-full text-xs font-medium
             ${status === 'in_stock' ? 'bg-green-100 text-green-800' :
@@ -81,7 +64,7 @@ const GarageInventoryDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Total Articles"
-          value={safeInventory.length.toString()}
+          value={inventory.length.toString()}
           icon={<Package className="h-4 w-4 text-blue-500" />}
           description="Tous les articles"
           className="bg-blue-50 hover:bg-blue-100"
@@ -109,7 +92,11 @@ const GarageInventoryDashboard = () => {
           <CardTitle>Liste des Articles</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable columns={columns} data={safeInventory} />
+          <DataTable 
+            columns={columns} 
+            data={inventory}
+            isLoading={isLoading} 
+          />
         </CardContent>
       </Card>
 

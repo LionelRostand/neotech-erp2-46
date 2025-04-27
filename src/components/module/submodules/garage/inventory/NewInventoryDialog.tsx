@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Inventory } from '../types/garage-types';
+import { InventoryItem } from '@/hooks/garage/useGarageInventory';
 import NewInventoryForm from './NewInventoryForm';
 import { toast } from 'sonner';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
@@ -14,9 +14,16 @@ interface NewInventoryDialogProps {
 }
 
 const NewInventoryDialog = ({ open, onOpenChange, onSuccess }: NewInventoryDialogProps) => {
-  const handleSave = async (item: Partial<Inventory>) => {
+  const handleSave = async (data: Partial<InventoryItem>) => {
     try {
-      await addDocument(COLLECTIONS.GARAGE.INVENTORY, item);
+      const newItem = {
+        ...data,
+        status: data.quantity === 0 ? 'out_of_stock' :
+                data.quantity <= (data.minQuantity || 0) ? 'low_stock' : 
+                'in_stock'
+      };
+      
+      await addDocument(COLLECTIONS.GARAGE.INVENTORY, newItem);
       toast.success("Article ajouté avec succès");
       onOpenChange(false);
       onSuccess();
