@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import MaintenancesTable from './MaintenancesTable';
+import { BarChart } from '@/components/ui/charts';
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import EditMaintenanceDialog from './EditMaintenanceDialog';
@@ -18,6 +19,7 @@ const GarageMaintenanceDashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
+  // Handlers for maintenance actions
   const handleView = (maintenance) => {
     setSelectedMaintenance(maintenance);
     setViewDialogOpen(true);
@@ -33,6 +35,23 @@ const GarageMaintenanceDashboard = () => {
     setDeleteDialogOpen(true);
   };
 
+  // Calculate maintenance stats
+  const completedMaintenances = maintenances.filter(m => m.status === 'completed').length;
+  const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress').length;
+  const scheduledMaintenances = maintenances.filter(m => m.status === 'scheduled').length;
+
+  // Data for the status chart
+  const statusChartData = {
+    labels: ['Terminées', 'En cours', 'Planifiées'],
+    datasets: [
+      {
+        label: 'Maintenances par statut',
+        data: [completedMaintenances, inProgressMaintenances, scheduledMaintenances],
+        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6'],
+      },
+    ],
+  };
+
   if (isLoading) return <div>Chargement...</div>;
 
   return (
@@ -44,6 +63,50 @@ const GarageMaintenanceDashboard = () => {
           Nouvelle maintenance
         </Button>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Maintenances terminées
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{completedMaintenances}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Maintenances en cours
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{inProgressMaintenances}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Maintenances planifiées
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{scheduledMaintenances}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Répartition des maintenances</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <BarChart data={statusChartData} />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
