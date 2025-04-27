@@ -75,7 +75,11 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="clientName">Nom du Client</label>
-            <input {...form.register('clientName')} className="w-full border rounded p-2" />
+            <input 
+              {...form.register('clientName')} 
+              className="w-full border rounded p-2" 
+              placeholder="Nom du client"
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -86,11 +90,12 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
                 step="0.01" 
                 {...form.register('amount', { setValueAs: (v) => parseFloat(v) })} 
                 className="w-full border rounded p-2" 
+                placeholder="0.00"
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="currency">Devise</label>
+              <label>Devise</label>
               <select {...form.register('currency')} className="w-full border rounded p-2">
                 <option value="EUR">EUR</option>
                 <option value="USD">USD</option>
@@ -106,8 +111,8 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {shipments.map((shipment) => (
-                  <SelectItem key={shipment.reference} value={shipment.reference}>
-                    {shipment.reference} - {shipment.customerName}
+                  <SelectItem key={shipment.reference} value={shipment.reference || 'none'}>
+                    {shipment.reference} - {shipment.customerName || shipment.customer}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -122,7 +127,7 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {containers.map((container) => (
-                  <SelectItem key={container.number} value={container.number}>
+                  <SelectItem key={container.number} value={container.number || 'none'}>
                     {container.number} - {container.client}
                   </SelectItem>
                 ))}
@@ -131,7 +136,7 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="status">Statut</label>
+            <label>Statut</label>
             <select {...form.register('status')} className="w-full border rounded p-2">
               <option value="pending">En attente</option>
               <option value="paid">Payée</option>
@@ -142,7 +147,7 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit">
+            <Button type="submit" variant="default" className="bg-emerald-600 hover:bg-emerald-700">
               Créer la facture
             </Button>
           </div>
