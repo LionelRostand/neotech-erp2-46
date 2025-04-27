@@ -1,5 +1,5 @@
 
-import { Car, LayoutDashboard, Users, Receipt, Truck, Package, BadgePercent, Settings, Calendar, Cog, UserCog, Wrench } from 'lucide-react';
+import { Car, LayoutDashboard, Users, Receipt, Truck, Package, BadgePercent, Settings, Calendar, Cog, UserCog, Wrench, List } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const garageModule: AppModule = {
@@ -16,7 +16,8 @@ export const garageModule: AppModule = {
     { id: "garage-appointments", name: "Rendez-vous", href: "/modules/garage/appointments", icon: createIcon(Calendar) },
     { id: "garage-services", name: "Services", href: "/modules/garage/services", icon: createIcon(Cog) },
     { id: "garage-mechanics", name: "Mécaniciens", href: "/modules/garage/mechanics", icon: createIcon(UserCog) },
-    { id: "garage-maintenance", name: "Maintenances", href: "/modules/garage/maintenance", icon: createIcon(Wrench) },
+    { id: "garage-maintenance-list", name: "Liste des maintenances", href: "/modules/garage/maintenance", icon: createIcon(List) },
+    { id: "garage-maintenance-dashboard", name: "Tableau de bord maintenance", href: "/modules/garage/maintenance/dashboard", icon: createIcon(Wrench) },
     { id: "garage-invoices", name: "Factures", href: "/modules/garage/invoices", icon: createIcon(Receipt) },
     { id: "garage-suppliers", name: "Fournisseurs", href: "/modules/garage/suppliers", icon: createIcon(Truck) },
     { id: "garage-inventory", name: "Inventaire", href: "/modules/garage/inventory", icon: createIcon(Package) },
