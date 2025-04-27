@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useGarageInvoices } from '@/hooks/garage/useGarageInvoices';
 import { formatCurrency } from '@/lib/utils';
 import { Plus, FileText, BadgeEuro, BadgeDollarSign } from 'lucide-react';
+import ViewGarageInvoiceDialog from './ViewGarageInvoiceDialog';
 
 const statusLabel = {
   paid: "Payée",
@@ -17,6 +17,16 @@ const statusLabel = {
 
 const GarageInvoicesDashboard = () => {
   const { invoices, isLoading } = useGarageInvoices();
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  
+  const handleViewInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice);
+  };
+
+  const handlePaymentComplete = async () => {
+    // Refresh invoices after payment
+    window.location.reload();
+  };
 
   // Safely calculate totals and counts
   const totalInvoices = invoices?.length || 0;
@@ -121,7 +131,7 @@ const GarageInvoicesDashboard = () => {
                     <TableCell>{formatCurrency(Number(invoice.amount) || 0)}</TableCell>
                     <TableCell>{statusLabel[invoice.status] || invoice.status}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoice)}>
                         Voir
                       </Button>
                     </TableCell>
@@ -138,6 +148,15 @@ const GarageInvoicesDashboard = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {selectedInvoice && (
+        <ViewGarageInvoiceDialog
+          invoice={selectedInvoice}
+          isOpen={!!selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
     </div>
   );
 };
