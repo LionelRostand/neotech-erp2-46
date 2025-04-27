@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -8,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Banknote, CreditCard, PaypalIcon } from 'lucide-react';
+import { Banknote, CreditCard, Paypal } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import { jsPDF } from 'jspdf';
@@ -128,7 +127,7 @@ const ViewGarageInvoiceDialog = ({
               onClick={() => handlePayment('PayPal')}
               disabled={processingPayment}
             >
-              <PaypalIcon className="mr-2 h-4 w-4" />
+              <Paypal className="mr-2 h-4 w-4" />
               PayPal
             </Button>
             <Button
