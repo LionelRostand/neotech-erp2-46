@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import useFreightShipments from '@/hooks/freight/useFreightShipments';
+import { useContainersData } from '@/hooks/modules/useContainersData';
 
 interface CreateFreightInvoiceDialogProps {
   open: boolean;
@@ -17,6 +20,9 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
   open, 
   onOpenChange 
 }) => {
+  const { shipments } = useFreightShipments();
+  const { containers } = useContainersData();
+
   const form = useForm<Partial<FreightInvoice>>({
     defaultValues: {
       status: 'pending',
@@ -26,6 +32,22 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
   
   const onSubmit = async (data: Partial<FreightInvoice>) => {
     try {
+      // Si un colis est sélectionné, on récupère ses informations
+      if (data.shipmentReference) {
+        const shipment = shipments.find(s => s.reference === data.shipmentReference);
+        if (shipment) {
+          data.clientName = shipment.customerName || shipment.customer;
+        }
+      }
+
+      // Si un conteneur est sélectionné, on récupère ses coûts
+      if (data.containerNumber) {
+        const container = containers.find(c => c.number === data.containerNumber);
+        if (container && container.costs && container.costs.length > 0) {
+          data.containerCost = container.costs.reduce((total, cost) => total + cost.amount, 0);
+        }
+      }
+
       const newInvoice = {
         ...data,
         createdAt: new Date().toISOString(),
@@ -75,10 +97,37 @@ const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({
               </select>
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <label htmlFor="shipmentReference">Référence d'Expédition</label>
-            <input {...form.register('shipmentReference')} className="w-full border rounded p-2" />
+            <label>Référence d'Expédition</label>
+            <Select onValueChange={(value) => form.setValue('shipmentReference', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un colis" />
+              </SelectTrigger>
+              <SelectContent>
+                {shipments.map((shipment) => (
+                  <SelectItem key={shipment.reference} value={shipment.reference}>
+                    {shipment.reference} - {shipment.customerName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label>Conteneur</label>
+            <Select onValueChange={(value) => form.setValue('containerNumber', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un conteneur" />
+              </SelectTrigger>
+              <SelectContent>
+                {containers.map((container) => (
+                  <SelectItem key={container.number} value={container.number}>
+                    {container.number} - {container.client}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
