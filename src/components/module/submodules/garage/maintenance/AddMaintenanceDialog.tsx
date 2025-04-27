@@ -24,6 +24,8 @@ const AddMaintenanceDialog = ({ open, onOpenChange, onMaintenanceAdded }: AddMai
 
   const handleSubmit = async (data: any) => {
     try {
+      console.log("Tentative d'ajout de maintenance avec données:", data);
+      
       // Add timestamp fields
       const maintenanceData = {
         ...data,
@@ -32,16 +34,21 @@ const AddMaintenanceDialog = ({ open, onOpenChange, onMaintenanceAdded }: AddMai
       };
       
       // Add document to Firestore
-      const collectionRef = collection(db, COLLECTIONS.GARAGE.MAINTENANCE);
-      await addDoc(collectionRef, maintenanceData);
+      const collectionRef = collection(db, COLLECTIONS.GARAGE.MAINTENANCE || 'garage_maintenances');
+      const docRef = await addDoc(collectionRef, maintenanceData);
       
+      console.log("Maintenance ajoutée avec ID:", docRef.id);
       toast.success("Maintenance ajoutée avec succès");
-      queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });
       
+      // Invalider le cache pour forcer un rechargement des données
+      await queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });
+      
+      // Appeler le callback si fourni
       if (onMaintenanceAdded) {
         onMaintenanceAdded();
       }
       
+      // Fermer le dialogue
       onOpenChange(false);
     } catch (error) {
       console.error("Error adding maintenance:", error);

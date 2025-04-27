@@ -81,7 +81,7 @@ export const COLLECTIONS = {
     MECHANICS: 'garage_mechanics',
     SERVICES: 'garage_services',
     REPAIRS: 'garage_repairs',
-    MAINTENANCE: 'garage_maintenance',
+    MAINTENANCE: 'garage_maintenances',
     INVOICES: 'garage_invoices',
     PARTS: 'garage_parts',
     SUPPLIERS: 'garage_suppliers',

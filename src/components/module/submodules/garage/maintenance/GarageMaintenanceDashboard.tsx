@@ -34,6 +34,11 @@ const GarageMaintenanceDashboard = () => {
     setDeleteDialogOpen(true);
   };
 
+  const handleMaintenanceAdded = () => {
+    console.log("Maintenance ajoutée, rechargement des données...");
+    refetch();
+  };
+
   // Calculate maintenance stats
   const completedMaintenances = maintenances.filter(m => m.status === 'completed').length;
   const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress').length;
@@ -101,7 +106,7 @@ const GarageMaintenanceDashboard = () => {
       <AddMaintenanceDialog 
         open={addDialogOpen} 
         onOpenChange={setAddDialogOpen}
-        onMaintenanceAdded={refetch}
+        onMaintenanceAdded={handleMaintenanceAdded}
       />
 
       {selectedMaintenance && (

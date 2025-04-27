@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -98,15 +99,28 @@ export const useGarageData = () => {
   });
 
   // Add maintenance query
-  const { data: maintenances = [], isLoading: maintenancesLoading } = useQuery({
+  const { 
+    data: maintenances = [], 
+    isLoading: maintenancesLoading,
+    refetch: refetchMaintenances 
+  } = useQuery({
     queryKey: ['garage', 'maintenances'],
     queryFn: async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'garage_maintenances'));
-        return snapshot.docs.map(doc => ({ 
+        console.log("Fetching maintenances from Firestore...");
+        const collectionPath = COLLECTIONS.GARAGE.MAINTENANCE || 'garage_maintenances';
+        console.log("Collection path:", collectionPath);
+        
+        const snapshot = await getDocs(collection(db, collectionPath));
+        console.log("Maintenance snapshot size:", snapshot.size);
+        
+        const maintenancesList = snapshot.docs.map(doc => ({ 
           id: doc.id, 
           ...doc.data() 
         })) as GarageMaintenance[];
+        
+        console.log("Maintenances fetched:", maintenancesList);
+        return maintenancesList;
       } catch (error) {
         console.error("Error fetching maintenances:", error);
         return [];
@@ -120,6 +134,7 @@ export const useGarageData = () => {
     clients,
     vehicles,
     maintenances,
-    isLoading: servicesLoading || mechanicsLoading || clientsLoading || vehiclesLoading || maintenancesLoading
+    isLoading: servicesLoading || mechanicsLoading || clientsLoading || vehiclesLoading || maintenancesLoading,
+    refetch: refetchMaintenances
   };
 };
