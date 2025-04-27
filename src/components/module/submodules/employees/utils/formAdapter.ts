@@ -1,3 +1,4 @@
+
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from './photoUtils';
@@ -12,6 +13,16 @@ export const formValuesToEmployee = (
   formValues: EmployeeFormValues, 
   existingEmployee?: Partial<Employee>
 ): Partial<Employee> => {
+  // Assurer que l'email professionnel est toujours généré correctement
+  const firstName = formValues.firstName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const lastName = formValues.lastName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const company = typeof formValues.company === 'string' ? 
+    formValues.company.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '') : 
+    '';
+  
+  // Générer l'email professionnel
+  const professionalEmail = `${firstName}.${lastName}@${company}.com`;
+  
   // Créer l'objet employé à partir des valeurs du formulaire
   const employeeData: Partial<Employee> = {
     firstName: formValues.firstName,
@@ -26,7 +37,7 @@ export const formValuesToEmployee = (
     birthDate: formValues.birthDate,
     managerId: formValues.managerId,
     status: formValues.status,
-    professionalEmail: formValues.professionalEmail,
+    professionalEmail: professionalEmail, // Utiliser l'email généré
     forceManager: formValues.forceManager,
     isManager: formValues.isManager,
     streetNumber: formValues.streetNumber,

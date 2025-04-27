@@ -54,6 +54,17 @@ export const useEmployeeService = () => {
     try {
       console.log('Début de mise à jour d\'un employé:', id, employeeData);
       
+      // S'assurer que l'email professionnel est correctement généré lors de la mise à jour
+      if (employeeData.firstName && employeeData.lastName && employeeData.company) {
+        const firstName = employeeData.firstName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const lastName = employeeData.lastName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const company = typeof employeeData.company === 'string' 
+          ? employeeData.company.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '')
+          : '';
+          
+        employeeData.professionalEmail = `${firstName}.${lastName}@${company}.com`;
+      }
+
       // Ensure we're not sending undefined values
       const cleanedData: Partial<Employee> = {};
       Object.entries(employeeData).forEach(([key, value]) => {
