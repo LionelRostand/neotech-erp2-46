@@ -1,67 +1,60 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, CheckCircle, Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface AppointmentsStatsProps {
-  scheduledCount: number;
-  inProgressCount: number;
-  completedCount: number;
-  totalCount: number;
+  appointments: any[];
 }
 
-const AppointmentsStats: React.FC<AppointmentsStatsProps> = ({
-  scheduledCount,
-  inProgressCount,
-  completedCount,
-  totalCount
-}) => {
+const AppointmentsStats = ({ appointments }: AppointmentsStatsProps) => {
+  const today = new Date().toISOString().split('T')[0];
+  const todaysAppointments = appointments.filter(a => a.date === today);
+  const upcomingAppointments = appointments.filter(a => a.date > today);
+  const completedAppointments = appointments.filter(a => a.status === 'completed');
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-blue-500 mr-4" />
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Rendez-vous prévus</p>
-              <h3 className="text-2xl font-bold">{scheduledCount}</h3>
-            </div>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Rendez-vous aujourd'hui</CardTitle>
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{todaysAppointments.length}</div>
         </CardContent>
       </Card>
-      
+
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center">
-            <Clock className="h-8 w-8 text-yellow-500 mr-4" />
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">En cours</p>
-              <h3 className="text-2xl font-bold">{inProgressCount}</h3>
-            </div>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">À venir</CardTitle>
+          <Clock className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{upcomingAppointments.length}</div>
         </CardContent>
       </Card>
-      
+
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-500 mr-4" />
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Terminés</p>
-              <h3 className="text-2xl font-bold">{completedCount}</h3>
-            </div>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Complétés</CardTitle>
+          <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{completedAppointments.length}</div>
         </CardContent>
       </Card>
-      
+
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center">
-            <Activity className="h-8 w-8 text-purple-500 mr-4" />
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total</p>
-              <h3 className="text-2xl font-bold">{totalCount}</h3>
-            </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Taux de complétion</CardTitle>
+          <AlertCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {appointments.length > 0 
+              ? Math.round((completedAppointments.length / appointments.length) * 100)
+              : 0}%
           </div>
         </CardContent>
       </Card>

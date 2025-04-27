@@ -5,10 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarCheck, List, Plus, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import AppointmentsTable from './AppointmentsTable';
+import AppointmentsList from './AppointmentsTable';
 import AppointmentsCalendar from './AppointmentsCalendar';
 import NewAppointmentDialog from './NewAppointmentDialog';
 import { useGarageAppointments } from '../hooks/useGarageAppointments';
+import AppointmentsStats from './components/AppointmentsStats';
 
 const GarageAppointments = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -40,6 +41,8 @@ const GarageAppointments = () => {
           Nouveau rendez-vous
         </Button>
       </div>
+
+      <AppointmentsStats appointments={appointments} />
       
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -81,7 +84,7 @@ const GarageAppointments = () => {
         </CardHeader>
         <CardContent>
           {viewMode === 'list' ? (
-            <AppointmentsTable 
+            <AppointmentsList 
               appointments={filteredAppointments} 
               isLoading={isLoading}
               getClientName={getClientName}
