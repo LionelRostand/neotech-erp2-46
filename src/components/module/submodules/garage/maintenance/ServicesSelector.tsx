@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
@@ -28,35 +28,24 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
   
   // Calculate and update total cost whenever services change
   useEffect(() => {
-    // Make sure services is an array before calculating total
-    const validServices = Array.isArray(services) ? services : [];
-    const total = validServices.reduce((sum, service) => sum + (service?.cost || 0), 0);
-    
+    const total = services.reduce((sum, service) => sum + service.cost, 0);
     if (onCostChange && typeof onCostChange === 'function') {
       onCostChange(total);
     }
   }, [services, onCostChange]);
 
   const addService = () => {
-    // Ensure we're working with a valid array
-    const currentServices = Array.isArray(services) ? [...services] : [];
-    const newServices = [...currentServices, { serviceId: '', quantity: 1, cost: 0 }];
+    const newServices = [...services, { serviceId: '', quantity: 1, cost: 0 }];
     onChange(newServices);
   };
 
   const removeService = (index: number) => {
-    // Ensure we're working with a valid array
-    const currentServices = Array.isArray(services) ? [...services] : [];
-    const newServices = currentServices.filter((_, i) => i !== index);
+    const newServices = services.filter((_, i) => i !== index);
     onChange(newServices);
   };
 
   const updateService = (index: number, field: keyof RepairService, value: any) => {
-    // Ensure we're working with a valid array
-    const currentServices = Array.isArray(services) ? [...services] : [];
-    if (!currentServices[index]) return;
-    
-    const newServices = [...currentServices];
+    const newServices = [...services];
     newServices[index] = { ...newServices[index], [field]: value };
     
     if (field === 'serviceId') {
@@ -80,9 +69,6 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
     return <div>Chargement des services...</div>;
   }
 
-  // Ensure services is always an array
-  const safeServices = Array.isArray(services) ? services : [];
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -91,7 +77,6 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
           onClick={addService}
           variant="outline"
           size="sm"
-          type="button" // Important: prevent form submission
         >
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un service
@@ -108,14 +93,14 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {safeServices.length === 0 ? (
+          {services.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="text-center py-4 text-gray-500">
                 Aucun service ajouté
               </TableCell>
             </TableRow>
           ) : (
-            safeServices.map((service, index) => (
+            services.map((service, index) => (
               <TableRow key={index}>
                 <TableCell>
                   <Select
@@ -148,7 +133,6 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    type="button" // Important: prevent form submission
                     onClick={() => removeService(index)}
                   >
                     <Trash2 className="h-4 w-4" />
