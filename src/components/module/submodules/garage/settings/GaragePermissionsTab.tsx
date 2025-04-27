@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,13 +8,27 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const GaragePermissionsTab = () => {
+  // Add state to track permissions
+  const [enhancedSecurity, setEnhancedSecurity] = useState(false);
+  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({});
+
   const handleSave = () => {
     toast.success("Paramètres des droits d'accès sauvegardés");
   };
 
+  const handlePermissionChange = (roleId: string, permissionId: string, checked: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [roleId]: {
+        ...(prev[roleId] || {}),
+        [permissionId]: checked
+      }
+    }));
+  };
+
   // Mock data pour les rôles et permissions
   const roles = ["Administrateur", "Manager", "Mécanicien", "Réceptionniste"];
-  const permissions = [
+  const permissionsList = [
     { name: "Voir les clients", id: "view_clients" },
     { name: "Modifier les clients", id: "edit_clients" },
     { name: "Voir les véhicules", id: "view_vehicles" },
@@ -40,7 +54,10 @@ const GaragePermissionsTab = () => {
                   Activer la validation en deux étapes pour les modifications sensibles
                 </p>
               </div>
-              <Switch />
+              <Switch 
+                checked={enhancedSecurity} 
+                onCheckedChange={setEnhancedSecurity}
+              />
             </div>
             
             <Table>
@@ -53,14 +70,18 @@ const GaragePermissionsTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {permissions.map(permission => (
+                {permissionsList.map(permission => (
                   <TableRow key={permission.id}>
                     <TableCell>{permission.name}</TableCell>
                     {roles.map(role => (
                       <TableCell key={`${role}-${permission.id}`}>
                         <Checkbox 
-                          defaultChecked={role === "Administrateur" || 
-                            (role === "Manager" && !permission.id.includes("access_settings"))}
+                          checked={permissions[role]?.[permission.id] ?? 
+                            (role === "Administrateur" || 
+                            (role === "Manager" && !permission.id.includes("access_settings")))}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(role, permission.id, !!checked)
+                          }
                         />
                       </TableCell>
                     ))}
