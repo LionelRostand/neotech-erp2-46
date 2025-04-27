@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 import { Maintenance } from './types';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 
@@ -25,19 +27,18 @@ const MaintenancesTable = ({
   onEdit, 
   onDelete 
 }: MaintenancesTableProps) => {
-  // Get clients and vehicles data for name resolution
   const { clients, vehicles } = useGarageData();
   
   // Helper function to get client name
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : clientId;
+    return client ? `${client.firstName} ${client.lastName}` : 'Client non assigné';
   };
 
-  // Helper function to get vehicle info with vehicle name
+  // Helper function to get vehicle info
   const getVehicleInfo = (vehicleId: string) => {
     const vehicle = vehicles.find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.name} (${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate})` : vehicleId;
+    return vehicle ? `${vehicle.name || ''} (${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate})` : 'Véhicule non assigné';
   };
 
   // Helper function to format date
@@ -49,8 +50,27 @@ const MaintenancesTable = ({
         day: 'numeric'
       });
     } catch {
-      return dateString;
+      return 'Date non définie';
     }
+  };
+
+  // Helper function to get status badge
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      completed: { label: 'Terminé', variant: 'success' as const, className: 'bg-green-100 text-green-800' },
+      in_progress: { label: 'En cours', variant: 'warning' as const, className: 'bg-yellow-100 text-yellow-800' },
+      scheduled: { label: 'Planifié', variant: 'default' as const, className: 'bg-blue-100 text-blue-800' },
+      cancelled: { label: 'Annulé', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || 
+      { label: status, variant: 'default' as const, className: 'bg-gray-100 text-gray-800' };
+
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.label}
+      </Badge>
+    );
   };
 
   return (
@@ -70,7 +90,7 @@ const MaintenancesTable = ({
             <TableCell>{formatDate(maintenance.date)}</TableCell>
             <TableCell>{getClientName(maintenance.clientId)}</TableCell>
             <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
-            <TableCell>{maintenance.status}</TableCell>
+            <TableCell>{getStatusBadge(maintenance.status)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end space-x-2">
                 <Button 
