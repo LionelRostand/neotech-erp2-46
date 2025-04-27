@@ -14,6 +14,7 @@ import GarageLoyaltyDashboard from '../garage/loyalty/GarageLoyaltyDashboard';
 import GarageSettings from '../garage/settings/GarageSettings';
 import GarageMechanicsDashboard from '../garage/mechanics/GarageMechanicsDashboard';
 import GarageMaintenanceDashboard from '../garage/maintenance/GarageMaintenanceDashboard';
+import MaintenanceDashboard from '../garage/maintenance/MaintenanceDashboard';
 
 export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering garage submodule:', submoduleId);
@@ -45,6 +46,8 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageLoyaltyDashboard />;
     case 'garage-settings':
       return <GarageSettings />;
+    case 'garage-maintenance-dashboard':
+      return <MaintenanceDashboard />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
