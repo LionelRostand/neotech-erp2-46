@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -15,6 +14,7 @@ import { Maintenance } from './types';
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useGarageInvoices } from '@/hooks/garage/useGarageInvoices';
 
 interface MaintenancesTableProps {
   maintenances: Maintenance[];
@@ -30,21 +30,19 @@ const MaintenancesTable = ({
   onDelete 
 }: MaintenancesTableProps) => {
   const { clients, vehicles } = useGarageData();
+  const { createInvoice } = useGarageInvoices();
   const navigate = useNavigate();
   
-  // Helper function to get client name
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     return client ? `${client.firstName} ${client.lastName}` : 'Client non assigné';
   };
 
-  // Helper function to get vehicle info
   const getVehicleInfo = (vehicleId: string) => {
     const vehicle = vehicles.find(v => v.id === vehicleId);
     return vehicle ? `${vehicle.name || ''} (${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate})` : 'Véhicule non assigné';
   };
 
-  // Helper function to format date
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -57,7 +55,6 @@ const MaintenancesTable = ({
     }
   };
 
-  // Helper function to get status badge
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       completed: { label: 'Terminé', variant: 'success' as const, className: 'bg-green-100 text-green-800' },
@@ -76,30 +73,21 @@ const MaintenancesTable = ({
     );
   };
 
-  // Function to handle invoice creation
-  const handleCreateInvoice = (maintenance: Maintenance) => {
-    // Générer un numéro de facture unique basé sur la date
-    const invoiceNumber = `FAC-${Date.now()}`;
-    
-    // Créer les données de la facture
+  const handleCreateInvoice = async (maintenance: Maintenance) => {
     const invoiceData = {
-      invoiceNumber,
+      invoiceNumber: `FAC-${Date.now()}`,
       clientId: maintenance.clientId,
       clientName: getClientName(maintenance.clientId),
       date: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Échéance à 30 jours
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       amount: maintenance.totalCost,
       maintenanceId: maintenance.id,
-      status: 'pending'
+      status: 'pending',
+      vehicleInfo: getVehicleInfo(maintenance.vehicleId)
     };
 
-    // Stocker les données dans sessionStorage pour la page des factures
-    sessionStorage.setItem('newInvoiceData', JSON.stringify(invoiceData));
-    
-    // Rediriger vers la page des factures
+    await createInvoice(invoiceData);
     navigate('/modules/garage/invoices');
-    
-    toast.success("Redirection vers la création de facture");
   };
 
   return (

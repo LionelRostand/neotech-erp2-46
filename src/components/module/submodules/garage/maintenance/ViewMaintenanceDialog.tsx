@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
 import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useGarageInvoices } from '@/hooks/garage/useGarageInvoices';
 import { toast } from 'sonner';
 
 interface ViewMaintenanceDialogProps {
@@ -24,66 +24,51 @@ const ViewMaintenanceDialog = ({
   onOpenChange, 
   maintenance 
 }: ViewMaintenanceDialogProps) => {
-  const { clients } = useGarageData();
+  const { clients, vehicles } = useGarageData();
+  const { createInvoice } = useGarageInvoices();
   const navigate = useNavigate();
 
-  // Helper function to get client name
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     return client ? `${client.firstName} ${client.lastName}` : 'Client non assigné';
   };
 
-  // Function to handle invoice creation
-  const handleCreateInvoice = () => {
-    // Générer un numéro de facture unique basé sur la date
-    const invoiceNumber = `FAC-${Date.now()}`;
-    
-    // Créer les données de la facture
+  const handleCreateInvoice = async () => {
     const invoiceData = {
-      invoiceNumber,
+      invoiceNumber: `FAC-${Date.now()}`,
       clientId: maintenance.clientId,
       clientName: getClientName(maintenance.clientId),
       date: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Échéance à 30 jours
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       amount: maintenance.totalCost,
       maintenanceId: maintenance.id,
-      status: 'pending'
+      status: 'pending',
+      vehicleInfo: getVehicleInfo(maintenance.vehicleId)
     };
 
-    // Stocker les données dans sessionStorage pour la page des factures
-    sessionStorage.setItem('newInvoiceData', JSON.stringify(invoiceData));
-    
-    // Rediriger vers la page des factures
-    navigate('/modules/garage/invoices');
-    
-    toast.success("Redirection vers la création de facture");
+    await createInvoice(invoiceData);
     onOpenChange(false);
+    navigate('/modules/garage/invoices');
+    toast.success("Redirection vers la création de facture");
   };
 
   if (!maintenance) return null;
 
-  // Helper function to get vehicle info
   const getVehicleInfo = (vehicleId: string) => {
-    // Assuming vehicles is an array of objects with id, make, model, and licensePlate properties
-    const vehicle = useGarageData().vehicles.find(v => v.id === vehicleId);
+    const vehicle = vehicles.find(v => v.id === vehicleId);
     return vehicle ? `${vehicle.name || ''} (${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate})` : 'Véhicule non assigné';
   };
 
-  // Helper function to get mechanic name
   const getMechanicName = (mechanicId: string) => {
-    // Assuming mechanics is an array of objects with id, firstName, and lastName properties
     const mechanic = useGarageData().mechanics.find(m => m.id === mechanicId);
     return mechanic ? `${mechanic.firstName} ${mechanic.lastName}` : 'Mécanicien non assigné';
   };
 
-  // Helper function to get service name
   const getServiceName = (serviceId: string) => {
-    // Assuming services is an array of objects with id and name properties
     const service = useGarageData().services.find(s => s.id === serviceId);
     return service ? service.name : 'Service non défini';
   };
 
-  // Helper function to format date
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -96,7 +81,6 @@ const ViewMaintenanceDialog = ({
     }
   };
 
-  // Helper function to get status display
   const getStatusDisplay = (status: string) => {
     const statusConfig = {
       completed: 'Terminé',
