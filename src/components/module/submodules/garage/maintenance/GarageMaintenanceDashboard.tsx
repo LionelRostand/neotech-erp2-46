@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { toast } from 'sonner';
-import { deleteDocument } from '@/hooks/firestore/firestore-utils';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import MaintenancesTable from './MaintenancesTable';
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import ViewMaintenanceDialog from './ViewMaintenanceDialog';
@@ -22,7 +19,6 @@ const GarageMaintenanceDashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Handlers for maintenance actions
   const handleView = (maintenance: Maintenance) => {
     setSelectedMaintenance(maintenance);
     setViewDialogOpen(true);
