@@ -16,7 +16,7 @@ const statusLabel = {
 };
 
 const GarageInvoicesDashboard = () => {
-  const { invoices, isLoading } = useGarageInvoices();
+  const { invoices, isLoading, updateInvoice } = useGarageInvoices();
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   
   const handleViewInvoice = (invoice: any) => {
@@ -24,16 +24,19 @@ const GarageInvoicesDashboard = () => {
   };
 
   const handlePaymentComplete = async () => {
-    // Refresh invoices after payment
-    window.location.reload();
+    if (selectedInvoice) {
+      await updateInvoice(selectedInvoice.id, {
+        status: 'paid',
+        paidAt: new Date().toISOString()
+      });
+    }
+    setSelectedInvoice(null);
   };
 
-  // Safely calculate totals and counts
   const totalInvoices = invoices?.length || 0;
   const totalPaid = invoices?.filter(inv => inv?.status === 'paid')?.reduce((sum, inv) => sum + (Number(inv?.amount) || 0), 0) || 0;
   const totalPending = invoices?.filter(inv => inv?.status === 'pending')?.reduce((sum, inv) => sum + (Number(inv?.amount) || 0), 0) || 0;
   const overdueCount = invoices?.filter(inv => {
-    // Add null checks for dueDate before attempting to use startsWith
     return inv?.status === 'overdue' || 
            (inv?.status === 'pending' && 
             inv?.dueDate && 
