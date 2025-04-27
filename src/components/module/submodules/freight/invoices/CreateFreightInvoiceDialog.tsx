@@ -8,7 +8,7 @@ import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import useFreightShipments from '@/hooks/freight/useFreightShipments';
+import { useFreightShipments } from '@/hooks/freight/useFreightShipments';
 import { useContainersData } from '@/hooks/modules/useContainersData';
 
 interface CreateFreightInvoiceDialogProps {
