@@ -47,15 +47,15 @@ export function EditCompanyPositionDialog({
     ? employee.company 
     : employee?.company?.id || '');
 
-  // Reset form when employee changes
+  // Reset form when employee changes or dialog opens
   useEffect(() => {
-    if (employee) {
+    if (employee && open) {
       setPosition(employee.position || '');
       setCompanyId(typeof employee.company === 'string' 
         ? employee.company 
         : employee?.company?.id || '');
     }
-  }, [employee]);
+  }, [employee, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,19 +68,26 @@ export function EditCompanyPositionDialog({
     try {
       console.log("Mise à jour de l'employé avec les données:", { position, company: companyId });
       
+      // Force email generation by providing firstName and lastName
       const updatedEmployee = await updateEmployee(employee.id, {
         position,
-        company: companyId
+        company: companyId,
+        firstName: employee.firstName, // Force email regeneration
+        lastName: employee.lastName    // Force email regeneration
       });
       
       if (updatedEmployee) {
+        console.log("Employé mis à jour avec succès:", updatedEmployee);
+        
         // Use the callback to update the UI
         onEmployeeUpdated({
           ...employee,
           position,
-          company: companyId
+          company: companyId,
+          professionalEmail: updatedEmployee.professionalEmail // Ensure we use the newly generated email
         });
         
+        toast.success("Informations mises à jour avec succès");
         onOpenChange(false);
       }
     } catch (error) {

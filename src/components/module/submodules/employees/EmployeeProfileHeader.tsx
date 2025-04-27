@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,8 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
   const [currentEmployee, setCurrentEmployee] = useState<Employee>(employee);
 
   // Update local state when parent prop changes
-  React.useEffect(() => {
+  useEffect(() => {
+    console.log("EmployeeProfileHeader: employee prop updated", employee);
     setCurrentEmployee(employee);
   }, [employee]);
 
@@ -64,12 +65,19 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
   const handleEmployeeUpdated = (updatedEmployee: Employee) => {
     console.log("Employee updated in header:", updatedEmployee);
+    
     // Update local state
-    setCurrentEmployee(updatedEmployee);
+    setCurrentEmployee(prevState => ({
+      ...prevState,
+      ...updatedEmployee
+    }));
     
     // Propagate change to parent component if callback exists
     if (onEmployeeUpdate) {
-      onEmployeeUpdate(updatedEmployee);
+      onEmployeeUpdate({
+        ...currentEmployee,
+        ...updatedEmployee
+      });
     }
   };
 
