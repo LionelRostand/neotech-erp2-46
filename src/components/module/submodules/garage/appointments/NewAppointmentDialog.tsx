@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +9,32 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useFirestore } from '@/hooks/useFirestore';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 interface NewAppointmentDialogProps {
   isOpen: boolean;
@@ -18,7 +42,6 @@ interface NewAppointmentDialogProps {
   clients: any[];
   vehicles: any[];
   mechanics: any[];
-  services: any[];
   onSuccess: () => void;
 }
 
@@ -28,36 +51,30 @@ const NewAppointmentDialog: React.FC<NewAppointmentDialogProps> = ({
   clients,
   vehicles,
   mechanics,
-  services,
   onSuccess
 }) => {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const form = useForm({
     defaultValues: {
-      clientId: '',
-      vehicleId: '',
-      date: '',
-      time: '',
-      mechanicId: '',
-      serviceId: '',
-      notes: '',
-      status: 'scheduled'
+      clientId: "",
+      vehicleId: "",
+      date: undefined as unknown as Date,
+      time: "",
+      mechanicId: "",
     }
   });
-  
+
   const { add } = useFirestore('garage_appointments');
 
   const onSubmit = async (data: any) => {
     try {
-      // Ajouter un nouvel enregistrement à la collection
+      // Add appointment to Firestore
       await add({
         ...data,
+        status: 'scheduled',
         createdAt: new Date().toISOString()
       });
       
-      // Afficher un message de succès
       toast.success("Rendez-vous créé avec succès");
-      
-      // Fermer la boîte de dialogue et rafraîchir les données
       onSuccess();
       onClose();
     } catch (error) {
@@ -73,21 +90,162 @@ const NewAppointmentDialog: React.FC<NewAppointmentDialogProps> = ({
           <DialogTitle>Nouveau rendez-vous</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Ici, nous ajouterions les champs du formulaire */}
-          <div className="text-center text-gray-500">
-            Formulaire de création de rendez-vous
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="clientId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un client" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.firstName} {client.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="vehicleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Véhicule</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un véhicule" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {vehicles.map((vehicle) => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
+                          {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Sélectionner une date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Heure</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une heure" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {[
+                        "08:00", "09:00", "10:00", "11:00", "12:00",
+                        "14:00", "15:00", "16:00", "17:00"
+                      ].map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mechanicId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mécanicien</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un mécanicien" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {mechanics.map((mechanic) => (
+                        <SelectItem key={mechanic.id} value={mechanic.id}>
+                          {mechanic.firstName} {mechanic.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Création...' : 'Créer'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Annuler
+              </Button>
+              <Button type="submit">
+                Créer
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
