@@ -12,22 +12,15 @@ const GarageSuppliersDashboard = () => {
   const { suppliers = [], isLoading, refetch } = useGarageData();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-96">Chargement...</div>;
-  }
-
-  // Ensure suppliers is an array even if it's undefined from useGarageData
-  const suppliersArray = Array.isArray(suppliers) ? suppliers : [];
-  const activeSuppliers = suppliersArray.filter(s => s.status === 'active');
-
+  // Define table columns
   const columns = [
     {
       accessorKey: "name",
       header: "Nom",
     },
     {
-      accessorKey: "category",
-      header: "Catégorie",
+      accessorKey: "contactName",
+      header: "Contact",
     },
     {
       accessorKey: "email",
@@ -36,6 +29,10 @@ const GarageSuppliersDashboard = () => {
     {
       accessorKey: "phone",
       header: "Téléphone",
+    },
+    {
+      accessorKey: "address",
+      header: "Adresse",
     },
     {
       accessorKey: "status",
@@ -48,6 +45,14 @@ const GarageSuppliersDashboard = () => {
       )
     }
   ];
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Chargement...</div>;
+  }
+
+  // Ensure suppliers is an array even if it's undefined from useGarageData
+  const suppliersArray = Array.isArray(suppliers) ? suppliers : [];
+  const activeSuppliers = suppliersArray.filter(s => s.status === 'active');
 
   return (
     <div className="p-6 space-y-6">

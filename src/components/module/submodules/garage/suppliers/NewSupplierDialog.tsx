@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Supplier } from '../types/garage-types';
 import NewSupplierForm from './NewSupplierForm';
 import { toast } from 'sonner';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
@@ -14,7 +13,7 @@ interface NewSupplierDialogProps {
 }
 
 const NewSupplierDialog = ({ open, onOpenChange, onSuccess }: NewSupplierDialogProps) => {
-  const handleSave = async (supplier: Partial<Supplier>) => {
+  const handleSave = async (supplier: any) => {
     try {
       await addDocument(COLLECTIONS.GARAGE.SUPPLIERS, supplier);
       toast.success("Fournisseur ajouté avec succès");
