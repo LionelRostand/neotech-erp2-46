@@ -1,3 +1,4 @@
+
 import { Car, LayoutDashboard, Users, Receipt, Truck, Package, BadgePercent, Settings, Calendar, Cog, UserCog, Wrench, ChartBar } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
