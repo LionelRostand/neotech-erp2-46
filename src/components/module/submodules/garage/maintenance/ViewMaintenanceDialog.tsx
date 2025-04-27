@@ -33,21 +33,25 @@ const ViewMaintenanceDialog = ({
   };
 
   const handleCreateInvoice = () => {
-    // Create new invoice data
+    // Générer un numéro de facture unique
+    const invoiceNumber = `FAC-${Date.now()}`;
+    
+    // Créer les données de la facture
     const invoiceData = {
+      invoiceNumber, // N° de facture
       clientId: maintenance.clientId,
-      clientName: getClientName(maintenance.clientId),
-      date: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Due in 30 days
-      amount: maintenance.totalCost,
+      clientName: getClientName(maintenance.clientId), // Nom du client
+      date: new Date().toISOString(), // Date de création
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Échéance à 30 jours
+      amount: maintenance.totalCost, // Montant
       maintenanceId: maintenance.id,
       status: 'pending'
     };
 
-    // Store the invoice data in sessionStorage to access it in the invoices page
+    // Stocker les données dans sessionStorage pour la page des factures
     sessionStorage.setItem('newInvoiceData', JSON.stringify(invoiceData));
     
-    // Navigate to invoices page
+    // Rediriger vers la page des factures
     navigate('/modules/garage/invoices');
     
     toast.success("Redirection vers la création de facture");
