@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -23,7 +24,7 @@ const ViewMaintenanceDialog = ({
   onOpenChange, 
   maintenance 
 }: ViewMaintenanceDialogProps) => {
-  const { clients, vehicles } = useGarageData();
+  const { clients } = useGarageData();
   const navigate = useNavigate();
 
   // Helper function to get client name
@@ -32,18 +33,19 @@ const ViewMaintenanceDialog = ({
     return client ? `${client.firstName} ${client.lastName}` : 'Client non assigné';
   };
 
+  // Function to handle invoice creation
   const handleCreateInvoice = () => {
-    // Générer un numéro de facture unique
+    // Générer un numéro de facture unique basé sur la date
     const invoiceNumber = `FAC-${Date.now()}`;
     
     // Créer les données de la facture
     const invoiceData = {
-      invoiceNumber, // N° de facture
+      invoiceNumber,
       clientId: maintenance.clientId,
-      clientName: getClientName(maintenance.clientId), // Nom du client
-      date: new Date().toISOString(), // Date de création
+      clientName: getClientName(maintenance.clientId),
+      date: new Date().toISOString(),
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Échéance à 30 jours
-      amount: maintenance.totalCost, // Montant
+      amount: maintenance.totalCost,
       maintenanceId: maintenance.id,
       status: 'pending'
     };
