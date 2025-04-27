@@ -1,263 +1,106 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useQuery } from '@tanstack/react-query';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
 import { toast } from 'sonner';
+import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { FreightInvoice } from '@/hooks/modules/useFreightInvoices';
 
 interface CreateFreightInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface Shipment {
-  id: string;
-  reference: string;
-  customer: string;
-  clientName?: string;
-  customerName?: string;
-  origin: string;
-  destination: string;
-}
-
-interface Container {
-  id: string;
-  number: string;
-  client: string;
-  clientName?: string;
-  costs?: Array<{
-    amount: number;
-    description?: string;
-  }>;
-}
-
-export function CreateFreightInvoiceDialog({
-  open,
-  onOpenChange,
-}: CreateFreightInvoiceDialogProps) {
-  const [formData, setFormData] = useState({
-    invoiceNumber: `INV-${Date.now().toString().substring(5)}`,
-    clientName: '',
-    amount: '',
-    currency: 'EUR',
-    shipmentReference: '',
-    containerReference: '',
-    notes: '',
-    status: 'pending',
-  });
-
-  const { data: shipments = [] } = useQuery({
-    queryKey: ['freight', 'shipments'],
-    queryFn: () => fetchCollectionData<Shipment>(COLLECTIONS.FREIGHT.SHIPMENTS),
-  });
-
-  const { data: containers = [] } = useQuery({
-    queryKey: ['freight', 'containers'],
-    queryFn: () => fetchCollectionData<Container>(COLLECTIONS.FREIGHT.CONTAINERS),
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Auto-populate client name and amount based on selection
-    if (name === 'shipmentReference' && value) {
-      const selectedShipment = shipments.find((s) => s.reference === value);
-      if (selectedShipment) {
-        setFormData((prev) => ({
-          ...prev,
-          clientName: selectedShipment.customerName || selectedShipment.customer || '',
-        }));
-      }
-    } else if (name === 'containerReference' && value) {
-      const selectedContainer = containers.find((c) => c.number === value);
-      if (selectedContainer) {
-        const containerCost = selectedContainer.costs?.[0]?.amount || 0;
-        setFormData((prev) => ({
-          ...prev,
-          clientName: selectedContainer.clientName || selectedContainer.client || '',
-          amount: containerCost.toString(),
-        }));
-      }
+const CreateFreightInvoiceDialog: React.FC<CreateFreightInvoiceDialogProps> = ({ 
+  open, 
+  onOpenChange 
+}) => {
+  const form = useForm<Partial<FreightInvoice>>({
+    defaultValues: {
+      status: 'pending',
+      currency: 'EUR'
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.clientName) {
-      toast.error('Veuillez spécifier un client');
-      return;
-    }
-    
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error('Veuillez spécifier un montant valide');
-      return;
-    }
-    
+  });
+  
+  const onSubmit = async (data: Partial<FreightInvoice>) => {
     try {
-      const invoiceData = {
-        ...formData,
-        amount: parseFloat(formData.amount),
+      const newInvoice = {
+        ...data,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        status: data.status || 'pending'
       };
       
-      await addDoc(collection(db, COLLECTIONS.FREIGHT.BILLING), invoiceData);
+      await addDocument(COLLECTIONS.FREIGHT.BILLING, newInvoice);
+      
       toast.success('Facture créée avec succès');
       onOpenChange(false);
+      form.reset();
     } catch (error) {
-      console.error('Error creating invoice:', error);
+      console.error('Erreur lors de la création de la facture:', error);
       toast.error('Erreur lors de la création de la facture');
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nouvelle Facture</DialogTitle>
+          <DialogTitle>Nouvelle Facture de Transport</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div>
-              <Label htmlFor="invoiceNumber">Numéro de facture</Label>
-              <Input
-                id="invoiceNumber"
-                name="invoiceNumber"
-                value={formData.invoiceNumber}
-                onChange={handleInputChange}
-                required
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="clientName">Nom du Client</label>
+            <input {...form.register('clientName')} className="w-full border rounded p-2" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="amount">Montant</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                {...form.register('amount', { setValueAs: (v) => parseFloat(v) })} 
+                className="w-full border rounded p-2" 
               />
             </div>
-
-            <div>
-              <Label htmlFor="shipmentReference">Référence Colis</Label>
-              <Select
-                value={formData.shipmentReference || 'no-selection'}
-                onValueChange={(value) => handleSelectChange('shipmentReference', value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un colis" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-selection">Aucun colis</SelectItem>
-                  {shipments.map((shipment) => (
-                    <SelectItem key={shipment.id} value={shipment.reference}>
-                      {shipment.reference} - {shipment.origin} à {shipment.destination}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="containerReference">Référence Conteneur</Label>
-              <Select
-                value={formData.containerReference || 'no-selection'}
-                onValueChange={(value) => handleSelectChange('containerReference', value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un conteneur" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-selection">Aucun conteneur</SelectItem>
-                  {containers.map((container) => (
-                    <SelectItem key={container.id} value={container.number}>
-                      {container.number}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="clientName">Client</Label>
-              <Input
-                id="clientName"
-                name="clientName"
-                value={formData.clientName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="amount">Montant</Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="currency">Devise</Label>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => handleSelectChange('currency', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Notes ou commentaires sur la facture..."
-              />
+            
+            <div className="space-y-2">
+              <label htmlFor="currency">Devise</label>
+              <select {...form.register('currency')} className="w-full border rounded p-2">
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+              </select>
             </div>
           </div>
           
-          <DialogFooter>
+          <div className="space-y-2">
+            <label htmlFor="shipmentReference">Référence d'Expédition</label>
+            <input {...form.register('shipmentReference')} className="w-full border rounded p-2" />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="status">Statut</label>
+            <select {...form.register('status')} className="w-full border rounded p-2">
+              <option value="pending">En attente</option>
+              <option value="paid">Payée</option>
+            </select>
+          </div>
+          
+          <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit">Créer la facture</Button>
-          </DialogFooter>
+            <Button type="submit">
+              Créer la facture
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default CreateFreightInvoiceDialog;

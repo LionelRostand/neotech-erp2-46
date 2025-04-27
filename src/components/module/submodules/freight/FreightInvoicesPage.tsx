@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -6,6 +5,7 @@ import useFreightInvoices from '@/hooks/modules/useFreightInvoices';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import FreightInvoicesDashboard from './invoices/FreightInvoicesDashboard';
+import CreateFreightInvoiceDialog from './invoices/CreateFreightInvoiceDialog';
 import { 
   Table, 
   TableBody, 
@@ -17,11 +17,11 @@ import {
 import { cn } from '@/lib/utils';
 
 const FreightInvoicesPage = () => {
-  const { invoices, isLoading } = useFreightInvoices();
+  const { invoices, isLoading, updateInvoice } = useFreightInvoices();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const handleCreateInvoice = () => {
-    toast.info('Fonctionnalité de création de facture à implémenter');
+    setShowCreateDialog(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -130,6 +130,11 @@ const FreightInvoicesPage = () => {
           </TableBody>
         </Table>
       </div>
+
+      <CreateFreightInvoiceDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+      />
     </div>
   );
 };
