@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -61,6 +60,51 @@ const ViewMaintenanceDialog = ({
   };
 
   if (!maintenance) return null;
+
+  // Helper function to get vehicle info
+  const getVehicleInfo = (vehicleId: string) => {
+    // Assuming vehicles is an array of objects with id, make, model, and licensePlate properties
+    const vehicle = useGarageData().vehicles.find(v => v.id === vehicleId);
+    return vehicle ? `${vehicle.name || ''} (${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate})` : 'Véhicule non assigné';
+  };
+
+  // Helper function to get mechanic name
+  const getMechanicName = (mechanicId: string) => {
+    // Assuming mechanics is an array of objects with id, firstName, and lastName properties
+    const mechanic = useGarageData().mechanics.find(m => m.id === mechanicId);
+    return mechanic ? `${mechanic.firstName} ${mechanic.lastName}` : 'Mécanicien non assigné';
+  };
+
+  // Helper function to get service name
+  const getServiceName = (serviceId: string) => {
+    // Assuming services is an array of objects with id and name properties
+    const service = useGarageData().services.find(s => s.id === serviceId);
+    return service ? service.name : 'Service non défini';
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Date non définie';
+    }
+  };
+
+  // Helper function to get status display
+  const getStatusDisplay = (status: string) => {
+    const statusConfig = {
+      completed: 'Terminé',
+      in_progress: 'En cours',
+      scheduled: 'Planifié',
+      cancelled: 'Annulé'
+    };
+    return statusConfig[status as keyof typeof statusConfig] || status;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
