@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -8,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { FileInvoice } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -166,7 +167,7 @@ const ViewMaintenanceDialog = ({
             onClick={handleCreateInvoice}
             className="gap-2"
           >
-            <FileInvoice className="h-4 w-4" />
+            <FileText className="h-4 w-4" />
             Créer une facture
           </Button>
           <Button onClick={() => onOpenChange(false)}>

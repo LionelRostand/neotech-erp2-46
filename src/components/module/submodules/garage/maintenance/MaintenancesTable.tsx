@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -8,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, FileInvoice } from 'lucide-react';
+import { Eye, Pencil, Trash2, FileText } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Maintenance } from './types';
 import { useGarageData } from '@/hooks/garage/useGarageData';
@@ -147,7 +148,7 @@ const MaintenancesTable = ({
                   size="icon"
                   onClick={() => handleCreateInvoice(maintenance)}
                 >
-                  <FileInvoice className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                 </Button>
               </div>
             </TableCell>
