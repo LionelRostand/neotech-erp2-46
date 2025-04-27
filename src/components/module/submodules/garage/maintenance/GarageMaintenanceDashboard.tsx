@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,10 +13,17 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import AddMaintenanceDialog from './AddMaintenanceDialog';
+import ViewMaintenanceDialog from './ViewMaintenanceDialog';
+import EditMaintenanceDialog from './EditMaintenanceDialog';
+import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
 import StatCard from '@/components/StatCard';
 
 const GarageMaintenanceDashboard = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { maintenances, vehicles, clients, mechanics, isLoading } = useGarageData();
 
   // Statistiques des maintenances
@@ -25,6 +31,21 @@ const GarageMaintenanceDashboard = () => {
   const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress');
   const completedMaintenances = maintenances.filter(m => m.status === 'completed');
   const urgentMaintenances = maintenances.filter(m => m.status === 'scheduled' && new Date(m.date) <= new Date());
+
+  const handleView = (maintenance: any) => {
+    setSelectedMaintenance(maintenance);
+    setShowViewDialog(true);
+  };
+
+  const handleEdit = (maintenance: any) => {
+    setSelectedMaintenance(maintenance);
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = (maintenance: any) => {
+    setSelectedMaintenance(maintenance);
+    setShowDeleteDialog(true);
+  };
 
   const getVehicleInfo = (vehicleId: string) => {
     const vehicle = vehicles.find(v => v.id === vehicleId);
@@ -75,69 +96,83 @@ const GarageMaintenanceDashboard = () => {
         />
       </div>
 
-      {/* Section Liste des maintenances */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Liste des maintenances</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Maintenance
-        </Button>
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">Liste des maintenances</h2>
+        </div>
+        <div className="p-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Véhicule</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Mécanicien</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {maintenances.map((maintenance) => (
+                <TableRow key={maintenance.id}>
+                  <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
+                  <TableCell>{getClientName(maintenance.clientId)}</TableCell>
+                  <TableCell>{getMechanicName(maintenance.mechanicId)}</TableCell>
+                  <TableCell>
+                    {maintenance.date ? format(new Date(maintenance.date), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {maintenance.status === 'scheduled' ? 'Planifiée' :
+                     maintenance.status === 'in_progress' ? 'En cours' :
+                     maintenance.status === 'completed' ? 'Terminée' :
+                     maintenance.status === 'cancelled' ? 'Annulée' : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleView(maintenance)}>
+                        Voir
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(maintenance)}>
+                        Modifier
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDelete(maintenance)}
+                      >
+                        Supprimer
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des maintenances</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div>Chargement...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Véhicule</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Mécanicien</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {maintenances.map((maintenance) => (
-                  <TableRow key={maintenance.id}>
-                    <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
-                    <TableCell>{getClientName(maintenance.clientId)}</TableCell>
-                    <TableCell>{getMechanicName(maintenance.mechanicId)}</TableCell>
-                    <TableCell>
-                      {maintenance.date ? format(new Date(maintenance.date), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {maintenance.status === 'scheduled' ? 'Planifiée' :
-                       maintenance.status === 'in_progress' ? 'En cours' :
-                       maintenance.status === 'completed' ? 'Terminée' :
-                       maintenance.status === 'cancelled' ? 'Annulée' : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Voir</Button>
-                        <Button variant="outline" size="sm">Modifier</Button>
-                        <Button variant="outline" size="sm" className="text-red-600">
-                          Supprimer
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
       <AddMaintenanceDialog 
-        open={showAddDialog}
+        open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+      />
+
+      <ViewMaintenanceDialog
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+        maintenance={selectedMaintenance}
+      />
+
+      <EditMaintenanceDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        maintenance={selectedMaintenance}
+      />
+
+      <DeleteMaintenanceDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        maintenanceId={selectedMaintenance?.id}
       />
     </div>
   );
