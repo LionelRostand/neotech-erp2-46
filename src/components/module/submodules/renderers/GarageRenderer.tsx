@@ -35,6 +35,8 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageMechanicsDashboard />;
     case 'garage-maintenance':
       return <GarageMaintenanceDashboard />;
+    case 'garage-maintenance-dashboard':
+      return <MaintenanceDashboard />;
     case 'garage-repairs':
       return <GarageRepairsDashboard />;
     case 'garage-invoices':
@@ -47,8 +49,6 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageLoyaltyDashboard />;
     case 'garage-settings':
       return <GarageSettings />;
-    case 'garage-maintenance-dashboard':
-      return <MaintenanceDashboard />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
