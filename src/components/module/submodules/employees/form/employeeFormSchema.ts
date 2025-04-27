@@ -13,7 +13,7 @@ export const employeeFormSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis' }),
   lastName: z.string().min(1, { message: 'Le nom est requis' }),
   email: z.string().email({ message: 'Email personnel invalide' }),
-  professionalEmail: z.string().optional(),
+  professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   phone: z.string().optional(),
   streetNumber: z.string().optional(),
   streetName: z.string().optional(),
@@ -32,15 +32,6 @@ export const employeeFormSchema = z.object({
   photoMeta: photoMetaSchema.optional(),
   forceManager: z.boolean().default(false),
   isManager: z.boolean().default(false),
-}).transform((data) => {
-  // Générer l'email professionnel à partir du prénom, nom et entreprise
-  const firstName = data.firstName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const lastName = data.lastName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const company = data.company.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
-  
-  data.professionalEmail = `${firstName}.${lastName}@${company}.com`;
-  
-  return data;
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
