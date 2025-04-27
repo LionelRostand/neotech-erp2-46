@@ -33,14 +33,14 @@ const GarageAppointments = () => {
   } = useGarageAppointments(searchTerm);
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50/50">
-      <div className="flex justify-between items-center">
+    <div className="p-6 space-y-6 bg-gray-50/50 min-h-screen">
+      <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
           Rendez-vous
         </h2>
         <Button 
           onClick={() => setShowAddDialog(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nouveau rendez-vous
@@ -49,13 +49,13 @@ const GarageAppointments = () => {
 
       <AppointmentsStats appointments={appointments} />
       
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             type="search"
             placeholder="Rechercher par client, véhicule ou mécanicien..."
-            className="pl-8 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+            className="pl-8 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -77,14 +77,14 @@ const GarageAppointments = () => {
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
                 <TabsTrigger 
                   value="list" 
-                  className="flex items-center gap-2 data-[state=active]:bg-white"
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600"
                 >
                   <List size={16} />
                   <span>Liste</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="calendar" 
-                  className="flex items-center gap-2 data-[state=active]:bg-white"
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600"
                 >
                   <CalendarCheck size={16} />
                   <span>Calendrier</span>
