@@ -21,11 +21,13 @@ interface AddLoyaltyProgramDialogProps {
 const AddLoyaltyProgramDialog = ({ open, onOpenChange, onSuccess }: AddLoyaltyProgramDialogProps) => {
   const handleSubmit = async (data: Partial<LoyaltyProgram>) => {
     try {
-      await addDocument(COLLECTIONS.GARAGE.LOYALTY, {
+      const newProgram = {
         ...data,
-        status: 'active',
+        status: new Date(data.startDate || '') > new Date() ? 'upcoming' : 'active',
         createdAt: new Date().toISOString()
-      });
+      };
+      
+      await addDocument(COLLECTIONS.GARAGE.LOYALTY, newProgram);
       toast.success("Programme de fidélité créé avec succès");
       onSuccess();
     } catch (error) {
