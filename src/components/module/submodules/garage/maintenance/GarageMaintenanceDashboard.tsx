@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -39,57 +38,60 @@ const GarageMaintenanceDashboard = () => {
     refetch();
   };
 
-  // Calculate maintenance stats
   const completedMaintenances = maintenances.filter(m => m.status === 'completed').length;
   const inProgressMaintenances = maintenances.filter(m => m.status === 'in_progress').length;
   const scheduledMaintenances = maintenances.filter(m => m.status === 'scheduled').length;
 
-  if (isLoading) return <div>Chargement...</div>;
+  if (isLoading) return <div className="flex items-center justify-center h-96">Chargement...</div>;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-gray-50/50">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Maintenances</h2>
-        <Button onClick={() => setAddDialogOpen(true)}>
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-500 bg-clip-text text-transparent">
+          Maintenances
+        </h2>
+        <Button onClick={() => setAddDialogOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle maintenance
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
+        <Card className="border border-indigo-100 bg-indigo-50/50 shadow-sm hover:shadow transition-all duration-200">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-indigo-900">
               Maintenances terminées
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedMaintenances}</div>
+            <div className="text-2xl font-bold text-indigo-600">{completedMaintenances}</div>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="border border-amber-100 bg-amber-50/50 shadow-sm hover:shadow transition-all duration-200">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-amber-900">
               Maintenances en cours
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{inProgressMaintenances}</div>
+            <div className="text-2xl font-bold text-amber-600">{inProgressMaintenances}</div>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="border border-blue-100 bg-blue-50/50 shadow-sm hover:shadow transition-all duration-200">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-blue-900">
               Maintenances planifiées
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{scheduledMaintenances}</div>
+            <div className="text-2xl font-bold text-blue-600">{scheduledMaintenances}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="shadow-sm border-gray-200/70">
         <CardHeader>
           <CardTitle>Liste des maintenances</CardTitle>
         </CardHeader>

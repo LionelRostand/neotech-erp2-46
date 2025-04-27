@@ -57,17 +57,17 @@ const MaintenancesTable = ({
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      completed: { label: 'Terminé', variant: 'success' as const, className: 'bg-green-100 text-green-800' },
-      in_progress: { label: 'En cours', variant: 'warning' as const, className: 'bg-yellow-100 text-yellow-800' },
-      scheduled: { label: 'Planifié', variant: 'default' as const, className: 'bg-blue-100 text-blue-800' },
-      cancelled: { label: 'Annulé', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' }
+      completed: { label: 'Terminé', className: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' },
+      in_progress: { label: 'En cours', className: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' },
+      scheduled: { label: 'Planifié', className: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' },
+      cancelled: { label: 'Annulé', className: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || 
-      { label: status, variant: 'default' as const, className: 'bg-gray-100 text-gray-800' };
+      { label: status, className: 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200' };
 
     return (
-      <Badge variant={config.variant} className={config.className}>
+      <Badge variant="outline" className={config.className}>
         {config.label}
       </Badge>
     );
@@ -93,7 +93,7 @@ const MaintenancesTable = ({
   return (
     <Table>
       <TableHeader>
-        <TableRow>
+        <TableRow className="bg-gray-50/50">
           <TableHead>Date</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Véhicule</TableHead>
@@ -103,7 +103,7 @@ const MaintenancesTable = ({
       </TableHeader>
       <TableBody>
         {maintenances.map((maintenance) => (
-          <TableRow key={maintenance.id}>
+          <TableRow key={maintenance.id} className="hover:bg-gray-50/50">
             <TableCell>{formatDate(maintenance.date)}</TableCell>
             <TableCell>{getClientName(maintenance.clientId)}</TableCell>
             <TableCell>{getVehicleInfo(maintenance.vehicleId)}</TableCell>
@@ -112,31 +112,35 @@ const MaintenancesTable = ({
               <div className="flex justify-end space-x-2">
                 <Button 
                   variant="ghost" 
-                  size="icon" 
+                  size="icon"
+                  className="hover:bg-gray-100"
                   onClick={() => onView(maintenance)}
                 >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => onEdit(maintenance)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => onDelete(maintenance)}
-                >
-                  <Trash2 className="h-4 w-4" />
+                  <Eye className="h-4 w-4 text-gray-600" />
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  className="hover:bg-gray-100"
+                  onClick={() => onEdit(maintenance)}
+                >
+                  <Pencil className="h-4 w-4 text-gray-600" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="hover:bg-gray-100"
+                  onClick={() => onDelete(maintenance)}
+                >
+                  <Trash2 className="h-4 w-4 text-gray-600" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="hover:bg-gray-100"
                   onClick={() => handleCreateInvoice(maintenance)}
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4 text-gray-600" />
                 </Button>
               </div>
             </TableCell>
