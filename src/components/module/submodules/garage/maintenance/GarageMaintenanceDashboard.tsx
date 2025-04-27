@@ -1,50 +1,38 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import MaintenanceTable from './MaintenanceTable';
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import AddMaintenanceDialog from './AddMaintenanceDialog';
 import ViewMaintenanceDialog from './ViewMaintenanceDialog';
 import EditMaintenanceDialog from './EditMaintenanceDialog';
 import DeleteMaintenanceDialog from './DeleteMaintenanceDialog';
-import { formatDate } from '@/lib/utils';
+import { GarageMaintenance } from '@/types/module-types';
+import { useNavigate } from 'react-router-dom';
 
 const GarageMaintenanceDashboard = () => {
+  const navigate = useNavigate();
+  const { maintenances = [], isLoading, refetch } = useGarageData();
+  const [selectedMaintenance, setSelectedMaintenance] = useState<GarageMaintenance | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  
-  const { maintenances = [], isLoading } = useGarageData();
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleView = (maintenance: any) => {
+  const handleView = (maintenance: GarageMaintenance) => {
     setSelectedMaintenance(maintenance);
-    setViewDialogOpen(true);
+    setShowViewDialog(true);
   };
 
-  const handleEdit = (maintenance: any) => {
+  const handleEdit = (maintenance: GarageMaintenance) => {
     setSelectedMaintenance(maintenance);
-    setEditDialogOpen(true);
+    setShowEditDialog(true);
   };
 
-  const handleDelete = (maintenance: any) => {
+  const handleDelete = (maintenance: GarageMaintenance) => {
     setSelectedMaintenance(maintenance);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleMaintenanceChange = () => {
-    // This will trigger a refetch of the maintenance data
-    console.log("Maintenance changed, refetching data...");
+    setShowDeleteDialog(true);
   };
 
   if (isLoading) {
@@ -53,71 +41,58 @@ const GarageMaintenanceDashboard = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <Card className="p-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Véhicule</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Mécanicien</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Coût Total</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {maintenances.map((maintenance) => (
-              <TableRow key={maintenance.id}>
-                <TableCell>{formatDate(maintenance.date)}</TableCell>
-                <TableCell>{maintenance.vehicleId}</TableCell>
-                <TableCell>{maintenance.clientId}</TableCell>
-                <TableCell>{maintenance.mechanicId}</TableCell>
-                <TableCell>{maintenance.status}</TableCell>
-                <TableCell>{maintenance.totalCost}€</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleView(maintenance)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(maintenance)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(maintenance)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Maintenances</h1>
+        <div className="flex gap-4">
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/modules/garage/maintenance/dashboard')}
+          >
+            Tableau de bord
+          </Button>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle maintenance
+          </Button>
+        </div>
+      </div>
+
+      <MaintenanceTable 
+        maintenances={maintenances}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
       <AddMaintenanceDialog 
-        open={showAddDialog} 
+        open={showAddDialog}
         onOpenChange={setShowAddDialog}
+        onSuccess={refetch}
       />
 
-      <ViewMaintenanceDialog
-        maintenance={selectedMaintenance}
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-      />
+      {selectedMaintenance && (
+        <>
+          <ViewMaintenanceDialog
+            open={showViewDialog}
+            onOpenChange={setShowViewDialog}
+            maintenance={selectedMaintenance}
+          />
 
-      <EditMaintenanceDialog
-        maintenance={selectedMaintenance}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onUpdate={handleMaintenanceChange}
-      />
+          <EditMaintenanceDialog
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            maintenance={selectedMaintenance}
+            onSuccess={refetch}
+          />
 
-      <DeleteMaintenanceDialog
-        maintenanceId={selectedMaintenance?.id ?? null}
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onDelete={handleMaintenanceChange}
-      />
+          <DeleteMaintenanceDialog 
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            maintenanceId={selectedMaintenance.id}
+            onSuccess={refetch}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -1,5 +1,4 @@
 
-import React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,29 +9,50 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteDocument } from '@/hooks/firestore/firestore-utils';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/components/ui/use-toast';
 
 interface DeleteMaintenanceDialogProps {
-  maintenanceId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDelete: () => void;
+  maintenanceId: string | undefined;
 }
 
-const DeleteMaintenanceDialog = ({ maintenanceId, open, onOpenChange, onDelete }: DeleteMaintenanceDialogProps) => {
+const DeleteMaintenanceDialog = ({
+  open,
+  onOpenChange,
+  maintenanceId,
+}: DeleteMaintenanceDialogProps) => {
+  const queryClient = useQueryClient();
+
   const handleDelete = async () => {
-    if (!maintenanceId) return;
+    if (!maintenanceId) {
+      toast({
+        title: "Erreur",
+        description: "ID de maintenance manquant",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      await deleteDocument(COLLECTIONS.GARAGE.MAINTENANCE, maintenanceId);
-      toast.success("Maintenance supprimée avec succès");
-      onDelete();
+      await deleteDocument('garage_maintenances', maintenanceId);
+      
+      toast({
+        title: "Succès",
+        description: "Maintenance supprimée avec succès",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });
       onOpenChange(false);
     } catch (error) {
       console.error("Error deleting maintenance:", error);
-      toast.error("Erreur lors de la suppression de la maintenance");
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression de la maintenance",
+        variant: "destructive",
+      });
     }
   };
 

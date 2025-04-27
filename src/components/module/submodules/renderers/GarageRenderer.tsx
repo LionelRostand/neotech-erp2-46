@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from "@/data/types/modules";
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
@@ -6,14 +5,15 @@ import GarageDashboard from '../garage/GarageDashboard';
 import GarageClientsDashboard from '../garage/clients/GarageClientsDashboard';
 import GarageVehiclesDashboard from '../garage/vehicles/GarageVehiclesDashboard';
 import GarageAppointmentsDashboard from '../garage/appointments/GarageAppointmentsDashboard';
+import GarageRepairsDashboard from '../garage/repairs/GarageRepairsDashboard';
 import GarageServicesDashboard from '../garage/services/GarageServicesDashboard';
-import GarageMechanicsDashboard from '../garage/mechanics/GarageMechanicsDashboard';
-import GarageMaintenanceDashboard from '../garage/maintenance/GarageMaintenanceDashboard';
 import GarageInvoicesDashboard from '../garage/invoices/GarageInvoicesDashboard';
 import GarageSuppliersDashboard from '../garage/suppliers/GarageSuppliersDashboard';
 import GarageInventoryDashboard from '../garage/inventory/GarageInventoryDashboard';
 import GarageLoyaltyDashboard from '../garage/loyalty/GarageLoyaltyDashboard';
 import GarageSettings from '../garage/settings/GarageSettings';
+import GarageMechanicsDashboard from '../garage/mechanics/GarageMechanicsDashboard';
+import GarageMaintenanceDashboard from '../garage/maintenance/GarageMaintenanceDashboard';
 
 export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering garage submodule:', submoduleId);
@@ -31,11 +31,10 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageServicesDashboard />;
     case 'garage-mechanics':
       return <GarageMechanicsDashboard />;
-    case 'garage-maintenance-list':
     case 'garage-maintenance':
-      return <GarageMaintenanceDashboard showDashboardLink />;
-    case 'garage-maintenance-dashboard':
-      return <GarageMaintenanceDashboard showListLink />;
+      return <GarageMaintenanceDashboard />;
+    case 'garage-repairs':
+      return <GarageRepairsDashboard />;
     case 'garage-invoices':
       return <GarageInvoicesDashboard />;
     case 'garage-suppliers':

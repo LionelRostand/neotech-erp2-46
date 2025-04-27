@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
@@ -25,42 +25,38 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
   onCostChange,
 }) => {
   const { services: garageServices = [], isLoading } = useGarageData();
-  // Use a local state to track services
-  const [localServices, setLocalServices] = useState<RepairService[]>(services || []);
-
-  // Update local services when props change, but only if different
+  
+  // Calculate and update total cost whenever services change
   useEffect(() => {
-    if (JSON.stringify(services) !== JSON.stringify(localServices)) {
-      setLocalServices(services);
+    // Make sure services is an array before calculating total
+    const validServices = Array.isArray(services) ? services : [];
+    const total = validServices.reduce((sum, service) => sum + (service?.cost || 0), 0);
+    
+    if (onCostChange && typeof onCostChange === 'function') {
+      onCostChange(total);
     }
-  }, [services]);
-
-  // Calculate and update total cost whenever localServices changes
-  useEffect(() => {
-    const total = localServices.reduce((sum, service) => sum + service.cost, 0);
-    onCostChange(total);
-  }, [localServices, onCostChange]);
-
-  // Update parent component but only when our local state changes
-  useEffect(() => {
-    // Avoid calling onChange unnecessarily to prevent infinite loop
-    if (JSON.stringify(services) !== JSON.stringify(localServices)) {
-      onChange(localServices);
-    }
-  }, [localServices, onChange, services]);
+  }, [services, onCostChange]);
 
   const addService = () => {
-    const newServices = [...localServices, { serviceId: '', quantity: 1, cost: 0 }];
-    setLocalServices(newServices);
+    // Ensure we're working with a valid array
+    const currentServices = Array.isArray(services) ? [...services] : [];
+    const newServices = [...currentServices, { serviceId: '', quantity: 1, cost: 0 }];
+    onChange(newServices);
   };
 
   const removeService = (index: number) => {
-    const newServices = localServices.filter((_, i) => i !== index);
-    setLocalServices(newServices);
+    // Ensure we're working with a valid array
+    const currentServices = Array.isArray(services) ? [...services] : [];
+    const newServices = currentServices.filter((_, i) => i !== index);
+    onChange(newServices);
   };
 
   const updateService = (index: number, field: keyof RepairService, value: any) => {
-    const newServices = [...localServices];
+    // Ensure we're working with a valid array
+    const currentServices = Array.isArray(services) ? [...services] : [];
+    if (!currentServices[index]) return;
+    
+    const newServices = [...currentServices];
     newServices[index] = { ...newServices[index], [field]: value };
     
     if (field === 'serviceId') {
@@ -77,12 +73,15 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
       }
     }
     
-    setLocalServices(newServices);
+    onChange(newServices);
   };
 
   if (isLoading) {
     return <div>Chargement des services...</div>;
   }
+
+  // Ensure services is always an array
+  const safeServices = Array.isArray(services) ? services : [];
 
   return (
     <div className="space-y-4">
@@ -92,6 +91,7 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
           onClick={addService}
           variant="outline"
           size="sm"
+          type="button" // Important: prevent form submission
         >
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un service
@@ -108,46 +108,55 @@ const ServicesSelector: React.FC<ServicesSelectorProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {localServices.map((service, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Select
-                  value={service.serviceId}
-                  onValueChange={(value) => updateService(index, 'serviceId', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {garageServices.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name} - {s.cost}€
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={1}
-                  value={service.quantity}
-                  onChange={(e) => updateService(index, 'quantity', parseInt(e.target.value) || 1)}
-                  className="w-20"
-                />
-              </TableCell>
-              <TableCell>{service.cost}€</TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeService(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+          {safeServices.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                Aucun service ajouté
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            safeServices.map((service, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Select
+                    value={service.serviceId}
+                    onValueChange={(value) => updateService(index, 'serviceId', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {garageServices.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name} - {s.cost}€
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={service.quantity}
+                    onChange={(e) => updateService(index, 'quantity', parseInt(e.target.value) || 1)}
+                    className="w-20"
+                  />
+                </TableCell>
+                <TableCell>{service.cost}€</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button" // Important: prevent form submission
+                    onClick={() => removeService(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

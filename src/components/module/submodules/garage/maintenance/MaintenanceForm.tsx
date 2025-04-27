@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import ServicesSelector from './ServicesSelector';
 import { useGarageData } from '@/hooks/garage/useGarageData';
-import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 interface MaintenanceFormProps {
   onSubmit: (data: any) => void;
@@ -14,32 +21,41 @@ interface MaintenanceFormProps {
 }
 
 const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormProps) => {
-  const { vehicles, clients, mechanics, services } = useGarageData();
-  
   const [formData, setFormData] = useState({
     vehicleId: '',
     clientId: '',
     mechanicId: '',
-    date: '',
-    services: [] as Array<{ serviceId: string; quantity: number; cost: number }>,
+    description: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    status: 'pending',
     totalCost: 0,
-    notes: ''
+    services: [],
+    notes: '',
   });
 
-  // Initialize form with initial data if provided
   useEffect(() => {
     if (initialData) {
+      const dateValue = initialData.date
+        ? typeof initialData.date === 'string'
+            ? initialData.date.substring(0, 10)
+            : format(new Date(initialData.date), 'yyyy-MM-dd')
+        : format(new Date(), 'yyyy-MM-dd');
+
       setFormData({
         vehicleId: initialData.vehicleId || '',
         clientId: initialData.clientId || '',
         mechanicId: initialData.mechanicId || '',
-        date: initialData.date || '',
-        services: initialData.services || [],
+        description: initialData.description || '',
+        date: dateValue,
+        status: initialData.status || 'pending',
         totalCost: initialData.totalCost || 0,
-        notes: initialData.notes || ''
+        services: Array.isArray(initialData.services) ? [...initialData.services] : [],
+        notes: initialData.notes || '',
       });
     }
   }, [initialData]);
+
+  const { vehicles = [], clients = [], mechanics = [], isLoading } = useGarageData();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -50,50 +66,12 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setFormData(prev => ({ ...prev, date: date.toISOString() }));
-    }
+  const handleServicesChange = (services: any[]) => {
+    setFormData(prev => ({ ...prev, services }));
   };
 
-  const handleServiceChange = (serviceId: string, quantity: number) => {
-    const service = services.find(s => s.id === serviceId);
-    if (!service) return;
-
-    const cost = service.cost * quantity;
-    
-    // Check if service already exists in the array
-    const serviceIndex = formData.services.findIndex(s => s.serviceId === serviceId);
-    
-    let updatedServices;
-    if (serviceIndex >= 0) {
-      // Update existing service
-      updatedServices = [...formData.services];
-      updatedServices[serviceIndex] = { serviceId, quantity, cost };
-    } else {
-      // Add new service
-      updatedServices = [...formData.services, { serviceId, quantity, cost }];
-    }
-    
-    // Calculate total cost
-    const totalCost = updatedServices.reduce((sum, s) => sum + s.cost, 0);
-    
-    setFormData(prev => ({
-      ...prev,
-      services: updatedServices,
-      totalCost
-    }));
-  };
-
-  const removeService = (serviceId: string) => {
-    const updatedServices = formData.services.filter(s => s.serviceId !== serviceId);
-    const totalCost = updatedServices.reduce((sum, s) => sum + s.cost, 0);
-    
-    setFormData(prev => ({
-      ...prev,
-      services: updatedServices,
-      totalCost
-    }));
+  const handleCostChange = (totalCost: number) => {
+    setFormData(prev => ({ ...prev, totalCost }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,9 +79,13 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
     onSubmit(formData);
   };
 
+  if (isLoading) {
+    return <div className="text-center py-8">Chargement des données...</div>;
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="vehicleId">Véhicule</Label>
           <Select 
@@ -114,7 +96,7 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
               <SelectValue placeholder="Sélectionner un véhicule" />
             </SelectTrigger>
             <SelectContent>
-              {vehicles.map(vehicle => (
+              {vehicles.map((vehicle: any) => (
                 <SelectItem key={vehicle.id} value={vehicle.id}>
                   {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
                 </SelectItem>
@@ -122,7 +104,7 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="clientId">Client</Label>
           <Select 
@@ -133,7 +115,7 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
               <SelectValue placeholder="Sélectionner un client" />
             </SelectTrigger>
             <SelectContent>
-              {clients.map(client => (
+              {clients.map((client: any) => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.firstName} {client.lastName}
                 </SelectItem>
@@ -141,7 +123,9 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
             </SelectContent>
           </Select>
         </div>
-        
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="mechanicId">Mécanicien</Label>
           <Select 
@@ -152,7 +136,7 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
               <SelectValue placeholder="Sélectionner un mécanicien" />
             </SelectTrigger>
             <SelectContent>
-              {mechanics.map(mechanic => (
+              {mechanics.map((mechanic: any) => (
                 <SelectItem key={mechanic.id} value={mechanic.id}>
                   {mechanic.firstName} {mechanic.lastName}
                 </SelectItem>
@@ -160,84 +144,79 @@ const MaintenanceForm = ({ onSubmit, onCancel, initialData }: MaintenanceFormPro
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
-          <DatePicker 
-            date={formData.date ? new Date(formData.date) : undefined}
-            onSelect={handleDateChange}
+          <Input
+            type="date"
+            id="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
           />
         </div>
       </div>
-      
+
       <div className="space-y-2">
-        <Label>Services</Label>
-        <div className="border rounded-md p-4 space-y-4">
-          {formData.services.map((service, index) => {
-            const serviceDetails = services.find(s => s.id === service.serviceId);
-            return (
-              <div key={index} className="flex items-center gap-4">
-                <div className="flex-grow">{serviceDetails?.name}</div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="1"
-                    value={service.quantity}
-                    onChange={(e) => handleServiceChange(service.serviceId, parseInt(e.target.value) || 1)}
-                    className="w-20"
-                  />
-                  <div className="w-24 text-right">{service.cost}€</div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => removeService(service.serviceId)}
-                  >
-                    X
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-          
-          <div className="flex gap-4">
-            <Select onValueChange={(value) => handleServiceChange(value, 1)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Ajouter un service" />
-              </SelectTrigger>
-              <SelectContent>
-                {services.map(service => (
-                  <SelectItem key={service.id} value={service.id}>
-                    {service.name} - {service.cost}€
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex justify-end font-bold">
-            Total: {formData.totalCost}€
-          </div>
-        </div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Description des travaux de maintenance"
+          rows={3}
+        />
       </div>
-      
+
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
+        <Label htmlFor="status">Statut</Label>
+        <Select 
+          value={formData.status} 
+          onValueChange={(value) => handleSelectChange('status', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionner un statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">En attente</SelectItem>
+            <SelectItem value="in_progress">En cours</SelectItem>
+            <SelectItem value="completed">Terminée</SelectItem>
+            <SelectItem value="cancelled">Annulée</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <ServicesSelector 
+        services={formData.services}
+        onChange={handleServicesChange}
+        onCostChange={handleCostChange}
+      />
+
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes additionnelles</Label>
         <Textarea
           id="notes"
           name="notes"
           value={formData.notes}
           onChange={handleChange}
-          rows={3}
+          placeholder="Notes additionnelles"
+          rows={2}
         />
       </div>
-      
-      <div className="flex justify-end gap-2 mt-4">
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="text-lg font-medium">
+          Coût total: {formData.totalCost}€
+        </div>
+      </div>
+
+      <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Annuler
         </Button>
         <Button type="submit">
-          Enregistrer
+          {initialData ? 'Mettre à jour' : 'Créer'}
         </Button>
       </div>
     </form>
