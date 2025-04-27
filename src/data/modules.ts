@@ -13,6 +13,7 @@ import { transportModule } from './modules/transport';
 import { garageModule } from './modules/garage';
 import { websiteModule } from './modules/website';
 import { vehicleRentalsModule } from './modules/vehicle-rentals';
+import { academyModule } from './modules/academy';
 
 // Export des modules sous forme de tableau pour l'application
 export const modules = [
@@ -29,4 +30,5 @@ export const modules = [
   transportModule,
   garageModule,
   websiteModule,
+  academyModule,
 ];

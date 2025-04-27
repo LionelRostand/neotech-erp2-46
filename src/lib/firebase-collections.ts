@@ -1,3 +1,4 @@
+
 // Define all Firestore collection paths here for consistency
 export const COLLECTIONS = {
   // User collections
@@ -44,6 +45,19 @@ export const COLLECTIONS = {
   },
 
   DOCUMENTS: {
+    SETTINGS: 'document_settings',
+    TEMPLATES: 'document_templates',
+    DOCUMENTS: 'documents',
+    FILES: 'documents_files',
+    FOLDERS: 'documents_folders',
+    SHARED: 'documents_shared',
+    FAVORITES: 'documents_favorites',
+    RECENTS: 'documents_recents',
+    ARCHIVES: 'documents_archives',
+    METADATA: 'documents_metadata',
+  },
+
+  DOCUMENT_COLLECTIONS: {
     SETTINGS: 'document_settings',
     TEMPLATES: 'document_templates',
     DOCUMENTS: 'documents',
@@ -126,6 +140,22 @@ export const COLLECTIONS = {
     SETTINGS: 'hr_settings',
     TIMESHEET: 'hr_timesheet',
     TRAININGS: 'hr_trainings'
+  },
+
+  ACADEMY: {
+    STUDENTS: 'academy_students',
+    STAFF: 'academy_staff',
+    TEACHERS: 'academy_teachers',
+    REGISTRATIONS: 'academy_registrations',
+    COURSES: 'academy_courses',
+    GRADES: 'academy_grades',
+    EXAMS: 'academy_exams',
+    SCHEDULE: 'academy_schedule',
+    ATTENDANCE: 'academy_attendance',
+    REPORTS: 'academy_reports',
+    DOCUMENTS: 'academy_documents',
+    GOVERNANCE: 'academy_governance',
+    SETTINGS: 'academy_settings'
   },
 
   LIBRARY: {
