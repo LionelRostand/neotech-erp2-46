@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Table,
@@ -38,6 +37,13 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+
+  const safeFormatValue = (value: any): string => {
+    if (value && typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
+      return new Date(value.seconds * 1000).toLocaleDateString();
+    }
+    return String(value || '');
+  };
 
   const handleView = (appointment: any) => {
     setSelectedAppointment(appointment);
@@ -101,8 +107,8 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                 <TableRow key={appointment.id}>
                   <TableCell>{getClientName(appointment.clientId)}</TableCell>
                   <TableCell>{getVehicleInfo(appointment.vehicleId)}</TableCell>
-                  <TableCell>{appointment.date}</TableCell>
-                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>{safeFormatValue(appointment.date)}</TableCell>
+                  <TableCell>{safeFormatValue(appointment.time)}</TableCell>
                   <TableCell>{getMechanicName(appointment.mechanicId)}</TableCell>
                   <TableCell>{getServiceName(appointment.serviceId)}</TableCell>
                   <TableCell>{getStatusBadge(appointment.status)}</TableCell>

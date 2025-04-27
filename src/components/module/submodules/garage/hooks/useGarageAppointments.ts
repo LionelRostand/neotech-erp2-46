@@ -18,6 +18,23 @@ export const useGarageAppointments = (searchTerm: string = '') => {
   const { getAll: getMechanics } = useFirestore('garage_mechanics');
   const { getAll: getServices } = useFirestore('garage_services');
 
+  // Helper function to safely format or handle Firebase timestamp objects
+  const safeFormatDate = (value: any): string => {
+    // Check if the value is a Firebase timestamp object (has seconds and nanoseconds)
+    if (value && typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
+      // Convert Firebase timestamp to JavaScript Date and then to ISO string
+      return new Date(value.seconds * 1000).toISOString().split('T')[0];
+    }
+    
+    // If it's already a string, return it
+    if (typeof value === 'string') {
+      return value;
+    }
+    
+    // Return empty string for undefined/null
+    return '';
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -29,7 +46,19 @@ export const useGarageAppointments = (searchTerm: string = '') => {
         getServices()
       ]);
 
-      setAppointments(appointmentsData || []);
+      // Process appointments to handle possible Firebase timestamps
+      const processedAppointments = appointmentsData?.map(appointment => {
+        return {
+          ...appointment,
+          // Convert dates to strings if they are Firebase timestamps
+          formattedDate: safeFormatDate(appointment.date),
+          formattedTime: typeof appointment.time === 'object' && 'seconds' in appointment.time
+            ? new Date(appointment.time.seconds * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+            : appointment.time
+        };
+      }) || [];
+
+      setAppointments(processedAppointments);
       setClients(clientsData || []);
       setVehicles(vehiclesData || []);
       setMechanics(mechanicsData || []);
@@ -55,10 +84,13 @@ export const useGarageAppointments = (searchTerm: string = '') => {
       const vehicleInfo = getVehicleInfo(appointment.vehicleId).toLowerCase();
       const mechanicName = getMechanicName(appointment.mechanicId).toLowerCase();
       
+      // Use the formattedDate field or safely format the date
+      const dateStr = appointment.formattedDate || safeFormatDate(appointment.date);
+      
       return clientName.includes(term) || 
         vehicleInfo.includes(term) || 
         mechanicName.includes(term) ||
-        (appointment.date && appointment.date.toLowerCase().includes(term));
+        dateStr.toLowerCase().includes(term);
     });
   }, [appointments, searchTerm]);
 

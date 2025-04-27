@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar } from "@/components/ui/calendar";
 
@@ -11,10 +10,25 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   appointments,
   isLoading
 }) => {
+  // Helper function to safely format or convert Firebase timestamp objects
+  const safeFormatValue = (value: any): string => {
+    // Check if the value is a Firebase timestamp object (has seconds and nanoseconds)
+    if (value && typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
+      // Convert Firebase timestamp to JavaScript Date and then to string
+      return new Date(value.seconds * 1000).toLocaleDateString();
+    }
+    
+    // Otherwise, just return the value as a string or empty string if undefined
+    return String(value || '');
+  };
+
   // Créer un objet pour stocker les dates qui ont des rendez-vous
   const appointmentDates = appointments.reduce((acc, appointment) => {
     if (appointment.date) {
-      const dateKey = appointment.date;
+      const dateKey = typeof appointment.date === 'string' 
+        ? appointment.date 
+        : safeFormatValue(appointment.date);
+      
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
@@ -46,11 +60,18 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
               <div key={date} className="border rounded-md p-3">
                 <div className="font-medium">{date}</div>
                 <div className="space-y-1 mt-2">
-                  {dateAppointments.map((app: any) => (
-                    <div key={app.id} className="text-sm flex justify-between">
-                      <span>{app.time} - {app.serviceId}</span>
-                    </div>
-                  ))}
+                  {dateAppointments.map((app: any) => {
+                    // Ensure we handle potential timestamp objects in service field
+                    const serviceId = typeof app.serviceId === 'object' && 'seconds' in app.serviceId 
+                      ? safeFormatValue(app.serviceId)
+                      : app.serviceId || 'Service non spécifié';
+                    
+                    return (
+                      <div key={app.id} className="text-sm flex justify-between">
+                        <span>{safeFormatValue(app.time)} - {serviceId}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}

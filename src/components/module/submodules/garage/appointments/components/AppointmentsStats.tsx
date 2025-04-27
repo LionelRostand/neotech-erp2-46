@@ -8,9 +8,28 @@ interface AppointmentsStatsProps {
 }
 
 const AppointmentsStats = ({ appointments }: AppointmentsStatsProps) => {
+  // Helper function to safely format or handle Firebase timestamp objects
+  const safeFormatDate = (value: any): string => {
+    // Check if the value is a Firebase timestamp object (has seconds and nanoseconds)
+    if (value && typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
+      // Convert Firebase timestamp to JavaScript Date and then to ISO string
+      return new Date(value.seconds * 1000).toISOString().split('T')[0];
+    }
+    
+    // If it's already a string, return it
+    if (typeof value === 'string') {
+      return value;
+    }
+    
+    // Return empty string for undefined/null
+    return '';
+  };
+
   const today = new Date().toISOString().split('T')[0];
-  const todaysAppointments = appointments.filter(a => a.date === today);
-  const upcomingAppointments = appointments.filter(a => a.date > today);
+  
+  // Use safeFormatDate when comparing appointment dates
+  const todaysAppointments = appointments.filter(a => safeFormatDate(a.date) === today);
+  const upcomingAppointments = appointments.filter(a => safeFormatDate(a.date) > today);
   const completedAppointments = appointments.filter(a => a.status === 'completed');
 
   return (
