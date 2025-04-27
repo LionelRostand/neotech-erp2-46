@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Banknote, CreditCard, PayPal } from 'lucide-react';
+import { Banknote, CreditCard, paypal } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import { jsPDF } from 'jspdf';
@@ -127,7 +127,7 @@ const ViewGarageInvoiceDialog = ({
               onClick={() => handlePayment('PayPal')}
               disabled={processingPayment}
             >
-              <PayPal className="mr-2 h-4 w-4" />
+              <paypal className="mr-2 h-4 w-4" />
               PayPal
             </Button>
             <Button
