@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 
 export interface SubModule {
@@ -24,7 +23,7 @@ export interface AppModule {
 }
 
 // Helper function to create icon components
-export const createIcon = (Icon: any): ReactNode => <Icon className="h-5 w-5" />;
+export const createIcon = (Icon: any) => <Icon className="h-5 w-5" />;
 
 export interface GarageMaintenance {
   id: string;
@@ -41,7 +40,4 @@ export interface GarageMaintenance {
     cost: number;
   }>;
   notes?: string;
-  clientName?: string;
-  vehicleName?: string;
 }
-
