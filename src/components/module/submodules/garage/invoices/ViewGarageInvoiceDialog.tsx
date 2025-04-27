@@ -7,10 +7,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CreditCard, paypal } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import { jsPDF } from 'jspdf';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGarageLoyalty } from '@/hooks/garage/useGarageLoyalty';
+import { toast } from 'sonner';
 
 interface ViewGarageInvoiceDialogProps {
   invoice: any;
@@ -26,6 +35,21 @@ const ViewGarageInvoiceDialog = ({
   onPaymentComplete 
 }: ViewGarageInvoiceDialogProps) => {
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [selectedLoyalty, setSelectedLoyalty] = useState<string>("");
+  const { activePrograms } = useGarageLoyalty();
+
+  const [discountedAmount, setDiscountedAmount] = useState(invoice?.amount || 0);
+
+  const handleLoyaltyChange = (programId: string) => {
+    setSelectedLoyalty(programId);
+    const program = activePrograms.find(p => p.id === programId);
+    if (program) {
+      const discount = invoice.amount * (program.pointsMultiplier - 1) / program.pointsMultiplier;
+      setDiscountedAmount(invoice.amount - discount);
+    } else {
+      setDiscountedAmount(invoice.amount);
+    }
+  };
 
   const generateReceipt = (paymentMethod: string) => {
     const doc = new jsPDF();
@@ -105,10 +129,41 @@ const ViewGarageInvoiceDialog = ({
               <p>{new Date(invoice.dueDate).toLocaleDateString()}</p>
             </div>
           </div>
+
+          {invoice.status !== 'paid' && (
+            <div>
+              <p className="font-medium mb-1">Programme de Fidélité</p>
+              <Select
+                value={selectedLoyalty}
+                onValueChange={handleLoyaltyChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un programme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucun programme</SelectItem>
+                  {activePrograms.map(program => (
+                    <SelectItem key={program.id} value={program.id}>
+                      {program.name} (-{((program.pointsMultiplier - 1) / program.pointsMultiplier * 100).toFixed(0)}%)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           <div>
             <p className="font-medium mb-1">Montant</p>
-            <p className="text-lg font-bold">{formatCurrency(invoice.amount)}</p>
+            <div className="space-y-1">
+              {selectedLoyalty && discountedAmount !== invoice.amount && (
+                <p className="text-sm line-through text-gray-500">
+                  {formatCurrency(invoice.amount)}
+                </p>
+              )}
+              <p className="text-lg font-bold">
+                {formatCurrency(discountedAmount)}
+              </p>
+            </div>
           </div>
         </div>
 
