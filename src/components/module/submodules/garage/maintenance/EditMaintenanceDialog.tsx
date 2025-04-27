@@ -8,18 +8,20 @@ import {
 } from "@/components/ui/dialog";
 import MaintenanceForm from './MaintenanceForm';
 import { useQueryClient } from '@tanstack/react-query';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { Maintenance } from './types';
 
 interface EditMaintenanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  maintenance: any | null;
+  maintenance: Maintenance | null;
+  onMaintenanceUpdated?: () => void;
 }
 
-const EditMaintenanceDialog = ({ open, onOpenChange, maintenance }: EditMaintenanceDialogProps) => {
+const EditMaintenanceDialog = ({ open, onOpenChange, maintenance, onMaintenanceUpdated }: EditMaintenanceDialogProps) => {
   const queryClient = useQueryClient();
 
   const handleSubmit = async (data: any) => {
@@ -27,13 +29,22 @@ const EditMaintenanceDialog = ({ open, onOpenChange, maintenance }: EditMaintena
     
     try {
       const docRef = doc(db, COLLECTIONS.GARAGE.MAINTENANCE, maintenance.id);
-      await updateDoc(docRef, {
+      
+      // Use setDoc with merge:true instead of updateDoc to ensure the document
+      // is created if it doesn't exist
+      await setDoc(docRef, {
         ...data,
         updatedAt: new Date().toISOString()
-      });
+      }, { merge: true });
       
       toast.success("Maintenance mise à jour avec succès");
       queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });
+      
+      // Call the callback if provided
+      if (onMaintenanceUpdated) {
+        onMaintenanceUpdated();
+      }
+      
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating maintenance:", error);

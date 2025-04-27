@@ -20,22 +20,31 @@ interface DeleteMaintenanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   maintenanceId: string | null;
+  onMaintenanceDeleted?: () => void;
 }
 
 const DeleteMaintenanceDialog = ({ 
   open, 
   onOpenChange, 
-  maintenanceId 
+  maintenanceId,
+  onMaintenanceDeleted
 }: DeleteMaintenanceDialogProps) => {
   const queryClient = useQueryClient();
 
   const handleDelete = async () => {
     if (!maintenanceId) return;
-
+    
     try {
-      await deleteDoc(doc(db, COLLECTIONS.GARAGE.MAINTENANCE, maintenanceId));
+      const docRef = doc(db, COLLECTIONS.GARAGE.MAINTENANCE, maintenanceId);
+      await deleteDoc(docRef);
+      
       toast.success("Maintenance supprimée avec succès");
       queryClient.invalidateQueries({ queryKey: ['garage', 'maintenances'] });
+      
+      if (onMaintenanceDeleted) {
+        onMaintenanceDeleted();
+      }
+      
       onOpenChange(false);
     } catch (error) {
       console.error("Error deleting maintenance:", error);
@@ -47,14 +56,14 @@ const DeleteMaintenanceDialog = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer cette maintenance ? Cette action ne peut pas être annulée.
+            Cette action est irréversible. Cela supprimera définitivement cette maintenance.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogAction onClick={handleDelete}>
             Supprimer
           </AlertDialogAction>
         </AlertDialogFooter>
