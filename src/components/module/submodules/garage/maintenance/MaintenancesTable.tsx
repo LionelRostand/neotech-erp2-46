@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -35,10 +34,10 @@ const MaintenancesTable = ({
     return client ? `${client.firstName} ${client.lastName}` : clientId;
   };
 
-  // Helper function to get vehicle info
+  // Helper function to get vehicle info with vehicle name
   const getVehicleInfo = (vehicleId: string) => {
     const vehicle = vehicles.find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate}` : vehicleId;
+    return vehicle ? `${vehicle.name} (${vehicle.make} ${vehicle.model} - ${vehicle.licensePlate})` : vehicleId;
   };
 
   // Helper function to format date
