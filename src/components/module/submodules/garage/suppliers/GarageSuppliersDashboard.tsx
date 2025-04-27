@@ -1,9 +1,12 @@
 
 import React from 'react';
-import { useGarageSuppliers } from '@/hooks/garage/useGarageSuppliers';
+import { useGarageSuppliers, GarageSupplier } from '@/hooks/garage/useGarageSuppliers';
 import { Eye, Pencil, Trash, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NewSupplierDialog from './NewSupplierDialog';
+import ViewSupplierDialog from './ViewSupplierDialog';
+import EditSupplierDialog from './EditSupplierDialog';
+import DeleteSupplierDialog from './DeleteSupplierDialog';
 import { 
   Table, 
   TableBody, 
@@ -14,15 +17,44 @@ import {
 } from "@/components/ui/table";
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 const GarageSuppliersDashboard = () => {
-  const { suppliers = [], isLoading, refetch } = useGarageSuppliers();
+  const { suppliers = [], isLoading, refetch, updateSupplier, deleteSupplier } = useGarageSuppliers();
   const [showAddDialog, setShowAddDialog] = React.useState(false);
+  const [selectedSupplier, setSelectedSupplier] = React.useState<GarageSupplier | null>(null);
+  const [showViewDialog, setShowViewDialog] = React.useState(false);
+  const [showEditDialog, setShowEditDialog] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
   // Dashboard statistics
   const totalSuppliers = suppliers.length;
   const activeSuppliers = suppliers.filter(supplier => supplier.status === 'active').length;
   const inactiveSuppliers = totalSuppliers - activeSuppliers;
+
+  const handleUpdateSupplier = async (updatedSupplier: GarageSupplier) => {
+    try {
+      await updateSupplier.mutateAsync(updatedSupplier);
+      setShowEditDialog(false);
+      refetch();
+    } catch (error) {
+      console.error('Error updating supplier:', error);
+      toast.error('Erreur lors de la mise à jour du fournisseur');
+    }
+  };
+
+  const handleDeleteSupplier = async () => {
+    if (!selectedSupplier) return;
+    try {
+      await deleteSupplier.mutateAsync(selectedSupplier.id);
+      setShowDeleteDialog(false);
+      setSelectedSupplier(null);
+      refetch();
+    } catch (error) {
+      console.error('Error deleting supplier:', error);
+      toast.error('Erreur lors de la suppression du fournisseur');
+    }
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -86,13 +118,37 @@ const GarageSuppliersDashboard = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" title="Voir">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      title="Voir"
+                      onClick={() => {
+                        setSelectedSupplier(supplier);
+                        setShowViewDialog(true);
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" title="Modifier">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      title="Modifier"
+                      onClick={() => {
+                        setSelectedSupplier(supplier);
+                        setShowEditDialog(true);
+                      }}
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" title="Supprimer">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      title="Supprimer"
+                      onClick={() => {
+                        setSelectedSupplier(supplier);
+                        setShowDeleteDialog(true);
+                      }}
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </div>
@@ -114,6 +170,26 @@ const GarageSuppliersDashboard = () => {
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
         onSuccess={refetch}
+      />
+
+      <ViewSupplierDialog
+        supplier={selectedSupplier}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+      />
+
+      <EditSupplierDialog
+        supplier={selectedSupplier}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSave={handleUpdateSupplier}
+      />
+
+      <DeleteSupplierDialog
+        supplier={selectedSupplier}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDeleteSupplier}
       />
     </div>
   );
