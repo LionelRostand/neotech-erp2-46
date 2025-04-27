@@ -1,107 +1,123 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
-import { updateDocument } from '@/hooks/firestore/update-operations';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { toast } from 'sonner';
+import { useEmployeeService } from '@/hooks/useEmployeeService';
+import { Loader2 } from 'lucide-react';
 
 interface EditCompanyPositionDialogProps {
-  employee: Employee;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEmployeeUpdated?: (updatedEmployee: Employee) => void;
+  employee: Employee;
+  onEmployeeUpdated: (employee: Employee) => void;
 }
 
-export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps> = ({
-  employee,
+export function EditCompanyPositionDialog({
   open,
   onOpenChange,
+  employee,
   onEmployeeUpdated
-}) => {
-  const { companies, isLoading } = useCompaniesData();
-  const [position, setPosition] = useState(employee.position || '');
-  const [department, setDepartment] = useState(employee.department || '');
-  const [companyId, setCompanyId] = useState<string>(
-    typeof employee.company === 'string' ? employee.company : employee.company?.id || ''
-  );
-  const [professionalEmail, setProfessionalEmail] = useState(employee.professionalEmail || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+}: EditCompanyPositionDialogProps) {
+  const { companies } = useHrModuleData();
+  const { updateEmployee, isLoading } = useEmployeeService();
+  
+  const [position, setPosition] = useState(employee?.position || '');
+  const [companyId, setCompanyId] = useState(typeof employee?.company === 'string' 
+    ? employee.company 
+    : employee?.company?.id || '');
+
+  // Reset form when employee changes
+  useEffect(() => {
+    if (employee) {
+      setPosition(employee.position || '');
+      setCompanyId(typeof employee.company === 'string' 
+        ? employee.company 
+        : employee?.company?.id || '');
+    }
+  }, [employee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    
+    if (!employee || !employee.id) {
+      toast.error("Impossible de mettre à jour l'employé: ID manquant");
+      return;
+    }
 
     try {
-      // Préparer les données à mettre à jour
-      const updatedData: Partial<Employee> = {
+      console.log("Mise à jour de l'employé avec les données:", { position, company: companyId });
+      
+      const updatedEmployee = await updateEmployee(employee.id, {
         position,
-        department,
-        professionalEmail
-      };
-
-      // Si l'entreprise a changé, mettre à jour l'entreprise
-      if (companyId) {
-        // Trouver l'objet entreprise complet
-        const selectedCompany = companies.find(company => company.id === companyId);
+        company: companyId
+      });
+      
+      if (updatedEmployee) {
+        // Use the callback to update the UI
+        onEmployeeUpdated({
+          ...employee,
+          position,
+          company: companyId
+        });
         
-        if (selectedCompany) {
-          updatedData.company = selectedCompany;
-        } else {
-          updatedData.company = companyId;
-        }
-      }
-
-      // Mettre à jour l'employé dans Firestore
-      if (employee.id) {
-        const result = await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, updatedData);
-        
-        if (result) {
-          toast.success("Informations professionnelles mises à jour avec succès");
-          
-          // Mettre à jour l'employé dans l'interface
-          if (onEmployeeUpdated) {
-            onEmployeeUpdated({
-              ...employee,
-              ...updatedData
-            });
-          }
-          
-          onOpenChange(false);
-        } else {
-          toast.error("Erreur lors de la mise à jour des informations");
-        }
+        onOpenChange(false);
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
-      toast.error("Erreur lors de la mise à jour des informations");
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Une erreur est survenue lors de la mise à jour");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Modifier les informations professionnelles</DialogTitle>
+          <DialogTitle>Modifier le poste et l'entreprise</DialogTitle>
+          <DialogDescription>
+            Modifiez le poste et l'entreprise de l'employé
+          </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="position">Poste</Label>
+              <Input
+                id="position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                placeholder="Poste de l'employé"
+              />
+            </div>
+            
+            <div className="grid gap-2">
               <Label htmlFor="company">Entreprise</Label>
-              <Select
+              <Select 
                 value={companyId}
-                onValueChange={setCompanyId}
-                disabled={isLoading}
+                onValueChange={(value) => setCompanyId(value)}
               >
-                <SelectTrigger id="company">
+                <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
                 <SelectContent>
@@ -113,54 +129,30 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="position">Poste</Label>
-              <Input
-                id="position"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="Poste de l'employé"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="department">Département</Label>
-              <Input
-                id="department"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                placeholder="Département"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="professionalEmail">Email professionnel</Label>
-              <Input
-                id="professionalEmail"
-                type="email"
-                value={professionalEmail}
-                onChange={(e) => setProfessionalEmail(e.target.value)}
-                placeholder="Email professionnel"
-              />
-            </div>
           </div>
           
           <DialogFooter>
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => onOpenChange(false)} 
-              disabled={isSubmitting}
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Enregistrement..." : "Enregistrer"}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                'Enregistrer'
+              )}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-};
+}

@@ -1,3 +1,4 @@
+
 import { 
   updateDoc,
   setDoc,
@@ -70,8 +71,10 @@ export const updateDocument = async (collectionName: string, id: string, data: D
       console.log(`Document ${id} created with setDoc`);
     }
     
-    console.log(`Document ${id} processed successfully`);
-    return { id, ...updatedData };
+    // Return the updated document data with ID for convenience
+    const result = { id, ...updatedData };
+    console.log(`Document ${id} processed successfully:`, result);
+    return result;
   } catch (error: any) {
     console.error(`Error updating document ${id}:`, error);
     

@@ -1,69 +1,178 @@
 
-import { useState, useEffect } from 'react';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import type { Employee } from '@/types/employee';
-import type { Department } from '@/components/module/submodules/departments/types';
-import type { TimeReport } from '@/types/timesheet';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { useHrData } from './modules/useHrData';
+import { Company } from '@/components/module/submodules/companies/types';
+import { Employee } from '@/types/employee';
 
+/**
+ * Hook to fetch and process HR module data
+ */
 export const useHrModuleData = () => {
+  const { 
+    employees: rawEmployees, 
+    payslips, 
+    contracts, 
+    departments, 
+    leaveRequests, 
+    attendance,
+    absenceRequests,
+    hrDocuments,
+    timeSheets,
+    evaluations,
+    trainings,
+    hrReports,
+    hrAlerts,
+    isLoading, 
+    error 
+  } = useHrData();
+  
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [timeSheets, setTimeSheets] = useState<TimeReport[]>([]);
-  const [payslips, setPayslips] = useState<any[]>([]);
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
 
+  // Process employees data
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Check if HR collection exists in COLLECTIONS before trying to access its properties
-        if (COLLECTIONS.HR) {
-          const employeesData = await fetchCollectionData<Employee>(COLLECTIONS.HR.EMPLOYEES);
-          const departmentsData = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS);
-          const companiesData = await fetchCollectionData(COLLECTIONS.COMPANIES);
-          const timeSheetsData = await fetchCollectionData<TimeReport>(COLLECTIONS.HR.TIMESHEET);
-          const payslipsData = await fetchCollectionData(COLLECTIONS.HR.PAYSLIPS);
-          const contractsData = await fetchCollectionData(COLLECTIONS.HR.CONTRACTS);
-          const leaveRequestsData = await fetchCollectionData(COLLECTIONS.HR.LEAVE_REQUESTS);
-          
-          setEmployees(employeesData);
-          setDepartments(departmentsData);
-          setCompanies(companiesData);
-          setTimeSheets(timeSheetsData);
-          setPayslips(payslipsData);
-          setContracts(contractsData);
-          setLeaveRequests(leaveRequestsData);
-        } else {
-          console.error("HR collection is not defined in COLLECTIONS");
-          toast.error("La collection HR n'est pas définie");
-        }
-      } catch (err) {
-        console.error('Error fetching HR data:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error'));
-        toast.error('Erreur lors du chargement des données RH');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (rawEmployees) {
+      const processedEmployees = rawEmployees.map(emp => ({
+        id: emp.id,
+        firstName: emp.firstName || '',
+        lastName: emp.lastName || '',
+        email: emp.email || '',
+        phone: emp.phone || '',
+        position: emp.position || emp.role || 'Employé',
+        department: emp.department || 'Non spécifié',
+        departmentId: emp.departmentId || emp.department || '',
+        photo: emp.photoURL || emp.photo || '',
+        photoURL: emp.photoURL || emp.photo || '',
+        hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
+        startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
+        status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
+        address: emp.address || {},
+        contract: emp.contract || '',
+        socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
+        birthDate: emp.birthDate || '',
+        documents: emp.documents || [],
+        company: emp.company || '',
+        role: emp.role || emp.position || '',
+        title: emp.title || emp.position || '',
+        manager: emp.manager || '',
+        managerId: emp.managerId || '',
+        professionalEmail: emp.professionalEmail || emp.email || '',
+        skills: emp.skills || [],
+        education: emp.education || [],
+        workSchedule: emp.workSchedule || {
+          monday: '09:00 - 18:00',
+          tuesday: '09:00 - 18:00',
+          wednesday: '09:00 - 18:00',
+          thursday: '09:00 - 18:00',
+          friday: '09:00 - 17:00',
+        },
+        payslips: emp.payslips || [],
+      })) as Employee[];
+      
+      setEmployees(processedEmployees);
+    }
+  }, [rawEmployees]);
 
-    fetchData();
-  }, []);
+  // Extract companies from employees if available
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      // Create a map to ensure unique companies
+      const companiesMap = new Map<string, Company>();
+      
+      employees.forEach(emp => {
+        if (emp.company) {
+          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
+          
+          if (!companiesMap.has(companyId)) {
+            if (typeof emp.company === 'string') {
+              // Only has the id, create a basic company object
+              companiesMap.set(companyId, {
+                id: companyId,
+                name: 'Entreprise',
+                address: {
+                  street: '',
+                  city: '',
+                  postalCode: '',
+                  country: ''
+                },
+                siret: '',
+                logo: '',
+                logoUrl: '',
+                phone: '',
+                email: '',
+                website: '',
+                industry: '',
+                size: '',
+                status: 'active',
+                employeesCount: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+            } else {
+              // Has the full company object
+              const company = emp.company as Company;
+              
+              // Add missing properties if needed
+              if (!company.address) {
+                company.address = {
+                  street: '',
+                  city: '',
+                  postalCode: '',
+                  country: ''
+                };
+              }
+              
+              companiesMap.set(companyId, {
+                ...company,
+                logo: company.logo || '',
+                logoUrl: company.logoUrl || '',
+                phone: company.phone || '',
+                email: company.email || '',
+                website: company.website || '',
+                industry: company.industry || '',
+                size: company.size || '',
+                status: company.status || 'active',
+                employeesCount: company.employeesCount || 0,
+                createdAt: company.createdAt || new Date().toISOString(),
+                updatedAt: company.updatedAt || new Date().toISOString()
+              });
+            }
+          }
+        }
+      });
+      
+      // Convert map to array
+      const companiesList = Array.from(companiesMap.values());
+      setCompanies(companiesList);
+      
+      // Store in global appData for reference from other components
+      if (!window.appData) window.appData = {};
+      window.appData.companies = companiesList;
+      window.appData.departments = departments || [];
+    }
+  }, [employees, departments]);
 
   return {
     employees,
-    departments,
-    companies,
-    timeSheets,
     payslips,
     contracts,
-    leaveRequests,
+    departments,
+    companies,
+    leaveRequests: leaveRequests || [],
+    attendance: attendance || [],
+    absenceRequests: absenceRequests || [],
+    hrDocuments: hrDocuments || [],
+    timeSheets: timeSheets || [],
+    evaluations: evaluations || [],
+    trainings: trainings || [],
+    hrReports: hrReports || [],
+    hrAlerts: hrAlerts || [],
     isLoading,
-    error
+    error,
+    refetchEmployees: () => {
+      // This function would be implemented in the useHrData hook
+      console.log("Refetching employees data...");
+      // The refetch mechanism should be handled in the useHrData hook
+    }
   };
 };

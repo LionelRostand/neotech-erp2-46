@@ -54,14 +54,30 @@ export const useEmployeeService = () => {
     try {
       console.log('Début de mise à jour d\'un employé:', id, employeeData);
       
-      // Utiliser directement la fonction du service pour mettre à jour l'employé
-      const updatedEmployee = await updateEmployeeDoc(id, employeeData);
+      // Ensure we're not sending undefined values
+      const cleanedData: Partial<Employee> = {};
+      Object.entries(employeeData).forEach(([key, value]) => {
+        if (value !== undefined) {
+          cleanedData[key as keyof Employee] = value;
+        }
+      });
       
-      if (updatedEmployee) {
-        // Synchroniser le statut de manager
+      // Use the update operation directly from firestore hook
+      await firestore.update(id, cleanedData);
+      
+      // Reconstruct the updated employee data with the ID
+      const updatedEmployee = { 
+        id, 
+        ...cleanedData,
+        updatedAt: new Date().toISOString()
+      } as Employee;
+      
+      // Synchroniser le statut de manager si nécessaire
+      if (cleanedData.isManager !== undefined) {
         await syncManagerStatus(updatedEmployee);
-        toast.success(`L'employé ${updatedEmployee.firstName} ${updatedEmployee.lastName} a été mis à jour avec succès`);
       }
+      
+      toast.success(`L'employé ${updatedEmployee.firstName} ${updatedEmployee.lastName} a été mis à jour avec succès`);
       
       return updatedEmployee;
     } catch (error) {
