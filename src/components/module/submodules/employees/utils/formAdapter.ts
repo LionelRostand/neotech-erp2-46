@@ -1,4 +1,3 @@
-
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from './photoUtils';
