@@ -8,7 +8,8 @@ interface CompetencesTabProps {
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
-  const skills = employee.skills || [];
+  // Make sure skills is always an array and never undefined
+  const skills = Array.isArray(employee.skills) ? employee.skills : [];
 
   const getBadgeColor = (level: string) => {
     switch (level) {
@@ -27,17 +28,27 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
 
   // Make sure we're only grouping skills that are proper objects with level property
   const groupedSkills = skills.reduce<Record<string, Skill[]>>((acc, skill) => {
-    // Skip invalid skills or string skills
-    if (!skill || typeof skill !== 'object' || !('level' in skill)) {
+    // Skip invalid skills
+    if (!skill) {
       return acc;
     }
     
-    const level = skill.level || 'other';
+    // Handle string skills or object skills
+    const skillObj: Skill = typeof skill === 'string' 
+      ? { id: `string-skill-${skill}`, name: skill, level: 'other' }
+      : (skill as Skill);
+    
+    // Skip if somehow the skill doesn't have a valid level
+    if (!skillObj.name || !skillObj.level) {
+      return acc;
+    }
+    
+    const level = skillObj.level || 'other';
     
     if (!acc[level]) {
       acc[level] = [];
     }
-    acc[level].push(skill as Skill);
+    acc[level].push(skillObj);
     return acc;
   }, {});
 

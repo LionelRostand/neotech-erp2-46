@@ -16,6 +16,8 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
     danger: "bg-red-100 text-red-800 border-red-200",
   };
 
+  const content = children || status || '';
+
   return (
     <span 
       className={cn(
@@ -24,7 +26,7 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
         className
       )}
     >
-      {children}
+      {typeof content === 'object' ? JSON.stringify(content) : content}
     </span>
   );
 };

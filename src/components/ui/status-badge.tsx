@@ -52,14 +52,15 @@ function StatusBadge({
   // Ensure children is a valid React child (string, number, or React element)
   const content = children || status || '';
 
-  const finalVariant = badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger' 
+  // Map our custom variants to Badge-compatible variants
+  const finalBadgeVariant = (badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger') 
     ? 'outline' 
-    : (badgeVariant as "default" | "destructive" | "secondary" | "outline" || 'default');
+    : (badgeVariant || 'default') as "default" | "destructive" | "secondary" | "outline";
 
   return (
     <Badge
       className={cn(statusBadgeVariants({ variant: badgeVariant as any }), className)}
-      variant={finalVariant}
+      variant={finalBadgeVariant}
       {...props}
     >
       {content}

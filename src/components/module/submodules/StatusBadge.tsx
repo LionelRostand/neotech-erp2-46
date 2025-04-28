@@ -50,8 +50,30 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propV
     }
   };
 
+  // Map our custom variants to Badge's accepted variants
+  const badgeVariantMapping = {
+    outline: 'outline' as const,
+    success: 'outline' as const,  // Use outline but apply success classes
+    warning: 'outline' as const,  // Use outline but apply warning classes
+    danger: 'outline' as const,   // Use outline but apply danger classes
+  };
+
+  // Apply custom classes based on our variant
+  const variantClassMapping = {
+    outline: '',
+    success: 'bg-green-100 text-green-800 border-green-200',
+    warning: 'bg-amber-100 text-amber-800 border-amber-200',
+    danger: 'bg-red-100 text-red-800 border-red-200',
+  };
+
+  const variant = getVariant();
+  const badgeVariant = badgeVariantMapping[variant];
+  const variantClasses = variantClassMapping[variant];
+
   return (
-    <Badge variant={getVariant()}>{getLabel()}</Badge>
+    <Badge variant={badgeVariant} className={variantClasses}>
+      {getLabel()}
+    </Badge>
   );
 };
 
