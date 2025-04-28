@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus, GraduationCap, FileText, ClipboardCheck, File } from 'lucide-react';
 import RecruitmentTab from './RecruitmentTab';
+import DegreeManagementTab from './DegreeManagementTab';
 
 const AcademyStaff = () => {
   return (
@@ -44,15 +45,7 @@ const AcademyStaff = () => {
             </TabsContent>
 
             <TabsContent value="diplomes" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Diplômes et Qualifications</CardTitle>
-                  <CardDescription>Gestion des diplômes du personnel</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>Module de gestion des diplômes en cours de développement...</p>
-                </CardContent>
-              </Card>
+              <DegreeManagementTab />
             </TabsContent>
 
             <TabsContent value="contrats" className="mt-6">
