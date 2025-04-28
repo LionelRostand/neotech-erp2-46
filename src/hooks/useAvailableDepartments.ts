@@ -1,6 +1,7 @@
 
 import { useFirebaseDepartments } from './useFirebaseDepartments';
 import { useCallback } from 'react';
+import { Department } from '@/components/module/submodules/departments/types';
 
 export const useAvailableDepartments = () => {
   const { departments = [], isLoading = false, error, refetch } = useFirebaseDepartments();
@@ -12,14 +13,16 @@ export const useAvailableDepartments = () => {
       return [];
     }
 
-    return departments.map(dept => ({
-      id: dept.id || '',
-      name: dept.name || '',
-      description: dept.description || '',
-      managerId: dept.managerId || '',
-      managerName: dept.managerName || '',
-      color: dept.color || '#3b82f6'
-    }));
+    return departments
+      .filter(dept => dept && typeof dept === 'object') // Ensure we have a valid object
+      .map(dept => ({
+        id: dept.id || `dept-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        name: dept.name || `Département ${dept.id?.substring(0, 5) || ''}`,
+        description: dept.description || '',
+        managerId: dept.managerId || '',
+        managerName: dept.managerName || '',
+        color: dept.color || '#3b82f6'
+      }));
   }, [departments]);
 
   return {

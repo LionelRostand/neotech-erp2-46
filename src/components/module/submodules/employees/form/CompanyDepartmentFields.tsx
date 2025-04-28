@@ -89,7 +89,7 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
               </FormLabel>
               <Select 
                 onValueChange={field.onChange}
-                value={field.value}
+                value={field.value || "no_department"}
                 disabled={disabledFields.includes('department')}
               >
                 <FormControl>
@@ -102,11 +102,13 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                   {isLoading ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (
+                    departments && departments.length > 0 ? 
                     departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.name}>
-                        {dept.name}
+                      <SelectItem key={dept.id} value={dept.id || dept.name || `dept-${dept.id}`}>
+                        {dept.name || "Département sans nom"}
                       </SelectItem>
-                    ))
+                    )) :
+                    <SelectItem value="no_departments_available">Aucun département disponible</SelectItem>
                   )}
                 </SelectContent>
               </Select>

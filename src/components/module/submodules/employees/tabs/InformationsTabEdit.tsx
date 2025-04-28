@@ -7,6 +7,7 @@ import { employeeFormSchema, EmployeeFormValues } from '../form/employeeFormSche
 import CompanyDepartmentFields from '../form/CompanyDepartmentFields';
 import { formValuesToEmployee, employeeToFormValues } from '../utils/formAdapter';
 import PersonalInfoFields from '../form/PersonalInfoFields';
+import FormActions from '../form/FormActions';
 
 interface InformationsTabEditProps {
   employee: Employee;
@@ -18,11 +19,14 @@ const InformationsTabEdit: React.FC<InformationsTabEditProps> = ({ employee, onS
   
   const methods = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
-    defaultValues
+    defaultValues,
+    mode: 'onChange'
   });
   
   const handleSubmit = (data: EmployeeFormValues) => {
+    console.log("Form submitted with values:", data);
     const updatedEmployeeData = formValuesToEmployee(data, employee);
+    console.log("Converting to employee data:", updatedEmployeeData);
     onSave(updatedEmployeeData);
   };
   
