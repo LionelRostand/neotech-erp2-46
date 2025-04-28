@@ -1,278 +1,262 @@
+
 import React, { useState } from 'react';
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { addDays, format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Employee } from '@/types/employee';
-import { TimeReportStatus } from '@/types/timesheet';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { addTimeSheet } from './services/timesheetService';
+import { toast } from 'sonner';
+
+// Define form schema
+const formSchema = z.object({
+  title: z.string().min(2, { message: 'Le titre est requis' }),
+  employeeId: z.string().min(1, { message: "L'employé est requis" }),
+  startDate: z.date({ required_error: "La date de début est requise" }),
+  endDate: z.date({ required_error: "La date de fin est requise" }),
+  totalHours: z.coerce.number().min(0, { message: "Le nombre d'heures doit être positif" }),
+  status: z.enum(["En cours", "Soumis", "Validé", "Rejeté"]),
+  comments: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface TimesheetFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  employees: Employee[];
-  isSubmitting?: boolean;
 }
 
-const TimesheetForm: React.FC<TimesheetFormProps> = ({ 
-  onSubmit, 
-  onCancel, 
-  employees, 
-  isSubmitting = false 
-}) => {
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-  const [weekStartDate, setWeekStartDate] = useState<Date>();
-  const [status, setStatus] = useState<string>('active');
-  const [notes, setNotes] = useState<string>('');
+const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => {
+  const { employees, isLoading } = useEmployeeData();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Heures par jour
-  const [hours, setHours] = useState<Record<string, string>>({
-    monday: '0',
-    tuesday: '0',
-    wednesday: '0',
-    thursday: '0',
-    friday: '0',
-    saturday: '0',
-    sunday: '0'
+  const defaultValues: Partial<FormValues> = {
+    title: '',
+    employeeId: '',
+    startDate: new Date(),
+    endDate: new Date(),
+    totalHours: 0,
+    status: "En cours",
+    comments: '',
+  };
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
   });
 
-  // Calculer la date de fin (7 jours après la date de début)
-  const weekEndDate = weekStartDate ? addDays(weekStartDate, 6) : undefined;
-  
-  // Formatage de la période pour l'affichage
-  const periodText = weekStartDate && weekEndDate 
-    ? `Période: ${format(weekStartDate, 'dd/MM/yyyy', { locale: fr })} - ${format(weekEndDate, 'dd/MM/yyyy', { locale: fr })}`
-    : 'Sélectionnez une date de début';
+  const handleSubmit = async (values: FormValues) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Prepare data for submission
+      const selectedEmployee = employees.find(emp => emp.id === values.employeeId);
+      const timeSheetData = {
+        ...values,
+        employeeName: selectedEmployee ? `${selectedEmployee.firstName} ${selectedEmployee.lastName}` : 'Employé inconnu',
+        employeePhoto: selectedEmployee?.photoURL || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        lastUpdateText: new Date().toLocaleDateString('fr'),
+      };
 
-  // Calculer le total des heures
-  const totalHours = Object.values(hours).reduce((sum, hour) => sum + (parseFloat(hour) || 0), 0);
-
-  // Mettre à jour les heures pour un jour spécifique
-  const handleHoursChange = (day: string, value: string) => {
-    setHours(prev => ({
-      ...prev,
-      [day]: value
-    }));
+      // Call the onSubmit function passed from parent
+      await onSubmit(timeSheetData);
+      
+      toast.success('Feuille de temps créée avec succès');
+      form.reset(defaultValues);
+    } catch (error) {
+      console.error('Erreur lors de la soumission de la feuille de temps:', error);
+      toast.error("Erreur lors de la création de la feuille de temps");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Soumettre le formulaire
-  const handleSubmit = () => {
-    if (!selectedEmployee) {
-      alert('Veuillez sélectionner un employé');
-      return;
-    }
+  // Function to get a unique list of employees (no duplicates)
+  const getUniqueEmployees = () => {
+    if (!employees || employees.length === 0) return [];
 
-    if (!weekStartDate) {
-      alert('Veuillez sélectionner une date de début');
-      return;
-    }
+    // Create a map to store unique employees by ID
+    const uniqueEmployeesMap = new Map();
 
-    const formData = {
-      employeeId: selectedEmployee,
-      weekStartDate,
-      weekEndDate,
-      status,
-      notes,
-      hours,
-      totalHours
-    };
+    // Add each employee to the map, overwriting any duplicates
+    employees.forEach(employee => {
+      // Only add active employees
+      if (employee.status === 'active' || employee.status === 'Actif') {
+        uniqueEmployeesMap.set(employee.id, employee);
+      }
+    });
 
-    onSubmit(formData);
+    // Convert the map back to an array
+    return Array.from(uniqueEmployeesMap.values());
   };
+
+  // Get unique employees list
+  const uniqueEmployees = getUniqueEmployees();
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Nouvelle feuille de temps</h2>
-      
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Employé</label>
-          <Select
-            value={selectedEmployee}
-            onValueChange={setSelectedEmployee}
-            disabled={isSubmitting}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un employé" />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id}>
-                  {`${employee.firstName} ${employee.lastName}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Début de semaine</label>
-          <DatePicker
-            date={weekStartDate}
-            setDate={setWeekStartDate}
-            placeholder="Sélectionner une date de début"
-            disabled={isSubmitting}
-          />
-          {weekStartDate && (
-            <p className="text-sm text-muted-foreground">{periodText}</p>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <h2 className="text-lg font-medium text-center mb-4">Créer une nouvelle feuille de temps</h2>
+        
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Titre</FormLabel>
+              <FormControl>
+                <Input placeholder="Nom de la feuille de temps" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Statut</label>
-          <Select
-            value={status}
-            onValueChange={setStatus}
-            disabled={isSubmitting}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">En cours</SelectItem>
-              <SelectItem value="pending">Soumis</SelectItem>
-              <SelectItem value="validated">Validé</SelectItem>
-              <SelectItem value="rejected">Rejeté</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Heures travaillées</label>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs">Lundi</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.monday}
-                onChange={(e) => handleHoursChange('monday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs">Mardi</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.tuesday}
-                onChange={(e) => handleHoursChange('tuesday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs">Mercredi</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.wednesday}
-                onChange={(e) => handleHoursChange('wednesday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs">Jeudi</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.thursday}
-                onChange={(e) => handleHoursChange('thursday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs">Vendredi</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.friday}
-                onChange={(e) => handleHoursChange('friday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs">Samedi</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.saturday}
-                onChange={(e) => handleHoursChange('saturday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs">Dimanche</label>
-              <Input
-                type="number"
-                min="0"
-                max="24"
-                step="0.5"
-                value={hours.sunday}
-                onChange={(e) => handleHoursChange('sunday', e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Total</label>
-              <Input
-                type="number"
-                value={totalHours}
-                readOnly
-                disabled
-                className="bg-muted"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Notes</label>
-          <Textarea
-            placeholder="Notes ou commentaires sur cette feuille de temps"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            disabled={isSubmitting}
+        />
+        
+        <FormField
+          control={form.control}
+          name="employeeId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Employé</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un employé" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {/* Use the unique employees list here */}
+                  {uniqueEmployees && uniqueEmployees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date de début</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    date={field.value}
+                    setDate={field.onChange}
+                    placeholder="Sélectionner une date"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date de fin</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    date={field.value}
+                    setDate={field.onChange}
+                    placeholder="Sélectionner une date"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
+        
+        <FormField
+          control={form.control}
+          name="totalHours"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nombre d'heures</FormLabel>
+              <FormControl>
+                <Input type="number" min="0" step="0.5" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statut</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Soumis">Soumis</SelectItem>
+                  <SelectItem value="Validé">Validé</SelectItem>
+                  <SelectItem value="Rejeté">Rejeté</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="comments"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Commentaires</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Commentaires ou notes supplémentaires" 
+                  className="resize-none"
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex items-center justify-end space-x-4">
+          <Button variant="outline" type="button" onClick={onCancel}>
             Annuler
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !selectedEmployee || !weekStartDate}
-          >
-            {isSubmitting ? "Création en cours..." : "Créer la feuille de temps"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Création...' : 'Créer'}
           </Button>
         </div>
-      </div>
-    </div>
+      </form>
+    </Form>
   );
 };
 
