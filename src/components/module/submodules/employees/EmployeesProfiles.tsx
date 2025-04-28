@@ -8,7 +8,6 @@ import ViewEmployeeDialog from './dialogs/ViewEmployeeDialog';
 import EditEmployeeDialog from './dialogs/EditEmployeeDialog';
 import DeleteEmployeeDialog from './dialogs/DeleteEmployeeDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { deleteEmployee } from './services/employeeService';
 
 interface EmployeesProfilesProps {
   employees: Employee[];
@@ -57,7 +56,8 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
   // Handle employee deletion
   const handleConfirmDelete = async (id: string) => {
     try {
-      // Using directly imported function instead of dynamic import
+      // Import dynamically to avoid circular dependencies
+      const { deleteEmployee } = await import('../../employees/services/employeeService');
       await deleteEmployee(id);
       
       toast.success('Employé supprimé avec succès');
@@ -85,7 +85,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
         </CardHeader>
         <CardContent className="pt-6">
           <EmployeesTable 
-            employees={employees || []} 
+            employees={employees} 
             isLoading={isLoading}
             onView={handleViewEmployee}
             onEdit={handleEditEmployee}

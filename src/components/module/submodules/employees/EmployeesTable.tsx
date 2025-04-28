@@ -22,7 +22,7 @@ interface EmployeesTableProps {
 }
 
 const EmployeesTable: React.FC<EmployeesTableProps> = ({
-  employees = [],
+  employees,
   isLoading = false,
   onView,
   onEdit,
@@ -72,7 +72,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {!employees || employees.length === 0 ? (
+          {employees.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="text-center py-8">
                 Aucun employé trouvé.
