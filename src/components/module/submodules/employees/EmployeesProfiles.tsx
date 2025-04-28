@@ -1,225 +1,165 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState } from 'react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { Employee } from '@/types/employee';
 import { Button } from "@/components/ui/button";
 import { DataTable } from '@/components/ui/data-table';
-import { Employee } from '@/types/employee';
-import { Eye, Edit, Trash, Plus, UserPlus } from 'lucide-react';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { toast } from 'sonner';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Column } from '@/types/table-types';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Eye, Edit, Trash2, UserPlus } from 'lucide-react';
 import EmployeesStats from './EmployeesStats';
 import EmployeeViewDialog from './EmployeeViewDialog';
-import { Badge } from "@/components/ui/badge";
+import { toast } from 'sonner';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 
-interface EmployeesProfilesProps {
-  employees: Employee[];
-  isLoading?: boolean;
-}
-
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], isLoading = false }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }> = ({ 
+  employees = [], 
+  isLoading = false 
+}) => {
+  const { updateEmployee, deleteEmployee } = useEmployeeActions();
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Filter employees based on search query
-  const filteredEmployees = employees.filter(employee => {
-    const searchTerm = searchQuery.toLowerCase();
-    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-    const department = employee.department ? employee.department.toLowerCase() : '';
-    const position = employee.position ? employee.position.toLowerCase() : '';
-    const email = employee.email ? employee.email.toLowerCase() : '';
-
-    return (
-      fullName.includes(searchTerm) ||
-      department.includes(searchTerm) ||
-      position.includes(searchTerm) ||
-      email.includes(searchTerm)
-    );
-  });
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'dd/MM/yyyy', { locale: fr });
+    } catch (e) {
+      return dateStr;
+    }
+  };
 
   const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
-    setIsViewDialogOpen(true);
+    setViewDialogOpen(true);
   };
 
-  const handleEditEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsEditDialogOpen(true);
+  const handleUpdateEmployee = async (data: Partial<Employee>) => {
+    if (!data.id) return;
+
+    try {
+      await updateEmployee(data);
+      // Update the selected employee in state to see changes immediately
+      if (selectedEmployee && selectedEmployee.id === data.id) {
+        setSelectedEmployee(prev => prev ? { ...prev, ...data } : prev);
+      }
+      toast.success('Employé mis à jour avec succès');
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      toast.error('Erreur lors de la mise à jour de l\'employé');
+    }
   };
 
-  const handleDeleteEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsDeleteDialogOpen(true);
+  const handleDeleteEmployee = async (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) {
+      try {
+        await deleteEmployee(id);
+        toast.success('Employé supprimé avec succès');
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+        toast.error('Erreur lors de la suppression de l\'employé');
+      }
+    }
   };
 
-  const handleAddEmployee = () => {
-    setIsAddDialogOpen(true);
-  };
-
-  const columns = [
+  const columns: Column<Employee>[] = [
     {
-      header: "Employé",
-      accessorKey: "name",
-      cell: ({ row }: { row: { original: Employee } }) => {
-        const employee = row.original;
-        return (
-          <div className="flex items-center gap-3">
-            {employee.photoURL ? (
-              <img 
-                src={employee.photoURL} 
-                alt={`${employee.firstName} ${employee.lastName}`}
-                className="w-10 h-10 rounded-full object-cover border"
+      header: "Nom",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 h-8 w-8">
+            {row.original.photoUrl ? (
+              <img
+                src={row.original.photoUrl}
+                alt={`${row.original.firstName} ${row.original.lastName}`}
+                className="rounded-full object-cover h-full w-full"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium">
-                {employee.firstName?.charAt(0) || ''}{employee.lastName?.charAt(0) || ''}
+              <div className="bg-gray-200 rounded-full h-full w-full flex items-center justify-center">
+                <span className="text-xs font-medium">
+                  {row.original.firstName?.[0]}{row.original.lastName?.[0]}
+                </span>
               </div>
             )}
-            <div>
-              <div className="font-medium">{employee.firstName} {employee.lastName}</div>
-              <div className="text-sm text-gray-500">{employee.email}</div>
-            </div>
           </div>
-        );
-      },
-    },
-    {
-      header: "Poste",
-      accessorKey: "position",
+          <div>
+            <div className="font-medium">{row.original.firstName} {row.original.lastName}</div>
+            <div className="text-sm text-gray-500">{row.original.position}</div>
+          </div>
+        </div>
+      )
     },
     {
       header: "Département",
       accessorKey: "department",
     },
     {
+      header: "Email",
+      accessorKey: "email",
+    },
+    {
+      header: "Date d'embauche",
+      cell: ({ row }) => row.original.hireDate ? formatDate(row.original.hireDate) : "-"
+    },
+    {
       header: "Statut",
-      accessorKey: "status",
-      cell: ({ row }: { row: { original: Employee } }) => {
-        const status = row.original.status;
-        let badgeClass = "";
-        let statusLabel = status;
-        
-        switch (status?.toLowerCase()) {
-          case 'active':
-          case 'actif':
-            badgeClass = "bg-green-100 text-green-800";
-            statusLabel = "Actif";
-            break;
-          case 'inactive':
-          case 'inactif':
-            badgeClass = "bg-red-100 text-red-800";
-            statusLabel = "Inactif";
-            break;
-          case 'onleave':
-          case 'en congé':
-            badgeClass = "bg-amber-100 text-amber-800";
-            statusLabel = "En congé";
-            break;
-          default:
-            badgeClass = "bg-gray-100 text-gray-800";
-            statusLabel = status || "Non défini";
-        }
-        
-        return (
-          <Badge className={badgeClass}>{statusLabel}</Badge>
-        );
-      },
+      cell: ({ row }) => <StatusBadge status={row.original.status} />
     },
     {
       header: "Actions",
-      id: "actions",
-      cell: ({ row }: { row: { original: Employee } }) => {
-        const employee = row.original;
-        return (
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleViewEmployee(employee);
-              }}
-              className="hover:bg-purple-50 text-purple-700"
-            >
-              <Eye className="h-4 w-4" />
-              <span className="sr-only">Voir</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditEmployee(employee);
-              }}
-              className="hover:bg-blue-50 text-blue-700"
-            >
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Modifier</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteEmployee(employee);
-              }}
-              className="hover:bg-red-50 text-red-700"
-            >
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Supprimer</span>
-            </Button>
-          </div>
-        );
-      },
-    },
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleViewEmployee(row.original)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteEmployee(row.original.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )
+    }
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Employés</h1>
-        <Button className="gap-2" onClick={handleAddEmployee}>
-          <UserPlus className="h-4 w-4" />
-          <span>Ajouter un employé</span>
-        </Button>
-      </div>
-
-      <EmployeesStats employees={employees} />
-
-      <div className="bg-white shadow-sm rounded-lg border overflow-hidden">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Liste des employés</h2>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Rechercher un employé..."
-                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          <DataTable
-            columns={columns}
-            data={filteredEmployees}
-            isLoading={isLoading}
-            emptyMessage="Aucun employé trouvé"
-          />
+    <div className="container mx-auto p-6">
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Employés</h1>
+          <Button>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Ajouter un employé
+          </Button>
         </div>
+        
+        <EmployeesStats employees={employees} />
+      </div>
+      
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-6">Liste des employés</h2>
+        
+        <DataTable
+          columns={columns}
+          data={employees}
+          isLoading={isLoading}
+          emptyMessage="Aucun employé trouvé"
+        />
       </div>
 
       <EmployeeViewDialog
         employee={selectedEmployee}
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
-        onEditEmployee={handleEditEmployee}
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        onUpdate={handleUpdateEmployee}
       />
-
-      {/* TODO: Add Edit Dialog */}
-      {/* TODO: Add Delete Dialog */}
-      {/* TODO: Add New Employee Dialog */}
     </div>
   );
 };

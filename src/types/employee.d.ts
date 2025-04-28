@@ -1,10 +1,64 @@
 
 export interface EmployeePhotoMeta {
-  fileName: string; // Required field
-  fileType: string; // Required field
-  fileSize: number; // Required field
-  updatedAt: string; // Required field
-  data?: string;     // Optional field
+  data: string;
+  updatedAt: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  level: string;
+}
+
+export interface WorkDay {
+  isWorkDay: boolean;
+  shifts: { start: string; end: string }[];
+}
+
+export interface Schedule {
+  monday?: WorkDay;
+  tuesday?: WorkDay;
+  wednesday?: WorkDay;
+  thursday?: WorkDay;
+  friday?: WorkDay;
+  saturday?: WorkDay;
+  sunday?: WorkDay;
+  [key: string]: WorkDay | undefined;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  type: 'contract' | 'id' | 'certificate' | 'other';
+  date: string;
+  fileUrl: string;
+  description?: string;
+  uploadedAt: string;
+}
+
+export interface Evaluation {
+  id: string;
+  date: string;
+  type: 'performance' | 'skills' | 'objectives';
+  score: string;
+  evaluator: string;
+  comments?: string;
+}
+
+export interface Absence {
+  id: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: 'approved' | 'pending' | 'rejected';
+  reason?: string;
+  submittedAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  notes?: string;
 }
 
 export interface Employee {
@@ -13,98 +67,24 @@ export interface Employee {
   lastName: string;
   email: string;
   phone?: string;
-  address?: EmployeeAddress | string;
-  department?: string;
-  departmentId?: string;
-  position?: string;
-  contract?: string;
+  position: string;
+  department: string;
+  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
   hireDate?: string;
-  startDate?: string;
-  endDate?: string;
   birthDate?: string;
-  status?: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
   salary?: number;
   manager?: string;
-  managerId?: string;
-  professionalEmail?: string;
-  company?: string | any;
-  photoURL?: string;
-  photo?: string;
-  photoData?: string;
+  isManager?: boolean;
+  photoUrl?: string;
   photoMeta?: EmployeePhotoMeta;
+  skills?: Skill[];
+  schedule?: Schedule;
   documents?: Document[];
-  createdAt?: string;
-  updatedAt?: string;
-  socialSecurityNumber?: string;
-  bannerColor?: string;
-  skills?: string[];
-  education?: EducationEntry[];
-  workSchedule?: WorkSchedule;
-  role?: string;
-  isManager?: boolean; 
-  userAccountId?: string;
-  payslips?: string[];
-  title?: string;
-  forceManager?: boolean;
-  conges?: {
-    acquired: number;
-    taken: number;
-    balance: number;
-  };
-  rtt?: {
-    acquired: number;
-    taken: number;
-    balance: number;
-  };
-  // Adding address fields for direct access
-  streetNumber?: string;
-  streetName?: string;
-  city?: string;
-  zipCode?: string;
-  region?: string;
-}
-
-export interface EmployeeAddress {
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  state?: string;
-}
-
-export interface Education {
-  degree: string;
-  school: string;
-  year: string;
-}
-
-export interface EducationEntry {
-  degree: string;
-  school: string;
-  year: string;
-}
-
-export interface Document {
-  id: string;
-  name: string;
-  type: string;
-  date: string;
-  fileData?: string;
-  fileType: string;
-  fileSize: number;
-  employeeId: string;
-  documentId?: string;
-  storedInFirebase?: boolean;
-  storedInHrDocuments?: boolean;
-  storageFormat?: string;
-}
-
-export interface WorkSchedule {
-  monday: string;
-  tuesday: string;
-  wednesday: string;
-  thursday: string;
-  friday: string;
-  saturday?: string;
-  sunday?: string;
+  evaluations?: Evaluation[];
+  absences?: Absence[];
+  contract?: string;
 }

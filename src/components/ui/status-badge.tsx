@@ -51,9 +51,15 @@ function StatusBadge({
 
   const content = children || status || '';
 
+  // Converting our custom variants to Badge-compatible variants
+  const badgeCompatibleVariant = badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger' 
+    ? 'outline' // Use outline as base and rely on our custom classes for colors
+    : badgeVariant as "default" | "destructive" | "secondary" | "outline"; 
+
   return (
     <Badge
       className={cn(statusBadgeVariants({ variant: badgeVariant as "success" | "warning" | "danger" | "outline" | "default" }), className)}
+      variant={badgeCompatibleVariant}
       {...props}
     >
       {content}

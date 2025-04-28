@@ -1,161 +1,61 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Employee } from '@/types/employee';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Employee, Skill } from '@/types/employee';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Plus, Save, Trash, XCircle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { updateEmployeeDoc } from '@/services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  onEmployeeUpdated?: (updatedEmployee: Employee) => void;
-  isEditing?: boolean;
-  onFinishEditing?: () => void;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
-  employee,
-  onEmployeeUpdated,
-  isEditing: isEditingProp = false,
-  onFinishEditing
-}) => {
-  const [isEditing, setIsEditing] = useState(isEditingProp);
-  const [skills, setSkills] = useState<string[]>(employee.skills || []);
-  const [newSkill, setNewSkill] = useState('');
-  
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-  
-  const handleCancel = () => {
-    setSkills(employee.skills || []);
-    setNewSkill('');
-    setIsEditing(false);
-    if (onFinishEditing) {
-      onFinishEditing();
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
+  const skills = employee.skills || [];
+
+  const getBadgeColor = (level: string) => {
+    switch (level) {
+      case 'débutant':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      case 'intermédiaire':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'avancé':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
+      case 'expert':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+      default:
+        return '';
     }
   };
-  
-  const handleAddSkill = () => {
-    if (newSkill.trim()) {
-      setSkills(prev => [...prev, newSkill.trim()]);
-      setNewSkill('');
+
+  const groupedSkills = skills.reduce<Record<string, Skill[]>>((acc, skill) => {
+    if (!acc[skill.level]) {
+      acc[skill.level] = [];
     }
-  };
-  
-  const handleRemoveSkill = (index: number) => {
-    setSkills(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  const handleSave = async () => {
-    try {
-      // Mettre à jour l'employé dans la base de données
-      const updatedEmployee = await updateEmployeeDoc(employee.id, {
-        skills
-      });
-      
-      if (updatedEmployee) {
-        toast.success('Compétences mises à jour avec succès');
-        
-        // Si un callback de mise à jour a été fourni, l'appeler avec l'employé mis à jour
-        if (typeof onEmployeeUpdated === 'function') {
-          onEmployeeUpdated(updatedEmployee);
-        }
-        
-        setIsEditing(false);
-        if (onFinishEditing) {
-          onFinishEditing();
-        }
-      }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des compétences:', error);
-      toast.error('Erreur lors de la mise à jour des compétences');
-    }
-  };
-  
-  // Use isEditingProp if it's provided
-  React.useEffect(() => {
-    setIsEditing(isEditingProp);
-  }, [isEditingProp]);
-  
+    acc[skill.level].push(skill);
+    return acc;
+  }, {});
+
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-medium">Compétences</h3>
-          {!isEditing ? (
-            <Button variant="outline" size="sm" onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancel}>
-                <XCircle className="h-4 w-4 mr-2" />
-                Annuler
-              </Button>
-              <Button variant="default" size="sm" onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Enregistrer
-              </Button>
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Compétences</h3>
+      
+      {skills.length === 0 ? (
+        <p className="text-gray-500">Aucune compétence enregistrée</p>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(groupedSkills).map(([level, levelSkills]) => (
+            <div key={level} className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-500 capitalize">{level}</h4>
+              <div className="flex flex-wrap gap-2">
+                {levelSkills.map(skill => (
+                  <Badge key={skill.id} className={getBadgeColor(level)}>
+                    {skill.name}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          )}
+          ))}
         </div>
-        
-        {isEditing ? (
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Nouvelle compétence"
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddSkill();
-                  }
-                }}
-              />
-              <Button type="button" onClick={handleAddSkill}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter
-              </Button>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                  {skill}
-                  <button 
-                    onClick={() => handleRemoveSkill(index)}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    <XCircle className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-              {skills.length === 0 && (
-                <p className="text-muted-foreground text-sm">Aucune compétence enregistrée</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {skills.map((skill, index) => (
-              <Badge key={index} variant="secondary">
-                {skill}
-              </Badge>
-            ))}
-            {skills.length === 0 && (
-              <p className="text-muted-foreground text-sm">Aucune compétence enregistrée</p>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 
