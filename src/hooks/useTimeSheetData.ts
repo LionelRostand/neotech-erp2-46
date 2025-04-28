@@ -5,6 +5,7 @@ import { TimeReport, TimeReportStatus } from '@/types/timesheet';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getAllTimeSheets } from '@/components/module/submodules/timesheet/services/timesheetService';
+import { toast } from 'sonner';
 
 // Fonction pour formater la date
 const formatDate = (dateValue: any): string => {
@@ -45,7 +46,7 @@ const formatDate = (dateValue: any): string => {
  * Hook pour accéder aux données des feuilles de temps
  */
 export const useTimeSheetData = () => {
-  const { timeSheets: hrTimeSheets, employees, isLoading: isHrLoading, error: hrError } = useHrModuleData();
+  const { timeSheets: hrTimeSheets, employees, isLoading: isHrLoading, error: hrError, refetchEmployees } = useHrModuleData();
   const [localTimeSheets, setLocalTimeSheets] = useState<TimeReport[]>([]);
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<Error | null>(null);
@@ -55,17 +56,32 @@ export const useTimeSheetData = () => {
   const refetch = useCallback(async () => {
     try {
       setIsRefreshing(true);
-      const freshTimeSheets = await getAllTimeSheets();
-      if (freshTimeSheets && freshTimeSheets.length > 0) {
-        setLocalTimeSheets(freshTimeSheets);
+      
+      // Utiliser refetchEmployees si disponible pour recharger toutes les données RH
+      if (refetchEmployees) {
+        await refetchEmployees();
       }
+      
+      // Tenter également de charger directement les feuilles de temps si nécessaire
+      try {
+        const freshTimeSheets = await getAllTimeSheets();
+        if (freshTimeSheets && freshTimeSheets.length > 0) {
+          setLocalTimeSheets(freshTimeSheets);
+        }
+      } catch (timeSheetError) {
+        console.warn('Impossible de charger directement les feuilles de temps:', timeSheetError);
+        // Pas de throw ici pour ne pas bloquer le processus si refetchEmployees a fonctionné
+      }
+      
+      return true;
     } catch (error) {
       console.error('Erreur lors du rechargement des feuilles de temps:', error);
       setLocalError(error instanceof Error ? error : new Error('Erreur inconnue'));
+      throw error;
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [refetchEmployees]);
   
   // Fusionner les données de HR et les données localement chargées
   const mergedTimeSheets = useMemo(() => {

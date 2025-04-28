@@ -12,8 +12,13 @@ const EmployeesTimesheet = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
 
   const handleRefresh = async () => {
-    await refetch();
-    toast.success("Données des feuilles de temps actualisées");
+    try {
+      await refetch();
+      toast.success("Données des feuilles de temps actualisées");
+    } catch (error) {
+      console.error("Erreur lors de l'actualisation des feuilles de temps:", error);
+      toast.error("Impossible d'actualiser les données des feuilles de temps");
+    }
   };
 
   return (
