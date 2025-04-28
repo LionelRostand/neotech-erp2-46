@@ -1,255 +1,278 @@
-
-import React, { useEffect } from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { startOfWeek, endOfWeek, format, addDays } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Employee } from "@/types/employee";
-import { TimeReportStatus } from "@/types/timesheet";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from 'react';
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { addDays, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Employee } from '@/types/employee';
+import { TimeReportStatus } from '@/types/timesheet';
 
-const formSchema = z.object({
-  employeeId: z.string().min(1, { message: "Veuillez sélectionner un employé" }),
-  weekStartDate: z.date(),
-  weekEndDate: z.date(),
-  hours: z.object({
-    monday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-    tuesday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-    wednesday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-    thursday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-    friday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-    saturday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-    sunday: z.string().regex(/^\d*\.?\d*$/, { message: "Format invalide" }).optional(),
-  }),
-  totalHours: z.number(),
-  status: z.string(),
-  notes: z.string().optional(),
-});
-
-type TimesheetFormProps = {
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+interface TimesheetFormProps {
+  onSubmit: (data: any) => void;
   onCancel: () => void;
   employees: Employee[];
-  isSubmitting: boolean;
-};
+  isSubmitting?: boolean;
+}
 
 const TimesheetForm: React.FC<TimesheetFormProps> = ({ 
   onSubmit, 
   onCancel, 
-  employees,
-  isSubmitting
+  employees, 
+  isSubmitting = false 
 }) => {
-  const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
-
-  const defaultDays = {
-    monday: "",
-    tuesday: "",
-    wednesday: "",
-    thursday: "",
-    friday: "",
-    saturday: "",
-    sunday: "",
-  };
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      employeeId: "",
-      weekStartDate: weekStart,
-      weekEndDate: weekEnd,
-      hours: defaultDays,
-      totalHours: 0,
-      status: "active",
-      notes: "",
-    },
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [weekStartDate, setWeekStartDate] = useState<Date>();
+  const [status, setStatus] = useState<string>('active');
+  const [notes, setNotes] = useState<string>('');
+  
+  // Heures par jour
+  const [hours, setHours] = useState<Record<string, string>>({
+    monday: '0',
+    tuesday: '0',
+    wednesday: '0',
+    thursday: '0',
+    friday: '0',
+    saturday: '0',
+    sunday: '0'
   });
 
-  const watchHours = form.watch("hours");
+  // Calculer la date de fin (7 jours après la date de début)
+  const weekEndDate = weekStartDate ? addDays(weekStartDate, 6) : undefined;
   
-  // Calculer le total des heures
-  useEffect(() => {
-    const total = Object.values(watchHours).reduce((sum, hours) => {
-      const value = parseFloat(hours || "0");
-      return sum + (isNaN(value) ? 0 : value);
-    }, 0);
-    
-    form.setValue("totalHours", parseFloat(total.toFixed(2)));
-  }, [watchHours, form]);
+  // Formatage de la période pour l'affichage
+  const periodText = weekStartDate && weekEndDate 
+    ? `Période: ${format(weekStartDate, 'dd/MM/yyyy', { locale: fr })} - ${format(weekEndDate, 'dd/MM/yyyy', { locale: fr })}`
+    : 'Sélectionnez une date de début';
 
-  // Fonction pour générer la liste de jours basée sur la date de début de semaine
-  const generateDaysList = (startDate: Date) => {
-    return Array.from({ length: 7 }).map((_, i) => {
-      const date = addDays(startDate, i);
-      const dayName = format(date, 'EEEE', { locale: fr });
-      const dayLower = dayName.toLowerCase() as keyof typeof watchHours;
-      return {
-        name: dayName.charAt(0).toUpperCase() + dayName.slice(1),
-        date: format(date, 'dd/MM/yyyy'),
-        key: dayLower,
-      };
-    });
+  // Calculer le total des heures
+  const totalHours = Object.values(hours).reduce((sum, hour) => sum + (parseFloat(hour) || 0), 0);
+
+  // Mettre à jour les heures pour un jour spécifique
+  const handleHoursChange = (day: string, value: string) => {
+    setHours(prev => ({
+      ...prev,
+      [day]: value
+    }));
   };
-  
-  // Mettre à jour la date de fin quand la date de début change
-  const handleStartDateChange = (date: Date) => {
-    const newEndDate = addDays(date, 6);
-    form.setValue("weekStartDate", date);
-    form.setValue("weekEndDate", newEndDate);
+
+  // Soumettre le formulaire
+  const handleSubmit = () => {
+    if (!selectedEmployee) {
+      alert('Veuillez sélectionner un employé');
+      return;
+    }
+
+    if (!weekStartDate) {
+      alert('Veuillez sélectionner une date de début');
+      return;
+    }
+
+    const formData = {
+      employeeId: selectedEmployee,
+      weekStartDate,
+      weekEndDate,
+      status,
+      notes,
+      hours,
+      totalHours
+    };
+
+    onSubmit(formData);
   };
-  
-  const days = generateDaysList(form.getValues("weekStartDate"));
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold mb-4">Nouvelle feuille de temps</h2>
-          
-          {/* Sélection de l'employé */}
-          <FormField
-            control={form.control}
-            name="employeeId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employé</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un employé" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Période (date de début) */}
-          <FormField
-            control={form.control}
-            name="weekStartDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Début de période</FormLabel>
-                <DatePicker
-                  date={field.value}
-                  setDate={(date) => date && handleStartDateChange(date)}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Affichage de la période */}
-          <div className="text-sm text-gray-600">
-            Période: {format(form.getValues("weekStartDate"), 'dd/MM/yyyy')} - {format(form.getValues("weekEndDate"), 'dd/MM/yyyy')}
-          </div>
-          
-          {/* Heures par jour */}
-          <div className="border rounded-md p-4 bg-gray-50">
-            <h3 className="text-sm font-medium mb-3">Heures travaillées</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {days.map((day) => (
-                <FormField
-                  key={day.key}
-                  control={form.control}
-                  name={`hours.${day.key}`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{day.name} ({day.date})</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="0"
-                          type="text"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">Nouvelle feuille de temps</h2>
+      
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Employé</label>
+          <Select
+            value={selectedEmployee}
+            onValueChange={setSelectedEmployee}
+            disabled={isSubmitting}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un employé" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {`${employee.firstName} ${employee.lastName}`}
+                </SelectItem>
               ))}
-            </div>
-          </div>
-          
-          {/* Total des heures */}
-          <div className="flex justify-end">
-            <div className="text-sm font-medium">
-              Total des heures: <span className="text-primary">{form.getValues("totalHours")}</span>
-            </div>
-          </div>
-          
-          {/* Statut */}
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Statut</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choisir un statut" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="active">En cours</SelectItem>
-                    <SelectItem value="pending">Soumis</SelectItem>
-                    <SelectItem value="validated">Validé</SelectItem>
-                    <SelectItem value="rejected">Rejeté</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Début de semaine</label>
+          <DatePicker
+            date={weekStartDate}
+            setDate={setWeekStartDate}
+            placeholder="Sélectionner une date de début"
+            disabled={isSubmitting}
           />
-          
-          {/* Notes */}
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Commentaires ou notes concernant cette feuille de temps..."
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          {weekStartDate && (
+            <p className="text-sm text-muted-foreground">{periodText}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Statut</label>
+          <Select
+            value={status}
+            onValueChange={setStatus}
+            disabled={isSubmitting}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">En cours</SelectItem>
+              <SelectItem value="pending">Soumis</SelectItem>
+              <SelectItem value="validated">Validé</SelectItem>
+              <SelectItem value="rejected">Rejeté</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Heures travaillées</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs">Lundi</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.monday}
+                onChange={(e) => handleHoursChange('monday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs">Mardi</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.tuesday}
+                onChange={(e) => handleHoursChange('tuesday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs">Mercredi</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.wednesday}
+                onChange={(e) => handleHoursChange('wednesday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs">Jeudi</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.thursday}
+                onChange={(e) => handleHoursChange('thursday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs">Vendredi</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.friday}
+                onChange={(e) => handleHoursChange('friday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs">Samedi</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.saturday}
+                onChange={(e) => handleHoursChange('saturday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs">Dimanche</label>
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                step="0.5"
+                value={hours.sunday}
+                onChange={(e) => handleHoursChange('sunday', e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium">Total</label>
+              <Input
+                type="number"
+                value={totalHours}
+                readOnly
+                disabled
+                className="bg-muted"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Notes</label>
+          <Textarea
+            placeholder="Notes ou commentaires sur cette feuille de temps"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            disabled={isSubmitting}
           />
         </div>
-        
-        {/* Actions */}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Annuler
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Enregistrement..." : "Enregistrer"}
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !selectedEmployee || !weekStartDate}
+          >
+            {isSubmitting ? "Création en cours..." : "Créer la feuille de temps"}
           </Button>
         </div>
-      </form>
-    </Form>
+      </div>
+    </div>
   );
 };
 
