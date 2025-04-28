@@ -36,8 +36,23 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           // Make sure document is valid
           if (!document || !document.name) return null;
           
+          // Ensure document name is a string
           const documentName = typeof document.name === 'object' ? 
-            JSON.stringify(document.name) : String(document.name);
+            JSON.stringify(document.name) : String(document.name || '');
+          
+          // Ensure document type is a string
+          const documentType = typeof document.type === 'object' ? 
+            JSON.stringify(document.type) : String(document.type || 'Document');
+            
+          // Format date or use fallback
+          let documentDate = 'Date inconnue';
+          try {
+            if (document.date) {
+              documentDate = new Date(document.date).toLocaleDateString();
+            }
+          } catch (e) {
+            console.error("Error formatting document date", e);
+          }
           
           return (
             <div 
@@ -51,7 +66,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
                 <div>
                   <p className="font-medium">{documentName}</p>
                   <p className="text-sm text-gray-500">
-                    {document.type || 'Document'} • {document.date ? new Date(document.date).toLocaleDateString() : 'Date inconnue'}
+                    {documentType} • {documentDate}
                   </p>
                 </div>
               </div>

@@ -70,7 +70,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
                   // Ensure skill name is a string, not an object
                   const skillName = typeof skill.name === 'object' ? 
                     JSON.stringify(skill.name) : 
-                    String(skill.name);
+                    String(skill.name || '');
                     
                   return (
                     <Badge key={skill.id} className={getBadgeColor(level)}>

@@ -35,7 +35,8 @@ const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {weekDays.map(day => {
-              const schedule = workSchedule[day.key as keyof typeof workSchedule];
+              const scheduleValue = workSchedule[day.key as keyof typeof workSchedule];
+              const schedule = typeof scheduleValue === 'object' ? JSON.stringify(scheduleValue) : String(scheduleValue || '');
               const isWorkDay = !!schedule && schedule !== 'off' && schedule !== '';
               
               return (
