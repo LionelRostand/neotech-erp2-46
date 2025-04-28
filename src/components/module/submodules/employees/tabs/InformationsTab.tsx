@@ -15,6 +15,28 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
       return dateString;
     }
   };
+  
+  // Helper to ensure values are strings and not objects
+  const ensureString = (value: any) => {
+    if (value === undefined || value === null) return '-';
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  };
+
+  // Extract and convert employee properties safely to strings
+  const firstName = ensureString(employee.firstName);
+  const lastName = ensureString(employee.lastName);
+  const birthDate = formatDate(ensureString(employee.birthDate));
+  const email = ensureString(employee.email);
+  const phone = ensureString(employee.phone);
+  const position = ensureString(employee.position);
+  const department = ensureString(employee.department);
+  const hireDate = formatDate(ensureString(employee.hireDate));
+  const status = ensureString(employee.status);
+  const contract = ensureString(employee.contract);
+  const address = ensureString(employee.address);
+  const city = ensureString(employee.city);
+  const postalCode = ensureString(employee.postalCode);
+  const country = ensureString(employee.country);
 
   return (
     <div className="space-y-6">
@@ -24,19 +46,19 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
           
           <div className="grid grid-cols-2 gap-2">
             <div className="text-gray-500">Prénom</div>
-            <div>{employee.firstName || '-'}</div>
+            <div>{firstName}</div>
             
             <div className="text-gray-500">Nom</div>
-            <div>{employee.lastName || '-'}</div>
+            <div>{lastName}</div>
             
             <div className="text-gray-500">Date de naissance</div>
-            <div>{formatDate(employee.birthDate)}</div>
+            <div>{birthDate}</div>
             
             <div className="text-gray-500">Email</div>
-            <div>{employee.email || '-'}</div>
+            <div>{email}</div>
             
             <div className="text-gray-500">Téléphone</div>
-            <div>{employee.phone || '-'}</div>
+            <div>{phone}</div>
           </div>
         </div>
         
@@ -45,19 +67,19 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
           
           <div className="grid grid-cols-2 gap-2">
             <div className="text-gray-500">Poste</div>
-            <div>{employee.position || '-'}</div>
+            <div>{position}</div>
             
             <div className="text-gray-500">Département</div>
-            <div>{employee.department || '-'}</div>
+            <div>{department}</div>
             
             <div className="text-gray-500">Date d'embauche</div>
-            <div>{formatDate(employee.hireDate)}</div>
+            <div>{hireDate}</div>
             
             <div className="text-gray-500">Statut</div>
-            <div>{employee.status || '-'}</div>
+            <div>{status}</div>
             
             <div className="text-gray-500">Type de contrat</div>
-            <div>{employee.contract || '-'}</div>
+            <div>{contract}</div>
           </div>
         </div>
       </div>
@@ -67,16 +89,16 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div className="text-gray-500">Adresse</div>
-          <div>{employee.address || '-'}</div>
+          <div>{address}</div>
           
           <div className="text-gray-500">Ville</div>
-          <div>{employee.city || '-'}</div>
+          <div>{city}</div>
           
           <div className="text-gray-500">Code postal</div>
-          <div>{employee.postalCode || '-'}</div>
+          <div>{postalCode}</div>
           
           <div className="text-gray-500">Pays</div>
-          <div>{employee.country || '-'}</div>
+          <div>{country}</div>
         </div>
       </div>
     </div>

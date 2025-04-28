@@ -37,6 +37,16 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
     return null;
   }
 
+  // Ensure we have string values for display
+  const firstName = typeof employee.firstName === 'object' ? JSON.stringify(employee.firstName) : String(employee.firstName || '');
+  const lastName = typeof employee.lastName === 'object' ? JSON.stringify(employee.lastName) : String(employee.lastName || '');
+  const position = typeof employee.position === 'object' ? JSON.stringify(employee.position) : String(employee.position || '');
+  const status = typeof employee.status === 'object' ? JSON.stringify(employee.status) : String(employee.status || '');
+  
+  // Extract initials for avatar fallback
+  const firstInitial = firstName?.[0] || '';
+  const lastInitial = lastName?.[0] || '';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -46,24 +56,24 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
               {employee.photoURL ? (
                 <img
                   src={employee.photoURL}
-                  alt={`${employee.firstName} ${employee.lastName}`}
+                  alt={`${firstName} ${lastName}`}
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <div className="h-full w-full flex items-center justify-center bg-gray-300">
                   <span className="text-xl font-medium uppercase">
-                    {employee.firstName?.[0]}{employee.lastName?.[0]}
+                    {firstInitial}{lastInitial}
                   </span>
                 </div>
               )}
             </div>
             <div>
               <DialogTitle className="text-xl font-bold">
-                {employee.firstName} {employee.lastName}
+                {firstName} {lastName}
               </DialogTitle>
               <div className="flex items-center gap-2 mt-1">
-                <StatusBadge status={employee.status} />
-                <span className="text-gray-600">{employee.position}</span>
+                <StatusBadge status={status} />
+                <span className="text-gray-600">{position}</span>
               </div>
             </div>
           </div>

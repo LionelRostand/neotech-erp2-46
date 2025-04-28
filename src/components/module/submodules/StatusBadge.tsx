@@ -24,11 +24,16 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
     (content === null ? '' : JSON.stringify(content)) : 
     String(content);
 
+  // Ensure status is a string for class lookup
+  const statusKey = typeof status === 'object' ? 
+    (status === null ? '' : String(Object.keys(status)[0] || '')) :
+    String(status || '');
+
   return (
     <span 
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border", 
-        statusClasses[status as keyof typeof statusClasses] || "bg-gray-100 text-gray-800 border-gray-200", 
+        statusClasses[statusKey as keyof typeof statusClasses] || "bg-gray-100 text-gray-800 border-gray-200", 
         className
       )}
     >
