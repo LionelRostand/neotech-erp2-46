@@ -5,13 +5,29 @@ import StatCard from '@/components/StatCard';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeesDashboardCards = () => {
-  const { employees = [], departments = [] } = useEmployeeData();
+  const { employees = [], departments = [], isLoading } = useEmployeeData();
   
   // Calculate statistics with null checks to prevent errors
-  const totalEmployees = employees?.length || 0;
-  const activeDepartments = departments?.length || 0;
-  const activeEmployees = employees?.filter(emp => emp?.status === 'active' || emp?.status === 'Actif')?.length || 0;
-  const onLeave = employees?.filter(emp => emp?.status === 'onLeave' || emp?.status === 'En congé')?.length || 0;
+  const totalEmployees = employees && Array.isArray(employees) ? employees.length : 0;
+  const activeDepartments = departments && Array.isArray(departments) ? departments.length : 0;
+  
+  const activeEmployees = employees && Array.isArray(employees) 
+    ? employees.filter(emp => emp?.status === 'active' || emp?.status === 'Actif').length 
+    : 0;
+    
+  const onLeave = employees && Array.isArray(employees)
+    ? employees.filter(emp => emp?.status === 'onLeave' || emp?.status === 'En congé').length 
+    : 0;
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[1, 2, 3, 4].map((_, index) => (
+          <div key={index} className="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
