@@ -1,15 +1,18 @@
 
 import React from 'react';
 import { Employee, Evaluation } from '@/types/employee';
+import { Star, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 interface EvaluationsTabProps {
   employee: Employee;
 }
 
 const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ employee }) => {
-  const evaluations = employee.evaluations || [];
+  // Make sure evaluations is always an array
+  const evaluations = Array.isArray(employee.evaluations) ? employee.evaluations : [];
 
   const formatDate = (dateString: string) => {
     try {
@@ -19,71 +22,98 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ employee }) => {
     }
   };
 
-  const getEvaluationTypeName = (type: string) => {
-    switch (type) {
-      case 'performance':
-        return 'Performance';
-      case 'skills':
-        return 'Compétences';
-      case 'objectives':
-        return 'Objectifs';
-      default:
-        return type;
-    }
-  };
-
-  const renderStarRating = (score: string) => {
-    const scoreNum = parseInt(score);
-    const maxStars = 5;
-    
+  const renderStars = (rating: number, maxRating: number = 5) => {
     return (
       <div className="flex">
-        {Array.from({ length: maxStars }).map((_, i) => (
-          <svg
+        {[...Array(maxRating)].map((_, i) => (
+          <Star 
             key={i}
-            className={`h-5 w-5 ${i < scoreNum ? 'text-yellow-400' : 'text-gray-200'}`}
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
+            className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+          />
         ))}
       </div>
     );
   };
 
-  // Sort evaluations by date, most recent first
-  const sortedEvaluations = [...evaluations].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Évaluations</h3>
       
-      {sortedEvaluations.length === 0 ? (
-        <p className="text-gray-500">Aucune évaluation enregistrée</p>
+      {evaluations.length === 0 ? (
+        <div className="text-center py-8 bg-gray-50 rounded-md">
+          <FileText className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune évaluation</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Aucune évaluation n'a été enregistrée pour cet employé.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
-          {sortedEvaluations.map(evaluation => (
-            <div key={evaluation.id} className="border rounded-md p-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
-                <h4 className="font-medium">{getEvaluationTypeName(evaluation.type)} - {formatDate(evaluation.date)}</h4>
-                {renderStarRating(evaluation.score)}
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                <p>
-                  <span className="text-gray-500">Évaluateur:</span> {evaluation.evaluator}
-                </p>
-                {evaluation.comments && (
-                  <div>
-                    <p className="text-gray-500">Commentaires:</p>
-                    <p className="mt-1 whitespace-pre-wrap">{evaluation.comments}</p>
-                  </div>
+        <div className="space-y-6">
+          {evaluations.map((evaluation, index) => (
+            <div key={index} className="p-6 border rounded-lg bg-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-lg">{evaluation.title || 'Évaluation périodique'}</h4>
+                  <p className="text-sm text-gray-500">
+                    {formatDate(evaluation.date)} • Par {evaluation.evaluatorName || evaluation.evaluator || 'Non spécifié'}
+                  </p>
+                </div>
+                {evaluation.status && (
+                  <StatusBadge status={
+                    evaluation.status === 'Complétée' ? 'success' : 
+                    evaluation.status === 'Planifiée' ? 'warning' : 
+                    evaluation.status === 'Annulée' ? 'danger' : 'default'
+                  }>
+                    {evaluation.status}
+                  </StatusBadge>
                 )}
               </div>
+              
+              {(evaluation.rating !== undefined || evaluation.score !== undefined) && (
+                <div className="mt-4">
+                  {evaluation.rating !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Note:</span>
+                      {renderStars(evaluation.rating)}
+                    </div>
+                  )}
+                  {evaluation.score !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Score:</span>
+                      <span>{evaluation.score}/{evaluation.maxScore || 100}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {evaluation.comments && (
+                <div className="mt-4 border-t pt-4">
+                  <h5 className="font-medium mb-2">Commentaires</h5>
+                  <p className="text-sm text-gray-600">{evaluation.comments}</p>
+                </div>
+              )}
+              
+              {(evaluation.strengths && evaluation.strengths.length > 0) && (
+                <div className="mt-4">
+                  <h5 className="font-medium mb-1">Points forts</h5>
+                  <ul className="list-disc pl-5 text-sm text-gray-600">
+                    {evaluation.strengths.map((strength, i) => (
+                      <li key={i}>{strength}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {(evaluation.improvements && evaluation.improvements.length > 0) && (
+                <div className="mt-4">
+                  <h5 className="font-medium mb-1">Axes d'amélioration</h5>
+                  <ul className="list-disc pl-5 text-sm text-gray-600">
+                    {evaluation.improvements.map((improvement, i) => (
+                      <li key={i}>{improvement}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           ))}
         </div>

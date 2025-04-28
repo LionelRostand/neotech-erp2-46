@@ -17,7 +17,9 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
   };
 
   // Ensure content is a valid React child (string, number, or React element)
-  const content = children || status || '';
+  let content = children || status || '';
+  
+  // Convert any object to string to prevent "Objects are not valid as React child" error
   const displayContent = typeof content === 'object' ? 
     (content === null ? '' : JSON.stringify(content)) : 
     String(content);

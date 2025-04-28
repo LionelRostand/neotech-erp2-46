@@ -24,6 +24,7 @@ export interface StatusBadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof statusBadgeVariants> {
   status?: string;
+  children?: React.ReactNode;
 }
 
 function StatusBadge({
@@ -37,12 +38,12 @@ function StatusBadge({
   let badgeVariant = variant;
   
   if (!variant && status) {
-    const statusLower = status.toLowerCase();
-    if (statusLower === 'active' || statusLower === 'actif' || statusLower === 'approved' || statusLower === 'approuvé') {
+    const statusLower = typeof status === 'string' ? status.toLowerCase() : '';
+    if (statusLower === 'active' || statusLower === 'actif' || statusLower === 'approved' || statusLower === 'approuvé' || statusLower === 'success') {
       badgeVariant = 'success';
-    } else if (statusLower === 'pending' || statusLower === 'en attente' || statusLower === 'onleave' || statusLower === 'en congé') {
+    } else if (statusLower === 'pending' || statusLower === 'en attente' || statusLower === 'onleave' || statusLower === 'en congé' || statusLower === 'warning') {
       badgeVariant = 'warning';
-    } else if (statusLower === 'inactive' || statusLower === 'inactif' || statusLower === 'rejected' || statusLower === 'refusé') {
+    } else if (statusLower === 'inactive' || statusLower === 'inactif' || statusLower === 'rejected' || statusLower === 'refusé' || statusLower === 'danger') {
       badgeVariant = 'danger';
     } else {
       badgeVariant = 'default';
@@ -50,12 +51,24 @@ function StatusBadge({
   }
 
   // Ensure content is a valid React child (string, number, or React element)
-  let content = children || status || '';
+  let content: React.ReactNode = children;
+  
+  // If no children provided, use status as content
+  if (!content && status !== undefined) {
+    content = status;
+  }
   
   // Convert any object to string to prevent "Objects are not valid as React child" error
-  const displayContent = typeof content === 'object' ? 
-    (content === null ? '' : JSON.stringify(content)) : 
-    String(content);
+  if (content !== undefined && typeof content === 'object' && content !== null) {
+    content = JSON.stringify(content);
+  }
+  
+  // Ensure we have string display content
+  const displayContent = content !== undefined ? 
+    (typeof content === 'object' ? 
+      (content === null ? '' : JSON.stringify(content)) : 
+      String(content)) : 
+    '';
 
   // Map our custom variants to Badge-compatible variants
   const finalBadgeVariant = (badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger') 

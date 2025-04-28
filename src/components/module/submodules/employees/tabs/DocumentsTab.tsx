@@ -1,9 +1,7 @@
 
 import React from 'react';
 import { Employee, Document } from '@/types/employee';
-import { File, FileText } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { FileText, Download, Eye, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DocumentsTabProps {
@@ -11,85 +9,64 @@ interface DocumentsTabProps {
 }
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
-  const documents = employee.documents || [];
+  // Make sure documents is always an array
+  const documents = Array.isArray(employee.documents) ? employee.documents : [];
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd MMMM yyyy', { locale: fr });
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  const getDocumentTypeIcon = (type: string) => {
-    switch (type) {
-      case 'contract':
-        return <FileText className="h-5 w-5 text-blue-500" />;
-      case 'id':
-        return <FileText className="h-5 w-5 text-red-500" />;
-      case 'certificate':
-        return <FileText className="h-5 w-5 text-green-500" />;
-      default:
-        return <File className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getDocumentTypeName = (type: string) => {
-    switch (type) {
-      case 'contract':
-        return 'Contrat';
-      case 'id':
-        return 'Pièce d\'identité';
-      case 'certificate':
-        return 'Certificat';
-      default:
-        return 'Autre';
-    }
-  };
+  if (documents.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-md">
+        <FileText className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucun document</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Aucun document n'a été ajouté pour cet employé.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Documents</h3>
-      </div>
+      <h3 className="text-lg font-medium">Documents</h3>
       
-      {documents.length === 0 ? (
-        <p className="text-gray-500">Aucun document enregistré</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {documents.map(doc => (
-            <div key={doc.id} className="border rounded-md p-4">
-              <div className="flex items-start gap-3">
-                <div className="pt-1">{getDocumentTypeIcon(doc.type)}</div>
-                <div className="flex-grow">
-                  <h4 className="font-medium">{doc.title}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm">
-                    <div>
-                      <span className="text-gray-500">Type:</span> {getDocumentTypeName(doc.type)}
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Date:</span> {formatDate(doc.date)}
-                    </div>
-                    {doc.description && (
-                      <div className="md:col-span-2">
-                        <span className="text-gray-500">Description:</span> {doc.description}
-                      </div>
-                    )}
-                    <div className="md:col-span-2">
-                      <span className="text-gray-500">Ajouté le:</span> {formatDate(doc.uploadedAt)}
-                    </div>
-                  </div>
+      <div className="grid grid-cols-1 gap-4">
+        {documents.map((doc, index) => {
+          // Handle both string and object documents
+          const document = typeof doc === 'string' ? { name: doc, type: 'other', date: new Date().toISOString() } : doc;
+          
+          // Make sure document is valid
+          if (!document || !document.name) return null;
+          
+          const documentName = typeof document.name === 'object' ? 
+            JSON.stringify(document.name) : String(document.name);
+          
+          return (
+            <div 
+              key={index} 
+              className="flex items-center justify-between p-4 border rounded-lg bg-white"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-blue-50 rounded-md">
+                  <FileText className="h-6 w-6 text-blue-500" />
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                    Voir
-                  </a>
+                <div>
+                  <p className="font-medium">{documentName}</p>
+                  <p className="text-sm text-gray-500">
+                    {document.type || 'Document'} • {document.date ? new Date(document.date).toLocaleDateString() : 'Date inconnue'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button variant="ghost" size="sm">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <Download className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 };

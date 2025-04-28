@@ -1,24 +1,22 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatusBadge } from '@/components/ui/status-badge';
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Employee } from '@/types/employee';
 import InformationsTab from './tabs/InformationsTab';
-import InformationsTabEdit from './tabs/InformationsTabEdit';
 import CompetencesTab from './tabs/CompetencesTab';
-import CompetencesTabEdit from './tabs/CompetencesTabEdit';
 import DocumentsTab from './tabs/DocumentsTab';
-import DocumentsTabEdit from './tabs/DocumentsTabEdit';
 import HorairesTab from './tabs/HorairesTab';
-import HorairesTabEdit from './tabs/HorairesTabEdit';
+import CongesTab from './tabs/CongesTab';
 import EvaluationsTab from './tabs/EvaluationsTab';
-import EvaluationsTabEdit from './tabs/EvaluationsTabEdit';
-import AbsencesTab from './tabs/AbsencesTab';
-import AbsencesTabEdit from './tabs/AbsencesTabEdit';
-import { Edit, Save, X } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface EmployeeViewDialogProps {
   employee: Employee | null;
@@ -27,194 +25,97 @@ interface EmployeeViewDialogProps {
   onUpdate: (data: Partial<Employee>) => void;
 }
 
-const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({ 
-  employee, 
-  open, 
-  onOpenChange, 
-  onUpdate 
+const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
+  employee,
+  open,
+  onOpenChange,
+  onUpdate
 }) => {
-  const [activeTab, setActiveTab] = useState('informations');
-  const [editingTab, setEditingTab] = useState<string | null>(null);
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState("informations");
 
-  const handleTabChange = (value: string) => {
-    // Check for unsaved changes before changing tabs
-    if (editingTab && unsavedChanges) {
-      if (window.confirm('Vous avez des modifications non sauvegardées. Voulez-vous quitter sans sauvegarder ?')) {
-        setEditingTab(null);
-        setUnsavedChanges(false);
-        setActiveTab(value);
-      }
-    } else {
-      setActiveTab(value);
-    }
-  };
-
-  const handleEnterEditMode = (tab: string) => {
-    setEditingTab(tab);
-    setUnsavedChanges(false);
-  };
-
-  const handleCancelEdit = () => {
-    if (unsavedChanges && !window.confirm('Annuler les modifications ?')) {
-      return;
-    }
-    setEditingTab(null);
-    setUnsavedChanges(false);
-  };
-
-  const handleSaveChanges = (data: Partial<Employee>) => {
-    if (!employee) return;
-    
-    onUpdate({
-      ...data,
-      id: employee.id
-    });
-    
-    toast.success('Modifications enregistrées');
-    setEditingTab(null);
-    setUnsavedChanges(false);
-  };
-
-  if (!employee) return null;
+  if (!employee) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="flex flex-row items-center justify-between relative pb-2 border-b">
           <div className="flex items-center gap-4">
-            {employee.photoUrl ? (
-              <img 
-                src={employee.photoUrl} 
-                alt={`${employee.firstName} ${employee.lastName}`}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-lg font-medium text-gray-500">
-                  {employee.firstName?.[0]}{employee.lastName?.[0]}
-                </span>
-              </div>
-            )}
+            <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-200">
+              {employee.photoURL ? (
+                <img
+                  src={employee.photoURL}
+                  alt={`${employee.firstName} ${employee.lastName}`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gray-300">
+                  <span className="text-xl font-medium uppercase">
+                    {employee.firstName?.[0]}{employee.lastName?.[0]}
+                  </span>
+                </div>
+              )}
+            </div>
             <div>
-              <DialogTitle className="text-xl">
+              <DialogTitle className="text-xl font-bold">
                 {employee.firstName} {employee.lastName}
               </DialogTitle>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-gray-500">{employee.position}</span>
                 <StatusBadge status={employee.status} />
+                <span className="text-gray-600">{employee.position}</span>
               </div>
             </div>
           </div>
+          <Button 
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+            size="sm"
+            className="absolute right-0 top-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <Button 
+            className="absolute right-0 top-10"
+            variant="outline"
+          >
+            Exporter PDF
+          </Button>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="informations">Informations</TabsTrigger>
-              <TabsTrigger value="competences">Compétences</TabsTrigger>
-              <TabsTrigger value="horaires">Horaires</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
-              <TabsTrigger value="absences">Absences</TabsTrigger>
-            </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="informations">Informations</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="competences">Compétences</TabsTrigger>
+            <TabsTrigger value="horaires">Horaires</TabsTrigger>
+            <TabsTrigger value="conges">Congés</TabsTrigger>
+            <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
+          </TabsList>
 
-            {!editingTab ? (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleEnterEditMode(activeTab)}
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Modifier
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleCancelEdit}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Annuler
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4">
-            <TabsContent value="informations" className="m-0">
-              {editingTab === 'informations' ? (
-                <InformationsTabEdit 
-                  employee={employee} 
-                  onSave={(data) => handleSaveChanges(data)}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <InformationsTab employee={employee} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="competences" className="m-0">
-              {editingTab === 'competences' ? (
-                <CompetencesTabEdit 
-                  employee={employee} 
-                  onSave={(data) => handleSaveChanges(data)}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <CompetencesTab employee={employee} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="horaires" className="m-0">
-              {editingTab === 'horaires' ? (
-                <HorairesTabEdit 
-                  employee={employee} 
-                  onSave={(data) => handleSaveChanges(data)}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <HorairesTab employee={employee} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="documents" className="m-0">
-              {editingTab === 'documents' ? (
-                <DocumentsTabEdit 
-                  employee={employee} 
-                  onSave={(data) => handleSaveChanges(data)}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <DocumentsTab employee={employee} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="evaluations" className="m-0">
-              {editingTab === 'evaluations' ? (
-                <EvaluationsTabEdit 
-                  employee={employee} 
-                  onSave={(data) => handleSaveChanges(data)}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <EvaluationsTab employee={employee} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="absences" className="m-0">
-              {editingTab === 'absences' ? (
-                <AbsencesTabEdit 
-                  employee={employee} 
-                  onSave={(data) => handleSaveChanges(data)}
-                  onCancel={handleCancelEdit}
-                />
-              ) : (
-                <AbsencesTab employee={employee} />
-              )}
-            </TabsContent>
-          </div>
+          <TabsContent value="informations" className="mt-4">
+            <InformationsTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="documents" className="mt-4">
+            <DocumentsTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="competences" className="mt-4">
+            <CompetencesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="horaires" className="mt-4">
+            <HorairesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="conges" className="mt-4">
+            <CongesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="evaluations" className="mt-4">
+            <EvaluationsTab employee={employee} />
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

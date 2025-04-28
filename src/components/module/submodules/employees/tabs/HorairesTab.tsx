@@ -1,81 +1,60 @@
 
 import React from 'react';
-import { Employee, WorkDay, Schedule } from '@/types/employee';
-import { Check, X } from 'lucide-react';
+import { Employee } from '@/types/employee';
+import { Card, CardContent } from '@/components/ui/card';
+import { Clock } from 'lucide-react';
 
 interface HorairesTabProps {
   employee: Employee;
 }
 
 const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
-  const schedule = employee.schedule || {};
+  const workSchedule = employee.workSchedule || {
+    monday: '09:00 - 18:00',
+    tuesday: '09:00 - 18:00',
+    wednesday: '09:00 - 18:00',
+    thursday: '09:00 - 18:00',
+    friday: '09:00 - 17:00',
+  };
   
-  const daysOfWeek = [
-    { id: 'monday', label: 'Lundi' },
-    { id: 'tuesday', label: 'Mardi' },
-    { id: 'wednesday', label: 'Mercredi' },
-    { id: 'thursday', label: 'Jeudi' },
-    { id: 'friday', label: 'Vendredi' },
-    { id: 'saturday', label: 'Samedi' },
-    { id: 'sunday', label: 'Dimanche' },
+  const weekDays = [
+    { key: 'monday', label: 'Lundi' },
+    { key: 'tuesday', label: 'Mardi' },
+    { key: 'wednesday', label: 'Mercredi' },
+    { key: 'thursday', label: 'Jeudi' },
+    { key: 'friday', label: 'Vendredi' },
+    { key: 'saturday', label: 'Samedi' },
+    { key: 'sunday', label: 'Dimanche' },
   ];
 
-  const formatShifts = (day: WorkDay | undefined) => {
-    if (!day || !day.isWorkDay || !day.shifts || day.shifts.length === 0) {
-      return '-';
-    }
-
-    return day.shifts.map((shift, index) => (
-      <div key={index} className="text-sm">
-        {shift.start} - {shift.end}
-      </div>
-    ));
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h3 className="text-lg font-medium">Horaires de travail</h3>
       
-      <div className="border rounded-md">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Jour
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Travaillé
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Horaires
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {daysOfWeek.map((day) => {
-              const daySchedule = schedule[day.id as keyof Schedule];
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {weekDays.map(day => {
+              const schedule = workSchedule[day.key as keyof typeof workSchedule];
+              const isWorkDay = !!schedule && schedule !== 'off' && schedule !== '';
               
               return (
-                <tr key={day.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{day.label}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {daySchedule?.isWorkDay ? (
-                      <Check className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    {formatShifts(daySchedule)}
-                  </td>
-                </tr>
+                <div key={day.key} className="flex items-center p-3 border rounded-md">
+                  <div className={`p-2 rounded-md ${isWorkDay ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                    <Clock className={`h-5 w-5 ${isWorkDay ? 'text-blue-500' : 'text-gray-400'}`} />
+                  </div>
+                  <div className="ml-4">
+                    <p className="font-medium">{day.label}</p>
+                    <p className="text-sm text-gray-500">
+                      {isWorkDay ? schedule : 'Non travaillé'}
+                    </p>
+                  </div>
+                </div>
               );
             })}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
