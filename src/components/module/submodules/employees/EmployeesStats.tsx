@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Users, UserCheck, Calendar, UsersIcon } from 'lucide-react';
-import StatCard from '../../../../StatCard';
+import StatCard from '@/components/StatCard';
 import { Employee } from '@/types/employee';
 
 interface EmployeesStatsProps {
