@@ -66,10 +66,11 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
           
           // Mettre à jour l'employé dans l'interface
           if (onEmployeeUpdated) {
-            onEmployeeUpdated({
+            const updatedEmployee = {
               ...employee,
               ...updatedData
-            });
+            };
+            onEmployeeUpdated(updatedEmployee);
           }
           
           onOpenChange(false);

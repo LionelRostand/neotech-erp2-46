@@ -18,40 +18,43 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
   onEmployeeUpdate 
 }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employee);
 
   const getInitials = () => {
-    return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
+    return `${currentEmployee.firstName?.charAt(0) || ''}${currentEmployee.lastName?.charAt(0) || ''}`;
   };
 
   const getStatusBadge = () => {
-    switch (employee.status) {
+    switch (currentEmployee.status) {
       case 'active':
       case 'Actif':
-        return <Badge variant="success">Actif</Badge>;
+        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
       case 'inactive':
       case 'Inactif':
         return <Badge variant="outline" className="text-gray-500 border-gray-300">Inactif</Badge>;
       case 'onLeave':
       case 'En congé':
-        return <Badge variant="warning">En congé</Badge>;
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>;
       case 'Suspendu':
-        return <Badge variant="danger">Suspendu</Badge>;
+        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
       default:
-        return <Badge variant="outline">{employee.status}</Badge>;
+        return <Badge variant="outline">{currentEmployee.status}</Badge>;
     }
   };
 
   const getCompanyName = () => {
-    if (!employee.company) return 'Non spécifiée';
+    if (!currentEmployee.company) return 'Non spécifiée';
     
-    if (typeof employee.company === 'string') {
-      return employee.company;
+    if (typeof currentEmployee.company === 'string') {
+      return currentEmployee.company;
     }
     
-    return employee.company.name || 'Non spécifiée';
+    return currentEmployee.company.name || 'Non spécifiée';
   };
 
   const handleEmployeeUpdated = (updatedEmployee: Employee) => {
+    setCurrentEmployee(updatedEmployee);
+    
     if (onEmployeeUpdate) {
       onEmployeeUpdate(updatedEmployee);
     }
@@ -64,8 +67,8 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
           <div className="flex flex-col items-center">
             <Avatar className="w-24 h-24 border-2 border-primary/10 mb-2">
               <AvatarImage 
-                src={employee.photoURL || employee.photo} 
-                alt={`${employee.firstName} ${employee.lastName}`} 
+                src={currentEmployee.photoURL || currentEmployee.photo} 
+                alt={`${currentEmployee.firstName} ${currentEmployee.lastName}`} 
               />
               <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
             </Avatar>
@@ -74,12 +77,12 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
-                <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
+                <h2 className="text-2xl font-bold">{currentEmployee.firstName} {currentEmployee.lastName}</h2>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center text-muted-foreground">
                     <Briefcase className="h-4 w-4 mr-2" />
                     <span className="text-sm">
-                      {employee.position || 'Poste non spécifié'} @ {getCompanyName()}
+                      {currentEmployee.position || 'Poste non spécifié'} @ {getCompanyName()}
                     </span>
                   </div>
                   <Button
@@ -104,7 +107,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
       <EditCompanyPositionDialog 
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        employee={employee}
+        employee={currentEmployee}
         onEmployeeUpdated={handleEmployeeUpdated}
       />
     </Card>
