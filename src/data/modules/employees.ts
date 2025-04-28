@@ -32,8 +32,8 @@ export const employeesModule: AppModule = {
   submodules: [
     { id: "employees-dashboard", name: "Tableau de bord", href: "/modules/employees/dashboard", icon: createIcon(LayoutDashboard) },
     
-    // Fiches employé
-    { id: "employees-profiles", name: "Fiches employé", href: "/modules/employees/profiles", icon: createIcon(IdCard) },
+    // Fiches employé (renommé en "Employés")
+    { id: "employees-profiles", name: "Employés", href: "/modules/employees/profiles", icon: createIcon(IdCard) },
     { id: "employees-badges", name: "Badges et accès", href: "/modules/employees/badges", icon: createIcon(User) },
     
     // Hiérarchie (removed Départements from this section)
