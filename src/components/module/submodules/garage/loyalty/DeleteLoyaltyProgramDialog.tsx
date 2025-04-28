@@ -29,9 +29,16 @@ const DeleteLoyaltyProgramDialog: React.FC<DeleteLoyaltyProgramDialogProps> = ({
   program,
   onSuccess
 }) => {
-  if (!program) return null;
+  if (!open) return null;
   
   const handleDelete = async () => {
+    if (!program || !program.id) {
+      console.error("Programme invalide ou ID manquant");
+      toast.error("Impossible de supprimer ce programme");
+      onOpenChange(false);
+      return;
+    }
+
     try {
       // Delete the program from Firebase
       await deleteDoc(doc(db, COLLECTIONS.GARAGE.LOYALTY, program.id));
@@ -54,7 +61,7 @@ const DeleteLoyaltyProgramDialog: React.FC<DeleteLoyaltyProgramDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer le programme de fidélité "{program.name}" ?
+            Êtes-vous sûr de vouloir supprimer le programme de fidélité "{program?.name}" ?
             Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>

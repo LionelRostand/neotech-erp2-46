@@ -13,9 +13,9 @@ import { LoyaltyProgram } from '../types/loyalty-types';
 
 const GarageLoyaltyDashboard = () => {
   const { 
-    loyalty, 
-    activePrograms,
-    upcomingPrograms,
+    loyalty = [], 
+    activePrograms = [],
+    upcomingPrograms = [],
     isLoading,
     refetch
   } = useGarageLoyalty();
@@ -58,7 +58,7 @@ const GarageLoyaltyDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Programmes Actifs"
-          value={activePrograms.length.toString()}
+          value={String(activePrograms?.length || 0)}
           icon={<BadgePercent className="h-4 w-4 text-purple-500" />}
           description="Programmes en cours"
           className="bg-purple-50 hover:bg-purple-100"
@@ -66,7 +66,7 @@ const GarageLoyaltyDashboard = () => {
         
         <StatCard
           title="Programmes à venir"
-          value={upcomingPrograms.length.toString()}
+          value={String(upcomingPrograms?.length || 0)}
           icon={<BadgePercent className="h-4 w-4 text-emerald-500" />}
           description="Programmes planifiés"
           className="bg-emerald-50 hover:bg-emerald-100"
@@ -74,7 +74,7 @@ const GarageLoyaltyDashboard = () => {
         
         <StatCard
           title="Total Programmes"
-          value={loyalty.length.toString()}
+          value={String(loyalty?.length || 0)}
           icon={<BadgePercent className="h-4 w-4 text-amber-500" />}
           description="Tous programmes confondus"
           className="bg-amber-50 hover:bg-amber-100"
@@ -82,37 +82,45 @@ const GarageLoyaltyDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {loyalty.map(program => (
-          <Card key={program.id}>
-            <CardHeader>
-              <div className="flex justify-between">
-                <CardTitle>{program.name}</CardTitle>
-                <div className="flex space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleView(program)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(program)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(program)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+        {loyalty && loyalty.length > 0 ? (
+          loyalty.map(program => (
+            <Card key={program.id}>
+              <CardHeader>
+                <div className="flex justify-between">
+                  <CardTitle>{program.name}</CardTitle>
+                  <div className="flex space-x-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleView(program)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(program)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(program)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{program.description}</p>
-              <div className="mt-4">
-                <h4 className="font-semibold mb-2">Avantages:</h4>
-                <p>{program.benefitsDescription}</p>
-                <div className="mt-4 flex justify-between items-center text-sm text-muted-foreground">
-                  <span>Multiplicateur: x{program.pointsMultiplier}</span>
-                  <span>Dépense minimum: {program.minimumSpend}€</span>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{program.description}</p>
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2">Avantages:</h4>
+                  <p>{program.benefitsDescription}</p>
+                  <div className="mt-4 flex justify-between items-center text-sm text-muted-foreground">
+                    <span>Multiplicateur: x{program.pointsMultiplier}</span>
+                    <span>Dépense minimum: {program.minimumSpend}€</span>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card className="col-span-2">
+            <CardContent className="p-6 text-center text-muted-foreground">
+              Aucun programme de fidélité n'a été créé.
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
 
       <AddLoyaltyProgramDialog 

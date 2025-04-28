@@ -24,8 +24,8 @@ const ViewLoyaltyProgramDialog: React.FC<ViewLoyaltyProgramDialogProps> = ({
   onOpenChange,
   program
 }) => {
-  // If no program is selected, don't render anything
-  if (!program) return null;
+  // If dialog is not open, don't render anything
+  if (!open) return null;
   
   // Format dates if they exist
   const formatDate = (dateString?: string) => {
@@ -57,44 +57,50 @@ const ViewLoyaltyProgramDialog: React.FC<ViewLoyaltyProgramDialogProps> = ({
           <DialogTitle>Détails du programme de fidélité</DialogTitle>
         </DialogHeader>
         
-        <div className="py-4 space-y-4">
-          <div>
-            <h3 className="text-xl font-semibold">{program.name}</h3>
-            <div className="mt-1">{getStatusBadge(program.status)}</div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+        {program ? (
+          <div className="py-4 space-y-4">
             <div>
-              <p className="text-sm text-gray-500">Multiplicateur de points</p>
-              <p className="text-lg font-medium">x{program.pointsMultiplier}</p>
+              <h3 className="text-xl font-semibold">{program.name}</h3>
+              <div className="mt-1">{getStatusBadge(program.status)}</div>
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Multiplicateur de points</p>
+                <p className="text-lg font-medium">x{program.pointsMultiplier}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Dépense minimum</p>
+                <p className="text-lg font-medium">{program.minimumSpend}€</p>
+              </div>
+            </div>
+            
             <div>
-              <p className="text-sm text-gray-500">Dépense minimum</p>
-              <p className="text-lg font-medium">{program.minimumSpend}€</p>
+              <p className="text-sm text-gray-500">Description</p>
+              <p className="mt-1">{program.description}</p>
             </div>
-          </div>
-          
-          <div>
-            <p className="text-sm text-gray-500">Description</p>
-            <p className="mt-1">{program.description}</p>
-          </div>
-          
-          <div>
-            <p className="text-sm text-gray-500">Avantages</p>
-            <p className="mt-1">{program.benefitsDescription}</p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+            
             <div>
-              <p className="text-sm text-gray-500">Date de début</p>
-              <p>{formatDate(program.startDate)}</p>
+              <p className="text-sm text-gray-500">Avantages</p>
+              <p className="mt-1">{program.benefitsDescription}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Date de fin</p>
-              <p>{formatDate(program.endDate)}</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Date de début</p>
+                <p>{formatDate(program.startDate)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Date de fin</p>
+                <p>{formatDate(program.endDate)}</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="py-4">
+            <p className="text-center text-gray-500">Aucun programme sélectionné</p>
+          </div>
+        )}
 
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)}>Fermer</Button>
