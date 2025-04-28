@@ -81,7 +81,7 @@ export interface Employee {
   isManager?: boolean;
   photoUrl?: string;
   photoMeta?: EmployeePhotoMeta;
-  skills?: Skill[];
+  skills?: (Skill | string)[];  // Updated to allow for string skills for backward compatibility
   schedule?: Schedule;
   documents?: Document[];
   evaluations?: Evaluation[];

@@ -25,11 +25,19 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
     }
   };
 
+  // Make sure we're only grouping skills that are proper objects with level property
   const groupedSkills = skills.reduce<Record<string, Skill[]>>((acc, skill) => {
-    if (!acc[skill.level]) {
-      acc[skill.level] = [];
+    // Skip invalid skills or string skills
+    if (!skill || typeof skill !== 'object' || !('level' in skill)) {
+      return acc;
     }
-    acc[skill.level].push(skill);
+    
+    const level = skill.level || 'other';
+    
+    if (!acc[level]) {
+      acc[level] = [];
+    }
+    acc[level].push(skill as Skill);
     return acc;
   }, {});
 
