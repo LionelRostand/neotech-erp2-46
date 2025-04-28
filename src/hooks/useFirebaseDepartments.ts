@@ -28,8 +28,8 @@ export const useFirebaseDepartments = (companyId?: string) => {
       const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints);
       console.log("Departments fetched:", fetchedDepartments);
       
-      // Ensure valid data
-      if (!Array.isArray(fetchedDepartments)) {
+      // Ensure valid data with strict type checking
+      if (!fetchedDepartments || !Array.isArray(fetchedDepartments)) {
         console.warn("Fetched departments is not an array:", fetchedDepartments);
         setDepartments([]);
         return;
@@ -37,9 +37,18 @@ export const useFirebaseDepartments = (companyId?: string) => {
       
       // Dédupliquer les départements par ID
       const uniqueDepartments = new Map<string, Department>();
+      
+      // Process each department with safety checks
       fetchedDepartments.forEach(dept => {
-        if (dept && dept.id && !uniqueDepartments.has(dept.id)) {
-          uniqueDepartments.set(dept.id, dept);
+        if (dept && dept.id && typeof dept.id === 'string') {
+          uniqueDepartments.set(dept.id, {
+            ...dept,
+            // Ensure all required fields exist
+            name: dept.name || `Department ${dept.id.substring(0, 5)}`,
+            description: dept.description || '',
+            managerId: dept.managerId || '',
+            color: dept.color || '#3b82f6'
+          });
         }
       });
       
@@ -51,6 +60,8 @@ export const useFirebaseDepartments = (companyId?: string) => {
     } catch (err) {
       console.error("Error fetching departments:", err);
       setError(err instanceof Error ? err : new Error("Unknown error fetching departments"));
+      // Always set a valid empty array in case of error
+      setDepartments([]);
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +77,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
   };
 
   return { 
-    departments, 
+    departments: departments || [], // Ensure we always return an array
     isLoading, 
     error, 
     refetch 

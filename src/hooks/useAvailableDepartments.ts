@@ -8,6 +8,7 @@ export const useAvailableDepartments = () => {
 
   // Ensure we have valid departments data with all required fields
   const formattedDepartments = useCallback(() => {
+    // Defensive check to ensure departments is always an array
     if (!departments || !Array.isArray(departments)) {
       console.warn('Departments data is not an array:', departments);
       return [];
@@ -25,8 +26,11 @@ export const useAvailableDepartments = () => {
       }));
   }, [departments]);
 
+  // Always return a valid array, even if empty
+  const safeDepartments = formattedDepartments() || [];
+
   return {
-    departments: formattedDepartments(),
+    departments: safeDepartments,
     isLoading,
     error,
     refetchDepartments: refetch

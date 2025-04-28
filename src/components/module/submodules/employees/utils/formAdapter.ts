@@ -6,43 +6,47 @@ import { EmployeeFormValues } from '../form/employeeFormSchema';
  * Convert employee form values to employee data object
  */
 export const formValuesToEmployee = (formValues: EmployeeFormValues, existingEmployee?: Partial<Employee>): Partial<Employee> => {
+  // Ensure we have valid input objects
+  const safeFormValues = formValues || {};
+  const safeExistingEmployee = existingEmployee || {};
+  
   const employeeData: Partial<Employee> = {
-    firstName: formValues.firstName,
-    lastName: formValues.lastName,
-    email: formValues.email,
-    phone: formValues.phone || '',
-    company: formValues.company || '',
+    firstName: safeFormValues.firstName || '',
+    lastName: safeFormValues.lastName || '',
+    email: safeFormValues.email || '',
+    phone: safeFormValues.phone || '',
+    company: safeFormValues.company || '',
     // Ensure department is never an empty string
-    department: formValues.department && formValues.department !== "" 
-      ? formValues.department === "no_department" ? "Aucun" : formValues.department 
+    department: safeFormValues.department && safeFormValues.department !== "" 
+      ? safeFormValues.department === "no_department" ? "Aucun" : safeFormValues.department 
       : "Aucun",
-    position: formValues.position || '',
-    status: formValues.status,
+    position: safeFormValues.position || '',
+    status: safeFormValues.status || 'active',
     // Preserve existing fields
-    ...(existingEmployee && {
-      id: existingEmployee.id,
-      createdAt: existingEmployee.createdAt,
-      photoURL: existingEmployee.photoURL,
+    ...(safeExistingEmployee && {
+      id: safeExistingEmployee.id,
+      createdAt: safeExistingEmployee.createdAt,
+      photoURL: safeExistingEmployee.photoURL,
     }),
     // New fields
     updatedAt: new Date().toISOString()
   };
 
-  if (formValues.hireDate) {
-    employeeData.hireDate = formValues.hireDate;
+  if (safeFormValues.hireDate) {
+    employeeData.hireDate = safeFormValues.hireDate;
   }
 
-  if (formValues.birthDate) {
-    employeeData.birthDate = formValues.birthDate;
+  if (safeFormValues.birthDate) {
+    employeeData.birthDate = safeFormValues.birthDate;
   }
 
-  if (formValues.photoMeta) {
-    employeeData.photoMeta = formValues.photoMeta;
+  if (safeFormValues.photoMeta) {
+    employeeData.photoMeta = safeFormValues.photoMeta;
   }
 
-  if (formValues.photo) {
-    employeeData.photo = formValues.photo;
-    employeeData.photoURL = formValues.photo;
+  if (safeFormValues.photo) {
+    employeeData.photo = safeFormValues.photo;
+    employeeData.photoURL = safeFormValues.photo;
   }
   
   return employeeData;
@@ -52,38 +56,41 @@ export const formValuesToEmployee = (formValues: EmployeeFormValues, existingEmp
  * Convert employee data object to form values
  */
 export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormValues => {
+  // Ensure we have a valid employee object
+  const safeEmployee = employee || {};
+  
   return {
-    firstName: employee.firstName || '',
-    lastName: employee.lastName || '',
-    email: employee.email || '',
-    phone: employee.phone || '',
-    company: employee.company || '',
+    firstName: safeEmployee.firstName || '',
+    lastName: safeEmployee.lastName || '',
+    email: safeEmployee.email || '',
+    phone: safeEmployee.phone || '',
+    company: safeEmployee.company || '',
     // Ensure department is never an empty string
-    department: employee.department && employee.department !== "" 
-      ? employee.department 
+    department: safeEmployee.department && safeEmployee.department !== "" 
+      ? safeEmployee.department === "Aucun" ? "no_department" : safeEmployee.department
       : "no_department",
-    position: employee.position || '',
-    hireDate: employee.hireDate || '',
-    birthDate: employee.birthDate || '',
-    status: (employee.status || 'active') as any,
-    photo: employee.photo || employee.photoURL || '',
-    photoMeta: employee.photoMeta,
-    contract: employee.contract || 'cdi',
-    managerId: employee.managerId || '',
-    forceManager: employee.forceManager || false,
-    isManager: employee.isManager || false,
-    professionalEmail: employee.professionalEmail || '',
-    streetNumber: employee.streetNumber || '',
-    streetName: employee.streetName || '',
-    city: employee.city || '',
-    zipCode: employee.zipCode || '',
-    region: employee.region || '',
-    country: employee.country || '',
-    workAddress: employee.workAddress ? {
-      street: employee.workAddress.street || '',
-      city: employee.workAddress.city || '',
-      postalCode: employee.workAddress.postalCode || '',
-      country: employee.workAddress.country || ''
+    position: safeEmployee.position || '',
+    hireDate: safeEmployee.hireDate || '',
+    birthDate: safeEmployee.birthDate || '',
+    status: (safeEmployee.status || 'active') as any,
+    photo: safeEmployee.photo || safeEmployee.photoURL || '',
+    photoMeta: safeEmployee.photoMeta || undefined,
+    contract: safeEmployee.contract || 'cdi',
+    managerId: safeEmployee.managerId || '',
+    forceManager: safeEmployee.forceManager || false,
+    isManager: safeEmployee.isManager || false,
+    professionalEmail: safeEmployee.professionalEmail || '',
+    streetNumber: safeEmployee.streetNumber || '',
+    streetName: safeEmployee.streetName || '',
+    city: safeEmployee.city || '',
+    zipCode: safeEmployee.zipCode || '',
+    region: safeEmployee.region || '',
+    country: safeEmployee.country || '',
+    workAddress: safeEmployee.workAddress ? {
+      street: safeEmployee.workAddress.street || '',
+      city: safeEmployee.workAddress.city || '',
+      postalCode: safeEmployee.workAddress.postalCode || '',
+      country: safeEmployee.workAddress.country || ''
     } : undefined
   };
 };

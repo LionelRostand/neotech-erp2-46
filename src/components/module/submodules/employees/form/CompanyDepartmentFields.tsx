@@ -23,13 +23,16 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
 }) => {
   // Safely access form context - this will throw a helpful error if used outside FormProvider
   const form = useFormContext<EmployeeFormValues>();
-  const { departments, isLoading } = useAvailableDepartments();
+  const { departments = [], isLoading = false } = useAvailableDepartments();
 
   // If we don't have form context, render nothing or a fallback
   if (!form) {
     console.error('CompanyDepartmentFields must be used within a FormProvider');
     return null;
   }
+
+  // Ensure departments is always an array
+  const safeDepartments = Array.isArray(departments) ? departments : [];
 
   return (
     <div className="space-y-4">
@@ -48,6 +51,7 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                   placeholder="Nom de l'entreprise" 
                   {...field} 
                   disabled={disabledFields.includes('company')}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -69,6 +73,7 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                   placeholder="Intitulé du poste" 
                   {...field} 
                   disabled={disabledFields.includes('position')}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -102,13 +107,16 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                   {isLoading ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (
-                    departments && departments.length > 0 ? 
-                    departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id || dept.name || `dept-${dept.id}`}>
+                    safeDepartments.length > 0 ? 
+                    safeDepartments.map((dept) => (
+                      <SelectItem 
+                        key={dept.id || `dept-${Math.random()}`} 
+                        value={dept.id || `dept-${Math.random()}`}
+                      >
                         {dept.name || "Département sans nom"}
                       </SelectItem>
                     )) :
-                    <SelectItem value="no_departments_available">Aucun département disponible</SelectItem>
+                    <SelectItem value="no_departments_available" disabled>Aucun département disponible</SelectItem>
                   )}
                 </SelectContent>
               </Select>
