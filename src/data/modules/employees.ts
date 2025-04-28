@@ -18,8 +18,7 @@ import {
   IdCard,
   SunMedium,
   FileSignature,
-  ListTree,
-  List
+  ListTree
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -33,12 +32,11 @@ export const employeesModule: AppModule = {
   submodules: [
     { id: "employees-dashboard", name: "Tableau de bord", href: "/modules/employees/dashboard", icon: createIcon(LayoutDashboard) },
     
-    // Gestion des employés
-    { id: "employees-management", name: "Gestion des employés", href: "/modules/employees/management", icon: createIcon(Users) },
-    { id: "employees-list", name: "Liste des employés", href: "/modules/employees/profiles", icon: createIcon(List) },
+    // Fiches employé (renommé en "Employés")
+    { id: "employees-profiles", name: "Employés", href: "/modules/employees/profiles", icon: createIcon(IdCard) },
     { id: "employees-badges", name: "Badges et accès", href: "/modules/employees/badges", icon: createIcon(User) },
     
-    // Hiérarchie
+    // Hiérarchie (removed Départements from this section)
     { id: "employees-hierarchy", name: "Hiérarchie", href: "/modules/employees/hierarchy", icon: createIcon(ListTree) },
     
     // Suivi du temps et présences
@@ -48,7 +46,7 @@ export const employeesModule: AppModule = {
     // Gestion des congés 
     { id: "employees-leaves", name: "Congés", href: "/modules/employees/leaves", icon: createIcon(SunMedium) },
     
-    // Documents et contrats
+    // Documents et contrats (added Départements to this section)
     { id: "employees-contracts", name: "Contrats", href: "/modules/employees/contracts", icon: createIcon(FileSignature) },
     { id: "employees-documents", name: "Documents RH", href: "/modules/employees/documents", icon: createIcon(FileText) },
     { id: "employees-departments", name: "Départements", href: "/modules/employees/departments", icon: createIcon(Building) },
@@ -60,10 +58,10 @@ export const employeesModule: AppModule = {
     // Intégration avec la paie
     { id: "employees-salaries", name: "Salaires", href: "/modules/employees/salaries", icon: createIcon(DollarSign) },
     
-    // Recrutement
+    // Recrutement (conservé du module original)
     { id: "employees-recruitment", name: "Recrutement", href: "/modules/employees/recruitment", icon: createIcon(Briefcase) },
     
-    // Entreprises
+    // Entreprises (ajouté)
     { id: "employees-companies", name: "Entreprises", href: "/modules/employees/companies", icon: createIcon(Building) },
     
     // Rapports et analytiques
