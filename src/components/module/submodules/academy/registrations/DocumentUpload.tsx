@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { FileText, Upload, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 interface DocumentStatus {
   id: string;
@@ -136,10 +137,10 @@ const DocumentUpload = () => {
                 </div>
               ) : (
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-sm flex items-center">
+                  <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                    <span className="text-green-700">Document téléchargé</span>
-                  </span>
+                    Document téléchargé
+                  </Badge>
                   <span className="text-xs text-gray-500">
                     {document.file?.name.substring(0, 20)}{document.file?.name.length > 20 ? '...' : ''}
                   </span>

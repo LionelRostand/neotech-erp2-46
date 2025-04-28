@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -108,12 +107,12 @@ const RegistrationsList = () => {
                 <TableCell>{registration.class}</TableCell>
                 <TableCell>{new Date(registration.registrationDate).toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell>
-                  <Badge variant={registration.status === 'complete' ? 'success' : 'outline'}>
+                  <Badge variant={registration.status === 'complete' ? 'default' : 'secondary'}>
                     {registration.status === 'complete' ? 'Complétée' : 'En attente'}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={registration.documentsComplete ? 'success' : 'destructive'}>
+                  <Badge variant={registration.documentsComplete ? 'default' : 'destructive'}>
                     {registration.documentsComplete ? 'Complets' : 'Incomplets'}
                   </Badge>
                 </TableCell>
