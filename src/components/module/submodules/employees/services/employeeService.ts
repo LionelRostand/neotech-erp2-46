@@ -1,7 +1,7 @@
 
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentReference } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
 
 // Define the EmployeeFormValues type if it doesn't exist
@@ -77,7 +77,7 @@ export const createEmployee = async (data: EmployeeFormValues): Promise<Employee
 
     if (docSnap.exists()) {
       const docData = docSnap.data();
-      return { id: docRef.id, ...docData } as unknown as Employee;
+      return { id: docRef.id, ...docData } as Employee;
     } else {
       console.log("No such document!");
       return null;

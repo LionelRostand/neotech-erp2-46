@@ -25,7 +25,18 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
-  const { employees, isLoading } = useEmployeeData();
+  const { employees, isLoading, error } = useEmployeeData();
+  
+  // Handle loading state if needed
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Chargement des données...</div>;
+  }
+  
+  // Handle error state if needed
+  if (error) {
+    return <div className="p-4 bg-red-50 text-red-800 rounded-md">Une erreur est survenue : {error.message}</div>;
+  }
+  
   return <EmployeesProfiles employees={employees || []} />;
 };
 
