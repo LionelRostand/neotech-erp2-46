@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
   FormField,
@@ -16,7 +16,7 @@ import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 const CompanyDepartmentFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
-  const { departments } = useAvailableDepartments();
+  const { departments, isLoading } = useAvailableDepartments();
 
   return (
     <div className="space-y-4">
@@ -68,7 +68,7 @@ const CompanyDepartmentFields: React.FC = () => {
               </FormLabel>
               <Select 
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -77,11 +77,15 @@ const CompanyDepartmentFields: React.FC = () => {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="no_department">Aucun département</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.name}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.name}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
