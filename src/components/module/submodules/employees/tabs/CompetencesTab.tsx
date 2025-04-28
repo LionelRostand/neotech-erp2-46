@@ -1,86 +1,71 @@
 
 import React from 'react';
 import { Employee, Skill } from '@/types/employee';
-import { Badge } from '@/components/ui/badge';
 
 interface CompetencesTabProps {
   employee: Employee;
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
-  // Make sure skills is always an array and never undefined
-  const skills = Array.isArray(employee.skills) ? employee.skills : [];
-
-  const getBadgeColor = (level: string) => {
-    switch (level) {
-      case 'débutant':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-      case 'intermédiaire':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'avancé':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
-      case 'expert':
-        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
-      default:
-        return '';
-    }
+  // Helper to ensure values are strings
+  const ensureString = (value: any) => {
+    if (value === undefined || value === null) return '-';
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
   };
 
-  // Make sure we're only grouping skills that are proper objects with level property
-  const groupedSkills = skills.reduce<Record<string, Skill[]>>((acc, skill) => {
-    // Skip invalid skills
-    if (!skill) {
-      return acc;
-    }
-    
-    // Handle string skills or object skills
-    const skillObj: Skill = typeof skill === 'string' 
-      ? { id: `string-skill-${skill}`, name: skill, level: 'other' }
-      : (skill as Skill);
-    
-    // Skip if somehow the skill doesn't have a valid level or name
-    if (!skillObj.name) {
-      return acc;
-    }
-    
-    const level = skillObj.level || 'other';
-    
-    if (!acc[level]) {
-      acc[level] = [];
-    }
-    acc[level].push(skillObj);
-    return acc;
-  }, {});
+  // Ensure skills is an array and filter out any null/undefined values
+  const skills = Array.isArray(employee.skills) 
+    ? employee.skills.filter(skill => skill !== null && skill !== undefined) 
+    : [];
+
+  // Define badge colors for different skill levels
+  const skillLevelColors = {
+    débutant: 'bg-blue-100 text-blue-800',
+    intermédiaire: 'bg-green-100 text-green-800',
+    avancé: 'bg-yellow-100 text-yellow-800',
+    expert: 'bg-purple-100 text-purple-800'
+  };
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Compétences</h3>
+      <h3 className="font-medium text-lg">Compétences</h3>
       
-      {skills.length === 0 ? (
-        <p className="text-gray-500">Aucune compétence enregistrée</p>
-      ) : Object.keys(groupedSkills).length === 0 ? (
-        <p className="text-gray-500">Aucune compétence valide trouvée</p>
-      ) : (
+      {skills.length > 0 ? (
         <div className="space-y-4">
-          {Object.entries(groupedSkills).map(([level, levelSkills]) => (
-            <div key={level} className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-500 capitalize">{level}</h4>
-              <div className="flex flex-wrap gap-2">
-                {levelSkills.map(skill => {
-                  // Ensure skill name is a string, not an object
-                  const skillName = typeof skill.name === 'object' ? 
-                    JSON.stringify(skill.name) : 
-                    String(skill.name || '');
-                    
-                  return (
-                    <Badge key={skill.id} className={getBadgeColor(level)}>
-                      {skillName}
-                    </Badge>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {skills.map((skill, index) => {
+              // Handle both string and object types of skills
+              const skillName = typeof skill === 'string' 
+                ? skill 
+                : ensureString((skill as Skill).name);
+              
+              // Default level if skill is just a string
+              const skillLevel = typeof skill === 'string' 
+                ? 'débutant' 
+                : ensureString((skill as Skill).level);
+              
+              // Get the appropriate color class for the badge
+              const colorClass = skillLevelColors[skillLevel as keyof typeof skillLevelColors] || 'bg-gray-100 text-gray-800';
+              
+              return (
+                <div 
+                  key={index} 
+                  className="p-3 border rounded-md flex justify-between items-center"
+                >
+                  <div>{skillName}</div>
+                  <span className={`px-2 py-1 rounded-full text-xs ${colorClass}`}>
+                    {skillLevel}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8 bg-gray-50 rounded-md">
+          <p className="text-gray-500">
+            Aucune compétence n'a été enregistrée pour cet employé.
+          </p>
         </div>
       )}
     </div>

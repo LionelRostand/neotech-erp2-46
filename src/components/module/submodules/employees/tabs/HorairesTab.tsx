@@ -1,23 +1,28 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { Card, CardContent } from '@/components/ui/card';
-import { Clock } from 'lucide-react';
 
 interface HorairesTabProps {
   employee: Employee;
 }
 
 const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
+  // Ensure workSchedule is an object with day properties
   const workSchedule = employee.workSchedule || {
     monday: '09:00 - 18:00',
     tuesday: '09:00 - 18:00',
     wednesday: '09:00 - 18:00',
     thursday: '09:00 - 18:00',
-    friday: '09:00 - 17:00',
+    friday: '09:00 - 17:00'
   };
-  
-  const weekDays = [
+
+  // Helper to ensure values are strings
+  const ensureString = (value: any) => {
+    if (value === undefined || value === null) return '-';
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  };
+
+  const days = [
     { key: 'monday', label: 'Lundi' },
     { key: 'tuesday', label: 'Mardi' },
     { key: 'wednesday', label: 'Mercredi' },
@@ -31,31 +36,32 @@ const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Horaires de travail</h3>
       
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {weekDays.map(day => {
-              const scheduleValue = workSchedule[day.key as keyof typeof workSchedule];
-              const schedule = typeof scheduleValue === 'object' ? JSON.stringify(scheduleValue) : String(scheduleValue || '');
-              const isWorkDay = !!schedule && schedule !== 'off' && schedule !== '';
-              
-              return (
-                <div key={day.key} className="flex items-center p-3 border rounded-md">
-                  <div className={`p-2 rounded-md ${isWorkDay ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                    <Clock className={`h-5 w-5 ${isWorkDay ? 'text-blue-500' : 'text-gray-400'}`} />
-                  </div>
-                  <div className="ml-4">
-                    <p className="font-medium">{day.label}</p>
-                    <p className="text-sm text-gray-500">
-                      {isWorkDay ? schedule : 'Non travaillé'}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="border rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Jour
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Horaires
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {days.map((day) => (
+              <tr key={day.key}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {day.label}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {ensureString(workSchedule[day.key as keyof typeof workSchedule]) || 'Non défini'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

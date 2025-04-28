@@ -7,16 +7,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Edit, Save } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Employee } from '@/types/employee';
 import InformationsTab from './tabs/InformationsTab';
+import InformationsTabEdit from './tabs/InformationsTabEdit';
 import CompetencesTab from './tabs/CompetencesTab';
+import CompetencesTabEdit from './tabs/CompetencesTabEdit';
 import DocumentsTab from './tabs/DocumentsTab';
 import HorairesTab from './tabs/HorairesTab';
+import HorairesTabEdit from './tabs/HorairesTabEdit';
 import CongesTab from './tabs/CongesTab';
+import CongesTabEdit from './tabs/CongesTabEdit';
 import EvaluationsTab from './tabs/EvaluationsTab';
+import EvaluationsTabEdit from './tabs/EvaluationsTabEdit';
 
 interface EmployeeViewDialogProps {
   employee: Employee | null;
@@ -32,6 +37,7 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
   onUpdate
 }) => {
   const [activeTab, setActiveTab] = useState("informations");
+  const [editMode, setEditMode] = useState(false);
 
   if (!employee) {
     return null;
@@ -46,6 +52,22 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
   // Extract initials for avatar fallback
   const firstInitial = firstName?.[0] || '';
   const lastInitial = lastName?.[0] || '';
+
+  const handleEdit = () => {
+    setEditMode(true);
+  };
+
+  const handleSave = (data: Partial<Employee>) => {
+    onUpdate({
+      id: employee.id,
+      ...data
+    });
+    setEditMode(false);
+  };
+
+  const handleCancel = () => {
+    setEditMode(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,14 +99,25 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
               </div>
             </div>
           </div>
-          <Button 
-            onClick={() => onOpenChange(false)}
-            variant="outline"
-            size="sm"
-            className="absolute right-0 top-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="absolute right-0 top-0 space-x-2">
+            {!editMode && (
+              <Button 
+                onClick={handleEdit}
+                variant="outline"
+                size="sm"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Modifier
+              </Button>
+            )}
+            <Button 
+              onClick={() => onOpenChange(false)}
+              variant="outline"
+              size="sm"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <Button 
             className="absolute right-0 top-10"
             variant="outline"
@@ -104,7 +137,15 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
           </TabsList>
 
           <TabsContent value="informations" className="mt-4">
-            <InformationsTab employee={employee} />
+            {editMode ? (
+              <InformationsTabEdit 
+                employee={employee} 
+                onSave={handleSave} 
+                onCancel={handleCancel} 
+              />
+            ) : (
+              <InformationsTab employee={employee} />
+            )}
           </TabsContent>
           
           <TabsContent value="documents" className="mt-4">
@@ -112,19 +153,51 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
           </TabsContent>
           
           <TabsContent value="competences" className="mt-4">
-            <CompetencesTab employee={employee} />
+            {editMode ? (
+              <CompetencesTabEdit 
+                employee={employee} 
+                onSave={handleSave} 
+                onCancel={handleCancel} 
+              />
+            ) : (
+              <CompetencesTab employee={employee} />
+            )}
           </TabsContent>
           
           <TabsContent value="horaires" className="mt-4">
-            <HorairesTab employee={employee} />
+            {editMode ? (
+              <HorairesTabEdit 
+                employee={employee} 
+                onSave={handleSave} 
+                onCancel={handleCancel} 
+              />
+            ) : (
+              <HorairesTab employee={employee} />
+            )}
           </TabsContent>
           
           <TabsContent value="conges" className="mt-4">
-            <CongesTab employee={employee} />
+            {editMode ? (
+              <CongesTabEdit 
+                employee={employee} 
+                onSave={handleSave} 
+                onCancel={handleCancel} 
+              />
+            ) : (
+              <CongesTab employee={employee} />
+            )}
           </TabsContent>
           
           <TabsContent value="evaluations" className="mt-4">
-            <EvaluationsTab employee={employee} />
+            {editMode ? (
+              <EvaluationsTabEdit 
+                employee={employee} 
+                onSave={handleSave} 
+                onCancel={handleCancel} 
+              />
+            ) : (
+              <EvaluationsTab employee={employee} />
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
