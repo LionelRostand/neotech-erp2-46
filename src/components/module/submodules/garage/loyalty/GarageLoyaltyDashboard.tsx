@@ -1,20 +1,45 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatCard from '@/components/StatCard';
-import { BadgePercent, Plus } from 'lucide-react';
+import { BadgePercent, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AddLoyaltyProgramDialog from './AddLoyaltyProgramDialog';
+import ViewLoyaltyProgramDialog from './ViewLoyaltyProgramDialog';
+import EditLoyaltyProgramDialog from './EditLoyaltyProgramDialog';
+import DeleteLoyaltyProgramDialog from './DeleteLoyaltyProgramDialog';
 import { useGarageLoyalty } from '@/hooks/garage/useGarageLoyalty';
+import { LoyaltyProgram } from '../types/loyalty-types';
 
 const GarageLoyaltyDashboard = () => {
   const { 
     loyalty, 
     activePrograms,
     upcomingPrograms,
-    isLoading
+    isLoading,
+    refetch
   } = useGarageLoyalty();
   
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<LoyaltyProgram | null>(null);
+
+  const handleView = (program: LoyaltyProgram) => {
+    setSelectedProgram(program);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = (program: LoyaltyProgram) => {
+    setSelectedProgram(program);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (program: LoyaltyProgram) => {
+    setSelectedProgram(program);
+    setDeleteDialogOpen(true);
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Chargement...</div>;
@@ -60,7 +85,20 @@ const GarageLoyaltyDashboard = () => {
         {loyalty.map(program => (
           <Card key={program.id}>
             <CardHeader>
-              <CardTitle>{program.name}</CardTitle>
+              <div className="flex justify-between">
+                <CardTitle>{program.name}</CardTitle>
+                <div className="flex space-x-2">
+                  <Button variant="ghost" size="icon" onClick={() => handleView(program)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(program)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(program)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">{program.description}</p>
@@ -82,7 +120,28 @@ const GarageLoyaltyDashboard = () => {
         onOpenChange={setDialogOpen}
         onSuccess={() => {
           setDialogOpen(false);
+          refetch();
         }} 
+      />
+
+      <ViewLoyaltyProgramDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        program={selectedProgram}
+      />
+
+      <EditLoyaltyProgramDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        program={selectedProgram}
+        onSuccess={refetch}
+      />
+
+      <DeleteLoyaltyProgramDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        program={selectedProgram}
+        onSuccess={refetch}
       />
     </div>
   );
