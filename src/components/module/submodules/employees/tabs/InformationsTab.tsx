@@ -74,9 +74,6 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
             <div className="text-gray-500">Email personnel</div>
             <div>{email}</div>
             
-            <div className="text-gray-500">Email professionnel</div>
-            <div>{professionalEmail}</div>
-            
             <div className="text-gray-500">Téléphone</div>
             <div>{phone}</div>
           </div>
@@ -94,6 +91,9 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
             
             <div className="text-gray-500">Date d'embauche</div>
             <div>{hireDate}</div>
+            
+            <div className="text-gray-500">Email professionnel</div>
+            <div>{professionalEmail}</div>
             
             <div className="text-gray-500">Statut</div>
             <div>
