@@ -24,7 +24,7 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
-  const { employees = [], isLoading } = useEmployeeData();
+  const { employees = [], isLoading = true } = useEmployeeData();
   // Make sure we have a valid array of employees before rendering the component
   const safeEmployees = Array.isArray(employees) ? employees : [];
   return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;

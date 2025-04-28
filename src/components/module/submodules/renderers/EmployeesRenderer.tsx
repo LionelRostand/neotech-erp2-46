@@ -23,9 +23,9 @@ import EmployeesDepartments from '../departments/EmployeesDepartments';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   const { 
-    employees, 
-    departments, 
-    companies, 
+    employees = [],
+    departments = [],
+    companies = [],
     isLoading = true
   } = useHrModuleData();
   

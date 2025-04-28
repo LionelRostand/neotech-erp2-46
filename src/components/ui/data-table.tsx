@@ -49,11 +49,16 @@ export function DataTable<T>({
 
   // Function to render cell content, handling both cell functions and accessorKey
   const renderCellContent = (column: Column, row: T) => {
-    if (typeof column.cell === 'function') {
-      return column.cell({ row: { original: row } });
-    } else if (column.accessorKey && typeof column.accessorKey === 'string') {
-      // If there's an accessorKey but no cell function, just display the raw value
-      return (row as any)[column.accessorKey];
+    try {
+      if (typeof column.cell === 'function') {
+        return column.cell({ row: { original: row } });
+      } else if (column.accessorKey && typeof column.accessorKey === 'string' && row) {
+        // If there's an accessorKey but no cell function, just display the raw value
+        return (row as any)[column.accessorKey];
+      }
+    } catch (error) {
+      console.error('Error rendering cell content:', error);
+      return null;
     }
     return null;
   };
