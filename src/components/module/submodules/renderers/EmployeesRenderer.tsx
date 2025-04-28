@@ -25,17 +25,18 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
   const { employees, departments, companies, isLoading } = useHrModuleData();
   
   console.log(`Rendering employee submodule: ${submoduleId}`);
-  console.log(`Loaded ${employees.length} employees from collection`);
+  console.log(`Loaded ${employees?.length || 0} employees from collection`);
+  console.log(`Loaded ${departments?.length || 0} departments from collection`);
   
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
-      return <EmployeesProfiles employees={employees} />;
+      return <EmployeesProfiles employees={employees || []} />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':
-      return <EmployeesDepartments />;
+      return <EmployeesDepartments departments={departments || []} employees={employees || []} />;
     case 'employees-hierarchy':
       return <EmployeesHierarchy />;
     case 'employees-attendance':

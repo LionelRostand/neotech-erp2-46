@@ -1,45 +1,53 @@
 
-import { useState, useEffect } from 'react';
-import { Employee } from '@/types/employee';
+import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { Employee } from '@/types/employee';
+import { Department } from '@/components/module/submodules/departments/types';
 
 /**
- * Hook pour accéder aux données des employés
+ * Hook centralisé pour accéder aux données des employés et départements
  */
 export const useEmployeeData = () => {
-  const { employees: rawEmployees, isLoading, error, refetchEmployees } = useHrModuleData();
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const { employees, departments: hrDepartments, isLoading, error } = useHrModuleData();
   
-  // Dédupliquer et nettoyer les données des employés
-  useEffect(() => {
-    if (rawEmployees && rawEmployees.length > 0) {
-      const uniqueEmployeesMap = new Map<string, Employee>();
+  // On s'assure que les données des employés sont correctement formatées
+  const formattedEmployees = useMemo(() => {
+    if (!employees || employees.length === 0) return [];
+    
+    return employees.map(employee => ({
+      ...employee,
+      // Garantir que chaque employé a une photo (même placeholder)
+      photoURL: employee.photoURL || employee.photo || '',
+    }));
+  }, [employees]);
+  
+  // Formater les départements pour les enrichir avec les données des managers
+  const formattedDepartments = useMemo(() => {
+    if (!hrDepartments || hrDepartments.length === 0) return [];
+    if (!formattedEmployees || formattedEmployees.length === 0) return hrDepartments;
+    
+    return hrDepartments.map(department => {
+      const manager = department.managerId 
+        ? formattedEmployees.find(emp => emp.id === department.managerId) 
+        : null;
       
-      // Parcourir tous les employés et ne garder que les entrées uniques selon l'ID
-      rawEmployees.forEach(emp => {
-        if (!uniqueEmployeesMap.has(emp.id)) {
-          uniqueEmployeesMap.set(emp.id, {
-            ...emp,
-            // S'assurer que toutes les propriétés requises sont présentes
-            firstName: emp.firstName || '',
-            lastName: emp.lastName || '',
-            email: emp.email || '',
-            position: emp.position || emp.role || 'Employé',
-            status: emp.status || 'active'
-          });
-        }
-      });
+      // Calculer le nombre d'employés dans ce département
+      const deptEmployeesCount = formattedEmployees.filter(
+        emp => emp.department === department.id || emp.departmentId === department.id
+      ).length;
       
-      setEmployees(Array.from(uniqueEmployeesMap.values()));
-    } else {
-      setEmployees([]);
-    }
-  }, [rawEmployees]);
+      return {
+        ...department,
+        managerName: manager ? `${manager.firstName} ${manager.lastName}` : null,
+        employeesCount: department.employeeIds?.length || deptEmployeesCount || 0
+      } as Department;
+    });
+  }, [hrDepartments, formattedEmployees]);
   
   return {
-    employees,
+    employees: formattedEmployees as Employee[],
+    departments: formattedDepartments as Department[],
     isLoading,
-    error,
-    refetchEmployees
+    error
   };
 };

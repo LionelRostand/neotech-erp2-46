@@ -5,13 +5,13 @@ import StatCard from '@/components/StatCard';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeesDashboardCards = () => {
-  const { employees, departments } = useEmployeeData();
+  const { employees = [], departments = [] } = useEmployeeData();
   
-  // Calculate statistics
-  const totalEmployees = employees.length;
-  const activeDepartments = departments.length;
-  const activeEmployees = employees.filter(emp => emp.status === 'active' || emp.status === 'Actif').length;
-  const onLeave = employees.filter(emp => emp.status === 'onLeave' || emp.status === 'En congé').length;
+  // Calculate statistics with null checks to prevent errors
+  const totalEmployees = employees?.length || 0;
+  const activeDepartments = departments?.length || 0;
+  const activeEmployees = employees?.filter(emp => emp?.status === 'active' || emp?.status === 'Actif')?.length || 0;
+  const onLeave = employees?.filter(emp => emp?.status === 'onLeave' || emp?.status === 'En congé')?.length || 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
