@@ -37,6 +37,7 @@ const EmployeesProfilesWithProps = () => {
     return <div className="p-4 bg-red-50 text-red-800 rounded-md">Une erreur est survenue : {error.message}</div>;
   }
   
+  // Make sure employees is always an array, even if undefined
   return <EmployeesProfiles employees={employees || []} />;
 };
 
