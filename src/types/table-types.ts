@@ -1,17 +1,17 @@
 
-import { ReactNode } from 'react';
+import React from 'react';
 
-export interface Column {
-  accessorKey?: string;
+export interface Column<T = any> {
   header: string;
-  cell?: (props: { row: { original: any } }) => ReactNode;
-  enableSorting?: boolean;
-  enableHiding?: boolean;
+  accessorKey?: string;
+  id?: string;
+  cell?: (props: { row: { original: T } }) => React.ReactNode;
 }
 
-export interface DataTableProps<T> {
-  columns: Column[];
-  data: T[];
+export interface DataTableProps<T = any> {
+  columns: Column<T>[];
+  data?: T[];
   isLoading?: boolean;
   emptyMessage?: string;
+  onRowClick?: (row: T) => void;
 }

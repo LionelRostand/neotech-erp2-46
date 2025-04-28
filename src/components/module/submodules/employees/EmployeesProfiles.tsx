@@ -1,108 +1,88 @@
-
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { DataTable } from '@/components/ui/data-table';
 import { Employee } from '@/types/employee';
-import { PlusCircle, Eye, Pencil, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import EmployeesStats from './EmployeesStats';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Eye, Edit, Trash, Plus, UserPlus } from 'lucide-react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';
+import EmployeesStats from './EmployeesStats';
+import EmployeeViewDialog from './EmployeeViewDialog';
+import { Badge } from "@/components/ui/badge";
 
-interface EmployeesTableProps {
+interface EmployeesProfilesProps {
   employees: Employee[];
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
-const EmployeesProfiles: React.FC<EmployeesTableProps> = ({ 
-  employees = [], 
-  isLoading = false 
-}) => {
-  const [openDialog, setOpenDialog] = useState<'view' | 'edit' | 'add' | 'delete' | null>(null);
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], isLoading = false }) => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  
-  // Ensure employees is always an array
-  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const handleOpenDialog = (type: 'view' | 'edit' | 'add' | 'delete', employee: Employee | null = null) => {
+  // Filter employees based on search query
+  const filteredEmployees = employees.filter(employee => {
+    const searchTerm = searchQuery.toLowerCase();
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    const department = employee.department ? employee.department.toLowerCase() : '';
+    const position = employee.position ? employee.position.toLowerCase() : '';
+    const email = employee.email ? employee.email.toLowerCase() : '';
+
+    return (
+      fullName.includes(searchTerm) ||
+      department.includes(searchTerm) ||
+      position.includes(searchTerm) ||
+      email.includes(searchTerm)
+    );
+  });
+
+  const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
-    setOpenDialog(type);
+    setIsViewDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(null);
-    setSelectedEmployee(null);
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsDeleteDialogOpen(true);
   };
 
   const handleAddEmployee = () => {
-    toast.success("Employé ajouté avec succès");
-    handleCloseDialog();
-  };
-
-  const handleUpdateEmployee = () => {
-    toast.success("Employé mis à jour avec succès");
-    handleCloseDialog();
-  };
-
-  const handleDeleteEmployee = () => {
-    toast.success("Employé supprimé avec succès");
-    handleCloseDialog();
-  };
-
-  // Status badge component
-  const StatusBadge = ({ status }: { status?: string }) => {
-    if (!status) return null;
-    
-    const normalizedStatus = status.toLowerCase();
-    
-    if (normalizedStatus === 'active' || normalizedStatus === 'actif') {
-      return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
-    }
-    if (normalizedStatus === 'inactive' || normalizedStatus === 'inactif') {
-      return <Badge variant="outline">Inactif</Badge>;
-    }
-    if (normalizedStatus === 'onleave' || normalizedStatus === 'en congé') {
-      return <Badge className="bg-amber-500 hover:bg-amber-600">En congé</Badge>;
-    }
-    
-    return <Badge variant="secondary">{status}</Badge>;
-  };
-
-  // Get initials for avatar
-  const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return "??";
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`;
+    setIsAddDialogOpen(true);
   };
 
   const columns = [
     {
       header: "Employé",
+      accessorKey: "name",
       cell: ({ row }: { row: { original: Employee } }) => {
-        const employee = row.original || {};
+        const employee = row.original;
         return (
           <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={employee.photoURL || ''} alt={`${employee.firstName} ${employee.lastName}`} />
-              <AvatarFallback>{getInitials(employee.firstName, employee.lastName)}</AvatarFallback>
-            </Avatar>
+            {employee.photoURL ? (
+              <img 
+                src={employee.photoURL} 
+                alt={`${employee.firstName} ${employee.lastName}`}
+                className="w-10 h-10 rounded-full object-cover border"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium">
+                {employee.firstName?.charAt(0) || ''}{employee.lastName?.charAt(0) || ''}
+              </div>
+            )}
             <div>
               <div className="font-medium">{employee.firstName} {employee.lastName}</div>
-              <div className="text-sm text-muted-foreground">{employee.email}</div>
+              <div className="text-sm text-gray-500">{employee.email}</div>
             </div>
           </div>
         );
-      }
+      },
     },
     {
       header: "Poste",
@@ -114,201 +94,132 @@ const EmployeesProfiles: React.FC<EmployeesTableProps> = ({
     },
     {
       header: "Statut",
-      cell: ({ row }: { row: { original: Employee } }) => (
-        <StatusBadge status={row.original?.status} />
-      ),
+      accessorKey: "status",
+      cell: ({ row }: { row: { original: Employee } }) => {
+        const status = row.original.status;
+        let badgeClass = "";
+        let statusLabel = status;
+        
+        switch (status?.toLowerCase()) {
+          case 'active':
+          case 'actif':
+            badgeClass = "bg-green-100 text-green-800";
+            statusLabel = "Actif";
+            break;
+          case 'inactive':
+          case 'inactif':
+            badgeClass = "bg-red-100 text-red-800";
+            statusLabel = "Inactif";
+            break;
+          case 'onleave':
+          case 'en congé':
+            badgeClass = "bg-amber-100 text-amber-800";
+            statusLabel = "En congé";
+            break;
+          default:
+            badgeClass = "bg-gray-100 text-gray-800";
+            statusLabel = status || "Non défini";
+        }
+        
+        return (
+          <Badge className={badgeClass}>{statusLabel}</Badge>
+        );
+      },
     },
     {
       header: "Actions",
-      cell: ({ row }: { row: { original: Employee } }) => (
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog('view', row.original)}>
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog('edit', row.original)}>
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog('delete', row.original)}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    }
+      id: "actions",
+      cell: ({ row }: { row: { original: Employee } }) => {
+        const employee = row.original;
+        return (
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewEmployee(employee);
+              }}
+              className="hover:bg-purple-50 text-purple-700"
+            >
+              <Eye className="h-4 w-4" />
+              <span className="sr-only">Voir</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditEmployee(employee);
+              }}
+              className="hover:bg-blue-50 text-blue-700"
+            >
+              <Edit className="h-4 w-4" />
+              <span className="sr-only">Modifier</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteEmployee(employee);
+              }}
+              className="hover:bg-red-50 text-red-700"
+            >
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">Supprimer</span>
+            </Button>
+          </div>
+        );
+      },
+    },
   ];
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Liste des employés</h1>
-        <Button onClick={() => handleOpenDialog('add')}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un employé
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Employés</h1>
+        <Button className="gap-2" onClick={handleAddEmployee}>
+          <UserPlus className="h-4 w-4" />
+          <span>Ajouter un employé</span>
         </Button>
       </div>
 
-      <EmployeesStats employees={safeEmployees} />
+      <EmployeesStats employees={employees} />
 
-      <Card className="mt-6">
-        <CardContent className="pt-6">
-          <DataTable 
-            columns={columns} 
-            data={safeEmployees} 
+      <div className="bg-white shadow-sm rounded-lg border overflow-hidden">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Liste des employés</h2>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Rechercher un employé..."
+                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <DataTable
+            columns={columns}
+            data={filteredEmployees}
             isLoading={isLoading}
             emptyMessage="Aucun employé trouvé"
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* View Employee Dialog */}
-      <Dialog open={openDialog === 'view'} onOpenChange={() => openDialog === 'view' && handleCloseDialog()}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Détails de l'employé</DialogTitle>
-          </DialogHeader>
-          {selectedEmployee && (
-            <div className="grid gap-4 py-4">
-              <div className="flex justify-center mb-4">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={selectedEmployee.photoURL || ''} alt={`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} />
-                  <AvatarFallback className="text-lg">{getInitials(selectedEmployee.firstName, selectedEmployee.lastName)}</AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-semibold">{selectedEmployee.firstName} {selectedEmployee.lastName}</h3>
-                <p className="text-muted-foreground">{selectedEmployee.position}</p>
-                <div className="mt-2">
-                  <StatusBadge status={selectedEmployee.status} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-muted-foreground">Email</Label>
-                  <p>{selectedEmployee.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">Téléphone</Label>
-                  <p>{selectedEmployee.phone || "Non renseigné"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">Département</Label>
-                  <p>{selectedEmployee.department || "Non assigné"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">Date d'embauche</Label>
-                  <p>{selectedEmployee.hireDate || "Non renseigné"}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <EmployeeViewDialog
+        employee={selectedEmployee}
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        onEditEmployee={handleEditEmployee}
+      />
 
-      {/* Add Employee Dialog */}
-      <Dialog open={openDialog === 'add'} onOpenChange={() => openDialog === 'add' && handleCloseDialog()}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Ajouter un employé</DialogTitle>
-            <DialogDescription>
-              Remplissez les informations pour ajouter un nouvel employé.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <Input id="firstName" placeholder="Prénom" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
-                <Input id="lastName" placeholder="Nom" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="email@example.com" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="position">Poste</Label>
-                <Input id="position" placeholder="Poste" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Département</Label>
-                <Input id="department" placeholder="Département" />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCloseDialog}>Annuler</Button>
-            <Button onClick={handleAddEmployee}>Ajouter</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Employee Dialog */}
-      <Dialog open={openDialog === 'edit'} onOpenChange={() => openDialog === 'edit' && handleCloseDialog()}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Modifier un employé</DialogTitle>
-          </DialogHeader>
-          {selectedEmployee && (
-            <>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-firstName">Prénom</Label>
-                    <Input id="edit-firstName" defaultValue={selectedEmployee.firstName} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-lastName">Nom</Label>
-                    <Input id="edit-lastName" defaultValue={selectedEmployee.lastName} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email</Label>
-                  <Input id="edit-email" type="email" defaultValue={selectedEmployee.email} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-position">Poste</Label>
-                    <Input id="edit-position" defaultValue={selectedEmployee.position} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-department">Département</Label>
-                    <Input id="edit-department" defaultValue={selectedEmployee.department} />
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={handleCloseDialog}>Annuler</Button>
-                <Button onClick={handleUpdateEmployee}>Enregistrer</Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Employee Dialog */}
-      <Dialog open={openDialog === 'delete'} onOpenChange={() => openDialog === 'delete' && handleCloseDialog()}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-destructive">Supprimer un employé</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer cet employé ? Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedEmployee && (
-            <div className="py-4">
-              <p>Vous êtes sur le point de supprimer l'employé :</p>
-              <p className="font-semibold mt-2">{selectedEmployee.firstName} {selectedEmployee.lastName}</p>
-            </div>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCloseDialog}>Annuler</Button>
-            <Button variant="destructive" onClick={handleDeleteEmployee}>Supprimer</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* TODO: Add Edit Dialog */}
+      {/* TODO: Add Delete Dialog */}
+      {/* TODO: Add New Employee Dialog */}
     </div>
   );
 };

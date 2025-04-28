@@ -9,6 +9,7 @@ export function DataTable<T>({
   data = [], 
   isLoading = false,
   emptyMessage = "No data available",
+  onRowClick,
 }: DataTableProps<T>) {
   
   // Ensure data is always an array
@@ -48,7 +49,7 @@ export function DataTable<T>({
   }
 
   // Function to render cell content, handling both cell functions and accessorKey
-  const renderCellContent = (column: Column, row: T) => {
+  const renderCellContent = (column: Column<T>, row: T) => {
     try {
       if (typeof column.cell === 'function') {
         return column.cell({ row: { original: row } });
@@ -82,7 +83,14 @@ export function DataTable<T>({
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
             {safeData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr 
+                key={rowIndex}
+                className={cn(
+                  "hover:bg-gray-50",
+                  onRowClick && "cursor-pointer"
+                )}
+                onClick={() => onRowClick?.(row)}
+              >
                 {columns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {renderCellContent(column, row)}
