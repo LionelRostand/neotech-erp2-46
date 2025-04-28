@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,24 @@ interface CompetencesTabEditProps {
 }
 
 const CompetencesTabEdit: React.FC<CompetencesTabEditProps> = ({ employee, onSave, onCancel }) => {
-  const [skills, setSkills] = useState<Skill[]>(employee.skills || []);
+  // Convert any string skills to Skill objects for editing
+  const initialSkills = () => {
+    const employeeSkills = employee.skills || [];
+    return employeeSkills
+      .filter(skill => skill !== null && skill !== undefined)
+      .map(skill => {
+        if (typeof skill === 'string') {
+          return {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            name: skill,
+            level: 'débutant'
+          };
+        }
+        return skill as Skill;
+      });
+  };
+
+  const [skills, setSkills] = useState<Skill[]>(initialSkills());
   const [newSkill, setNewSkill] = useState({ name: '', level: 'débutant' });
 
   const handleAddSkill = () => {

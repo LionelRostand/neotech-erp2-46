@@ -49,17 +49,17 @@ function StatusBadge({
     }
   }
 
+  // Ensure children is a valid React child (string, number, or React element)
   const content = children || status || '';
 
-  // Converting our custom variants to Badge-compatible variants
-  const badgeCompatibleVariant = badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger' 
-    ? 'outline' // Use outline as base and rely on our custom classes for colors
-    : badgeVariant as "default" | "destructive" | "secondary" | "outline"; 
+  const finalVariant = badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger' 
+    ? 'outline' 
+    : (badgeVariant as "default" | "destructive" | "secondary" | "outline" || 'default');
 
   return (
     <Badge
-      className={cn(statusBadgeVariants({ variant: badgeVariant as "success" | "warning" | "danger" | "outline" | "default" }), className)}
-      variant={badgeCompatibleVariant}
+      className={cn(statusBadgeVariants({ variant: badgeVariant as any }), className)}
+      variant={finalVariant}
       {...props}
     >
       {content}

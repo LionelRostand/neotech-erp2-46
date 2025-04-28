@@ -19,6 +19,11 @@ export const useEmployeeActions = () => {
         throw new Error("Employee ID is required for update");
       }
       
+      // Ensure skills are properly formatted before sending to API
+      if (data.skills) {
+        data.skills = data.skills.filter(skill => skill !== null && skill !== undefined);
+      }
+      
       await apiUpdateEmployee(data.id, data);
       
       // Invalidate queries to refetch data
@@ -53,6 +58,11 @@ export const useEmployeeActions = () => {
   const createEmployee = async (data: Omit<Employee, 'id'>): Promise<Employee | null> => {
     setIsLoading(true);
     try {
+      // Ensure skills are properly formatted before sending to API
+      if (data.skills) {
+        data.skills = data.skills.filter(skill => skill !== null && skill !== undefined);
+      }
+      
       const newEmployee = await apiCreateEmployee(data);
       
       // Invalidate queries to refetch data

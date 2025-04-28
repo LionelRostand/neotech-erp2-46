@@ -47,6 +47,8 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
       
       {skills.length === 0 ? (
         <p className="text-gray-500">Aucune compétence enregistrée</p>
+      ) : Object.keys(groupedSkills).length === 0 ? (
+        <p className="text-gray-500">Aucune compétence valide trouvée</p>
       ) : (
         <div className="space-y-4">
           {Object.entries(groupedSkills).map(([level, levelSkills]) => (
