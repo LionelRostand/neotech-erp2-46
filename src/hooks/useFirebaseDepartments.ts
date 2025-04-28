@@ -1,3 +1,4 @@
+
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { where, QueryConstraint } from 'firebase/firestore';
 import { Department } from '@/components/module/submodules/departments/types';
