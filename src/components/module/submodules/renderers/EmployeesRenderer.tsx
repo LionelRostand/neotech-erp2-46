@@ -4,6 +4,7 @@ import EmployeesDashboard from '../EmployeesDashboard';
 import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesBadges from '../EmployeesBadges';
 import EmployeesProfiles from '../employees/EmployeesProfiles';
+import EmployeesManagement from '../employees/EmployeesManagement';
 import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 import EmployeesLeaves from '../leaves/EmployeesLeaves';
 import SalarySlips from '../salaries/SalarySlips';
@@ -34,6 +35,9 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
+    case 'employees-management':
+      return <EmployeesManagement />;
+    case 'employees-list':
     case 'employees-profiles':
       return <EmployeesProfiles employees={safeEmployees} />;
     case 'employees-badges':
