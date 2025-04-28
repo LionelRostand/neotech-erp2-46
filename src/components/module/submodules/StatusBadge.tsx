@@ -70,9 +70,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propV
   const badgeVariant = badgeVariantMapping[variant];
   const variantClasses = variantClassMapping[variant];
 
+  const content = getLabel();
+  const displayContent = typeof content === 'object' ? 
+    (content === null ? '' : JSON.stringify(content)) : 
+    String(content);
+
   return (
     <Badge variant={badgeVariant} className={variantClasses}>
-      {getLabel()}
+      {displayContent}
     </Badge>
   );
 };

@@ -21,7 +21,24 @@ export const useEmployeeActions = () => {
       
       // Ensure skills are properly formatted before sending to API
       if (data.skills) {
-        data.skills = data.skills.filter(skill => skill !== null && skill !== undefined);
+        // Filter out null/undefined values and transform any invalid objects
+        data.skills = data.skills
+          .filter(skill => skill !== null && skill !== undefined)
+          .map(skill => {
+            if (typeof skill === 'string') {
+              return skill;
+            }
+            // Ensure skill objects have the required properties
+            const skillObj = skill as any;
+            if (!skillObj.name) {
+              return JSON.stringify(skillObj);
+            }
+            return {
+              ...skillObj,
+              id: skillObj.id || Date.now().toString(),
+              level: skillObj.level || 'other'
+            };
+          });
       }
       
       await apiUpdateEmployee(data.id, data);
@@ -60,7 +77,24 @@ export const useEmployeeActions = () => {
     try {
       // Ensure skills are properly formatted before sending to API
       if (data.skills) {
-        data.skills = data.skills.filter(skill => skill !== null && skill !== undefined);
+        // Filter out null/undefined values and transform any invalid objects
+        data.skills = data.skills
+          .filter(skill => skill !== null && skill !== undefined)
+          .map(skill => {
+            if (typeof skill === 'string') {
+              return skill;
+            }
+            // Ensure skill objects have the required properties
+            const skillObj = skill as any;
+            if (!skillObj.name) {
+              return JSON.stringify(skillObj);
+            }
+            return {
+              ...skillObj,
+              id: skillObj.id || Date.now().toString(),
+              level: skillObj.level || 'other'
+            };
+          });
       }
       
       const newEmployee = await apiCreateEmployee(data);

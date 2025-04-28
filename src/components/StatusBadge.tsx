@@ -17,6 +17,9 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
   };
 
   const content = children || status || '';
+  const displayContent = typeof content === 'object' ? 
+    (content === null ? '' : JSON.stringify(content)) : 
+    String(content);
 
   return (
     <span 
@@ -26,7 +29,7 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
         className
       )}
     >
-      {typeof content === 'object' ? JSON.stringify(content) : content}
+      {displayContent}
     </span>
   );
 };

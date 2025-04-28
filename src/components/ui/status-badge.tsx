@@ -51,6 +51,9 @@ function StatusBadge({
 
   // Ensure children is a valid React child (string, number, or React element)
   const content = children || status || '';
+  const displayContent = typeof content === 'object' ? 
+    (content === null ? '' : JSON.stringify(content)) : 
+    String(content);
 
   // Map our custom variants to Badge-compatible variants
   const finalBadgeVariant = (badgeVariant === 'success' || badgeVariant === 'warning' || badgeVariant === 'danger') 
@@ -63,7 +66,7 @@ function StatusBadge({
       variant={finalBadgeVariant}
       {...props}
     >
-      {content}
+      {displayContent}
     </Badge>
   )
 }

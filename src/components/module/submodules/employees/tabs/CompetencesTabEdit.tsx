@@ -27,7 +27,21 @@ const CompetencesTabEdit: React.FC<CompetencesTabEditProps> = ({ employee, onSav
             level: 'débutant'
           };
         }
-        return skill as Skill;
+        // Handle potential object skill with missing properties
+        if (typeof skill === 'object' && skill !== null) {
+          const skillObj = skill as Skill;
+          return {
+            id: skillObj.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            name: skillObj.name || 'Compétence sans nom',
+            level: skillObj.level || 'débutant'
+          };
+        }
+        // Fallback for unexpected cases
+        return {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: 'Compétence inconnue',
+          level: 'débutant'
+        };
       });
   };
 
@@ -66,7 +80,9 @@ const CompetencesTabEdit: React.FC<CompetencesTabEditProps> = ({ employee, onSav
           <div className="space-y-3">
             {skills.map(skill => (
               <div key={skill.id} className="flex items-center gap-2 p-2 border rounded-md">
-                <div className="flex-grow">{skill.name}</div>
+                <div className="flex-grow">
+                  {typeof skill.name === 'object' ? JSON.stringify(skill.name) : skill.name}
+                </div>
                 <Select 
                   value={skill.level} 
                   onValueChange={(value) => handleSkillLevelChange(skill.id, value)}

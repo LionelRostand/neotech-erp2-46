@@ -38,8 +38,8 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
       ? { id: `string-skill-${skill}`, name: skill, level: 'other' }
       : (skill as Skill);
     
-    // Skip if somehow the skill doesn't have a valid level
-    if (!skillObj.name || !skillObj.level) {
+    // Skip if somehow the skill doesn't have a valid level or name
+    if (!skillObj.name) {
       return acc;
     }
     
@@ -68,7 +68,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
               <div className="flex flex-wrap gap-2">
                 {levelSkills.map(skill => (
                   <Badge key={skill.id} className={getBadgeColor(level)}>
-                    {skill.name}
+                    {typeof skill.name === 'object' ? JSON.stringify(skill.name) : skill.name}
                   </Badge>
                 ))}
               </div>
