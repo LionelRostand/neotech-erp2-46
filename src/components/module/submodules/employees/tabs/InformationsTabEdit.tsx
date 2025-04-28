@@ -15,7 +15,9 @@ interface InformationsTabEditProps {
 }
 
 const InformationsTabEdit: React.FC<InformationsTabEditProps> = ({ employee, onSave }) => {
-  const defaultValues = employeeToFormValues(employee);
+  // Ensure we have a valid employee object before creating form values
+  const safeEmployee = employee || {};
+  const defaultValues = employeeToFormValues(safeEmployee);
   
   const methods = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),

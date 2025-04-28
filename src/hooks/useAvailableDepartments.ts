@@ -1,13 +1,13 @@
 
 import { useFirebaseDepartments } from './useFirebaseDepartments';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Department } from '@/components/module/submodules/departments/types';
 
 export const useAvailableDepartments = () => {
   const { departments = [], isLoading = false, error, refetch } = useFirebaseDepartments();
 
   // Ensure we have valid departments data with all required fields
-  const formattedDepartments = useCallback(() => {
+  const formattedDepartments = useMemo(() => {
     // Defensive check to ensure departments is always an array
     if (!departments || !Array.isArray(departments)) {
       console.warn('Departments data is not an array:', departments);
@@ -27,7 +27,7 @@ export const useAvailableDepartments = () => {
   }, [departments]);
 
   // Always return a valid array, even if empty
-  const safeDepartments = formattedDepartments() || [];
+  const safeDepartments: Department[] = formattedDepartments || [];
 
   return {
     departments: safeDepartments,

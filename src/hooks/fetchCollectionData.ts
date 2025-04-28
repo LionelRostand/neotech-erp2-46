@@ -25,12 +25,28 @@ export async function fetchCollectionData<T>(
     
     const collectionRef = collection(db, collectionPath);
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
-    const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data() 
-    })) as T[];
+    try {
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot) {
+        console.warn(`No snapshot returned from ${collectionPath}`);
+        return [];
+      }
+      
+      const results = querySnapshot.docs.map(doc => {
+        if (!doc) return null;
+        return { 
+          id: doc.id, 
+          ...doc.data() 
+        };
+      }).filter(Boolean) as T[];
+      
+      return results;
+    } catch (fetchErr) {
+      console.error(`Error in getDocs for ${collectionPath}:`, fetchErr);
+      return [];
+    }
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
