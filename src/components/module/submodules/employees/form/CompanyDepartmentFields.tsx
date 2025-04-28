@@ -14,9 +14,22 @@ import { Building, Building2, Briefcase } from 'lucide-react';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
-const CompanyDepartmentFields: React.FC = () => {
+interface CompanyDepartmentFieldsProps {
+  disabledFields?: string[];
+}
+
+const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({ 
+  disabledFields = [] 
+}) => {
+  // Safely access form context - this will throw a helpful error if used outside FormProvider
   const form = useFormContext<EmployeeFormValues>();
   const { departments, isLoading } = useAvailableDepartments();
+
+  // If we don't have form context, render nothing or a fallback
+  if (!form) {
+    console.error('CompanyDepartmentFields must be used within a FormProvider');
+    return null;
+  }
 
   return (
     <div className="space-y-4">
@@ -31,7 +44,11 @@ const CompanyDepartmentFields: React.FC = () => {
                 Entreprise
               </FormLabel>
               <FormControl>
-                <Input placeholder="Nom de l'entreprise" {...field} />
+                <Input 
+                  placeholder="Nom de l'entreprise" 
+                  {...field} 
+                  disabled={disabledFields.includes('company')}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -48,7 +65,11 @@ const CompanyDepartmentFields: React.FC = () => {
                 Poste
               </FormLabel>
               <FormControl>
-                <Input placeholder="Intitulé du poste" {...field} />
+                <Input 
+                  placeholder="Intitulé du poste" 
+                  {...field} 
+                  disabled={disabledFields.includes('position')}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -69,6 +90,7 @@ const CompanyDepartmentFields: React.FC = () => {
               <Select 
                 onValueChange={field.onChange}
                 value={field.value}
+                disabled={disabledFields.includes('department')}
               >
                 <FormControl>
                   <SelectTrigger>

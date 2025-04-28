@@ -1,4 +1,3 @@
-
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { where, QueryConstraint } from 'firebase/firestore';
 import { Department } from '@/components/module/submodules/departments/types';
@@ -27,6 +26,13 @@ export const useFirebaseDepartments = (companyId?: string) => {
       console.log("Fetching departments from collection:", COLLECTIONS.HR.DEPARTMENTS);
       const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints);
       console.log("Departments fetched:", fetchedDepartments);
+      
+      // Ensure valid data
+      if (!Array.isArray(fetchedDepartments)) {
+        console.warn("Fetched departments is not an array:", fetchedDepartments);
+        setDepartments([]);
+        return;
+      }
       
       // Dédupliquer les départements par ID
       const uniqueDepartments = new Map<string, Department>();
@@ -58,5 +64,10 @@ export const useFirebaseDepartments = (companyId?: string) => {
     await fetchDepartments();
   };
 
-  return { departments, isLoading, error, refetch };
+  return { 
+    departments, 
+    isLoading, 
+    error, 
+    refetch 
+  };
 };
