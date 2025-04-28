@@ -1,10 +1,10 @@
 
 import { useFirebaseDepartments } from './useFirebaseDepartments';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Department } from '@/components/module/submodules/departments/types';
 
-export const useAvailableDepartments = () => {
-  const { departments = [], isLoading = false, error, refetch } = useFirebaseDepartments();
+export const useAvailableDepartments = (companyId?: string) => {
+  const { departments = [], isLoading = false, error, refetch } = useFirebaseDepartments(companyId);
 
   // Ensure we have valid departments data with all required fields
   const formattedDepartments = useMemo(() => {
@@ -22,9 +22,10 @@ export const useAvailableDepartments = () => {
         description: dept.description || '',
         managerId: dept.managerId || '',
         managerName: dept.managerName || '',
+        companyId: dept.companyId || companyId || '',
         color: dept.color || '#3b82f6'
       }));
-  }, [departments]);
+  }, [departments, companyId]);
 
   // Always return a valid array, even if empty
   const safeDepartments: Department[] = formattedDepartments || [];

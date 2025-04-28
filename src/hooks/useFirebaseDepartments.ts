@@ -24,7 +24,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
   const fetchDepartments = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching departments from collection:", COLLECTIONS.HR.DEPARTMENTS);
+      console.log("Fetching departments from collection:", COLLECTIONS.HR.DEPARTMENTS, companyId ? `for company ${companyId}` : 'for all companies');
       const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints);
       console.log("Departments fetched:", fetchedDepartments);
       
@@ -47,6 +47,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
             name: dept.name || `Department ${dept.id.substring(0, 5)}`,
             description: dept.description || '',
             managerId: dept.managerId || '',
+            companyId: dept.companyId || companyId || '',
             color: dept.color || '#3b82f6'
           });
         }

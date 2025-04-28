@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
   FormField,
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Building, Building2, Briefcase } from 'lucide-react';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface CompanyDepartmentFieldsProps {
   disabledFields?: string[];
@@ -23,13 +24,44 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
 }) => {
   // Safely access form context - this will throw a helpful error if used outside FormProvider
   const form = useFormContext<EmployeeFormValues>();
-  const { departments = [], isLoading = false } = useAvailableDepartments();
+  const { companies = [], isLoading: isLoadingCompanies } = useFirebaseCompanies();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const { departments = [], isLoading: isLoadingDepartments, refetch } = useAvailableDepartments(selectedCompanyId);
 
   // If we don't have form context, render nothing or a fallback
   if (!form) {
     console.error('CompanyDepartmentFields must be used within a FormProvider');
     return null;
   }
+
+  // Update selectedCompanyId when the form's company value changes
+  useEffect(() => {
+    const companyValue = form.watch('company');
+    if (companyValue && companyValue !== selectedCompanyId) {
+      setSelectedCompanyId(companyValue);
+    }
+  }, [form.watch('company')]);
+
+  // When company selection changes, reset the department field if needed
+  const handleCompanyChange = (companyId: string) => {
+    setSelectedCompanyId(companyId);
+    form.setValue('company', companyId);
+    
+    // Reset department if it's not available in the new company
+    const currentDept = form.getValues('department');
+    if (currentDept && currentDept !== 'no_department') {
+      // Check if the department is valid for the new company
+      refetch().then(() => {
+        const deptStillValid = departments.some(dept => dept.id === currentDept);
+        if (!deptStillValid) {
+          form.setValue('department', 'no_department');
+        }
+      });
+    }
+  };
+
+  // Ensure companies is always an array
+  const safeCompanies = Array.isArray(companies) ? companies : [];
 
   // Ensure departments is always an array
   const safeDepartments = Array.isArray(departments) ? departments : [];
@@ -46,14 +78,33 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                 <Building className="h-4 w-4" />
                 Entreprise
               </FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Nom de l'entreprise" 
-                  {...field} 
-                  disabled={disabledFields.includes('company')}
-                  value={field.value || ''}
-                />
-              </FormControl>
+              <Select 
+                onValueChange={handleCompanyChange}
+                value={field.value || ""}
+                disabled={disabledFields.includes('company')}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une entreprise" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {isLoadingCompanies ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    safeCompanies.length > 0 ? 
+                    safeCompanies.map((company) => (
+                      <SelectItem 
+                        key={company.id || `company-${Math.random()}`} 
+                        value={company.id || `company-${Math.random()}`}
+                      >
+                        {company.name || "Entreprise sans nom"}
+                      </SelectItem>
+                    )) :
+                    <SelectItem value="no_companies_available" disabled>Aucune entreprise disponible</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -95,7 +146,7 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
               <Select 
                 onValueChange={field.onChange}
                 value={field.value || "no_department"}
-                disabled={disabledFields.includes('department')}
+                disabled={disabledFields.includes('department') || !selectedCompanyId}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -104,7 +155,7 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="no_department">Aucun département</SelectItem>
-                  {isLoading ? (
+                  {isLoadingDepartments ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (
                     safeDepartments.length > 0 ? 
@@ -116,7 +167,7 @@ const CompanyDepartmentFields: React.FC<CompanyDepartmentFieldsProps> = ({
                         {dept.name || "Département sans nom"}
                       </SelectItem>
                     )) :
-                    <SelectItem value="no_departments_available" disabled>Aucun département disponible</SelectItem>
+                    <SelectItem value="no_departments_available" disabled>Aucun département disponible pour cette entreprise</SelectItem>
                   )}
                 </SelectContent>
               </Select>
