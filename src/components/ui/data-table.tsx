@@ -6,10 +6,13 @@ import { Skeleton } from './skeleton';
 
 export function DataTable<T>({ 
   columns, 
-  data, 
+  data = [], 
   isLoading = false,
   emptyMessage = "No data available",
 }: DataTableProps<T>) {
+  
+  // Ensure data is always an array
+  const safeData = Array.isArray(data) ? data : [];
   
   if (isLoading) {
     return (
@@ -36,7 +39,7 @@ export function DataTable<T>({
     );
   }
 
-  if (!data.length) {
+  if (!safeData.length) {
     return (
       <div className="w-full rounded-md border border-gray-200 p-8 text-center">
         <p className="text-gray-500">{emptyMessage}</p>
@@ -73,7 +76,7 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {data.map((row, rowIndex) => (
+            {safeData.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {columns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

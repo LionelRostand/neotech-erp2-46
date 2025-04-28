@@ -2,7 +2,7 @@
 import React from 'react';
 import EmployeesDashboard from '../EmployeesDashboard';
 import EmployeesAttendance from '../EmployeesAttendance';
-import EmployeesBadges from '../EmployeesBadges';
+import EmployeesBadges from '../employees/EmployeesBadges';
 import EmployeesProfiles from '../employees/EmployeesProfiles';
 import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 import EmployeesLeaves from '../leaves/EmployeesLeaves';
@@ -22,20 +22,27 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  const { employees = [], departments = [], companies = [], isLoading } = useHrModuleData();
+  const { 
+    employees, 
+    departments, 
+    companies, 
+    isLoading = true
+  } = useHrModuleData();
   
   console.log(`Rendering employee submodule: ${submoduleId}`);
   console.log(`Loaded ${employees?.length || 0} employees from collection`);
   console.log(`Loaded ${departments?.length || 0} departments from collection`);
   
+  // Ensure we always have arrays, even if the data is undefined or null
   const safeEmployees = Array.isArray(employees) ? employees : [];
   const safeDepartments = Array.isArray(departments) ? departments : [];
+  const safeCompanies = Array.isArray(companies) ? companies : [];
   
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
-      return <EmployeesProfiles employees={safeEmployees} />;
+      return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':
@@ -64,7 +71,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-recruitment':
       return <EmployeesRecruitment />;
     case 'employees-companies':
-      return <EmployeesCompanies />;
+      return <EmployeesCompanies companies={safeCompanies} employees={safeEmployees} />;
     case 'employees-reports':
       return <EmployeesReports />;
     case 'employees-alerts':
