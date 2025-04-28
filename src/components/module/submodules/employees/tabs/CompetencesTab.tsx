@@ -66,11 +66,18 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
             <div key={level} className="space-y-2">
               <h4 className="text-sm font-medium text-gray-500 capitalize">{level}</h4>
               <div className="flex flex-wrap gap-2">
-                {levelSkills.map(skill => (
-                  <Badge key={skill.id} className={getBadgeColor(level)}>
-                    {typeof skill.name === 'object' ? JSON.stringify(skill.name) : skill.name}
-                  </Badge>
-                ))}
+                {levelSkills.map(skill => {
+                  // Ensure skill name is a string, not an object
+                  const skillName = typeof skill.name === 'object' ? 
+                    JSON.stringify(skill.name) : 
+                    String(skill.name);
+                    
+                  return (
+                    <Badge key={skill.id} className={getBadgeColor(level)}>
+                      {skillName}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           ))}

@@ -36,7 +36,9 @@ export const useEmployeeActions = () => {
             return {
               ...skillObj,
               id: skillObj.id || Date.now().toString(),
-              level: skillObj.level || 'other'
+              level: skillObj.level || 'other',
+              // Ensure name is a string to avoid rendering issues
+              name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
             };
           });
       }
@@ -92,7 +94,9 @@ export const useEmployeeActions = () => {
             return {
               ...skillObj,
               id: skillObj.id || Date.now().toString(),
-              level: skillObj.level || 'other'
+              level: skillObj.level || 'other',
+              // Ensure name is a string to avoid rendering issues
+              name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
             };
           });
       }

@@ -104,7 +104,10 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
     },
     {
       header: "Statut",
-      cell: ({ row }) => <StatusBadge status={row.original.status} />
+      cell: ({ row }) => {
+        const status = row.original.status || '';
+        return <StatusBadge status={status} />;
+      }
     },
     {
       header: "Actions",

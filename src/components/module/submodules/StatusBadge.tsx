@@ -1,84 +1,37 @@
 
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
 
-export interface StatusBadgeProps {
-  status: string;
-  label?: string;
-  variant?: 'outline' | 'success' | 'warning' | 'danger';
+export type StatusType = "success" | "warning" | "danger" | string; // Add string to make it more flexible
+
+interface StatusBadgeProps {
+  status: StatusType;
   children?: React.ReactNode;
+  className?: string;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propVariant, children }) => {
-  const getVariant = () => {
-    // Use the provided variant if available, otherwise determine based on status
-    if (propVariant) return propVariant;
-    
-    switch (status) {
-      case 'scheduled':
-      case 'Planifiée':
-        return 'outline' as const;
-      case 'in_progress':
-      case 'En cours':
-        return 'warning' as const;
-      case 'completed':
-      case 'Terminée':
-        return 'success' as const;
-      case 'cancelled':
-      case 'Annulée':
-        return 'danger' as const;
-      default:
-        return 'outline' as const;
-    }
+const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
+  const statusClasses = {
+    success: "bg-green-100 text-green-800 border-green-200",
+    warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    danger: "bg-red-100 text-red-800 border-red-200",
   };
 
-  const getLabel = () => {
-    if (children) return children;
-    if (label) return label;
-    
-    switch (status) {
-      case 'scheduled':
-        return 'Planifiée';
-      case 'in_progress':
-        return 'En cours';
-      case 'completed':
-        return 'Terminée';
-      case 'cancelled':
-        return 'Annulée';
-      default:
-        return status;
-    }
-  };
-
-  // Map our custom variants to Badge's accepted variants
-  const badgeVariantMapping = {
-    outline: 'outline' as const,
-    success: 'outline' as const,  // Use outline but apply success classes
-    warning: 'outline' as const,  // Use outline but apply warning classes
-    danger: 'outline' as const,   // Use outline but apply danger classes
-  };
-
-  // Apply custom classes based on our variant
-  const variantClassMapping = {
-    outline: '',
-    success: 'bg-green-100 text-green-800 border-green-200',
-    warning: 'bg-amber-100 text-amber-800 border-amber-200',
-    danger: 'bg-red-100 text-red-800 border-red-200',
-  };
-
-  const variant = getVariant();
-  const badgeVariant = badgeVariantMapping[variant];
-  const variantClasses = variantClassMapping[variant];
-
-  const content = getLabel();
+  // Ensure content is a valid React child (string, number, or React element)
+  const content = children || status || '';
   const displayContent = typeof content === 'object' ? 
     (content === null ? '' : JSON.stringify(content)) : 
     String(content);
 
   return (
-    <Badge variant={badgeVariant} className={variantClasses}>
+    <span 
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border", 
+        statusClasses[status as keyof typeof statusClasses] || "bg-gray-100 text-gray-800 border-gray-200", 
+        className
+      )}
+    >
       {displayContent}
-    </Badge>
+    </span>
   );
 };
 
