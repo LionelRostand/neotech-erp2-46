@@ -48,9 +48,20 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refetchEmployees();
-    toast.success('Données actualisées avec succès');
-    setIsRefreshing(false);
+    try {
+      if (typeof refetchEmployees === 'function') {
+        await refetchEmployees();
+        toast.success('Données actualisées avec succès');
+      } else {
+        console.error("refetchEmployees is not a function");
+        toast.error('Erreur lors de l\'actualisation des données');
+      }
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error('Erreur lors de l\'actualisation des données');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleOpenCreateDialog = () => {
@@ -62,12 +73,22 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
   };
   
   const handleCreated = (newEmployee: Employee) => {
-    refetchEmployees();
+    if (typeof refetchEmployees === 'function') {
+      refetchEmployees();
+    } else {
+      console.warn("refetchEmployees is not a function, cannot refresh data after employee creation");
+      toast.info('Veuillez actualiser la page pour voir le nouvel employé');
+    }
   };
   
   const handleImported = (count: number) => {
     toast.success(`${count} employés importés avec succès`);
-    refetchEmployees();
+    if (typeof refetchEmployees === 'function') {
+      refetchEmployees();
+    } else {
+      console.warn("refetchEmployees is not a function, cannot refresh data after employee import");
+      toast.info('Veuillez actualiser la page pour voir les employés importés');
+    }
   };
   
   const handleDeleteEmployee = async (employee: Employee) => {
@@ -103,7 +124,13 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
       }
       
       toast.success(`L'employé ${employee.firstName} ${employee.lastName} a été supprimé avec succès`);
-      refetchEmployees();
+      
+      if (typeof refetchEmployees === 'function') {
+        refetchEmployees();
+      } else {
+        console.warn("refetchEmployees is not a function, cannot refresh data after employee deletion");
+        toast.info('Veuillez actualiser la page pour mettre à jour la liste');
+      }
     } catch (error) {
       console.error("Erreur lors de la suppression de l'employé:", error);
       toast.error("Erreur lors de la suppression de l'employé");
