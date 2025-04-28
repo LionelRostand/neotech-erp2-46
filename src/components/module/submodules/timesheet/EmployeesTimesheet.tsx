@@ -6,10 +6,12 @@ import { toast } from 'sonner';
 import TimesheetTable from './TimesheetTable';
 import TimesheetStats from './TimesheetStats';
 import { useTimeSheetData } from '@/hooks/useTimeSheetData';
+import CreateTimesheetDialog from './CreateTimesheetDialog';
 
 const EmployeesTimesheet = () => {
   const { timeSheets, isLoading, refetch } = useTimeSheetData();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleRefresh = async () => {
     try {
@@ -21,6 +23,11 @@ const EmployeesTimesheet = () => {
     }
   };
 
+  const handleCreateSuccess = () => {
+    // Rafraîchir les données après création réussie
+    handleRefresh();
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -30,7 +37,7 @@ const EmployeesTimesheet = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Actualiser
           </Button>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle feuille
           </Button>
@@ -42,6 +49,12 @@ const EmployeesTimesheet = () => {
       <TimesheetTable 
         data={timeSheets}
         isLoading={isLoading}
+      />
+
+      <CreateTimesheetDialog 
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={handleCreateSuccess}
       />
     </>
   );
