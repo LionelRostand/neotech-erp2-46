@@ -102,11 +102,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                     </span>
                   </div>
                 </div>
-                {currentEmployee.professionalEmail && (
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {currentEmployee.professionalEmail}
-                  </div>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 {getStatusBadge()}

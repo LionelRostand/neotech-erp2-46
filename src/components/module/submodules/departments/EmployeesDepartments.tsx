@@ -16,10 +16,6 @@ interface EmployeesDepartmentsProps {
 }
 
 const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments: propDepartments, employees: propEmployees }) => {
-  // Ensure we have valid arrays for departments and employees
-  const safeDepartments = Array.isArray(propDepartments) ? propDepartments : [];
-  const safeEmployees = Array.isArray(propEmployees) ? propEmployees : [];
-  
   const {
     departments,
     loading,
@@ -48,7 +44,7 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
     handleDeleteDepartment,
     handleSaveEmployeeAssignments,
     getDepartmentEmployees
-  } = useDepartments(safeDepartments, safeEmployees);
+  } = useDepartments(propDepartments, propEmployees);
 
   console.log("Rendering EmployeesDepartments with", departments?.length, "departments");
 
@@ -69,12 +65,12 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
             departments={departments || []}
             loading={loading}
             onEditDepartment={(id) => {
-              const dept = departments?.find(d => d.id === id);
+              const dept = departments.find(d => d.id === id);
               if (dept) handleEditDepartment(dept);
             }}
             onDeleteDepartment={handleDeleteDepartment}
             onManageEmployees={(id) => {
-              const dept = departments?.find(d => d.id === id);
+              const dept = departments.find(d => d.id === id);
               if (dept) handleManageEmployees(dept);
             }}
           />

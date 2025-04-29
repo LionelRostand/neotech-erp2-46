@@ -15,34 +15,28 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
   const [module, setModule] = useState(modules.find(m => m.id === moduleId));
   
   useEffect(() => {
-    // Find the module and set it in state
     const foundModule = modules.find(m => m.id === moduleId);
     setModule(foundModule);
     
-    if (foundModule) {
-      console.log(`Found module: ${foundModule.name}, checking paths...`);
+    // Only redirect if we found the module and we're at its root path
+    if (foundModule && location.pathname === `/modules/${foundModule?.href.split('/')[2]}`) {
+      console.log('At module root, redirecting to dashboard or first submodule');
       
-      // Only redirect if we're at the module's root path
-      if (location.pathname === `/modules/${foundModule?.href.split('/')[2]}`) {
-        console.log('At module root, redirecting to dashboard or first submodule');
-        
-        // Find dashboard submodule or use first available submodule
-        const submodules = foundModule.submodules || [];
-        const dashboardSubmodule = submodules.find(sm => sm.id.endsWith('-dashboard'));
-        
-        if (dashboardSubmodule) {
-          navigate(dashboardSubmodule.href);
-        } else if (submodules.length > 0) {
-          navigate(submodules[0].href);
-        }
+      // Find dashboard submodule or use first available submodule
+      const submodules = foundModule.submodules || [];
+      const dashboardSubmodule = submodules.find(sm => sm.id.endsWith('-dashboard'));
+      
+      if (dashboardSubmodule) {
+        navigate(`/modules/${foundModule.href.split('/')[2]}/dashboard`);
+      } else if (submodules.length > 0) {
+        const firstSubmodule = submodules[0];
+        const submoduleId = firstSubmodule.id.split('-')[1];
+        navigate(`/modules/${foundModule.href.split('/')[2]}/${submoduleId}`);
       }
-    } else {
-      console.error(`Module with ID ${moduleId} not found in modules array`);
     }
   }, [moduleId, location.pathname, navigate]);
 
   if (!module) {
-    console.error(`Module with ID ${moduleId} not found`);
     return (
       <DashboardLayout>
         <Card className="p-6">

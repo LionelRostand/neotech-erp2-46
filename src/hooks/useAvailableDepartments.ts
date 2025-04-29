@@ -8,7 +8,6 @@ export const useAvailableDepartments = () => {
   const [availableDepartments, setAvailableDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
-    // Make sure departments is an array before processing
     if (departments && Array.isArray(departments)) {
       // Format departments to ensure they have required fields
       const formattedDepartments = departments.map(dept => ({
@@ -25,8 +24,6 @@ export const useAvailableDepartments = () => {
       
       setAvailableDepartments(formattedDepartments);
     } else {
-      console.log('No departments data available or invalid format');
-      // If departments is not an array, set an empty array
       setAvailableDepartments([]);
     }
   }, [departments]);

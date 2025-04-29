@@ -1,145 +1,202 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Eye, Trash2 } from "lucide-react";
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { User, Search, Eye, Pencil, Trash } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee } from '@/types/employee';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface EmployeesListProps {
   employees: Employee[];
-  isLoading: boolean;
-  onViewDetails?: (employee: Employee) => void;
-  onDelete?: (employeeId: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onViewEmployee: (employee: Employee) => void;
+  onEditEmployee: (employee: Employee) => void;
+  onDeleteEmployee: (employeeId: string) => void;
+  loading?: boolean;
 }
 
 const EmployeesList: React.FC<EmployeesListProps> = ({
-  employees,
-  isLoading,
-  onViewDetails,
-  onDelete
+  employees = [],
+  searchQuery = "",
+  setSearchQuery,
+  onViewEmployee,
+  onEditEmployee,
+  onDeleteEmployee,
+  loading = false
 }) => {
-  // Helper to get employee initials for avatar fallback
-  const getInitials = (employee: Employee) => {
-    return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
-  };
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
-  // Helper to get status badge
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-      case 'Actif':
-        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
-      case 'inactive':
-      case 'Inactif':
-        return <Badge variant="outline" className="text-gray-500 border-gray-300">Inactif</Badge>;
-      case 'onLeave':
-      case 'En congé':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>;
-      case 'Suspendu':
-        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  // Log pour s'assurer que nous avons bien des employés dédupliqués
+  useEffect(() => {
+    console.log(`[EmployeesList] - Nombre d'employés reçus (dédupliqués): ${employees?.length || 0}`);
+    if (employees?.length > 0) {
+      console.log("[EmployeesList] - IDs des employés:", employees.map(e => e.id));
+    }
+  }, [employees]);
+
+  // Filtrer uniquement selon les critères de recherche, sans déduplication supplémentaire
+  // car les employés sont déjà dédupliqués par useEmployeeData
+  const filteredEmployees = employees ? employees.filter(employee => {
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase()) || 
+           (employee.position && employee.position.toLowerCase().includes(searchQuery.toLowerCase())) ||
+           (employee.department && employee.department.toLowerCase().includes(searchQuery.toLowerCase()));
+  }) : [];
+
+  const handleConfirmDelete = () => {
+    if (employeeToDelete) {
+      onDeleteEmployee(employeeToDelete.id);
+      setEmployeeToDelete(null);
     }
   };
   
-  // Format date helper
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: fr });
-    } catch (e) {
-      return dateString;
-    }
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-  
-  if (employees.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Aucun employé trouvé</p>
-      </div>
-    );
-  }
-  
+  // Skeleton pour l'état de chargement
+  const LoadingSkeleton = () => (
+    Array(5).fill(0).map((_, index) => (
+      <TableRow key={`skeleton-${index}`}>
+        <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+        <TableCell className="text-right"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
+      </TableRow>
+    ))
+  );
+
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>NOM</TableHead>
-            <TableHead>DÉPARTEMENT</TableHead>
-            <TableHead>EMAIL</TableHead>
-            <TableHead>DATE D'EMBAUCHE</TableHead>
-            <TableHead>STATUT</TableHead>
-            <TableHead className="text-right">ACTIONS</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {employees.map((employee) => (
-            <TableRow key={employee.id} className="hover:bg-muted/50">
-              <TableCell>
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage 
-                      src={employee.photoURL || employee.photo} 
-                      alt={`${employee.firstName} ${employee.lastName}`} 
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {getInitials(employee)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{employee.firstName} {employee.lastName}</div>
-                    <div className="text-xs text-muted-foreground">{employee.position}</div>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>{employee.department || 'Non spécifié'}</TableCell>
-              <TableCell>
-                <div>{employee.professionalEmail || employee.email}</div>
-                {employee.professionalEmail && employee.email !== employee.professionalEmail && (
-                  <div className="text-xs text-muted-foreground">{employee.email}</div>
-                )}
-              </TableCell>
-              <TableCell>{formatDate(employee.hireDate)}</TableCell>
-              <TableCell>{getStatusBadge(employee.status)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  {onViewDetails && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onViewDetails(employee)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onDelete(employee.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center text-xl font-semibold">
+          <User className="h-6 w-6 text-green-500 mr-2" />
+          Liste des Employés
+        </div>
+      </div>
+      
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-auto">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input 
+            placeholder="Rechercher un employé..." 
+            className="pl-10 w-full sm:w-80"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>Poste</TableHead>
+                <TableHead>Département</TableHead>
+                <TableHead>Type de contrat</TableHead>
+                <TableHead>Date d'entrée</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <LoadingSkeleton />
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-medium">
+                      {employee.firstName} {employee.lastName}
+                    </TableCell>
+                    <TableCell>{employee.position}</TableCell>
+                    <TableCell>{employee.department}</TableCell>
+                    <TableCell>{employee.contract}</TableCell>
+                    <TableCell>{employee.hireDate}</TableCell>
+                    <TableCell>
+                      <Badge className={`${
+                        employee.status === "Actif" || employee.status === "active" 
+                          ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                          : "bg-red-100 text-red-800 hover:bg-red-100"
+                      }`}>
+                        {employee.status === "active" ? "Actif" : employee.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onViewEmployee(employee)}
+                        title="Visualiser"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onEditEmployee(employee)}
+                        title="Modifier"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setEmployeeToDelete(employee)}
+                        title="Supprimer"
+                      >
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-6">
+                    {searchQuery ? "Aucun employé ne correspond à votre recherche." : "Aucun employé trouvé."}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Dialogue de confirmation pour la suppression */}
+      <AlertDialog open={!!employeeToDelete} onOpenChange={(open) => !open && setEmployeeToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cet employé ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Les données de {employeeToDelete?.firstName} {employeeToDelete?.lastName} seront définitivement supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
