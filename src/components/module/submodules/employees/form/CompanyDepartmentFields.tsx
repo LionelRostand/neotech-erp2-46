@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 import { useCompaniesQuery } from '../hooks/useCompaniesQuery';
+import { Building, MapPin, Landmark, Briefcase } from 'lucide-react';
 
 const CompanyDepartmentFields = () => {
   const { register, setValue, watch } = useFormContext();
@@ -86,6 +87,16 @@ const CompanyDepartmentFields = () => {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="professionalEmail">Email professionnel</Label>
+        <Input 
+          id="professionalEmail" 
+          {...register('professionalEmail')} 
+          placeholder="email.professionnel@entreprise.com"
+          type="email"
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="contract">Type de contrat</Label>
         <Select 
           onValueChange={(value) => setValue('contract', value)}
@@ -112,6 +123,61 @@ const CompanyDepartmentFields = () => {
           type="date" 
           {...register('hireDate')}
         />
+      </div>
+
+      {/* Adresse professionnelle */}
+      <div className="space-y-4 pt-3 border-t border-gray-200">
+        <h3 className="text-sm font-medium">Adresse professionnelle</h3>
+        
+        <div className="space-y-2">
+          <Label htmlFor="workAddress.street">Rue</Label>
+          <div className="flex items-center">
+            <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Input 
+              id="workAddress.street" 
+              {...register('workAddress.street')} 
+              placeholder="123 Rue de l'entreprise"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="workAddress.city">Ville</Label>
+            <div className="flex items-center">
+              <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Input 
+                id="workAddress.city" 
+                {...register('workAddress.city')} 
+                placeholder="Paris"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="workAddress.postalCode">Code postal</Label>
+            <div className="flex items-center">
+              <Landmark className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Input 
+                id="workAddress.postalCode" 
+                {...register('workAddress.postalCode')} 
+                placeholder="75000"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="workAddress.country">Pays</Label>
+          <div className="flex items-center">
+            <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Input 
+              id="workAddress.country" 
+              {...register('workAddress.country')} 
+              placeholder="France"
+            />
+          </div>
+        </div>
       </div>
     </>
   );

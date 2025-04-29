@@ -4,9 +4,11 @@ import { Employee } from '@/types/employee';
 import { 
   updateEmployee as apiUpdateEmployee,
   deleteEmployee as apiDeleteEmployee,
-  createEmployee as apiCreateEmployee
+  createEmployee as apiCreateEmployee,
+  updateEmployeeDoc
 } from '@/components/module/submodules/employees/services/employeeService';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export const useEmployeeActions = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +20,8 @@ export const useEmployeeActions = () => {
       if (!data.id) {
         throw new Error("Employee ID is required for update");
       }
+      
+      console.log("Updating employee data:", data);
       
       // Ensure skills are properly formatted before sending to API
       if (data.skills) {
@@ -43,7 +47,12 @@ export const useEmployeeActions = () => {
           });
       }
       
-      await apiUpdateEmployee(data.id, data);
+      // Use updateEmployeeDoc for better handling of nested objects like addresses
+      const updatedEmployee = await updateEmployeeDoc(data.id, data);
+      
+      if (updatedEmployee) {
+        toast.success("Employé mis à jour avec succès");
+      }
       
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['employees'] });
@@ -51,6 +60,7 @@ export const useEmployeeActions = () => {
       return Promise.resolve();
     } catch (error) {
       console.error("Error updating employee:", error);
+      toast.error("Erreur lors de la mise à jour de l'employé");
       return Promise.reject(error);
     } finally {
       setIsLoading(false);
@@ -62,12 +72,15 @@ export const useEmployeeActions = () => {
     try {
       await apiDeleteEmployee(id);
       
+      toast.success("Employé supprimé avec succès");
+      
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       
       return Promise.resolve();
     } catch (error) {
       console.error("Error deleting employee:", error);
+      toast.error("Erreur lors de la suppression de l'employé");
       return Promise.reject(error);
     } finally {
       setIsLoading(false);
@@ -77,6 +90,8 @@ export const useEmployeeActions = () => {
   const createEmployee = async (data: Omit<Employee, 'id'>): Promise<Employee | null> => {
     setIsLoading(true);
     try {
+      console.log("Creating new employee:", data);
+      
       // Ensure skills are properly formatted before sending to API
       if (data.skills) {
         // Filter out null/undefined values and transform any invalid objects
@@ -103,12 +118,17 @@ export const useEmployeeActions = () => {
       
       const newEmployee = await apiCreateEmployee(data);
       
+      if (newEmployee) {
+        toast.success("Nouvel employé créé avec succès");
+      }
+      
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       
       return newEmployee;
     } catch (error) {
       console.error("Error creating employee:", error);
+      toast.error("Erreur lors de la création de l'employé");
       return Promise.reject(error);
     } finally {
       setIsLoading(false);
