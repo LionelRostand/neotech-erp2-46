@@ -16,10 +16,10 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loa
   const renderStatus = (status: string) => {
     if (status === 'success') {
       return <Badge className="bg-green-100 text-green-800 border-green-300"><Check className="h-3 w-3 mr-1" /> Actif</Badge>;
-    } else if (status === 'error') {
+    } else if (status === 'danger') {
       return <Badge className="bg-red-100 text-red-800 border-red-300"><X className="h-3 w-3 mr-1" /> Désactivé</Badge>;
     } else if (status === 'warning') {
-      return <Badge className="bg-amber-100 text-amber-800 border-amber-300"><AlertCircle className="h-3 w-3 mr-1" /> Expiré</Badge>;
+      return <Badge className="bg-amber-100 text-amber-800 border-amber-300"><AlertCircle className="h-3 w-3 mr-1" /> En attente</Badge>;
     }
     return <Badge variant="outline">{status}</Badge>;
   };
