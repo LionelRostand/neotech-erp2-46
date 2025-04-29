@@ -3,7 +3,7 @@ import { collection, getDocs, query, QueryConstraint } from 'firebase/firestore'
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-// Mécanisme de cache pour éviter les requêtes redondantes
+// Cache mechanism to avoid redundant requests
 const requestCache = new Map<string, {
   data: any;
   timestamp: number;
@@ -11,22 +11,22 @@ const requestCache = new Map<string, {
 }>();
 
 /**
- * Fonction utilitaire pour récupérer des données de n'importe quelle collection Firestore
- * @param collectionPath Chemin vers la collection
- * @param constraints Contraintes de requête
- * @param cacheTime Temps en ms pour mettre en cache la réponse (10 secondes par défaut)
- * @returns Promise avec les données de la collection
+ * Utility function to fetch data from any Firestore collection
+ * @param collectionPath Path to the collection
+ * @param constraints Query constraints
+ * @param cacheTime Time in ms to cache the response (10 seconds default)
+ * @returns Promise with the collection data
  */
 export async function fetchCollectionData<T>(
   collectionPath: string, 
   constraints: QueryConstraint[] = [],
-  cacheTime: number = 10000 // 10 secondes de cache par défaut
+  cacheTime: number = 10000 // 10 seconds cache by default
 ): Promise<T[]> {
   try {
-    // Générer une clé de cache unique basée sur le chemin de la collection et les contraintes
+    // Generate a unique cache key based on collection path and constraints
     const cacheKey = `${collectionPath}-${JSON.stringify(constraints)}`;
     
-    // Vérifier si nous avons une réponse en cache valide
+    // Check if we have a valid cached response
     const cachedResponse = requestCache.get(cacheKey);
     const now = Date.now();
     
@@ -46,7 +46,7 @@ export async function fetchCollectionData<T>(
         ...doc.data() 
       })) as T[];
       
-      // Mettre en cache la réponse réussie
+      // Cache successful response
       requestCache.set(cacheKey, {
         data,
         timestamp: now,
@@ -57,7 +57,7 @@ export async function fetchCollectionData<T>(
     } catch (err: any) {
       console.error(`Error in getDocs for ${collectionPath}:`, err);
       
-      // Si nous avons des données en cache, les renvoyer même si expirées comme solution de repli
+      // If we have cached data, return it even if expired as fallback
       if (cachedResponse) {
         console.log(`Using expired cached data for ${collectionPath} due to error`);
         return cachedResponse.data;
@@ -68,12 +68,12 @@ export async function fetchCollectionData<T>(
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);
     
-    // Afficher un toast uniquement pour les erreurs réseau, pas pour les données manquantes ou les problèmes d'index Firestore
+    // Only show toast for network errors, not for missing data or Firestore index issues
     if (err.code !== 'failed-precondition') {
       toast.error(`Erreur lors du chargement des données: ${err.message}`);
     }
     
-    // Renvoyer un tableau vide en cas d'erreur
+    // Return empty array on error
     return [] as T[];
   }
 }
