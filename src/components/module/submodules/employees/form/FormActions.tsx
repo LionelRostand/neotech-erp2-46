@@ -97,7 +97,7 @@ const FormActions: React.FC<FormActionsProps> = ({
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="none">Aucun responsable</SelectItem>
-                {(sortedEmployees || []).map((employee) => {
+                {sortedEmployees.map((employee) => {
                   // Ensure we only render SelectItems with valid (non-empty) values
                   if (!employee?.id) return null;
                   

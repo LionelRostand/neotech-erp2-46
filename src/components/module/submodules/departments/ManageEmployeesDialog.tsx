@@ -31,14 +31,22 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   // Filter employees to only show valid ones (with ID)
   useEffect(() => {
     if (employees && Array.isArray(employees)) {
-      const validEmployees = employees.filter(emp => emp && emp.id && emp.id.trim() !== '');
+      const validEmployees = employees.filter(emp => emp && emp.id && typeof emp.id === 'string' && emp.id.trim() !== '');
       setDepartmentEmployees(validEmployees);
     }
   }, [employees]);
 
   const handleSubmit = async () => {
     try {
-      const success = await onSave(department.id, department.name, selectedEmployees);
+      // Filter out any empty strings from selectedEmployees
+      const validSelectedEmployees = selectedEmployees.filter(id => id && id.trim() !== '');
+      
+      const success = await onSave(
+        department.id, 
+        department.name || 'Département sans nom', 
+        validSelectedEmployees
+      );
+      
       if (success) {
         onClose();
       }
@@ -50,7 +58,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Gérer les employés - {department.name}</DialogTitle>
+        <DialogTitle>Gérer les employés - {department.name || 'Département sans nom'}</DialogTitle>
       </DialogHeader>
       <DialogContent className="max-h-[70vh] overflow-y-auto">
         <EmployeesList 

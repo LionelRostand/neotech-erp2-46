@@ -62,7 +62,7 @@ const EmployeeDeleteDialog: React.FC<EmployeeDeleteDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer {employee.firstName} {employee.lastName} ? Cette action est irréversible et supprimera toutes les données associées à cet employé.
+            Êtes-vous sûr de vouloir supprimer {employee.firstName || ''} {employee.lastName || ''} ? Cette action est irréversible et supprimera toutes les données associées à cet employé.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
