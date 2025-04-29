@@ -9,10 +9,9 @@ import { Department } from '@/components/module/submodules/departments/types';
  */
 export const getDepartmentName = (
   departmentId: string | undefined,
-  departments: Department[] | undefined
+  departments: Department[]
 ): string => {
-  // Check if departmentId and departments are both defined and departments is an array
-  if (!departmentId || !departments || !Array.isArray(departments) || departments.length === 0) {
+  if (!departmentId || !departments?.length) {
     return 'Non spécifié';
   }
   

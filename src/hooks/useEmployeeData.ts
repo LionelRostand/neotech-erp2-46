@@ -17,31 +17,28 @@ export const useEmployeeData = () => {
       return [];
     }
     
-    return rawEmployees
-      .filter(employee => employee !== null && employee !== undefined)
-      .map(employee => {
-        // Make sure employee is a valid object
-        if (!employee || typeof employee !== 'object') {
-          console.warn("Invalid employee data:", employee);
-          return null;
-        }
-        
-        return {
-          ...employee,
-          // Garantir que chaque employé a une photo (même placeholder)
-          photoURL: employee.photoURL || employee.photo || '',
-          // Ensure other required fields exist
-          firstName: employee.firstName || '',
-          lastName: employee.lastName || '',
-          email: employee.email || '',
-          professionalEmail: employee.professionalEmail || employee.email || '',
-          status: employee.status || 'active',
-          department: employee.department || '',
-          position: employee.position || '',
-          id: employee.id || `emp-${Date.now()}`
-        };
-      })
-      .filter(Boolean) as Employee[]; // Filter out null values
+    return rawEmployees.map(employee => {
+      // Make sure employee is a valid object
+      if (!employee || typeof employee !== 'object') {
+        console.warn("Invalid employee data:", employee);
+        return null;
+      }
+      
+      return {
+        ...employee,
+        // Garantir que chaque employé a une photo (même placeholder)
+        photoURL: employee.photoURL || employee.photo || '',
+        // Ensure other required fields exist
+        firstName: employee.firstName || '',
+        lastName: employee.lastName || '',
+        email: employee.email || '',
+        professionalEmail: employee.professionalEmail || employee.email || '',
+        status: employee.status || 'active',
+        department: employee.department || '',
+        position: employee.position || '',
+        id: employee.id || `emp-${Date.now()}`
+      };
+    }).filter(Boolean) as Employee[]; // Filter out null values
   }, [rawEmployees]);
   
   // Formater les départements pour les enrichir avec les données des managers
@@ -53,46 +50,35 @@ export const useEmployeeData = () => {
     
     if (!formattedEmployees || formattedEmployees.length === 0) {
       console.log("Using departments without employee data");
-      return hrDepartments.map(dept => {
-        if (!dept) return null;
-        return {
-          ...dept,
-          name: dept.name || `Department ${dept.id?.substring(0, 5) || ''}`,
-          description: dept.description || '',
-          color: dept.color || '#3b82f6'
-        };
-      }).filter(Boolean) as Department[];
+      return hrDepartments;
     }
     
-    return hrDepartments
-      .filter(department => department !== null && department !== undefined)
-      .map(department => {
-        // Make sure department is a valid object
-        if (!department || typeof department !== 'object') {
-          console.warn("Invalid department data:", department);
-          return null;
-        }
-        
-        const manager = department.managerId 
-          ? formattedEmployees.find(emp => emp.id === department.managerId) 
-          : null;
-        
-        // Calculer le nombre d'employés dans ce département
-        const deptEmployeesCount = formattedEmployees.filter(
-          emp => emp.department === department.id || emp.departmentId === department.id
-        ).length;
-        
-        return {
-          ...department,
-          managerName: manager ? `${manager.firstName} ${manager.lastName}` : null,
-          employeesCount: department.employeeIds?.length || deptEmployeesCount || 0,
-          // Ensure other required fields
-          name: department.name || `Department ${department.id?.substring(0, 5) || ''}`,
-          description: department.description || '',
-          color: department.color || '#3b82f6'
-        };
-      })
-      .filter(Boolean) as Department[]; // Filter out null values
+    return hrDepartments.map(department => {
+      // Make sure department is a valid object
+      if (!department || typeof department !== 'object') {
+        console.warn("Invalid department data:", department);
+        return null;
+      }
+      
+      const manager = department.managerId 
+        ? formattedEmployees.find(emp => emp.id === department.managerId) 
+        : null;
+      
+      // Calculer le nombre d'employés dans ce département
+      const deptEmployeesCount = formattedEmployees.filter(
+        emp => emp.department === department.id || emp.departmentId === department.id
+      ).length;
+      
+      return {
+        ...department,
+        managerName: manager ? `${manager.firstName} ${manager.lastName}` : null,
+        employeesCount: department.employeeIds?.length || deptEmployeesCount || 0,
+        // Ensure other required fields
+        name: department.name || `Department ${department.id?.substring(0, 5) || ''}`,
+        description: department.description || '',
+        color: department.color || '#3b82f6'
+      };
+    }).filter(Boolean) as Department[]; // Filter out null values
   }, [hrDepartments, formattedEmployees]);
   
   return {
