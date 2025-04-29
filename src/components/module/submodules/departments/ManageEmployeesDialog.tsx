@@ -31,7 +31,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   // Filter employees to only show valid ones (with ID)
   useEffect(() => {
     if (employees && Array.isArray(employees)) {
-      const validEmployees = employees.filter(emp => emp && emp.id);
+      const validEmployees = employees.filter(emp => emp && emp.id && emp.id.trim() !== '');
       setDepartmentEmployees(validEmployees);
     }
   }, [employees]);
