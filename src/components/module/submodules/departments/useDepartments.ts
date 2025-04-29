@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { Department } from './types';
+import { Department, DepartmentFormData } from './types';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
@@ -59,17 +59,21 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
 
   // Ouvrir le formulaire d'édition
   const handleEditDepartment = useCallback((department: Department) => {
-    setFormData({
+    if (!department) return;
+    
+    // Create a form data object from department
+    const editFormData: DepartmentFormData = {
       id: department.id,
       name: department.name || '',
       description: department.description || '',
       managerId: department.managerId || '',
-      managerName: department.managerName || '',
       companyId: department.companyId || '',
-      companyName: department.companyName || '',
       color: department.color || '#3b82f6',
       employeeIds: department.employeeIds || []
-    });
+    };
+    
+    // Set the form data
+    setFormData(editFormData);
     
     // Récupérer les employés du département
     const deptEmployees = getDepartmentEmployees(department.id);

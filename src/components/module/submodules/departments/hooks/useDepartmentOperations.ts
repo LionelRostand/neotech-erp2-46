@@ -1,242 +1,150 @@
 
 import { useCallback } from 'react';
-import { toast } from 'sonner';
-import { Department } from '../types';
-import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { Employee } from '@/types/hr-types';
+import { collection, doc, updateDoc, getDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument, deleteDocument, updateDocument } from '@/lib/firestore-helpers';
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
+import { toast } from 'sonner';
+import { Department, DepartmentFormData } from '../types';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { Employee } from '@/types/employee';
 
 export const useDepartmentOperations = () => {
-  const { refetch: refetchDepartments } = useFirebaseDepartments();
-  const { employees, refetch: refetchEmployees } = useEmployeeData();
+  const { refetch } = useFirebaseDepartments();
+  const { employees } = useEmployeeData();
 
-  // Récupérer les employés d'un département
-  const getDepartmentEmployees = useCallback((departmentId: string): string[] => {
-    if (!departmentId || !employees || !Array.isArray(employees)) {
-      return [];
-    }
-    
-    return employees
-      .filter(emp => 
-        emp.departmentId === departmentId || 
-        emp.department === departmentId
-      )
-      .map(emp => emp.id);
-  }, [employees]);
-
-  // Sauvegarder un nouveau département
-  const handleSaveDepartment = useCallback(async (formData: Partial<Department>, selectedEmployeeIds: string[]) => {
+  // Save department
+  const handleSaveDepartment = useCallback(async (formData: DepartmentFormData, selectedEmployeeIds: string[]): Promise<boolean> => {
     try {
-      // Valider les données obligatoires
-      if (!formData.name) {
-        toast.error("Le nom du département est obligatoire");
-        return;
+      // Find manager name if managerId is set
+      let managerName = '';
+      if (formData.managerId && employees && Array.isArray(employees)) {
+        const manager = employees.find(emp => emp.id === formData.managerId);
+        if (manager) {
+          managerName = `${manager.lastName || ''} ${manager.firstName || ''}`.trim();
+        }
       }
 
-      // Préparer les données du département
-      const departmentData = {
-        ...formData,
+      // Create a new department
+      const departmentRef = collection(db, COLLECTIONS.HR.DEPARTMENTS);
+      await addDoc(departmentRef, {
+        name: formData.name,
+        description: formData.description,
+        managerId: formData.managerId || '',
+        managerName,
+        companyId: formData.companyId || '',
+        color: formData.color || '#3b82f6',
         employeeIds: selectedEmployeeIds,
         employeesCount: selectedEmployeeIds.length,
-        createdAt: new Date().toISOString()
-      };
-
-      // Sauvegarder le département
-      await addDocument(COLLECTIONS.HR.DEPARTMENTS, departmentData);
-
-      // Mettre à jour les employés sélectionnés
-      if (selectedEmployeeIds.length > 0) {
-        const updatePromises = selectedEmployeeIds.map(employeeId => 
-          updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-            departmentId: departmentData.id,
-            department: departmentData.name
-          })
-        );
-        await Promise.all(updatePromises);
-      }
-
-      // Rafraîchir les données
-      refetchDepartments();
-      refetchEmployees();
-
-      toast.success("Département créé avec succès");
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de la création du département:", error);
-      toast.error("Erreur lors de la création du département");
-      return false;
-    }
-  }, [refetchDepartments, refetchEmployees]);
-
-  // Mettre à jour un département
-  const handleUpdateDepartment = useCallback(async (formData: Partial<Department>, selectedEmployeeIds: string[]) => {
-    try {
-      // Valider les données obligatoires
-      if (!formData.id || !formData.name) {
-        toast.error("Informations de département incomplètes");
-        return;
-      }
-
-      // Récupérer les employés actuels du département
-      const currentEmployeeIds = getDepartmentEmployees(formData.id);
-      
-      // Identifier les employés à ajouter et à supprimer
-      const employeesToAdd = selectedEmployeeIds.filter(id => !currentEmployeeIds.includes(id));
-      const employeesToRemove = currentEmployeeIds.filter(id => !selectedEmployeeIds.includes(id));
-
-      // Préparer les données du département
-      const departmentData = {
-        ...formData,
-        employeeIds: selectedEmployeeIds,
-        employeesCount: selectedEmployeeIds.length,
-        updatedAt: new Date().toISOString()
-      };
-
-      // Mettre à jour le département
-      await updateDocument(COLLECTIONS.HR.DEPARTMENTS, formData.id, departmentData);
-
-      // Mettre à jour les employés à ajouter
-      if (employeesToAdd.length > 0) {
-        const addPromises = employeesToAdd.map(employeeId => 
-          updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-            departmentId: departmentData.id,
-            department: departmentData.name
-          })
-        );
-        await Promise.all(addPromises);
-      }
-
-      // Mettre à jour les employés à supprimer
-      if (employeesToRemove.length > 0) {
-        const removePromises = employeesToRemove.map(employeeId => 
-          updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-            departmentId: '',
-            department: ''
-          })
-        );
-        await Promise.all(removePromises);
-      }
-
-      // Rafraîchir les données
-      refetchDepartments();
-      refetchEmployees();
-
-      toast.success("Département mis à jour avec succès");
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du département:", error);
-      toast.error("Erreur lors de la mise à jour du département");
-      return false;
-    }
-  }, [refetchDepartments, refetchEmployees, getDepartmentEmployees]);
-
-  // Gérer les affectations d'employés
-  const handleSaveEmployeeAssignments = useCallback(async (departmentId: string, departmentName: string, selectedEmployeeIds: string[]) => {
-    try {
-      if (!departmentId) {
-        toast.error("ID de département manquant");
-        return;
-      }
-
-      // Récupérer les employés actuels du département
-      const currentEmployeeIds = getDepartmentEmployees(departmentId);
-      
-      // Identifier les employés à ajouter et à supprimer
-      const employeesToAdd = selectedEmployeeIds.filter(id => !currentEmployeeIds.includes(id));
-      const employeesToRemove = currentEmployeeIds.filter(id => !selectedEmployeeIds.includes(id));
-
-      // Mettre à jour le département
-      await updateDocument(COLLECTIONS.HR.DEPARTMENTS, departmentId, {
-        employeeIds: selectedEmployeeIds,
-        employeesCount: selectedEmployeeIds.length,
-        updatedAt: new Date().toISOString()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
 
-      // Mettre à jour les employés à ajouter
-      if (employeesToAdd.length > 0) {
-        const addPromises = employeesToAdd.map(employeeId => 
-          updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-            departmentId: departmentId,
-            department: departmentName
-          })
-        );
-        await Promise.all(addPromises);
-      }
-
-      // Mettre à jour les employés à supprimer
-      if (employeesToRemove.length > 0) {
-        const removePromises = employeesToRemove.map(employeeId => 
-          updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-            departmentId: '',
-            department: ''
-          })
-        );
-        await Promise.all(removePromises);
-      }
-
-      // Rafraîchir les données
-      refetchDepartments();
-      refetchEmployees();
-
-      toast.success("Employés assignés avec succès");
+      toast.success('Département créé avec succès');
+      refetch(); // Refresh departments list
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'assignation des employés:", error);
-      toast.error("Erreur lors de l'assignation des employés");
+      console.error('Error creating department:', error);
+      toast.error('Erreur lors de la création du département');
       return false;
     }
-  }, [refetchDepartments, refetchEmployees, getDepartmentEmployees]);
+  }, [employees, refetch]);
 
-  // Supprimer un département
-  const handleDeleteDepartment = useCallback(async (departmentId: string, departmentName: string) => {
+  // Update department
+  const handleUpdateDepartment = useCallback(async (formData: DepartmentFormData, selectedEmployeeIds: string[]): Promise<boolean> => {
     try {
-      if (!departmentId) {
-        toast.error("ID de département manquant");
-        return;
+      if (!formData.id) {
+        toast.error('ID du département manquant');
+        return false;
       }
 
-      // Confirmation
-      if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le département "${departmentName}" ?`)) {
-        return;
+      // Find manager name if managerId is set
+      let managerName = '';
+      if (formData.managerId && employees && Array.isArray(employees)) {
+        const manager = employees.find(emp => emp.id === formData.managerId);
+        if (manager) {
+          managerName = `${manager.lastName || ''} ${manager.firstName || ''}`.trim();
+        }
       }
 
-      // Récupérer les employés du département
-      const departmentEmployeeIds = getDepartmentEmployees(departmentId);
+      // Update the department
+      const departmentRef = doc(db, COLLECTIONS.HR.DEPARTMENTS, formData.id);
+      await updateDoc(departmentRef, {
+        name: formData.name,
+        description: formData.description,
+        managerId: formData.managerId || '',
+        managerName,
+        companyId: formData.companyId || '',
+        color: formData.color || '#3b82f6',
+        employeeIds: selectedEmployeeIds,
+        employeesCount: selectedEmployeeIds.length,
+        updatedAt: serverTimestamp()
+      });
 
-      // Supprimer le département
-      await deleteDocument(COLLECTIONS.HR.DEPARTMENTS, departmentId);
-
-      // Mettre à jour les employés du département
-      if (departmentEmployeeIds.length > 0) {
-        const updatePromises = departmentEmployeeIds.map(employeeId => 
-          updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-            departmentId: '',
-            department: ''
-          })
-        );
-        await Promise.all(updatePromises);
-      }
-
-      // Rafraîchir les données
-      refetchDepartments();
-      refetchEmployees();
-
-      toast.success("Département supprimé avec succès");
+      toast.success('Département mis à jour avec succès');
+      refetch(); // Refresh departments list
       return true;
     } catch (error) {
-      console.error("Erreur lors de la suppression du département:", error);
-      toast.error("Erreur lors de la suppression du département");
+      console.error('Error updating department:', error);
+      toast.error('Erreur lors de la mise à jour du département');
       return false;
     }
-  }, [refetchDepartments, refetchEmployees, getDepartmentEmployees]);
+  }, [employees, refetch]);
+
+  // Save employee assignments
+  const handleSaveEmployeeAssignments = useCallback(async (departmentId: string, departmentName: string, selectedEmployeeIds: string[]): Promise<boolean> => {
+    try {
+      const departmentRef = doc(db, COLLECTIONS.HR.DEPARTMENTS, departmentId);
+      await updateDoc(departmentRef, {
+        employeeIds: selectedEmployeeIds,
+        employeesCount: selectedEmployeeIds.length,
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success(`Employés assignés au département ${departmentName}`);
+      refetch();
+      return true;
+    } catch (error) {
+      console.error('Error assigning employees:', error);
+      toast.error(`Erreur lors de l'assignation des employés: ${(error as Error).message}`);
+      return false;
+    }
+  }, [refetch]);
+
+  // Delete department
+  const handleDeleteDepartment = useCallback(async (departmentId: string): Promise<boolean> => {
+    try {
+      if (!departmentId) return false;
+      
+      await deleteDoc(doc(db, COLLECTIONS.HR.DEPARTMENTS, departmentId));
+      toast.success('Département supprimé avec succès');
+      refetch();
+      return true;
+    } catch (error) {
+      console.error('Error deleting department:', error);
+      toast.error('Erreur lors de la suppression du département');
+      return false;
+    }
+  }, [refetch]);
+
+  // Get department employees
+  const getDepartmentEmployees = useCallback((departmentId: string): string[] => {
+    if (!departmentId || !employees || !Array.isArray(employees)) return [];
+
+    // Filter employees that belong to the department
+    const deptEmployees = employees.filter((employee: Employee) => {
+      return employee.department === departmentId;
+    });
+
+    // Return array of employee IDs
+    return deptEmployees.map((employee: Employee) => employee.id || '').filter(Boolean);
+  }, [employees]);
 
   return {
-    getDepartmentEmployees,
     handleSaveDepartment,
     handleUpdateDepartment,
     handleSaveEmployeeAssignments,
-    handleDeleteDepartment
+    handleDeleteDepartment,
+    getDepartmentEmployees
   };
 };

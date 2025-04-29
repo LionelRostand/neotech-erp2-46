@@ -4,17 +4,16 @@ import { Department, DepartmentFormData, departmentColors } from '../types';
 import { createEmptyFormData } from '../utils/departmentUtils';
 import { toast } from 'sonner';
 
-export const useDepartmentForm = (departments: Department[] = []) => {
+export const useDepartmentForm = () => {
   const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData());
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("informations");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   
   // Reset form with initial data
   const resetForm = useCallback(() => {
-    // We don't want to continuously reset this in an infinite loop
     setFormData(createEmptyFormData());
     setSelectedEmployees([]);
-    setActiveTab("general");
+    setActiveTab("informations");
   }, []);
   
   // Initialize form with department data for editing
@@ -29,7 +28,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
       employeeIds: department.employeeIds || []
     });
     setSelectedEmployees(department.employeeIds || []);
-    setActiveTab("general");
+    setActiveTab("informations");
   }, []);
   
   // Form input handlers
@@ -82,6 +81,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
     handleColorChange,
     handleEmployeeSelection,
     validateForm,
+    setFormData,
     setSelectedEmployees
   };
 };

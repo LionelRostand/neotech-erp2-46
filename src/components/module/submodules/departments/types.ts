@@ -9,19 +9,39 @@ export interface Department {
   employeesCount?: number;
   color?: string;
   companyId?: string;
+  companyName?: string;
+}
+
+export interface DepartmentFormData {
+  id?: string;
+  name: string;
+  description: string;
+  managerId?: string;
+  companyId?: string;
+  color: string;
+  employeeIds?: string[];
 }
 
 export const departmentColors = [
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#10b981', // green
-  '#f97316', // orange
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#f59e0b', // amber
-  '#6366f1', // indigo
-  '#14b8a6', // teal
-  '#d946ef', // fuchsia
-  '#84cc16'  // lime
+  { label: 'Bleu', value: '#3b82f6' },
+  { label: 'Rouge', value: '#ef4444' },
+  { label: 'Vert', value: '#10b981' },
+  { label: 'Orange', value: '#f97316' },
+  { label: 'Violet', value: '#8b5cf6' },
+  { label: 'Rose', value: '#ec4899' },
+  { label: 'Cyan', value: '#06b6d4' },
+  { label: 'Ambre', value: '#f59e0b' },
+  { label: 'Indigo', value: '#6366f1' },
+  { label: 'Turquoise', value: '#14b8a6' },
+  { label: 'Fuchsia', value: '#d946ef' },
+  { label: 'Citron vert', value: '#84cc16' }
 ];
+
+export const createEmptyFormData = (): DepartmentFormData => ({
+  name: '',
+  description: '',
+  managerId: '',
+  companyId: '',
+  color: '#3b82f6',
+  employeeIds: []
+});

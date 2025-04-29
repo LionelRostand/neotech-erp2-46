@@ -1,29 +1,43 @@
 
 import React from 'react';
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DepartmentFormData, departmentColors } from './types';
-import EmployeesList from './EmployeesList';
+import {
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { DepartmentFormData } from './types';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { Building2, Loader2 } from 'lucide-react';
+import { Employee } from '@/types/employee';
+import EmployeesList from './EmployeesList';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import ColorSelector from './components/ColorSelector';
 
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
   selectedEmployees: string[];
   activeTab: string;
-  onTabChange: (tab: string) => void;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTabChange: (value: string) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onManagerChange: (value: string) => void;
   onCompanyChange: (value: string) => void;
   onColorChange: (value: string) => void;
-  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
+  onEmployeeSelection: (employeeId: string, isSelected: boolean) => void;
   onClose: () => void;
-  onUpdate: () => void;
+  onUpdate: (formData: DepartmentFormData, selectedEmployeeIds: string[]) => Promise<boolean>;
 }
 
 const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
@@ -37,163 +51,177 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onColorChange,
   onEmployeeSelection,
   onClose,
-  onUpdate,
+  onUpdate
 }) => {
-  const { employees, isLoading } = useEmployeeData();
-  // Utiliser les données des entreprises depuis Firebase
-  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
+  const { companies, isLoading: companiesLoading } = useCompaniesData();
+  const { employees, isLoading: employeesLoading } = useEmployeeData();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsSubmitting(true);
+    
+    try {
+      const success = await onUpdate(formData, selectedEmployees);
+      if (success) {
+        onClose();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const sortedEmployees = React.useMemo(() => {
+    if (!employees || !Array.isArray(employees)) return [];
+    
+    return [...employees].sort((a, b) => {
+      const nameA = `${a?.lastName || ''} ${a?.firstName || ''}`.toLowerCase();
+      const nameB = `${b?.lastName || ''} ${b?.firstName || ''}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  }, [employees]);
 
   return (
-    <DialogContent className="sm:max-w-[600px]">
-      <DialogHeader>
-        <DialogTitle>Modifier le département</DialogTitle>
-      </DialogHeader>
-      
-      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="general">
-            Informations
-          </TabsTrigger>
-          <TabsTrigger value="employees">
-            Employés
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="general" className="space-y-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="id" className="text-right">
-              ID
-            </Label>
-            <Input
-              id="id"
-              name="id"
-              value={formData.id}
-              className="col-span-3"
-              disabled
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Nom
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={onInputChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Input
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={onInputChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="manager" className="text-right">
-              Responsable
-            </Label>
-            <div className="col-span-3">
-              <Select value={formData.managerId || "none"} onValueChange={onManagerChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un responsable" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun responsable</SelectItem>
-                  {isLoading ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                  ) : (
-                    employees?.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+    <DialogContent className="sm:max-w-[550px]">
+      <form onSubmit={handleSubmit}>
+        <DialogHeader>
+          <DialogTitle>Modifier le département</DialogTitle>
+          <DialogDescription>
+            Modifier les informations du département.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs value={activeTab} onValueChange={onTabChange} className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="informations">Informations</TabsTrigger>
+            <TabsTrigger value="employés">Employés</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="informations" className="space-y-4 mt-4">
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="id" className="text-right">
+                  ID
+                </Label>
+                <Input
+                  id="id"
+                  disabled
+                  value={formData.id || "Généré automatiquement"}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Nom
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={onInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={onInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="manager" className="text-right">
+                  Responsable
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    value={formData.managerId || "none"}
+                    onValueChange={onManagerChange}
+                    disabled={employeesLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un responsable" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      <SelectItem value="none">Aucun responsable</SelectItem>
+                      {sortedEmployees.map((employee: Employee) => (
+                        <SelectItem
+                          key={employee?.id || `emp-${Math.random()}`}
+                          value={employee?.id || ""}
+                        >
+                          {`${employee?.lastName || ""} ${employee?.firstName || ""}`.trim() || "Employé sans nom"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="company" className="text-right">
+                  Entreprise
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    value={formData.companyId || "none"}
+                    onValueChange={onCompanyChange}
+                    disabled={companiesLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une entreprise" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      <SelectItem value="none">Aucune entreprise</SelectItem>
+                      {(companies || []).map((company: any) => (
+                        <SelectItem
+                          key={company?.id || `company-${Math.random()}`}
+                          value={company?.id || ""}
+                        >
+                          {company?.name || "Entreprise sans nom"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="color" className="text-right">
+                  Couleur
+                </Label>
+                <div className="col-span-3">
+                  <ColorSelector
+                    value={formData.color}
+                    onChange={onColorChange}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
-              Entreprise
-            </Label>
-            <div className="col-span-3">
-              <Select value={formData.companyId || "none"} onValueChange={onCompanyChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucune entreprise</SelectItem>
-                  {isLoadingCompanies ? (
-                    <div className="flex items-center justify-center py-2 px-2">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      <span>Chargement des entreprises...</span>
-                    </div>
-                  ) : companies && companies.length > 0 ? (
-                    companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        <div className="flex items-center">
-                          <Building2 className="h-4 w-4 mr-2 text-gray-500" />
-                          {company.name}
-                        </div>
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-2 text-sm text-muted-foreground">
-                      Aucune entreprise disponible
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="color" className="text-right">
-              Couleur
-            </Label>
-            <div className="col-span-3">
-              <Select value={formData.color || departmentColors[0].value} onValueChange={onColorChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une couleur" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departmentColors.map(color => (
-                    <SelectItem key={color.value} value={color.value}>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color.value }}></div>
-                        <span>{color.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="employees" className="py-4">
-          <EmployeesList 
-            employees={employees || []}
-            selectedEmployees={selectedEmployees}
-            onEmployeeSelection={onEmployeeSelection}
-            id="edit"
-          />
-        </TabsContent>
-      </Tabs>
-      
-      <DialogFooter>
-        <Button variant="outline" onClick={onClose}>
-          Annuler
-        </Button>
-        <Button onClick={onUpdate}>Mettre à jour</Button>
-      </DialogFooter>
+          </TabsContent>
+
+          <TabsContent value="employés" className="mt-4">
+            <EmployeesList
+              employees={sortedEmployees || []}
+              selectedEmployees={selectedEmployees}
+              onEmployeeSelection={onEmployeeSelection}
+              isLoading={employeesLoading}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="mt-6">
+          <Button variant="outline" type="button" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button type="submit" disabled={isSubmitting || !formData.name}>
+            {isSubmitting ? "Mise à jour..." : "Mettre à jour"}
+          </Button>
+        </DialogFooter>
+      </form>
     </DialogContent>
   );
 };
