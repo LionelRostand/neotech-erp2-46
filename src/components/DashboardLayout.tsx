@@ -6,7 +6,7 @@ import SidebarNavigation from '@/components/dashboard/SidebarNavigation';
 import SidebarHeader from '@/components/dashboard/SidebarHeader';
 import SidebarFooter from '@/components/dashboard/SidebarFooter';
 import DashboardNavbar from '@/components/DashboardNavbar';
-import { useSidebar } from '@/components/dashboard/SidebarContext';
+import { useSidebarContext } from '@/components/dashboard/SidebarContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,12 +15,17 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarOpen, toggleSidebar } = useSidebar();
+  const { expandedModules, toggleModuleSubmenus, expandedCategories, toggleCategory, isActiveModule } = useSidebarContext();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsActive, setSettingsActive] = useState(location.pathname.startsWith('/settings'));
 
   const handleNavigate = (href: string) => {
     navigate(href);
     setSettingsActive(href.startsWith('/settings'));
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
   return (
@@ -33,9 +38,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         )}
       >
         <div className="flex h-full flex-col">
-          <SidebarHeader />
+          <SidebarHeader 
+            sidebarOpen={sidebarOpen} 
+            onClick={() => navigate('/')} 
+          />
           <div className="flex-1 overflow-y-auto px-3 py-4">
-            <SidebarNavigation />
+            <SidebarNavigation 
+              installedModules={[]}
+              onNavigate={handleNavigate}
+            />
           </div>
           <SidebarFooter 
             sidebarOpen={sidebarOpen} 
