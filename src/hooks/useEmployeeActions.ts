@@ -24,7 +24,7 @@ export const useEmployeeActions = () => {
       console.log("Updating employee data:", data);
       
       // Ensure skills are properly formatted before sending to API
-      if (data.skills) {
+      if (data.skills && Array.isArray(data.skills)) {
         // Filter out null/undefined values and transform any invalid objects
         data.skills = data.skills
           .filter(skill => skill !== null && skill !== undefined)
@@ -45,6 +45,9 @@ export const useEmployeeActions = () => {
               name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
             };
           });
+      } else {
+        // Ensure skills is a valid array to prevent errors
+        data.skills = [];
       }
       
       // Use updateEmployeeDoc for better handling of nested objects like addresses
@@ -92,10 +95,13 @@ export const useEmployeeActions = () => {
     try {
       console.log("Creating new employee:", data);
       
+      // Create a copy of the data to ensure we don't mutate the original
+      const employeeData = {...data};
+      
       // Ensure skills are properly formatted before sending to API
-      if (data.skills) {
+      if (employeeData.skills && Array.isArray(employeeData.skills)) {
         // Filter out null/undefined values and transform any invalid objects
-        data.skills = data.skills
+        employeeData.skills = employeeData.skills
           .filter(skill => skill !== null && skill !== undefined)
           .map(skill => {
             if (typeof skill === 'string') {
@@ -114,9 +120,32 @@ export const useEmployeeActions = () => {
               name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
             };
           });
+      } else {
+        // Ensure skills is a valid array to prevent errors
+        employeeData.skills = [];
       }
       
-      const newEmployee = await apiCreateEmployee(data);
+      // Ensure address objects are properly initialized
+      if (!employeeData.address || typeof employeeData.address !== 'object') {
+        employeeData.address = {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: '',
+          state: ''
+        };
+      }
+      
+      if (!employeeData.workAddress || typeof employeeData.workAddress !== 'object') {
+        employeeData.workAddress = {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: ''
+        };
+      }
+      
+      const newEmployee = await apiCreateEmployee(employeeData);
       
       if (newEmployee) {
         toast.success("Nouvel employé créé avec succès");
