@@ -1,12 +1,12 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Department } from './types';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
 
-export const useDepartments = () => {
+export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) => {
   // État local pour les dialogues
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -14,8 +14,12 @@ export const useDepartments = () => {
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
 
   // Récupérer les départements et les employés
-  const { departments, isLoading: loading, refetch: refetchDepartments } = useFirebaseDepartments();
-  const { employees } = useEmployeeData();
+  const { departments: fetchedDepartments, isLoading: loading, refetch: refetchDepartments } = useFirebaseDepartments();
+  const { employees: fetchedEmployees } = useEmployeeData();
+  
+  // Utiliser les props si fournis, sinon utiliser les données récupérées
+  const departments = propDepartments || fetchedDepartments || [];
+  const employees = propEmployees || fetchedEmployees || [];
 
   // Utiliser le hook de formulaire pour gérer l'état du formulaire
   const {
@@ -40,6 +44,11 @@ export const useDepartments = () => {
     handleDeleteDepartment,
     handleSaveEmployeeAssignments
   } = useDepartmentOperations();
+
+  // Log pour voir les départements disponibles
+  useEffect(() => {
+    console.log("Departments in useDepartments:", departments?.length || 0);
+  }, [departments]);
 
   // Ouvrir le formulaire d'ajout
   const handleAddDepartment = useCallback(() => {

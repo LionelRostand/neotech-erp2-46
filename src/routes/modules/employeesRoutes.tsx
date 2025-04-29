@@ -21,6 +21,7 @@ import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
@@ -36,13 +37,29 @@ const EmployeesProfilesWithProps = () => {
   return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
 };
 
+// Helper component to pass props to EmployeesDepartments
+const EmployeesDepartmentsWithProps = () => {
+  const { departments = [], employees = [], isLoading = true } = useHrModuleData();
+  // Make sure we have valid arrays
+  const safeDepartments = Array.isArray(departments) ? departments : [];
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  
+  console.log("Rendering EmployeesDepartments with", { 
+    departmentsCount: safeDepartments.length,
+    employeesCount: safeEmployees.length,
+    isLoading 
+  });
+  
+  return <EmployeesDepartments departments={safeDepartments} employees={safeEmployees} />;
+};
+
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
     <Route path="profiles" element={<EmployeesProfilesWithProps />} />
     <Route path="badges" element={<EmployeesBadges />} />
-    <Route path="departments" element={<EmployeesDepartments />} />
+    <Route path="departments" element={<EmployeesDepartmentsWithProps />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />
     <Route path="attendance" element={<EmployeesAttendance />} />
     <Route path="timesheet" element={<EmployeesTimesheet />} />

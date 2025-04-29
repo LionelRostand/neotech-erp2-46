@@ -9,7 +9,12 @@ import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
 import { useDepartments } from './useDepartments';
 
-const EmployeesDepartments: React.FC = () => {
+interface EmployeesDepartmentsProps {
+  departments?: any[];
+  employees?: any[];
+}
+
+const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments: propDepartments, employees: propEmployees }) => {
   const {
     departments,
     loading,
@@ -37,7 +42,7 @@ const EmployeesDepartments: React.FC = () => {
     handleDeleteDepartment,
     handleSaveEmployeeAssignments,
     getDepartmentEmployees
-  } = useDepartments();
+  } = useDepartments(propDepartments, propEmployees);
 
   // Débogage pour vérifier la présence de départements
   console.log("Rendering EmployeesDepartments with", departments?.length, "departments");
