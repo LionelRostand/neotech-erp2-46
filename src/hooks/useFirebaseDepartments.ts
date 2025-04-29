@@ -4,18 +4,23 @@ import { where, QueryConstraint, orderBy } from 'firebase/firestore';
 import { Department } from '@/components/module/submodules/departments/types';
 import { fetchCollectionData } from './fetchCollectionData';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+
+// Cache for department data to reduce redundant fetches
+const departmentsCache = new Map<string, {
+  data: Department[];
+  timestamp: number;
+}>();
 
 /**
- * Hook pour récupérer les départements depuis Firebase avec mise à jour en temps réel
+ * Hook pour récupérer les départements depuis Firebase avec mise en cache
  * @param companyId Optionnel - ID de l'entreprise pour filtrer les départements
  */
 export const useFirebaseDepartments = (companyId?: string) => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const previousCompanyId = useRef<string | undefined>(companyId);
   const isMounted = useRef(true);
+  const previousCompanyId = useRef<string | undefined>(companyId);
   const hasInitialFetch = useRef(false);
   
   // Préparer les contraintes de requête si un ID d'entreprise est fourni
@@ -25,85 +30,90 @@ export const useFirebaseDepartments = (companyId?: string) => {
     queryConstraints.push(where('companyId', '==', companyId));
   }
 
-  // Trier par nom seulement (pas d'orderBy composé avec companyId pour éviter des erreurs d'index)
   queryConstraints.push(orderBy('name', 'asc'));
   
+  // Generate cache key based on company id
+  const cacheKey = companyId || 'all-departments';
+  
   const fetchDepartments = useCallback(async () => {
-    // Prevent refetching with the same parameters
+    // Prevent refetching with the same parameters or when component is unmounted
     if (!isMounted.current || (hasInitialFetch.current && previousCompanyId.current === companyId)) {
       return;
     }
     
-    if (previousCompanyId.current !== companyId) {
-      // Réinitialiser les départements lors du changement d'entreprise
+    // Check cache first
+    const cachedData = departmentsCache.get(cacheKey);
+    const now = Date.now();
+    
+    // Use cached data if available and less than 5 minutes old
+    if (cachedData && (now - cachedData.timestamp < 5 * 60 * 1000)) {
+      console.log(`Using cached departments data for key: ${cacheKey}`);
+      setDepartments(cachedData.data);
+      setIsLoading(false);
+      hasInitialFetch.current = true;
       previousCompanyId.current = companyId;
+      return;
+    }
+    
+    // If company ID changed, reset state before fetching
+    if (previousCompanyId.current !== companyId) {
       setDepartments([]);
+      previousCompanyId.current = companyId;
     }
 
     setIsLoading(true);
     try {
-      console.log("Fetching departments from collection:", COLLECTIONS.HR.DEPARTMENTS, companyId ? `for company ${companyId}` : 'for all companies');
-      const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints);
+      console.log("Fetching departments:", companyId ? `for company ${companyId}` : 'all departments');
+      const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints, 60000);
       
       if (!isMounted.current) return;
       
-      // Ensure valid data with strict type checking
-      if (!fetchedDepartments || !Array.isArray(fetchedDepartments)) {
-        console.warn("Fetched departments is not an array:", fetchedDepartments);
-        setDepartments([]);
-        setIsLoading(false);
-        hasInitialFetch.current = true;
-        return;
-      }
+      // Validate and normalize the data
+      const validDepartments = Array.isArray(fetchedDepartments) 
+        ? fetchedDepartments
+            .filter(dept => dept && typeof dept === 'object')
+            .map(dept => ({
+              id: dept.id || `dept-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+              name: dept.name || `Département ${dept.id?.substring(0, 5) || ''}`,
+              description: dept.description || '',
+              managerId: dept.managerId || '',
+              managerName: dept.managerName || '',
+              companyId: dept.companyId || companyId || '',
+              color: dept.color || '#3b82f6',
+              employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
+              employeesCount: typeof dept.employeesCount === 'number' ? dept.employeesCount : 0
+            } as Department))
+        : [];
       
-      // Dédupliquer les départements par ID
-      const uniqueDepartments = new Map<string, Department>();
-      
-      // Process each department with safety checks
-      fetchedDepartments.forEach(dept => {
-        if (dept && typeof dept === 'object' && dept.id && typeof dept.id === 'string') {
-          uniqueDepartments.set(dept.id, {
-            ...dept,
-            // Ensure all required fields exist
-            name: dept.name || `Department ${dept.id.substring(0, 5)}`,
-            description: dept.description || '',
-            managerId: dept.managerId || '',
-            managerName: dept.managerName || '',
-            companyId: dept.companyId || companyId || '',
-            color: dept.color || '#3b82f6',
-            employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
-            employeesCount: typeof dept.employeesCount === 'number' ? dept.employeesCount : 0
-          });
-        }
+      // Update cache
+      departmentsCache.set(cacheKey, {
+        data: validDepartments,
+        timestamp: now
       });
       
-      const uniqueData = Array.from(uniqueDepartments.values());
-      console.log(`Après déduplication: ${uniqueData.length} départements (avant: ${fetchedDepartments.length})`);
-      
-      setDepartments(uniqueData);
+      setDepartments(validDepartments);
       setError(null);
       hasInitialFetch.current = true;
     } catch (err) {
       if (!isMounted.current) return;
       
       console.error("Error fetching departments:", err);
-      setError(err instanceof Error ? err : new Error("Unknown error fetching departments"));
-      // Always set a valid empty array in case of error
-      setDepartments([]);
+      setError(err instanceof Error ? err : new Error("Failed to fetch departments"));
       
-      // Don't show toast on initial error to avoid overwhelming the user
-      if (hasInitialFetch.current) {
-        toast.error("Erreur lors du chargement des départements");
+      // Use expired cache as fallback if available
+      if (cachedData) {
+        console.log("Using expired cache as fallback");
+        setDepartments(cachedData.data);
+      } else {
+        setDepartments([]);
       }
     } finally {
       if (isMounted.current) {
         setIsLoading(false);
-        hasInitialFetch.current = true;
       }
     }
-  }, [companyId, queryConstraints]);
+  }, [companyId, queryConstraints, cacheKey]);
   
-  // Fetch departments on mount or when companyId changes
   useEffect(() => {
     isMounted.current = true;
     fetchDepartments();
@@ -111,15 +121,17 @@ export const useFirebaseDepartments = (companyId?: string) => {
     return () => {
       isMounted.current = false;
     };
-  }, [fetchDepartments]); // Re-fetch when companyId changes or query constraints update
+  }, [fetchDepartments]);
   
-  const refetch = useCallback(async () => {
+  const refetch = useCallback(() => {
+    // Clear cache entry for this specific query
+    departmentsCache.delete(cacheKey);
     hasInitialFetch.current = false;
     return fetchDepartments();
-  }, [fetchDepartments]);
+  }, [fetchDepartments, cacheKey]);
 
   return { 
-    departments: departments || [], // Ensure we always return an array
+    departments, 
     isLoading, 
     error, 
     refetch 

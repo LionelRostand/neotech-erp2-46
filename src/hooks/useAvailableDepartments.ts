@@ -15,7 +15,7 @@ export const useAvailableDepartments = (companyId?: string) => {
   const formattedDepartments = useMemo(() => {
     // Defensive check to ensure departments is always an array
     if (!departments || !Array.isArray(departments)) {
-      console.warn('Departments data is not an array:', departments);
+      console.log('Departments data is not an array:', departments);
       return [];
     }
 

@@ -22,7 +22,6 @@ const CompanyDepartmentFields: React.FC = () => {
   const { companies = [], isLoading: isLoadingCompanies } = useFirebaseCompanies();
   
   // Fetch departments avec le filtre d'entreprise sélectionnée
-  // Only fetch departments when a company is selected
   const { 
     departments = [], 
     isLoading: isLoadingDepartments 
@@ -37,7 +36,7 @@ const CompanyDepartmentFields: React.FC = () => {
     return companies.filter(company => company && company.status === 'active');
   }, [companies]);
   
-  // Update department name display when ID changes - use useEffect with proper dependencies
+  // Update department name display when ID changes
   useEffect(() => {
     if (!selectedDepartmentId || !Array.isArray(departments) || !departments.length) {
       return;
@@ -62,7 +61,9 @@ const CompanyDepartmentFields: React.FC = () => {
     setValue('department', value);
     if (Array.isArray(departments)) {
       const dept = departments.find(d => d && d.id === value);
-      setSelectedDepartmentName(dept?.name || '');
+      if (dept) {
+        setSelectedDepartmentName(dept.name || '');
+      }
     }
   };
 
@@ -76,7 +77,7 @@ const CompanyDepartmentFields: React.FC = () => {
             value={selectedCompany || ''}
             disabled={isLoadingCompanies}
           >
-            <SelectTrigger id="company">
+            <SelectTrigger id="company" className="bg-background">
               <SelectValue placeholder="Sélectionner une entreprise" />
             </SelectTrigger>
             <SelectContent>
@@ -101,6 +102,7 @@ const CompanyDepartmentFields: React.FC = () => {
             id="position"
             placeholder="Poste"
             {...register('position')}
+            className="bg-background"
           />
         </div>
       </div>
@@ -112,10 +114,10 @@ const CompanyDepartmentFields: React.FC = () => {
           value={selectedDepartmentId || ''}
           disabled={isLoadingDepartments || !selectedCompany}
         >
-          <SelectTrigger id="department">
+          <SelectTrigger id="department" className="bg-background">
             <SelectValue placeholder="Sélectionner un département" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-popover border">
             {Array.isArray(departments) && departments.length > 0 ? (
               departments.map((department) => (
                 department && department.id ? (
