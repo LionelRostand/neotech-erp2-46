@@ -7,6 +7,8 @@ import { Briefcase, Pencil, FileText } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
+import { exportEmployeePdf } from './utils/employeePdfUtils';
+import { toast } from 'sonner';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -60,6 +62,20 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     }
   };
 
+  const handleExportPdf = () => {
+    try {
+      const success = exportEmployeePdf(currentEmployee);
+      if (success) {
+        toast.success("Le profil a été exporté en PDF avec succès");
+      } else {
+        toast.error("Erreur lors de l'exportation du PDF");
+      }
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Erreur lors de l'exportation du PDF");
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
@@ -108,6 +124,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
           <Button
             variant="outline" 
             size="sm"
+            onClick={handleExportPdf}
           >
             <FileText className="h-4 w-4 mr-1" />
             Exporter PDF
