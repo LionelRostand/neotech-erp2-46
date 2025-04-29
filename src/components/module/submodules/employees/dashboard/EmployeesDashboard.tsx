@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, FileExport, Search, Eye } from 'lucide-react';
+import { Plus, FileText, Search, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -63,7 +62,7 @@ const EmployeesDashboard = () => {
   };
 
   // Handle export to PDF
-  const handleExportPdf = (employee: any) => {
+  const handleExportPdf = (employee) => {
     try {
       const success = exportEmployeePdf(employee);
       if (success) {
@@ -78,7 +77,7 @@ const EmployeesDashboard = () => {
   };
 
   // Handle view employee details
-  const handleViewEmployee = (employee: any) => {
+  const handleViewEmployee = (employee) => {
     navigate(`/modules/employees/profiles/${employee.id}`);
   };
 
@@ -86,7 +85,7 @@ const EmployeesDashboard = () => {
   const columns = [
     {
       header: "Nom",
-      cell: ({ row }: { row: { original: any } }) => {
+      cell: ({ row }) => {
         const employee = row.original;
         return (
           <div className="flex items-center space-x-3">
@@ -109,11 +108,11 @@ const EmployeesDashboard = () => {
     },
     {
       header: "Département",
-      cell: ({ row }: { row: { original: any } }) => row.original.department || 'Non spécifié'
+      cell: ({ row }) => row.original.department || 'Non spécifié'
     },
     {
       header: "Email",
-      cell: ({ row }: { row: { original: any } }) => {
+      cell: ({ row }) => {
         const employee = row.original;
         return (
           <div>
@@ -127,22 +126,30 @@ const EmployeesDashboard = () => {
     },
     {
       header: "Date d'embauche",
-      cell: ({ row }: { row: { original: any } }) => formatDate(row.original.hireDate)
+      cell: ({ row }) => formatDate(row.original.hireDate)
     },
     {
       header: "Statut",
-      cell: ({ row }: { row: { original: any } }) => getStatusBadge(row.original.status)
+      cell: ({ row }) => getStatusBadge(row.original.status)
     },
     {
       header: "Actions",
-      cell: ({ row }: { row: { original: any } }) => {
+      cell: ({ row }) => {
         return (
           <div className="flex space-x-2 justify-end">
-            <Button variant="ghost" size="icon" onClick={() => handleViewEmployee(row.original)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleViewEmployee(row.original)}
+            >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleExportPdf(row.original)}>
-              <FileExport className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleExportPdf(row.original)}
+            >
+              <FileText className="h-4 w-4" />
             </Button>
           </div>
         );
