@@ -39,11 +39,11 @@ const FormActions: React.FC<FormActionsProps> = ({
   // Ensure employees is always an array even if undefined
   useEffect(() => {
     if (employees && Array.isArray(employees) && employees.length > 0) {
-      const managerEmployees = employees.filter(emp => 
-        emp && (emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || ''))
-      );
+      // Afficher tous les employés au lieu de filtrer seulement les managers
+      const allEmployees = [...employees];
       
-      const sorted = [...managerEmployees].sort((a, b) => {
+      // Trier les employés par nom et prénom
+      const sorted = allEmployees.sort((a, b) => {
         const nameA = `${a?.lastName || ''} ${a?.firstName || ''}`.toLowerCase();
         const nameB = `${b?.lastName || ''} ${b?.firstName || ''}`.toLowerCase();
         return nameA.localeCompare(nameB);
