@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, FileText, Search, Eye } from 'lucide-react';
+import { Plus, FileExport, Search, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -19,29 +19,18 @@ const EmployeesDashboard = () => {
   const navigate = useNavigate();
   const { employees = [], isLoading } = useEmployeeData();
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Ensure employees is always an array to prevent "undefined.length" errors
-  const safeEmployees = Array.isArray(employees) ? employees : [];
-
-  // Filter employees based on search query (with null checks)
-  const filteredEmployees = safeEmployees.filter(employee => {
-    if (!employee) return false;
-
-    const firstName = (employee.firstName || '').toLowerCase();
-    const lastName = (employee.lastName || '').toLowerCase();
-    const position = (employee.position || '').toLowerCase();
-    const department = (employee.department || '').toLowerCase();
-    const query = searchQuery.toLowerCase();
-    
-    return firstName.includes(query) ||
-      lastName.includes(query) ||
-      position.includes(query) ||
-      department.includes(query);
-  });
+  
+  // Filter employees based on search query
+  const filteredEmployees = employees.filter((employee) => 
+    employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    employee.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    employee.position?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    employee.department?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Get status badge
-  const getStatusBadge = (status) => {
-    switch (status) {
+  const getStatusBadge = (status: string) => {
+    switch(status) {
       case 'active':
       case 'Actif':
         return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
@@ -54,39 +43,31 @@ const EmployeesDashboard = () => {
       case 'Suspendu':
         return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
       default:
-        return <Badge variant="outline">{status || 'Non défini'}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   // Format date helper
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     try {
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: fr });
     } catch (e) {
-      return dateString || '-';
+      return dateString;
     }
   };
 
   // Helper to get employee initials for avatar fallback
-  const getInitials = (employee) => {
-    if (!employee) return '';
-    const firstInitial = employee.firstName?.charAt(0) || '';
-    const lastInitial = employee.lastName?.charAt(0) || '';
-    return `${firstInitial}${lastInitial}`;
+  const getInitials = (employee: any) => {
+    return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
   };
 
   // Handle export to PDF
-  const handleExportPdf = (employee) => {
+  const handleExportPdf = (employee: any) => {
     try {
-      if (!employee) {
-        toast.error("Données de l'employé indisponibles");
-        return;
-      }
-      
       const success = exportEmployeePdf(employee);
       if (success) {
-        toast.success(`Fiche de ${employee.firstName || ''} ${employee.lastName || ''} exportée en PDF`);
+        toast.success(`Fiche de ${employee.firstName} ${employee.lastName} exportée en PDF`);
       } else {
         toast.error("Erreur lors de l'exportation du PDF");
       }
@@ -97,11 +78,7 @@ const EmployeesDashboard = () => {
   };
 
   // Handle view employee details
-  const handleViewEmployee = (employee) => {
-    if (!employee || !employee.id) {
-      toast.error("Identifiant d'employé indisponible");
-      return;
-    }
+  const handleViewEmployee = (employee: any) => {
     navigate(`/modules/employees/profiles/${employee.id}`);
   };
 
@@ -109,28 +86,22 @@ const EmployeesDashboard = () => {
   const columns = [
     {
       header: "Nom",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: any } }) => {
         const employee = row.original;
-        if (!employee) return <div>Données indisponibles</div>;
-        
         return (
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage 
                 src={employee.photoURL || employee.photo} 
-                alt={`${employee.firstName || ''} ${employee.lastName || ''}`} 
+                alt={`${employee.firstName} ${employee.lastName}`}
               />
               <AvatarFallback className="bg-primary/10 text-primary">
                 {getInitials(employee)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">
-                {employee.firstName || ''} {employee.lastName || ''}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {employee.position || 'Poste non spécifié'}
-              </div>
+              <div className="font-medium">{employee.firstName} {employee.lastName}</div>
+              <div className="text-xs text-muted-foreground">{employee.position}</div>
             </div>
           </div>
         );
@@ -138,21 +109,17 @@ const EmployeesDashboard = () => {
     },
     {
       header: "Département",
-      cell: ({ row }) => (row.original?.department || 'Non spécifié')
+      cell: ({ row }: { row: { original: any } }) => row.original.department || 'Non spécifié'
     },
     {
       header: "Email",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: any } }) => {
         const employee = row.original;
-        if (!employee) return 'Email indisponible';
-        
         return (
           <div>
-            <div>{employee.professionalEmail || employee.email || '-'}</div>
-            {employee.professionalEmail && employee.email && employee.email !== employee.professionalEmail && (
-              <div className="text-xs text-muted-foreground">
-                {employee.email}
-              </div>
+            <div>{employee.professionalEmail || employee.email}</div>
+            {employee.professionalEmail && employee.email !== employee.professionalEmail && (
+              <div className="text-xs text-muted-foreground">{employee.email}</div>
             )}
           </div>
         );
@@ -160,35 +127,22 @@ const EmployeesDashboard = () => {
     },
     {
       header: "Date d'embauche",
-      cell: ({ row }) => formatDate(row.original?.hireDate)
+      cell: ({ row }: { row: { original: any } }) => formatDate(row.original.hireDate)
     },
     {
       header: "Statut",
-      cell: ({ row }) => getStatusBadge(row.original?.status)
+      cell: ({ row }: { row: { original: any } }) => getStatusBadge(row.original.status)
     },
     {
       header: "Actions",
-      cell: ({ row }) => {
-        const employee = row.original;
-        if (!employee) return null;
-        
+      cell: ({ row }: { row: { original: any } }) => {
         return (
           <div className="flex space-x-2 justify-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleViewEmployee(employee)}
-              title="Voir les détails"
-            >
+            <Button variant="ghost" size="icon" onClick={() => handleViewEmployee(row.original)}>
               <Eye className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleExportPdf(employee)}
-              title="Exporter en PDF"
-            >
-              <FileText className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleExportPdf(row.original)}>
+              <FileExport className="h-4 w-4" />
             </Button>
           </div>
         );
@@ -206,16 +160,11 @@ const EmployeesDashboard = () => {
         </Button>
       </div>
       
-      {/* Only render cards if we have data or are still loading */}
-      {(safeEmployees.length > 0 || isLoading) && (
-        <EmployeesDashboardCards />
-      )}
+      <EmployeesDashboardCards />
       
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-700">
-            Derniers employés
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-700">Derniers employés</h2>
           <div className="relative w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input
