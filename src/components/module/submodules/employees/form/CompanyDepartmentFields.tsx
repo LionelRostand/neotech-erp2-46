@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const CompanyDepartmentFields: React.FC = () => {
   const { register, setValue, watch } = useFormContext();
@@ -72,28 +73,32 @@ const CompanyDepartmentFields: React.FC = () => {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="company">Entreprise</Label>
-          <Select
-            onValueChange={handleCompanyChange}
-            value={selectedCompany || ''}
-            disabled={isLoadingCompanies}
-          >
-            <SelectTrigger id="company" className="bg-background">
-              <SelectValue placeholder="Sélectionner une entreprise" />
-            </SelectTrigger>
-            <SelectContent>
-              {activeCompanies && activeCompanies.length > 0 ? (
-                activeCompanies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
+          {isLoadingCompanies ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Select
+              onValueChange={handleCompanyChange}
+              value={selectedCompany || ''}
+              disabled={isLoadingCompanies}
+            >
+              <SelectTrigger id="company" className="bg-background">
+                <SelectValue placeholder="Sélectionner une entreprise" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border z-50">
+                {activeCompanies && activeCompanies.length > 0 ? (
+                  activeCompanies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-company" disabled>
+                    Aucune entreprise disponible
                   </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-company" disabled>
-                  Aucune entreprise disponible
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+                )}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -109,30 +114,44 @@ const CompanyDepartmentFields: React.FC = () => {
 
       <div className="space-y-2">
         <Label htmlFor="department">Département</Label>
-        <Select
-          onValueChange={handleDepartmentChange}
-          value={selectedDepartmentId || ''}
-          disabled={isLoadingDepartments || !selectedCompany}
-        >
-          <SelectTrigger id="department" className="bg-background">
-            <SelectValue placeholder="Sélectionner un département" />
-          </SelectTrigger>
-          <SelectContent className="bg-popover border">
-            {Array.isArray(departments) && departments.length > 0 ? (
-              departments.map((department) => (
-                department && department.id ? (
-                  <SelectItem key={department.id} value={department.id}>
-                    {department.name || ''}
-                  </SelectItem>
-                ) : null
-              ))
-            ) : (
-              <SelectItem value="no-department" disabled>
-                {selectedCompany ? 'Aucun département disponible pour cette entreprise' : 'Sélectionnez d\'abord une entreprise'}
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select>
+        {isLoadingDepartments && selectedCompany ? (
+          <Skeleton className="h-10 w-full" />
+        ) : (
+          <Select
+            onValueChange={handleDepartmentChange}
+            value={selectedDepartmentId || ''}
+            disabled={isLoadingDepartments || !selectedCompany}
+          >
+            <SelectTrigger id="department" className="bg-background">
+              <SelectValue placeholder="Sélectionner un département" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border z-50 max-h-[300px]">
+              {Array.isArray(departments) && departments.length > 0 ? (
+                departments.map((department) => (
+                  department && department.id ? (
+                    <SelectItem 
+                      key={department.id} 
+                      value={department.id}
+                      className="flex items-center gap-2"
+                    >
+                      {department.name || ''}
+                      {department.color && (
+                        <span 
+                          className="w-3 h-3 rounded-full inline-block" 
+                          style={{ backgroundColor: department.color }}
+                        />
+                      )}
+                    </SelectItem>
+                  ) : null
+                ))
+              ) : (
+                <SelectItem value="no-department" disabled>
+                  {selectedCompany ? 'Aucun département disponible pour cette entreprise' : 'Sélectionnez d\'abord une entreprise'}
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        )}
       </div>
     </div>
   );

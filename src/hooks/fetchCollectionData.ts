@@ -23,8 +23,6 @@ export async function fetchCollectionData<T>(
   cacheTime: number = 10000 // 10 seconds default cache
 ): Promise<T[]> {
   try {
-    console.log(`Fetching from collection path: ${collectionPath}`);
-    
     // Generate a unique cache key based on collection path and constraints
     const cacheKey = `${collectionPath}-${JSON.stringify(constraints)}`;
     
