@@ -40,7 +40,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
       
       // Process each department with safety checks
       fetchedDepartments.forEach(dept => {
-        if (dept && dept.id && typeof dept.id === 'string') {
+        if (dept && typeof dept === 'object' && dept.id && typeof dept.id === 'string') {
           uniqueDepartments.set(dept.id, {
             ...dept,
             // Ensure all required fields exist
@@ -48,7 +48,8 @@ export const useFirebaseDepartments = (companyId?: string) => {
             description: dept.description || '',
             managerId: dept.managerId || '',
             companyId: dept.companyId || companyId || '',
-            color: dept.color || '#3b82f6'
+            color: dept.color || '#3b82f6',
+            employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : []
           });
         }
       });

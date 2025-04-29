@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Department } from '@/components/module/submodules/departments/types';
 
 export const useAvailableDepartments = (companyId?: string) => {
+  // Explicitly add default values to departments and isLoading to handle undefined cases
   const { departments = [], isLoading = false, error, refetch } = useFirebaseDepartments(companyId);
 
   // Ensure we have valid departments data with all required fields

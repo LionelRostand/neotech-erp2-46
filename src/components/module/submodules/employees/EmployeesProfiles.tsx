@@ -25,7 +25,7 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
   // Ensure employees is always a valid array
   const safeEmployees = Array.isArray(employees) ? employees : [];
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return "-";
     try {
       return format(new Date(dateStr), 'dd/MM/yyyy', { locale: fr });
@@ -166,12 +166,14 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
         />
       </div>
 
-      <EmployeeViewDialog
-        employee={selectedEmployee}
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        onUpdate={handleUpdateEmployee}
-      />
+      {selectedEmployee && (
+        <EmployeeViewDialog
+          employee={selectedEmployee}
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          onUpdate={handleUpdateEmployee}
+        />
+      )}
     </div>
   );
 };
