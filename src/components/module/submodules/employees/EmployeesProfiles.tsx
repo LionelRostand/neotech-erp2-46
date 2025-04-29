@@ -13,6 +13,7 @@ import EmployeesStats from './EmployeesStats';
 import EmployeeViewDialog from './EmployeeViewDialog';
 import { toast } from 'sonner';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading?: boolean }> = ({ 
   employees = [], 
@@ -74,21 +75,18 @@ const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading
         const employee = row.original || {};
         return (
           <div className="flex items-center gap-2">
-            <div className="flex-shrink-0 h-8 w-8">
-              {employee.photoUrl ? (
-                <img
-                  src={employee.photoUrl}
+            <Avatar className="h-8 w-8">
+              {employee.photoURL ? (
+                <AvatarImage 
+                  src={employee.photoURL} 
                   alt={`${employee.firstName || ''} ${employee.lastName || ''}`}
-                  className="rounded-full object-cover h-full w-full"
                 />
               ) : (
-                <div className="bg-gray-200 rounded-full h-full w-full flex items-center justify-center">
-                  <span className="text-xs font-medium">
-                    {(employee.firstName || '')[0]}{(employee.lastName || '')[0]}
-                  </span>
-                </div>
+                <AvatarFallback>
+                  {(employee.firstName?.[0] || '')}{(employee.lastName?.[0] || '')}
+                </AvatarFallback>
               )}
-            </div>
+            </Avatar>
             <div>
               <div className="font-medium">{employee.firstName || ''} {employee.lastName || ''}</div>
               <div className="text-sm text-gray-500">{employee.position || ''}</div>
@@ -104,8 +102,10 @@ const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading
     },
     {
       header: "Email",
-      accessorKey: "email",
-      cell: ({ row }) => row.original?.email || "-"
+      cell: ({ row }) => {
+        const employee = row.original;
+        return employee?.professionalEmail || employee?.email || "-";
+      }
     },
     {
       header: "Date d'embauche",

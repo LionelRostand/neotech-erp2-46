@@ -32,6 +32,7 @@ export const useEmployeeData = () => {
         firstName: employee.firstName || '',
         lastName: employee.lastName || '',
         email: employee.email || '',
+        professionalEmail: employee.professionalEmail || employee.email || '',
         status: employee.status || 'active',
         department: employee.department || '',
         position: employee.position || '',
