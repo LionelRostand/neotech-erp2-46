@@ -38,12 +38,14 @@ const FormActions: React.FC<FormActionsProps> = ({
   
   // Ensure employees is always an array even if undefined
   useEffect(() => {
-    if (employees && Array.isArray(employees) && employees.length > 0) {
-      // Afficher tous les employés au lieu de filtrer seulement les managers
+    // Guard against undefined or non-array employees
+    if (employees && Array.isArray(employees)) {
+      // Show all employees, no manager filtering
       const allEmployees = [...employees];
       
-      // Trier les employés par nom et prénom
+      // Sort employees by name and surname
       const sorted = allEmployees.sort((a, b) => {
+        // Safely handle potentially undefined lastName/firstName
         const nameA = `${a?.lastName || ''} ${a?.firstName || ''}`.toLowerCase();
         const nameB = `${b?.lastName || ''} ${b?.firstName || ''}`.toLowerCase();
         return nameA.localeCompare(nameB);
@@ -51,6 +53,7 @@ const FormActions: React.FC<FormActionsProps> = ({
       
       setSortedEmployees(sorted);
       
+      // Update form values if form is available
       if (form) {
         const position = form.getValues('position');
         const forceManager = form.getValues('forceManager');
@@ -93,8 +96,8 @@ const FormActions: React.FC<FormActionsProps> = ({
                 <SelectItem value="none">Aucun responsable</SelectItem>
                 {(sortedEmployees || []).map((employee) => (
                   <SelectItem 
-                    key={employee.id || `emp-${Math.random()}`} 
-                    value={employee.id || `emp-${Math.random()}`}
+                    key={employee?.id || `emp-${Math.random()}`} 
+                    value={employee?.id || `emp-${Math.random()}`}
                   >
                     {`${employee?.lastName || ''} ${employee?.firstName || ''}`.trim() || 'Employé sans nom'}
                   </SelectItem>

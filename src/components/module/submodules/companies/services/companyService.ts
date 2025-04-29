@@ -28,12 +28,14 @@ const determineCompanySize = (employeesCount: number): string => {
 class CompanyService {
   async getCompanies(filters?: CompanyFilters): Promise<{ companies: Company[] }> {
     try {
-      let q = collection(db, COLLECTIONS.COMPANIES);
+      const q = collection(db, COLLECTIONS.COMPANIES);
       
+      // Start with a basic query
       let queryRef = query(q);
       
       // Handle potentially undefined filters
       if (filters) {
+        // Only add valid filters
         if (filters.status) {
           queryRef = query(queryRef, where('status', '==', filters.status));
         }
@@ -56,34 +58,42 @@ class CompanyService {
         queryRef = query(queryRef, orderBy('name', 'asc'));
       }
       
-      const querySnapshot = await getDocs(queryRef || q);
+      const querySnapshot = await getDocs(queryRef);
       const companies: Company[] = [];
       
       for (const doc of querySnapshot.docs) {
-        const employeesQuery = query(
-          collection(db, COLLECTIONS.HR.EMPLOYEES),
-          where('company', '==', doc.id)
-        );
-        const employeesSnapshot = await getDocs(employeesQuery);
-        const employeesCount = employeesSnapshot.size;
-        
-        const companyData = doc.data();
-        const size = determineCompanySize(employeesCount);
-        
-        if (companyData.size !== size || companyData.employeesCount !== employeesCount) {
-          await updateDoc(doc.ref, {
-            size,
-            employeesCount,
-            updatedAt: serverTimestamp()
-          });
+        try {
+          const employeesQuery = query(
+            collection(db, COLLECTIONS.HR.EMPLOYEES),
+            where('company', '==', doc.id)
+          );
+          const employeesSnapshot = await getDocs(employeesQuery);
+          const employeesCount = employeesSnapshot.size;
+          
+          const companyData = doc.data();
+          const size = determineCompanySize(employeesCount);
+          
+          // Only update if the data exists
+          if (companyData) {
+            if (companyData.size !== size || companyData.employeesCount !== employeesCount) {
+              await updateDoc(doc.ref, {
+                size,
+                employeesCount,
+                updatedAt: serverTimestamp()
+              });
+            }
+            
+            companies.push({
+              id: doc.id,
+              ...companyData,
+              size,
+              employeesCount
+            } as Company);
+          }
+        } catch (docError) {
+          console.error(`Error processing company document ${doc.id}:`, docError);
+          // Continue with other documents even if one fails
         }
-        
-        companies.push({
-          id: doc.id,
-          ...companyData,
-          size,
-          employeesCount
-        } as Company);
       }
       
       return { companies };

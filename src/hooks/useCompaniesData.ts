@@ -14,7 +14,8 @@ export const useCompaniesData = () => {
       try {
         setIsLoading(true);
         const response = await companyService.getCompanies();
-        setCompanies(response.companies || []);
+        // Ensure we handle potentially undefined companies properly
+        setCompanies(response?.companies || []);
       } catch (err) {
         console.error("Error fetching companies:", err);
         setError(err instanceof Error ? err : new Error('Unknown error'));
@@ -28,7 +29,7 @@ export const useCompaniesData = () => {
   }, []);
 
   return {
-    companies,
+    companies: companies || [], // Ensure we always return an array even if companies is undefined
     isLoading,
     error
   };
