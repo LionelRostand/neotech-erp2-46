@@ -91,7 +91,7 @@ const EmployeesBadges: React.FC = () => {
     
     try {
       // Delete from Firebase using the correct function signature
-      await deleteDocument(badge.id);
+      await deleteDocument('HR.BADGES', badge.id);
       
       // Update local state
       setBadgesList(prev => prev.filter(b => b.id !== badge.id));

@@ -10,23 +10,15 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 const CompanyDepartmentFields = () => {
   const { register, setValue, watch } = useFormContext();
-  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
-  
-  const selectedCompany = watch('company');
-  const { departments, isLoading: isLoadingDepartments } = useFirebaseDepartments(selectedCompany);
+  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
   
   // Set the department field to empty when company changes
-  useEffect(() => {
-    if (selectedCompany) {
-      setValue('department', '');
-    }
-  }, [selectedCompany, setValue]);
-
+  const selectedCompany = watch('company');
+  
   return (
     <>
       <div className="space-y-2">
@@ -39,15 +31,8 @@ const CompanyDepartmentFields = () => {
             <SelectValue placeholder="Sélectionner une entreprise" />
           </SelectTrigger>
           <SelectContent>
-            {isLoadingCompanies ? (
-              <SelectItem value="loading" disabled>Chargement...</SelectItem>
-            ) : (
-              companies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))
-            )}
+            <SelectItem value="main">Entreprise principale</SelectItem>
+            <SelectItem value="subsidiary">Filiale</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -57,7 +42,6 @@ const CompanyDepartmentFields = () => {
         <Select 
           onValueChange={(value) => setValue('department', value)}
           value={watch('department') || ''}
-          disabled={!selectedCompany}
         >
           <SelectTrigger>
             <SelectValue placeholder="Sélectionner un département" />
@@ -65,7 +49,7 @@ const CompanyDepartmentFields = () => {
           <SelectContent>
             {isLoadingDepartments ? (
               <SelectItem value="loading" disabled>Chargement...</SelectItem>
-            ) : departments.length === 0 ? (
+            ) : !departments || departments.length === 0 ? (
               <SelectItem value="none" disabled>Aucun département disponible</SelectItem>
             ) : (
               departments.map((department) => (

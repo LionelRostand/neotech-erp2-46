@@ -9,7 +9,22 @@ export const useAvailableDepartments = () => {
 
   useEffect(() => {
     if (departments && Array.isArray(departments)) {
-      setAvailableDepartments(departments);
+      // Format departments to ensure they have required fields
+      const formattedDepartments = departments.map(dept => ({
+        id: dept.id || '',
+        name: dept.name || 'Département sans nom',
+        description: dept.description || '',
+        managerId: dept.managerId || '',
+        managerName: dept.managerName || '',
+        employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
+        employeesCount: dept.employeesCount || 0,
+        color: dept.color || '#3b82f6',
+        companyId: dept.companyId || ''
+      }));
+      
+      setAvailableDepartments(formattedDepartments);
+    } else {
+      setAvailableDepartments([]);
     }
   }, [departments]);
 
