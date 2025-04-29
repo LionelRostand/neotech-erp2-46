@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Pencil } from 'lucide-react';
+import { Briefcase, Pencil, FileText } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
@@ -85,15 +85,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                       {currentEmployee.position || 'Poste non spécifié'} @ {getCompanyName()}
                     </span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowEditDialog(true)}
-                    className="ml-2"
-                  >
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Modifier
-                  </Button>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -101,6 +92,24 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               </div>
             </div>
           </div>
+        </div>
+        
+        <div className="flex justify-end gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowEditDialog(true)}
+          >
+            <Pencil className="h-4 w-4 mr-1" />
+            Modifier
+          </Button>
+          <Button
+            variant="outline" 
+            size="sm"
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Exporter PDF
+          </Button>
         </div>
       </CardContent>
 
