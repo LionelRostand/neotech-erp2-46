@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { doc, getDoc, setDoc, collection, query, getDocs, deleteDoc } from 'firebase/firestore';
@@ -159,13 +160,14 @@ export const formatBadgeNumber = (employeeId: string, hireDate?: string): string
 };
 
 // Function to delete a document (used in EmployeesBadges.tsx)
-export const deleteDocument = async (collectionPath: string, documentId: string): Promise<boolean> => {
+export const deleteDocument = async (documentId: string): Promise<boolean> => {
   try {
-    const docRef = doc(db, collectionPath, documentId);
+    // Use the proper collection path from COLLECTIONS
+    const docRef = doc(db, COLLECTIONS.HR.BADGES, documentId);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
-    console.error(`Error deleting document from ${collectionPath}:`, error);
+    console.error(`Error deleting document from ${COLLECTIONS.HR.BADGES}:`, error);
     return false;
   }
 };

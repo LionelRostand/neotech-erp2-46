@@ -90,7 +90,7 @@ const EmployeesBadges: React.FC = () => {
     if (!badge || !badge.id) return;
     
     try {
-      // Delete from Firebase
+      // Delete from Firebase using the correct function signature
       await deleteDocument(badge.id);
       
       // Update local state
