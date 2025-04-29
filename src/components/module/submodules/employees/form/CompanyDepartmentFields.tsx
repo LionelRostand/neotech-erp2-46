@@ -1,178 +1,238 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Loader2, Building2, Users } from 'lucide-react';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { EmployeeFormValues } from './employeeFormSchema';
 
 const CompanyDepartmentFields: React.FC = () => {
-  const { register, setValue, watch } = useFormContext();
-  const selectedCompany = watch('company');
-  const [selectedDepartmentName, setSelectedDepartmentName] = useState<string>('');
+  const { control, watch, setValue, formState: { errors } } = useFormContext<EmployeeFormValues>();
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
   
-  // Utiliser useFirebaseCompanies pour récupérer les entreprises
-  const { companies = [], isLoading: isLoadingCompanies } = useFirebaseCompanies();
+  // Surveiller la valeur du champ entreprise
+  const selectedCompany = watch("company");
   
-  // Fetch departments avec le filtre d'entreprise sélectionnée
-  const { 
-    departments = [], 
-    isLoading: isLoadingDepartments,
-    refetchDepartments
-  } = useAvailableDepartments(selectedCompany);
+  // Utiliser le hook personnalisé pour obtenir les départements filtrés par entreprise
+  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments(selectedCompany);
   
-  // Watch for department changes
-  const selectedDepartmentId = watch('department');
-  
-  // Memoize the filtered companies to avoid re-renders
-  const activeCompanies = useMemo(() => {
-    if (!Array.isArray(companies)) return [];
-    return companies.filter(company => company && company.status === 'active');
-  }, [companies]);
-  
-  // Update department name display when ID changes
+  // Réinitialiser le département si l'entreprise change
   useEffect(() => {
-    if (!selectedDepartmentId || !Array.isArray(departments) || !departments.length) {
-      return;
+    if (selectedCompany) {
+      setValue("department", "");
     }
-    
-    const dept = departments.find(d => d && d.id === selectedDepartmentId);
-    if (dept) {
-      setSelectedDepartmentName(dept.name || '');
-    }
-  }, [selectedDepartmentId, departments]);
-
-  // Débogage pour vérifier les données des départements
-  useEffect(() => {
-    console.log("Available departments:", departments);
-    console.log("Selected department ID:", selectedDepartmentId);
-    console.log("Selected company ID:", selectedCompany);
-  }, [departments, selectedDepartmentId, selectedCompany]);
-
-  // Handle company change
-  const handleCompanyChange = (value: string) => {
-    setValue('company', value);
-    // Reset department when company changes
-    setValue('department', '');
-    setSelectedDepartmentName('');
-    
-    // Si nous avons un refetch pour les départements, l'appeler
-    if (typeof refetchDepartments === 'function') {
-      setTimeout(() => {
-        refetchDepartments();
-      }, 100);
-    }
-  };
-  
-  // Handle department change
-  const handleDepartmentChange = (value: string) => {
-    setValue('department', value);
-    if (Array.isArray(departments)) {
-      const dept = departments.find(d => d && d.id === value);
-      if (dept) {
-        setSelectedDepartmentName(dept.name || '');
-        console.log("Selected department:", dept);
-      }
-    }
-  };
+  }, [selectedCompany, setValue]);
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="company">Entreprise</Label>
-          {isLoadingCompanies ? (
-            <Skeleton className="h-10 w-full" />
-          ) : (
-            <Select
-              onValueChange={handleCompanyChange}
-              value={selectedCompany || ''}
-              disabled={isLoadingCompanies}
-            >
-              <SelectTrigger id="company" className="bg-background">
-                <SelectValue placeholder="Sélectionner une entreprise" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border z-[100]">
-                {activeCompanies && activeCompanies.length > 0 ? (
-                  activeCompanies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-company" disabled>
-                    Aucune entreprise disponible
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="company"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Entreprise</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isLoadingCompanies}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une entreprise" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  {isLoadingCompanies ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span>Chargement...</span>
+                    </div>
+                  ) : companies?.length > 0 ? (
+                    companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id} className="flex items-center">
+                        <div className="flex items-center">
+                          <Building2 className="h-4 w-4 mr-2 text-gray-500" />
+                          {company.name}
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>Aucune entreprise disponible</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="position">Poste</Label>
-          <Input
-            id="position"
-            placeholder="Poste"
-            {...register('position')}
-            className="bg-background"
-          />
-        </div>
+        <FormField
+          control={control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Département</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isLoadingDepartments || !selectedCompany}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue 
+                      placeholder={!selectedCompany 
+                        ? "Sélectionnez d'abord une entreprise" 
+                        : "Sélectionner un département"
+                      } 
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  {isLoadingDepartments ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span>Chargement...</span>
+                    </div>
+                  ) : !selectedCompany ? (
+                    <SelectItem value="none" disabled>Sélectionnez d'abord une entreprise</SelectItem>
+                  ) : departments?.length > 0 ? (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id} className="flex items-center">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-gray-500" />
+                          {dept.name}
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>Aucun département disponible pour cette entreprise</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="department">Département</Label>
-        {isLoadingDepartments && selectedCompany ? (
-          <Skeleton className="h-10 w-full" />
-        ) : (
-          <Select
-            onValueChange={handleDepartmentChange}
-            value={selectedDepartmentId || ''}
-            disabled={isLoadingDepartments || !selectedCompany}
-          >
-            <SelectTrigger id="department" className="bg-background">
-              <SelectValue placeholder="Sélectionner un département" />
-            </SelectTrigger>
-            <SelectContent 
-              className="bg-popover border z-[100] max-h-[300px]"
-              position="popper"
-            >
-              {Array.isArray(departments) && departments.length > 0 ? (
-                departments.map((department) => (
-                  department && department.id ? (
-                    <SelectItem 
-                      key={department.id} 
-                      value={department.id}
-                      className="flex items-center gap-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        {department.color && (
-                          <span 
-                            className="w-3 h-3 rounded-full inline-block" 
-                            style={{ backgroundColor: department.color || '#3b82f6' }}
-                          />
-                        )}
-                        <span>{department.name || ''}</span>
-                      </div>
-                    </SelectItem>
-                  ) : null
-                ))
-              ) : (
-                <SelectItem value="no-department" disabled>
-                  {selectedCompany ? 'Aucun département disponible pour cette entreprise' : 'Sélectionnez d\'abord une entreprise'}
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="position"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Poste</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Ex: Développeur Web" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="contract"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type de contrat</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type de contrat" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="cdi">CDI</SelectItem>
+                  <SelectItem value="cdd">CDD</SelectItem>
+                  <SelectItem value="interim">Intérim</SelectItem>
+                  <SelectItem value="freelance">Freelance</SelectItem>
+                  <SelectItem value="stage">Stage</SelectItem>
+                  <SelectItem value="alternance">Alternance</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statut</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="inactive">Inactif</SelectItem>
+                  <SelectItem value="onLeave">En congé</SelectItem>
+                  <SelectItem value="suspended">Suspendu</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="hireDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date d'embauche</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+  
+      <Separator />
+  
+      <div className="flex items-center space-x-2">
+        <FormField
+          control={control}
+          name="forceManager"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel className="font-normal">
+                Désigner comme responsable
+              </FormLabel>
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );
