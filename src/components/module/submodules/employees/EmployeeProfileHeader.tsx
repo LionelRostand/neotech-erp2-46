@@ -93,8 +93,10 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             </div>
           </div>
         </div>
-        
-        <div className="flex justify-end gap-2 mt-4">
+      </CardContent>
+
+      <div className="flex justify-end p-4 pt-0">
+        <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
@@ -111,7 +113,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             Exporter PDF
           </Button>
         </div>
-      </CardContent>
+      </div>
 
       <EditCompanyPositionDialog 
         open={showEditDialog}
