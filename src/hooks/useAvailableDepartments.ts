@@ -25,6 +25,7 @@ export const useAvailableDepartments = () => {
       
       setAvailableDepartments(formattedDepartments);
     } else {
+      console.log('No departments data available or invalid format');
       // If departments is not an array, set an empty array
       setAvailableDepartments([]);
     }
