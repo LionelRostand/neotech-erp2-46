@@ -40,8 +40,10 @@ const AppRoutes = () => {
           <Routes>
             {IndexRoutes}
             {SettingsRoutes}
-            {/* Add Profile route */}
+            
+            {/* Profile route */}
             <Route path="/profile" element={<UserProfile />} />
+            
             {/* Add other route groups here */}
             
             {/* Fallback redirect */}
