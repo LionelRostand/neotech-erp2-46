@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Department } from './types';
 import { DialogHeader, DialogTitle, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import EmployeesList from './EmployeesList';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { Employee } from '@/types/employee';
 
 interface ManageEmployeesDialogProps {
   department: Department;
@@ -22,6 +24,18 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onClose,
   onSave,
 }) => {
+  // Get employees data for display
+  const { employees } = useEmployeeData();
+  const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>([]);
+
+  // Filter employees to only show valid ones (with ID)
+  useEffect(() => {
+    if (employees && Array.isArray(employees)) {
+      const validEmployees = employees.filter(emp => emp && emp.id);
+      setDepartmentEmployees(validEmployees);
+    }
+  }, [employees]);
+
   const handleSubmit = async () => {
     try {
       const success = await onSave(department.id, department.name, selectedEmployees);
@@ -40,7 +54,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       </DialogHeader>
       <DialogContent className="max-h-[70vh] overflow-y-auto">
         <EmployeesList 
-          employees={[]} // We need to pass employees here
+          employees={departmentEmployees} 
           selectedEmployees={selectedEmployees} 
           onEmployeeSelection={onEmployeeSelection}
           id={`manage-employees-${department.id}`}

@@ -51,7 +51,10 @@ const FormActions: React.FC<FormActionsProps> = ({
         return nameA.localeCompare(nameB);
       });
       
-      setSortedEmployees(sorted);
+      // Filter out employees without valid IDs
+      const validEmployees = sorted.filter(emp => emp && emp.id);
+      
+      setSortedEmployees(validEmployees);
       
       // Update form values if form is available
       if (form) {
@@ -94,14 +97,23 @@ const FormActions: React.FC<FormActionsProps> = ({
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="none">Aucun responsable</SelectItem>
-                {(sortedEmployees || []).map((employee) => (
-                  <SelectItem 
-                    key={employee?.id || `emp-${Math.random()}`} 
-                    value={employee?.id || `emp-${Math.random()}`}
-                  >
-                    {`${employee?.lastName || ''} ${employee?.firstName || ''}`.trim() || 'Employé sans nom'}
-                  </SelectItem>
-                ))}
+                {(sortedEmployees || []).map((employee) => {
+                  // Ensure we only render SelectItems with valid (non-empty) values
+                  if (!employee?.id) return null;
+                  
+                  const displayName = `${employee?.lastName || ''} ${employee?.firstName || ''}`.trim();
+                  // Only render if we have a valid employee ID and name
+                  if (!employee.id || !displayName) return null;
+                  
+                  return (
+                    <SelectItem 
+                      key={employee.id} 
+                      value={employee.id}
+                    >
+                      {displayName || 'Employé sans nom'}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

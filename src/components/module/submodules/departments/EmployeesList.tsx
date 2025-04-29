@@ -39,8 +39,9 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
     <ScrollArea className="h-[300px] border rounded-md p-4">
       <div className="space-y-4">
         {employees.map((employee) => {
+          // Skip invalid employees or employees without an id
           if (!employee || !employee.id) {
-            return null; // Skip invalid employees
+            return null;
           }
           
           const isSelected = selectedEmployees.includes(employee.id);
