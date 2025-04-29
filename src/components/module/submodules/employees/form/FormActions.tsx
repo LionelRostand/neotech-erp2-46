@@ -36,16 +36,16 @@ const FormActions: React.FC<FormActionsProps> = ({
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
-  // Utiliser les données des employés dédupliquées depuis useEmployeeData
+  // Ensure employees is always an array even if undefined
   useEffect(() => {
-    if (employees && employees.length > 0) {
+    if (employees && Array.isArray(employees) && employees.length > 0) {
       const managerEmployees = employees.filter(emp => 
-        emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || '')
+        emp && (emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || ''))
       );
       
       const sorted = [...managerEmployees].sort((a, b) => {
-        const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
-        const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+        const nameA = `${a?.lastName || ''} ${a?.firstName || ''}`.toLowerCase();
+        const nameB = `${b?.lastName || ''} ${b?.firstName || ''}`.toLowerCase();
         return nameA.localeCompare(nameB);
       });
       
@@ -62,6 +62,8 @@ const FormActions: React.FC<FormActionsProps> = ({
           }
         }
       }
+    } else {
+      setSortedEmployees([]);
     }
   }, [employees, isLoadingEmployees, form]);
   
@@ -89,12 +91,12 @@ const FormActions: React.FC<FormActionsProps> = ({
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="none">Aucun responsable</SelectItem>
-                {sortedEmployees.map((employee) => (
+                {(sortedEmployees || []).map((employee) => (
                   <SelectItem 
-                    key={employee.id} 
-                    value={employee.id || 'fallback-id'}
+                    key={employee.id || `emp-${Math.random()}`} 
+                    value={employee.id || `emp-${Math.random()}`}
                   >
-                    {`${employee.lastName || ''} ${employee.firstName || ''}`.trim() || 'Employé sans nom'}
+                    {`${employee?.lastName || ''} ${employee?.firstName || ''}`.trim() || 'Employé sans nom'}
                   </SelectItem>
                 ))}
               </SelectContent>
