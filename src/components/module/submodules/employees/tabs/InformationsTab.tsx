@@ -37,23 +37,39 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   const contract = ensureString(employee.contract);
 
   // Format personal address
-  const personalAddress = typeof employee.address === 'object' && employee.address
-    ? `${employee.address.street || ''}, ${employee.address.city || ''}, ${employee.address.postalCode || ''}`
-    : typeof employee.address === 'string' ? employee.address : 
-      employee.streetNumber && employee.streetName 
-      ? `${employee.streetNumber} ${employee.streetName}` 
-      : '-';
+  let personalAddress = '-';
+  let personalCity = '-';
+  let personalPostalCode = '-';
+  let personalCountry = '-';
   
-  const personalCity = ensureString(employee.city);
-  const personalPostalCode = ensureString(employee.postalCode || employee.zipCode);
-  const personalCountry = ensureString(employee.country);
+  if (typeof employee.address === 'object' && employee.address) {
+    personalAddress = employee.address.street || '-';
+    personalCity = employee.address.city || '-';
+    personalPostalCode = employee.address.postalCode || '-';
+    personalCountry = employee.address.country || '-';
+  } else {
+    // Fallback to individual fields
+    const streetParts = [];
+    if (employee.streetNumber) streetParts.push(employee.streetNumber);
+    if (employee.streetName) streetParts.push(employee.streetName);
+    personalAddress = streetParts.length > 0 ? streetParts.join(' ') : '-';
+    personalCity = employee.city || '-';
+    personalPostalCode = employee.postalCode || employee.zipCode || '-';
+    personalCountry = employee.country || '-';
+  }
   
   // Format work address
-  const hasWorkAddress = employee.workAddress && typeof employee.workAddress === 'object';
-  const workStreet = hasWorkAddress ? ensureString(employee.workAddress.street) : '-';
-  const workCity = hasWorkAddress ? ensureString(employee.workAddress.city) : '-';
-  const workPostalCode = hasWorkAddress ? ensureString(employee.workAddress.postalCode) : '-';
-  const workCountry = hasWorkAddress ? ensureString(employee.workAddress.country) : '-';
+  let workStreet = '-';
+  let workCity = '-';
+  let workPostalCode = '-';
+  let workCountry = '-';
+  
+  if (employee.workAddress && typeof employee.workAddress === 'object') {
+    workStreet = employee.workAddress.street || '-';
+    workCity = employee.workAddress.city || '-';
+    workPostalCode = employee.workAddress.postalCode || '-';
+    workCountry = employee.workAddress.country || '-';
+  }
 
   return (
     <div className="space-y-6">

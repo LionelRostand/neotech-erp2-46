@@ -38,8 +38,19 @@ export const getEmployee = async (id: string): Promise<Employee | null> => {
 // Function to update an employee
 export const updateEmployee = async (id: string, data: Partial<EmployeeFormValues>): Promise<void> => {
   try {
+    console.log("Updating employee with data:", data);
+    
+    // Clean up any undefined or null values to prevent Firebase errors
+    const cleanedData: Record<string, any> = {};
+    
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        cleanedData[key] = value;
+      }
+    });
+    
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await updateDoc(docRef, data);
+    await updateDoc(docRef, cleanedData);
     console.log("Employee updated successfully!");
   } catch (error) {
     console.error("Error updating employee:", error);
@@ -71,8 +82,19 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
 // Function to create a new employee
 export const createEmployee = async (data: EmployeeFormValues): Promise<Employee | null> => {
   try {
+    console.log("Creating employee with data:", data);
+    
+    // Clean up any undefined or null values to prevent Firebase errors
+    const cleanedData: Record<string, any> = {};
+    
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        cleanedData[key] = value;
+      }
+    });
+    
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const docRef = await addDoc(collectionRef, data);
+    const docRef = await addDoc(collectionRef, cleanedData);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -100,7 +122,7 @@ export const deleteEmployee = async (id: string): Promise<void> => {
   }
 };
 
-// Add a function to update employee skills
+// Function to update employee skills
 export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<boolean> => {
   try {
     await updateEmployee(employeeId, { skills });
@@ -108,6 +130,67 @@ export const updateEmployeeSkills = async (employeeId: string, skills: any[]): P
     return true;
   } catch (error) {
     console.error("Error updating employee skills:", error);
+    throw error;
+  }
+};
+
+// Function to synchronize manager status
+export const syncManagerStatus = async (employeeData: Employee): Promise<boolean> => {
+  try {
+    if (employeeData.isManager) {
+      console.log(`Syncing manager status for ${employeeData.firstName} ${employeeData.lastName}`);
+      // Additional logic for manager synchronization can be added here
+    }
+    return true;
+  } catch (error) {
+    console.error("Error syncing manager status:", error);
+    return false;
+  }
+};
+
+// Function to update employee document with improved error handling
+export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Promise<Employee | null> => {
+  try {
+    console.log("Updating employee document:", id, data);
+    
+    // Clean up any undefined or null values to prevent Firebase errors
+    const cleanedData: Record<string, any> = {};
+    
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        // Handle nested objects like address and workAddress separately
+        if (key === 'address' || key === 'workAddress') {
+          if (typeof value === 'object' && !Array.isArray(value)) {
+            const nestedObj: Record<string, any> = {};
+            Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+              if (nestedValue !== undefined && nestedValue !== null) {
+                nestedObj[nestedKey] = nestedValue;
+              }
+            });
+            if (Object.keys(nestedObj).length > 0) {
+              cleanedData[key] = nestedObj;
+            }
+          }
+        } else {
+          cleanedData[key] = value;
+        }
+      }
+    });
+    
+    // Set updatedAt timestamp
+    cleanedData.updatedAt = new Date().toISOString();
+    
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    await updateDoc(docRef, cleanedData);
+    
+    // Return the updated document
+    const updatedDoc = await getDoc(docRef);
+    if (updatedDoc.exists()) {
+      return { id, ...updatedDoc.data() } as Employee;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error updating employee document:", error);
     throw error;
   }
 };

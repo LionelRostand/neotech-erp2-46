@@ -6,7 +6,7 @@ import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
 import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
 import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeaves";
 import EmployeesProfiles from "@/components/module/submodules/employees/EmployeesProfiles";
-import EmployeesHierarchy from "@/components/module/submodules/employees/EmployeesHierarchy";
+import EmployeesHierarchy from "@/components/module/submodules/employees/hierarchy/EmployeesHierarchy";
 import EmployeesRecruitment from "@/components/module/submodules/EmployeesRecruitment";
 import EmployeesBadges from "@/components/module/submodules/employees/EmployeesBadges";
 import EmployeesAttendance from "@/components/module/submodules/EmployeesAttendance";
@@ -21,13 +21,36 @@ import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
   const { employees = [], isLoading = true } = useEmployeeData();
   // Make sure we have a valid array of employees before rendering the component
   const safeEmployees = Array.isArray(employees) ? employees : [];
+  
+  console.log("Rendering EmployeesProfiles with", { 
+    employeesCount: safeEmployees.length, 
+    isLoading 
+  });
+  
   return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
+};
+
+// Helper component to pass props to EmployeesDepartments
+const EmployeesDepartmentsWithProps = () => {
+  const { departments = [], employees = [], isLoading = true } = useHrModuleData();
+  // Make sure we have valid arrays
+  const safeDepartments = Array.isArray(departments) ? departments : [];
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  
+  console.log("Rendering EmployeesDepartments with", { 
+    departmentsCount: safeDepartments.length,
+    employeesCount: safeEmployees.length,
+    isLoading 
+  });
+  
+  return <EmployeesDepartments departments={safeDepartments} employees={safeEmployees} />;
 };
 
 export const EmployeesRoutes = (
@@ -36,7 +59,7 @@ export const EmployeesRoutes = (
     <Route path="dashboard" element={<EmployeesDashboard />} />
     <Route path="profiles" element={<EmployeesProfilesWithProps />} />
     <Route path="badges" element={<EmployeesBadges />} />
-    <Route path="departments" element={<EmployeesDepartments />} />
+    <Route path="departments" element={<EmployeesDepartmentsWithProps />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />
     <Route path="attendance" element={<EmployeesAttendance />} />
     <Route path="timesheet" element={<EmployeesTimesheet />} />

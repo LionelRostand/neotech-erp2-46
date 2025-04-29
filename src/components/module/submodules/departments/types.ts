@@ -11,23 +11,17 @@ export interface Department {
   companyId?: string;
 }
 
-export interface DepartmentFormData {
-  id: string;
-  name: string;
-  description: string;
-  managerId: string;
-  companyId: string;
-  color: string;
-  employeeIds?: string[];
-}
-
 export const departmentColors = [
-  { label: "Bleu", value: "#3B82F6" },
-  { label: "Vert", value: "#22C55E" },
-  { label: "Rouge", value: "#EF4444" },
-  { label: "Jaune", value: "#F59E0B" },
-  { label: "Violet", value: "#8B5CF6" },
-  { label: "Rose", value: "#EC4899" },
-  { label: "Indigo", value: "#6366F1" },
-  { label: "Turquoise", value: "#06B6D4" }
+  '#3b82f6', // blue
+  '#ef4444', // red
+  '#10b981', // green
+  '#f97316', // orange
+  '#8b5cf6', // purple
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#f59e0b', // amber
+  '#6366f1', // indigo
+  '#14b8a6', // teal
+  '#d946ef', // fuchsia
+  '#84cc16'  // lime
 ];

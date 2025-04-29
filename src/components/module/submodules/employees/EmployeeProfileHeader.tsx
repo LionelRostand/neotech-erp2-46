@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Pencil } from 'lucide-react';
+import { Briefcase, Pencil, FileText } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
+import { exportEmployeePdf } from './utils/employeePdfUtils';
+import { toast } from 'sonner';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -60,6 +62,20 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     }
   };
 
+  const handleExportPdf = () => {
+    try {
+      const success = exportEmployeePdf(currentEmployee);
+      if (success) {
+        toast.success("Le profil a été exporté en PDF avec succès");
+      } else {
+        toast.error("Erreur lors de l'exportation du PDF");
+      }
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Erreur lors de l'exportation du PDF");
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
@@ -85,16 +101,12 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
                       {currentEmployee.position || 'Poste non spécifié'} @ {getCompanyName()}
                     </span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowEditDialog(true)}
-                    className="ml-2"
-                  >
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Modifier
-                  </Button>
                 </div>
+                {currentEmployee.professionalEmail && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {currentEmployee.professionalEmail}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {getStatusBadge()}
@@ -103,6 +115,27 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
           </div>
         </div>
       </CardContent>
+
+      <div className="flex justify-end p-4 pt-0">
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowEditDialog(true)}
+          >
+            <Pencil className="h-4 w-4 mr-1" />
+            Modifier
+          </Button>
+          <Button
+            variant="outline" 
+            size="sm"
+            onClick={handleExportPdf}
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Exporter PDF
+          </Button>
+        </div>
+      </div>
 
       <EditCompanyPositionDialog 
         open={showEditDialog}
