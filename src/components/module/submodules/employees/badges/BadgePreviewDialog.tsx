@@ -28,19 +28,30 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   // Early return with null if no badge is selected
   if (!isOpen || !selectedBadge) return null;
   
+  // Get company name from employee or use a default
   const companyName = getCompanyName(selectedEmployee);
   
   const handleDownloadBadge = () => {
-    const doc = generateBadgePdf(selectedBadge, selectedEmployee, companyName);
-    doc.save(`badge-${selectedBadge.id}.pdf`);
-    
-    toast.success("Badge téléchargé avec succès");
-    setIsPrinted(true);
+    try {
+      const doc = generateBadgePdf(selectedBadge, selectedEmployee, companyName);
+      doc.save(`badge-${selectedBadge.id}.pdf`);
+      
+      toast.success("Badge téléchargé avec succès");
+      setIsPrinted(true);
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du badge:", error);
+      toast.error("Erreur lors du téléchargement du badge");
+    }
   };
   
   const handlePrintBadge = () => {
-    handleDownloadBadge();
-    toast.success("Badge imprimé avec succès");
+    try {
+      handleDownloadBadge();
+      toast.success("Badge imprimé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de l'impression du badge:", error);
+      toast.error("Erreur lors de l'impression du badge");
+    }
   };
   
   return (
@@ -60,7 +71,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
           <BadgeActions 
             onDownload={handleDownloadBadge} 
             onPrint={handlePrintBadge} 
-            onDelete={onDeleteClick}
+            onDelete={selectedBadge ? () => onDeleteClick?.(selectedBadge) : undefined}
             badge={selectedBadge}
           />
         </div>

@@ -73,7 +73,6 @@ export const useHrModuleData = () => {
       
       setEmployees(processedEmployees);
     } else {
-      // If rawEmployees is undefined or not an array, set employees to empty array
       setEmployees([]);
     }
   }, [rawEmployees]);
@@ -93,7 +92,7 @@ export const useHrModuleData = () => {
               // Only has the id, create a basic company object
               companiesMap.set(companyId, {
                 id: companyId,
-                name: 'Entreprise',
+                name: 'Neotech Consulting',  // Default company name
                 address: {
                   street: '',
                   city: '',
@@ -121,7 +120,7 @@ export const useHrModuleData = () => {
               companiesMap.set(companyId, {
                 ...company,
                 id: companyId,
-                name: company.name || 'Entreprise',
+                name: company.name || 'Neotech Consulting',  // Default company name
                 address: company.address || {
                   street: '',
                   city: '',
@@ -148,16 +147,38 @@ export const useHrModuleData = () => {
       // Convert map to array
       setCompanies(Array.from(companiesMap.values()));
     } else {
-      setCompanies([]);
+      // If no employees with companies, create at least one default company
+      setCompanies([{
+        id: 'default-company',
+        name: 'Neotech Consulting',
+        address: {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: ''
+        },
+        siret: '',
+        logo: '',
+        logoUrl: '',
+        phone: '',
+        email: '',
+        website: '',
+        industry: '',
+        size: '',
+        status: 'active',
+        employeesCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }]);
     }
   }, [employees]);
 
   return {
-    employees: employees || [],
-    payslips: payslips || [],
-    contracts: contracts || [],
-    departments: departments || [],
-    companies: companies || [],
+    employees,
+    companies,
+    payslips,
+    contracts,
+    departments,
     leaveRequests: leaveRequests || [],
     attendance: attendance || [],
     absenceRequests: absenceRequests || [],

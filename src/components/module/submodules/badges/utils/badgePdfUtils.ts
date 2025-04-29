@@ -10,14 +10,14 @@ export const getCompanyName = (employee: Employee | null): string => {
   if (!employee) return 'Non spécifiée';
   
   if (typeof employee.company === 'string') {
-    return employee.company || 'Non spécifiée';
+    return 'Neotech Consulting'; // Default company name
   }
   
   if (employee.company && typeof employee.company === 'object') {
-    return employee.company.name || 'Non spécifiée';
+    return employee.company.name || 'Neotech Consulting';
   }
   
-  return 'Non spécifiée';
+  return 'Neotech Consulting';
 };
 
 /**

@@ -16,7 +16,7 @@ const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [badgesList, setBadgesList] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const { employees = [] } = useHrModuleData();
+  const { employees = [], companies = [] } = useHrModuleData();
   
   const [isBadgePreviewOpen, setIsBadgePreviewOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeData | null>(null);
