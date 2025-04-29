@@ -1,242 +1,240 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Employee } from '@/types/employee';
-import EmployeesList from './employees/EmployeesList';
-import EmployeeDetails from './employees/EmployeeDetails';
-import EmployeeForm from './employees/EmployeeForm';
+import { useQuery } from '@tanstack/react-query';
+import { Plus, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Employee } from '@/types/employee';
+import { getEmployees } from '@/components/module/submodules/employees/services/employeeService';
+import SubmoduleHeader from './SubmoduleHeader';
+import EmployeeViewDialog from './employees/EmployeeViewDialog';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { RefreshCw } from 'lucide-react';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import EmployeeForm from './employees/EmployeeForm';
+import EmployeeStats from './employees/EmployeesStats';
+import DeleteEmployeeDialog from './employees/DeleteEmployeeDialog';
 
-interface EmployeesProfilesProps {
-  employees?: Employee[];
-  searchQuery?: string;
-  setSearchQuery?: (query: string) => void;
-  onViewEmployee?: (employee: Employee) => void;
-  onEditEmployee?: (employee: Employee) => void;
-  onDeleteEmployee?: (employeeId: string) => void;
-  onOpenAddEmployee?: () => void;
-}
-
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
-  const { employees: fetchedEmployees, isLoading } = useEmployeeData();
-  const [searchQuery, setSearchQuery] = useState(props.searchQuery || '');
+const EmployeesProfiles: React.FC = () => {
+  const { employees, isLoading, departments } = useEmployeeData();
+  const { updateEmployee, deleteEmployee, isLoading: isActionLoading } = useEmployeeActions();
+  
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
-  const [isEditEmployeeOpen, setIsEditEmployeeOpen] = useState(false);
-  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
-  const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<string>('all');
-
-  useEffect(() => {
-    if (props.employees && props.employees.length > 0) {
-      setEmployees(props.employees);
-    } else if (fetchedEmployees) {
-      setEmployees(fetchedEmployees);
-    }
-  }, [props.employees, fetchedEmployees]);
-
-  const companies = [
-    { id: 'all', name: 'Toutes les entreprises' },
-    { id: 'enterprise1', name: 'Enterprise Solutions' },
-    { id: 'techinno', name: 'TechInnovation' },
-    { id: 'greenco', name: 'GreenCo' },
-  ];
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  // Filtre les employés en fonction de la recherche
+  const filteredEmployees = employees.filter(employee => {
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase()) || 
+           (employee.email && employee.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+           (employee.position && employee.position.toLowerCase().includes(searchQuery.toLowerCase()));
+  });
 
   const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
-  };
-
-  const handleAddEmployee = (newEmployee: Partial<Employee>) => {
-    if (!newEmployee.id) {
-      toast.error("Erreur: L'ID de l'employé est manquant");
-      return;
-    }
-    
-    console.log("Ajout d'un nouvel employé:", newEmployee);
-    
-    // Vérifier si l'employé existe déjà dans la liste locale
-    const existingIndex = employees.findIndex(emp => emp.id === newEmployee.id);
-    
-    if (existingIndex >= 0) {
-      // Mettre à jour l'employé existant dans la liste locale
-      const updatedEmployees = [...employees];
-      updatedEmployees[existingIndex] = { ...updatedEmployees[existingIndex], ...newEmployee } as Employee;
-      setEmployees(updatedEmployees);
-      toast.success("Employé mis à jour avec succès dans l'interface");
-    } else {
-      // Ajouter le nouvel employé à la liste locale
-      const employeeWithId = newEmployee as Employee;
-      const updatedEmployees = [...employees, employeeWithId];
-      setEmployees(updatedEmployees);
-      toast.success("Employé ajouté avec succès à l'interface");
-    }
-    
-    // Fermer le formulaire
-    setIsAddEmployeeOpen(false);
-    
-    // Si l'employé en cours d'affichage est celui qui a été modifié, mettre à jour la vue
-    if (selectedEmployee && selectedEmployee.id === newEmployee.id) {
-      setSelectedEmployee({ ...selectedEmployee, ...newEmployee } as Employee);
-    }
+    setIsViewDialogOpen(true);
   };
 
   const handleEditEmployee = (employee: Employee) => {
-    console.log('Édition de l\'employé:', employee);
-    setEmployeeToEdit(employee);
-    setIsEditEmployeeOpen(true);
+    setSelectedEmployee(employee);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDeleteClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
-    if (!employeeToEdit || !updatedEmployee.id) return;
+  const handleConfirmDelete = async () => {
+    if (!selectedEmployee) return;
     
-    console.log('Mise à jour de l\'employé:', updatedEmployee);
-    
-    // Mettre à jour l'employé dans la liste locale
-    const updatedEmployees = employees.map(emp => 
-      emp.id === updatedEmployee.id 
-        ? { ...emp, ...updatedEmployee } as Employee
-        : emp
-    );
-    
-    setEmployees(updatedEmployees);
-    
-    // Si l'employé est actuellement sélectionné, mettre à jour aussi
-    if (selectedEmployee && selectedEmployee.id === updatedEmployee.id) {
-      setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
-    }
-    
-    toast.success("Employé mis à jour avec succès dans l'interface");
-    setIsEditEmployeeOpen(false);
-    setEmployeeToEdit(null);
-  };
-
-  const handleDeleteEmployee = (employeeId: string) => {
-    // Supprimer l'employé de la liste locale
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
-    setEmployees(updatedEmployees);
-    
-    // Si l'employé supprimé est celui qui est affiché, revenir à la liste
-    if (selectedEmployee && selectedEmployee.id === employeeId) {
+    try {
+      await deleteEmployee(selectedEmployee.id);
+      toast.success(`${selectedEmployee.firstName} ${selectedEmployee.lastName} a été supprimé avec succès`);
+      setIsDeleteDialogOpen(false);
       setSelectedEmployee(null);
+    } catch (error) {
+      toast.error("Erreur lors de la suppression de l'employé");
+      console.error("Delete employee error:", error);
     }
-    
-    toast.success("Employé supprimé avec succès");
   };
 
-  const handleExportPdf = () => {
-    setIsPdfExportOpen(true);
-    setTimeout(() => {
-      setIsPdfExportOpen(false);
-    }, 1000);
+  const handleCreateEmployee = () => {
+    setIsCreateDialogOpen(true);
   };
 
-  // Filtrer les employés selon l'entreprise sélectionnée
-  const filteredEmployees = selectedCompany === 'all' 
-    ? employees 
-    : employees.filter(emp => emp.company === selectedCompany);
+  const handleUpdateEmployee = async (updatedEmployee: Partial<Employee>) => {
+    try {
+      await updateEmployee(updatedEmployee);
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error("Update employee error:", error);
+    }
+  };
+
+  const handleCreateSubmit = async (newEmployee: Partial<Employee>) => {
+    // La création d'employé est gérée ailleurs
+    setIsCreateDialogOpen(false);
+  };
 
   return (
     <div className="space-y-6">
-      {selectedEmployee ? (
-        <>
-          <div className="flex items-center mb-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => setSelectedEmployee(null)}
-              className="mr-2"
+      <SubmoduleHeader
+        title="Gestion des employés"
+        description="Gérez vos employés, consultez leurs profils et mettez à jour leurs informations."
+      />
+      
+      <EmployeeStats employees={employees} departments={departments} isLoading={isLoading} />
+      
+      <div className="flex items-center justify-between">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un employé..."
+            className="w-full pl-9 md:w-[300px]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-9 w-9 p-0"
+              onClick={() => setSearchQuery('')}
             >
-              <span className="mr-2">←</span> Retour à la liste
+              <X className="h-4 w-4" />
             </Button>
-          </div>
-          <EmployeeDetails 
-            employee={selectedEmployee} 
-            onExportPdf={handleExportPdf}
-            onEdit={() => handleEditEmployee(selectedEmployee)}
-          />
-        </>
+          )}
+        </div>
+        <Button onClick={handleCreateEmployee}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouvel employé
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-lg border p-4 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-gray-200" />
+                <div className="space-y-2">
+                  <div className="h-4 w-32 rounded bg-gray-200" />
+                  <div className="h-4 w-40 rounded bg-gray-200" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredEmployees.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-8 text-center">
+          <h3 className="text-lg font-medium">Aucun employé trouvé</h3>
+          <p className="text-muted-foreground mt-1">
+            {searchQuery
+              ? "Aucun employé ne correspond à votre recherche."
+              : "Commencez par ajouter un nouvel employé."}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <div className="text-md font-medium">Entreprise :</div>
-              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="space-y-4">
+          {filteredEmployees.map((employee) => (
+            <div
+              key={employee.id}
+              className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  {employee.photoURL ? (
+                    <img
+                      src={employee.photoURL}
+                      alt={`${employee.firstName} ${employee.lastName}`}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg font-medium">
+                      {employee.firstName.charAt(0)}
+                      {employee.lastName.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    {employee.firstName} {employee.lastName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {employee.position} {employee.department && `• ${employee.department}`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewEmployee(employee)}
+                >
+                  Voir
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditEmployee(employee)}
+                >
+                  Modifier
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => handleDeleteClick(employee)}
+                >
+                  Supprimer
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => {
-                  // Recharger les données depuis le hook
-                  setEmployees(fetchedEmployees);
-                  toast.success("Données des employés actualisées");
-                }}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Actualiser
-              </Button>
-              <Button 
-                variant="default" 
-                className="bg-green-500 hover:bg-green-600"
-                onClick={() => setIsAddEmployeeOpen(true)}
-              >
-                Nouvel employé
-              </Button>
-            </div>
-          </div>
-          
-          <EmployeesList
-            employees={filteredEmployees}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            onViewEmployee={handleViewEmployee}
-            onEditEmployee={handleEditEmployee}
-            onDeleteEmployee={handleDeleteEmployee}
-            loading={isLoading}
-          />
+          ))}
         </div>
       )}
 
-      <EmployeeForm 
-        open={isAddEmployeeOpen} 
-        onOpenChange={setIsAddEmployeeOpen} 
-        onSubmit={handleAddEmployee} 
+      {selectedEmployee && (
+        <EmployeeViewDialog
+          isOpen={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          employee={selectedEmployee}
+          onEdit={() => {
+            setIsViewDialogOpen(false);
+            setIsEditDialogOpen(true);
+          }}
+        />
+      )}
+
+      <EmployeeForm
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreateSubmit}
       />
 
-      {employeeToEdit && (
-        <EmployeeForm 
-          open={isEditEmployeeOpen}
-          onOpenChange={setIsEditEmployeeOpen}
+      {selectedEmployee && (
+        <EmployeeForm
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
           onSubmit={handleUpdateEmployee}
-          employee={employeeToEdit}
+          employee={selectedEmployee}
           isEditing={true}
         />
       )}
 
-      <Dialog open={isPdfExportOpen} onOpenChange={setIsPdfExportOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Export PDF en cours...</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center items-center p-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DeleteEmployeeDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        employee={selectedEmployee}
+        isDeleting={isActionLoading}
+      />
     </div>
   );
 };
