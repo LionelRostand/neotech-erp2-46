@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Employee, Department } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import useEmployeeActions from './hooks/useEmployeeActions';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +13,6 @@ import DeleteEmployeeDialog from './DeleteEmployeeDialog';
 import { toast } from 'sonner';
 import { useFirestore } from '@/hooks/useFirestore';
 import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
-import { useEmployeeData as useEmployeeDataHook } from '@/hooks/useEmployeeData';
 
 const EmployeesProfiles = () => {
   const { employees, departments, isLoading } = useEmployeeData();
@@ -23,7 +21,7 @@ const EmployeesProfiles = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const firestore = useFirestore('employees');
 
@@ -31,7 +29,7 @@ const EmployeesProfiles = () => {
     console.log('Employees loaded:', employees.length);
   }, [employees]);
 
-  const handleViewEmployee = (employee: Employee) => {
+  const handleViewEmployee = (employee) => {
     setSelectedEmployee(employee);
     setViewDialogOpen(true);
   };
@@ -44,14 +42,13 @@ const EmployeesProfiles = () => {
     setEditDialogOpen(true);
   };
 
-  const handleDeleteEmployee = (employee: Employee) => {
+  const handleDeleteEmployee = (employee) => {
     setSelectedEmployee(employee);
     setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!selectedEmployee) return;
-    
     try {
       setIsDeleting(true);
       await deleteEmployee(selectedEmployee.id);
@@ -65,9 +62,9 @@ const EmployeesProfiles = () => {
     }
   };
 
-  const handleAddSubmit = async (newEmployee: Partial<Employee>) => {
+  const handleAddSubmit = async (newEmployee) => {
     try {
-      await addEmployee(newEmployee as Employee);
+      await addEmployee(newEmployee);
       setAddDialogOpen(false);
       toast.success("Employé ajouté avec succès");
     } catch (error) {
@@ -76,11 +73,13 @@ const EmployeesProfiles = () => {
     }
   };
 
-  const handleEditSubmit = async (updatedEmployee: Partial<Employee>) => {
+  const handleEditSubmit = async (updatedEmployee) => {
     if (!selectedEmployee) return;
-    
     try {
-      await updateEmployee(selectedEmployee.id, updatedEmployee);
+      await updateEmployee({
+        ...updatedEmployee,
+        id: selectedEmployee.id
+      });
       setEditDialogOpen(false);
       toast.success("Employé mis à jour avec succès");
     } catch (error) {
@@ -89,9 +88,9 @@ const EmployeesProfiles = () => {
     }
   };
 
-  // Use employees from the main hook for display
-  const { employees: employeesForDashboard, departments: departmentsForDashboard, isLoading: loadingDashboard } = useEmployeeDataHook();
-
+  // We don't need to duplicate the data retrieval
+  // The same hook is already used above for employees and departments
+  
   return (
     <div className="space-y-8">
       <div className="mb-8">
@@ -99,18 +98,16 @@ const EmployeesProfiles = () => {
         <p className="text-muted-foreground">Statistiques et informations sur les employés de l'entreprise</p>
       </div>
 
-      <EmployeesDashboardCards 
-        employees={employeesForDashboard}
-      />
-
+      <EmployeesDashboardCards />
+      
+      {/* Employee list section */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold">Gestion des employés</h2>
-            <p className="text-muted-foreground">
-              Consultez, ajoutez, modifiez ou supprimez des employés
-            </p>
+            <p className="text-muted-foreground">Consultez, ajoutez, modifiez ou supprimez des employés</p>
           </div>
+          
           <Button onClick={handleAddEmployee}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter un employé
@@ -129,32 +126,41 @@ const EmployeesProfiles = () => {
                   <div className="flex flex-col items-center text-center">
                     <Avatar className="h-24 w-24 mb-4">
                       <AvatarImage src={employee.photo} />
-                      <AvatarFallback>{getInitials(`${employee.firstName} ${employee.lastName}`)}</AvatarFallback>
+                      <AvatarFallback>
+                        {getInitials(`${employee.firstName} ${employee.lastName}`)}
+                      </AvatarFallback>
                     </Avatar>
-                    <h3 className="font-semibold text-lg">{employee.firstName} {employee.lastName}</h3>
+                    <h3 className="font-semibold text-lg">
+                      {employee.firstName} {employee.lastName}
+                    </h3>
                     <p className="text-muted-foreground">{employee.position}</p>
                     {employee.company && (
                       <p className="text-sm text-muted-foreground">
-                        {typeof employee.company === 'string' 
-                          ? employee.company 
+                        {typeof employee.company === 'string'
+                          ? employee.company
                           : employee.company.name || 'Neotech Consulting'}
                       </p>
                     )}
                     <div className="flex justify-center mt-4 space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => handleViewEmployee(employee)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewEmployee(employee)}>
                         Voir
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => {
-                        setSelectedEmployee(employee);
-                        handleEditEmployee();
-                      }}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedEmployee(employee);
+                          handleEditEmployee();
+                        }}>
                         Modifier
                       </Button>
-                      <Button 
-                        variant="destructive" 
+                      <Button
+                        variant="destructive"
                         size="sm"
-                        onClick={() => handleDeleteEmployee(employee)}
-                      >
+                        onClick={() => handleDeleteEmployee(employee)}>
                         Supprimer
                       </Button>
                     </div>
@@ -191,7 +197,7 @@ const EmployeesProfiles = () => {
         />
       )}
 
-      <DeleteEmployeeDialog 
+      <DeleteEmployeeDialog
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
