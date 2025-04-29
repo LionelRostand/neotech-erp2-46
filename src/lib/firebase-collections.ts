@@ -124,4 +124,33 @@ export const COLLECTIONS = {
     VACCINATION: 'health/data/vaccination',
     INSURANCE: 'health/data/insurance',
   },
+  
+  // Messages module collections
+  MESSAGES: {
+    INBOX: 'messages/data/inbox',
+    SENT: 'messages/data/sent',
+    DRAFTS: 'messages/data/drafts',
+    ARCHIVE: 'messages/data/archive',
+    SCHEDULED: 'messages/data/scheduled',
+    CONTACTS: 'messages/data/contacts',
+    SETTINGS: 'messages/data/settings',
+    PERMISSIONS: 'messages/data/permissions',
+    TEMPLATES: 'messages/data/templates',
+    ATTACHMENTS: 'messages/data/attachments',
+    FOLDERS: 'messages/data/folders',
+    LABELS: 'messages/data/labels',
+  },
+  
+  // Document collections for referencing in document services
+  DOCUMENT_COLLECTIONS: {
+    FILES: 'documents/data/files',
+    FOLDERS: 'documents/data/folders',
+    TEMPLATES: 'documents/data/templates',
+    ARCHIVE: 'documents/data/archive',
+    SETTINGS: 'documents/data/settings',
+    PERMISSIONS: 'documents/data/permissions',
+    TAGS: 'documents/data/tags',
+    METADATA: 'documents/data/metadata',
+    SHARED: 'documents/data/shared',
+  }
 };
