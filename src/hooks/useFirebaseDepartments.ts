@@ -5,7 +5,7 @@ import { Department } from '@/components/module/submodules/departments/types';
 import { fetchCollectionData } from './fetchCollectionData';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
-// Cache for department data to reduce redundant fetches
+// Cache pour les données des départements afin de réduire les requêtes redondantes
 const departmentsCache = new Map<string, {
   data: Department[];
   timestamp: number;
@@ -32,20 +32,20 @@ export const useFirebaseDepartments = (companyId?: string) => {
 
   queryConstraints.push(orderBy('name', 'asc'));
   
-  // Generate cache key based on company id
+  // Générer une clé de cache basée sur l'ID de l'entreprise
   const cacheKey = companyId || 'all-departments';
   
   const fetchDepartments = useCallback(async () => {
-    // Prevent refetching with the same parameters or when component is unmounted
+    // Empêcher la récupération avec les mêmes paramètres ou lorsque le composant est démonté
     if (!isMounted.current || (hasInitialFetch.current && previousCompanyId.current === companyId)) {
       return;
     }
     
-    // Check cache first
+    // Vérifier d'abord le cache
     const cachedData = departmentsCache.get(cacheKey);
     const now = Date.now();
     
-    // Use cached data if available and less than 5 minutes old
+    // Utiliser les données en cache si disponibles et moins de 5 minutes
     if (cachedData && (now - cachedData.timestamp < 5 * 60 * 1000)) {
       console.log(`Using cached departments data for key: ${cacheKey}`);
       setDepartments(cachedData.data);
@@ -55,7 +55,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
       return;
     }
     
-    // If company ID changed, reset state before fetching
+    // Si l'ID de l'entreprise a changé, réinitialiser l'état avant la récupération
     if (previousCompanyId.current !== companyId) {
       setDepartments([]);
       previousCompanyId.current = companyId;
@@ -68,7 +68,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
       
       if (!isMounted.current) return;
       
-      // Validate and normalize the data
+      // Valider et normaliser les données
       const validDepartments = Array.isArray(fetchedDepartments) 
         ? fetchedDepartments
             .filter(dept => dept && typeof dept === 'object')
@@ -79,13 +79,14 @@ export const useFirebaseDepartments = (companyId?: string) => {
               managerId: dept.managerId || '',
               managerName: dept.managerName || '',
               companyId: dept.companyId || companyId || '',
+              companyName: dept.companyName || '',
               color: dept.color || '#3b82f6',
               employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
               employeesCount: typeof dept.employeesCount === 'number' ? dept.employeesCount : 0
             } as Department))
         : [];
       
-      // Update cache
+      // Mettre à jour le cache
       departmentsCache.set(cacheKey, {
         data: validDepartments,
         timestamp: now
@@ -100,7 +101,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
       console.error("Error fetching departments:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch departments"));
       
-      // Use expired cache as fallback if available
+      // Utiliser le cache expiré comme solution de repli si disponible
       if (cachedData) {
         console.log("Using expired cache as fallback");
         setDepartments(cachedData.data);
@@ -124,7 +125,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
   }, [fetchDepartments]);
   
   const refetch = useCallback(() => {
-    // Clear cache entry for this specific query
+    // Effacer l'entrée de cache pour cette requête spécifique
     departmentsCache.delete(cacheKey);
     hasInitialFetch.current = false;
     return fetchDepartments();

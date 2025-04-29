@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Department } from '../types';
 import { useDepartmentService } from '../services/departmentService';
@@ -18,7 +19,36 @@ export const useDepartmentOperations = () => {
     }
     
     try {
-      const departmentToSave = prepareDepartmentFromForm(formData, selectedEmployees, allEmployees, companies);
+      // Rechercher le manager sélectionné dans tous les employés
+      const selectedManager = formData.managerId && formData.managerId !== "none"
+        ? allEmployees.find(emp => emp.id === formData.managerId) 
+        : null;
+        
+      const managerName = selectedManager 
+        ? `${selectedManager.firstName} ${selectedManager.lastName}` 
+        : '';
+        
+      // Rechercher l'entreprise sélectionnée dans toutes les entreprises
+      const selectedCompany = formData.companyId && formData.companyId !== "none"
+        ? companies.find(comp => comp.id === formData.companyId)
+        : null;
+        
+      const companyName = selectedCompany 
+        ? selectedCompany.name
+        : '';
+      
+      // Préparer les données du département avec des informations supplémentaires
+      const departmentWithNames = {
+        ...formData,
+        managerName: managerName,
+        companyName: companyName,
+        employeeIds: selectedEmployees,
+        employeesCount: selectedEmployees.length
+      };
+      
+      console.log("Données complètes du département à enregistrer:", departmentWithNames);
+      
+      const departmentToSave = prepareDepartmentFromForm(departmentWithNames, selectedEmployees, allEmployees, companies);
       const success = await departmentService.createDepartment(departmentToSave);
       
       if (success) {
@@ -47,23 +77,27 @@ export const useDepartmentOperations = () => {
     try {
       console.log("Current department before update:", currentDepartment);
       
-      // Find the selected manager from all employees
+      // Rechercher le manager sélectionné dans tous les employés
       const selectedManager = formData.managerId && formData.managerId !== "none"
         ? allEmployees.find(emp => emp.id === formData.managerId) 
         : null;
-
+        
       const managerName = selectedManager 
         ? `${selectedManager.firstName} ${selectedManager.lastName}` 
-        : null;
+        : '';
       
-      // Find the selected company from all companies
+      // Rechercher l'entreprise sélectionnée dans toutes les entreprises
       const selectedCompany = formData.companyId && formData.companyId !== "none"
         ? companies.find(comp => comp.id === formData.companyId)
         : null;
         
       const companyName = selectedCompany 
         ? selectedCompany.name
-        : null;
+        : '';
+      
+      // Vous pouvez maintenant journaliser le manager trouvé
+      console.log("Manager sélectionné:", selectedManager);
+      console.log("Nom du manager:", managerName);
       
       // S'assurer que l'ID est conservé et que toutes les métadonnées sont préservées
       const departmentToUpdate: Department = {

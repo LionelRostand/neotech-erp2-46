@@ -20,19 +20,19 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onManageEmployees 
 }) => {
-  // Add defensive check for departments array
+  // Vérification défensive pour le tableau departments
   const validDepartments = React.useMemo(() => {
     if (!departments || !Array.isArray(departments)) {
       console.warn("Invalid departments data:", departments);
       return [];
     }
     
-    // Filter out invalid entries and deduplicate
+    // Filtrer les entrées invalides et dédupliquer
     const deptMap = new Map<string, Department>();
     
     departments.forEach(dept => {
       if (dept && dept.id && !deptMap.has(dept.id)) {
-        // Ensure all required properties exist
+        // S'assurer que toutes les propriétés requises existent
         const validDept = {
           ...dept,
           name: dept.name || 'Sans nom',
@@ -80,10 +80,20 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
           ) : (
             validDepartments.map((department) => (
               <TableRow key={department.id}>
-                <TableCell className="font-medium">{department.id}</TableCell>
-                <TableCell>{department.name}</TableCell>
+                <TableCell className="font-medium">{department.id.substring(0, 12)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    {department.color && (
+                      <span 
+                        className="w-3 h-3 rounded-full inline-block mr-2" 
+                        style={{ backgroundColor: department.color || '#3b82f6' }}
+                      />
+                    )}
+                    {department.name}
+                  </div>
+                </TableCell>
                 <TableCell>{department.description}</TableCell>
-                <TableCell>{department.managerName || 'N/A'}</TableCell>
+                <TableCell className="font-medium">{department.managerName || 'N/A'}</TableCell>
                 <TableCell>{department.companyName || 'N/A'}</TableCell>
                 <TableCell>{department.employeesCount || (department.employeeIds?.length || 0)}</TableCell>
                 <TableCell className="text-right">

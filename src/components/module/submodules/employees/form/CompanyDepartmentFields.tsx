@@ -25,7 +25,8 @@ const CompanyDepartmentFields: React.FC = () => {
   // Fetch departments avec le filtre d'entreprise sélectionnée
   const { 
     departments = [], 
-    isLoading: isLoadingDepartments 
+    isLoading: isLoadingDepartments,
+    refetchDepartments
   } = useAvailableDepartments(selectedCompany);
   
   // Watch for department changes
@@ -49,12 +50,26 @@ const CompanyDepartmentFields: React.FC = () => {
     }
   }, [selectedDepartmentId, departments]);
 
+  // Débogage pour vérifier les données des départements
+  useEffect(() => {
+    console.log("Available departments:", departments);
+    console.log("Selected department ID:", selectedDepartmentId);
+    console.log("Selected company ID:", selectedCompany);
+  }, [departments, selectedDepartmentId, selectedCompany]);
+
   // Handle company change
   const handleCompanyChange = (value: string) => {
     setValue('company', value);
     // Reset department when company changes
     setValue('department', '');
     setSelectedDepartmentName('');
+    
+    // Si nous avons un refetch pour les départements, l'appeler
+    if (typeof refetchDepartments === 'function') {
+      setTimeout(() => {
+        refetchDepartments();
+      }, 100);
+    }
   };
   
   // Handle department change
@@ -64,6 +79,7 @@ const CompanyDepartmentFields: React.FC = () => {
       const dept = departments.find(d => d && d.id === value);
       if (dept) {
         setSelectedDepartmentName(dept.name || '');
+        console.log("Selected department:", dept);
       }
     }
   };
@@ -84,7 +100,7 @@ const CompanyDepartmentFields: React.FC = () => {
               <SelectTrigger id="company" className="bg-background">
                 <SelectValue placeholder="Sélectionner une entreprise" />
               </SelectTrigger>
-              <SelectContent className="bg-popover border z-50">
+              <SelectContent className="bg-popover border z-[100]">
                 {activeCompanies && activeCompanies.length > 0 ? (
                   activeCompanies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
@@ -125,7 +141,10 @@ const CompanyDepartmentFields: React.FC = () => {
             <SelectTrigger id="department" className="bg-background">
               <SelectValue placeholder="Sélectionner un département" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border z-50 max-h-[300px]">
+            <SelectContent 
+              className="bg-popover border z-[100] max-h-[300px]"
+              position="popper"
+            >
               {Array.isArray(departments) && departments.length > 0 ? (
                 departments.map((department) => (
                   department && department.id ? (
@@ -134,13 +153,15 @@ const CompanyDepartmentFields: React.FC = () => {
                       value={department.id}
                       className="flex items-center gap-2"
                     >
-                      {department.name || ''}
-                      {department.color && (
-                        <span 
-                          className="w-3 h-3 rounded-full inline-block" 
-                          style={{ backgroundColor: department.color }}
-                        />
-                      )}
+                      <div className="flex items-center gap-2">
+                        {department.color && (
+                          <span 
+                            className="w-3 h-3 rounded-full inline-block" 
+                            style={{ backgroundColor: department.color || '#3b82f6' }}
+                          />
+                        )}
+                        <span>{department.name || ''}</span>
+                      </div>
                     </SelectItem>
                   ) : null
                 ))

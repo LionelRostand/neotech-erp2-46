@@ -39,6 +39,9 @@ const EmployeesDepartments: React.FC = () => {
     getDepartmentEmployees
   } = useDepartments();
 
+  // Débogage pour vérifier la présence de départements
+  console.log("Rendering EmployeesDepartments with", departments?.length, "departments");
+
   return (
     <div className="space-y-6">
       <DepartmentHeader onAddDepartment={handleAddDepartment} />
@@ -46,11 +49,17 @@ const EmployeesDepartments: React.FC = () => {
       <Card>
         <CardContent className="p-6">
           <DepartmentTable 
-            departments={departments}
+            departments={departments || []}
             loading={loading}
-            onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
+            onEditDepartment={(id) => {
+              const dept = departments.find(d => d.id === id);
+              if (dept) handleEditDepartment(dept);
+            }}
             onDeleteDepartment={handleDeleteDepartment}
-            onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
+            onManageEmployees={(id) => {
+              const dept = departments.find(d => d.id === id);
+              if (dept) handleManageEmployees(dept);
+            }}
           />
         </CardContent>
       </Card>
