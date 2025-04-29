@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, FileExport, Search, Eye } from 'lucide-react';
+import { Plus, FileText, Search, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -142,7 +141,7 @@ const EmployeesDashboard = () => {
               <Eye className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => handleExportPdf(row.original)}>
-              <FileExport className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
             </Button>
           </div>
         );
