@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Employee } from '@/types/employee';
@@ -13,7 +12,7 @@ import { updateEmployee, createEmployee } from './services/employeeService';
 import EmployeeForm from './EmployeeForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { EmployeeFilter } from './EmployeeFilter';
+import EmployeeFilter from './EmployeeFilter';
 
 export default function EmployeesProfiles() {
   const { employees, isLoading } = useEmployeeData();
