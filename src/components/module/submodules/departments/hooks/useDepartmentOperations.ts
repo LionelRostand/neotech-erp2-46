@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { collection, doc, updateDoc, getDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, updateDoc, getDoc, addDoc, deleteDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Department, DepartmentFormData } from '../types';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Employee } from '@/types/employee';
+import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 
 export const useDepartmentOperations = () => {
   const { refetch } = useFirebaseDepartments();
@@ -67,9 +68,8 @@ export const useDepartmentOperations = () => {
         }
       }
 
-      // Update the department
-      const departmentRef = doc(db, COLLECTIONS.HR.DEPARTMENTS, formData.id);
-      await updateDoc(departmentRef, {
+      // Use setDocument instead of updateDoc to handle the case where the document doesn't exist
+      await setDocument(COLLECTIONS.HR.DEPARTMENTS, formData.id, {
         name: formData.name,
         description: formData.description,
         managerId: formData.managerId || '',
@@ -78,7 +78,7 @@ export const useDepartmentOperations = () => {
         color: formData.color || '#3b82f6',
         employeeIds: selectedEmployeeIds,
         employeesCount: selectedEmployeeIds.length,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date().toISOString()
       });
 
       toast.success('Département mis à jour avec succès');
@@ -94,11 +94,11 @@ export const useDepartmentOperations = () => {
   // Save employee assignments
   const handleSaveEmployeeAssignments = useCallback(async (departmentId: string, departmentName: string, selectedEmployeeIds: string[]): Promise<boolean> => {
     try {
-      const departmentRef = doc(db, COLLECTIONS.HR.DEPARTMENTS, departmentId);
-      await updateDoc(departmentRef, {
+      // Use setDocument instead of updateDoc to handle the case where the document doesn't exist
+      await setDocument(COLLECTIONS.HR.DEPARTMENTS, departmentId, {
         employeeIds: selectedEmployeeIds,
         employeesCount: selectedEmployeeIds.length,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date().toISOString()
       });
 
       toast.success(`Employés assignés au département ${departmentName}`);

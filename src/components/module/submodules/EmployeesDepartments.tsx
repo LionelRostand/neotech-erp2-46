@@ -99,7 +99,7 @@ const EmployeesDepartments: React.FC = () => {
             department={currentDepartment}
             selectedEmployees={selectedEmployees}
             onEmployeeSelection={handleEmployeeSelection}
-            getDepartmentEmployees={(departmentId: string) => getDepartmentEmployees(departmentId)}
+            getDepartmentEmployees={getDepartmentEmployees}
             onClose={() => setIsManageEmployeesDialogOpen(false)}
             onSave={handleSaveEmployeeAssignments}
           />

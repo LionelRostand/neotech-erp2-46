@@ -1,18 +1,17 @@
 
-import React, { useEffect } from 'react';
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Department } from './types';
-import EmployeesList from './EmployeesList';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { DialogHeader, DialogTitle, DialogContent, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { EmployeesList } from './EmployeesList';
 
 interface ManageEmployeesDialogProps {
   department: Department;
   selectedEmployees: string[];
-  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
-  getDepartmentEmployees: (departmentId: string) => any[];
+  onEmployeeSelection: (employeeId: string, isSelected: boolean) => void;
+  getDepartmentEmployees: (departmentId: string) => string[];
   onClose: () => void;
-  onSave: () => void;
+  onSave: (departmentId: string, departmentName: string, selectedEmployeeIds: string[]) => Promise<boolean>;
 }
 
 const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
@@ -23,38 +22,37 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  const { employees } = useEmployeeData();
-
-  // Set selected employees based on department
-  useEffect(() => {
-    // This is just to ensure department employees are loaded
-    if (department && department.id) {
-      getDepartmentEmployees(department.id);
+  const handleSubmit = async () => {
+    try {
+      const success = await onSave(department.id, department.name, selectedEmployees);
+      if (success) {
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error saving employee assignments:', error);
     }
-  }, [department, getDepartmentEmployees]);
+  };
 
   return (
-    <DialogContent className="sm:max-w-[600px]">
+    <>
       <DialogHeader>
-        <DialogTitle>Gérer les employés: {department.name}</DialogTitle>
+        <DialogTitle>Gérer les employés - {department.name}</DialogTitle>
       </DialogHeader>
-      
-      <div className="py-4">
+      <DialogContent className="max-h-[70vh] overflow-y-auto">
         <EmployeesList 
-          employees={employees || []}
-          selectedEmployees={selectedEmployees}
+          selectedEmployees={selectedEmployees} 
           onEmployeeSelection={onEmployeeSelection}
-          id="manage"
         />
-      </div>
-      
-      <DialogFooter>
+      </DialogContent>
+      <DialogFooter className="flex justify-between">
         <Button variant="outline" onClick={onClose}>
           Annuler
         </Button>
-        <Button onClick={onSave}>Enregistrer</Button>
+        <Button onClick={handleSubmit}>
+          Enregistrer
+        </Button>
       </DialogFooter>
-    </DialogContent>
+    </>
   );
 };
 
