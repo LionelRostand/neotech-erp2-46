@@ -9,8 +9,6 @@ import { AuthRoutes } from './modules/authRoutes';
 import { IndexRoutes } from './modules/indexRoutes';
 import { SettingsRoutes } from './modules/settingsRoutes';
 // Import other route groups as needed
-import UserProfile from '@/pages/UserProfile';
-import NotFound from '@/pages/NotFound';
 
 // Loading component
 const LoadingScreen = () => (
@@ -40,14 +38,10 @@ const AppRoutes = () => {
           <Routes>
             {IndexRoutes}
             {SettingsRoutes}
-            
-            {/* Profile route */}
-            <Route path="/profile" element={<UserProfile />} />
-            
             {/* Add other route groups here */}
             
             {/* Fallback redirect */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ProtectedRoute>
       } />

@@ -5,27 +5,26 @@ import { useSidebarContext } from './SidebarContext';
 export const useSidebar = () => {
   const context = useSidebarContext();
   
-  // Add more functionality specific to useSidebar if needed
-  const { 
-    expandedModules, 
-    toggleModuleSubmenus, 
-    expandedCategories, 
-    toggleCategory, 
-    isActiveModule,
-    focusedSection, 
-    setFocusedSection 
-  } = context;
-  
-  // For backwards compatibility, we extract the sidebarOpen state from context
-  const sidebarOpen = true; // Default value
-  const toggleSidebar = () => {
-    // You might want to implement this based on your needs
-    console.log("Toggle sidebar functionality");
-  };
-  
-  return {
-    ...context,
-    sidebarOpen,
-    toggleSidebar
-  };
+  // Listen for the focus event from Welcome page
+  useEffect(() => {
+    const handleFocusInstalledApps = () => {
+      context.setFocusedSection('applications');
+      
+      // Scroll applications section into view if needed
+      setTimeout(() => {
+        const appsSection = document.getElementById('applications-section');
+        if (appsSection) {
+          appsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    };
+    
+    window.addEventListener('focusInstalledApps', handleFocusInstalledApps);
+    
+    return () => {
+      window.removeEventListener('focusInstalledApps', handleFocusInstalledApps);
+    };
+  }, [context]);
+
+  return context;
 };
