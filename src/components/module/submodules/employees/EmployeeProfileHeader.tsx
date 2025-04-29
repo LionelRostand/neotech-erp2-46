@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Pencil, FileText, Building } from 'lucide-react';
+import { Briefcase, Pencil, FileText } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
@@ -76,9 +76,6 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     }
   };
 
-  // Obtenir le nom de l'entreprise pour l'affichage
-  const companyName = getCompanyName();
-
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
@@ -97,17 +94,11 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-bold">{currentEmployee.firstName} {currentEmployee.lastName}</h2>
-                <div className="flex flex-col space-y-1">
+                <div className="flex items-center gap-2">
                   <div className="flex items-center text-muted-foreground">
                     <Briefcase className="h-4 w-4 mr-2" />
                     <span className="text-sm">
-                      {currentEmployee.position || 'Poste non spécifié'}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <Building className="h-4 w-4 mr-2" />
-                    <span className="text-sm font-medium">
-                      {companyName}
+                      {currentEmployee.position || 'Poste non spécifié'} @ {getCompanyName()}
                     </span>
                   </div>
                 </div>

@@ -91,8 +91,8 @@ const BadgePreview: React.FC<BadgePreviewProps> = ({
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
           <div className="space-y-1 text-sm">
-            <p><span className="font-medium">Email professionnel:</span> {employee.professionalEmail || employee.email || 'Non spécifié'}</p>
-            <p><span className="font-medium">Poste:</span> {employee.position || employee.title || 'Non spécifié'}</p>
+            <p><span className="font-medium">Email professionnel:</span> {employee.professionalEmail || 'Non spécifié'}</p>
+            <p><span className="font-medium">Poste:</span> {employee.position || 'Non spécifié'}</p>
           </div>
         </div>
       )}
