@@ -2,13 +2,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, FileExport, Search } from 'lucide-react';
+import { Plus, FileExport, Search, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import EmployeesDashboardCards from './EmployeesDashboardCards';
 import { DataTable } from '@/components/ui/data-table';
-import { Employee } from '@/types/employee';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { exportEmployeePdf } from './utils/employeePdfUtils';
@@ -20,19 +19,18 @@ const EmployeesDashboard = () => {
   const navigate = useNavigate();
   const { employees = [], isLoading } = useEmployeeData();
   const [searchQuery, setSearchQuery] = useState('');
-
+  
   // Filter employees based on search query
-  const filteredEmployees = employees.filter(
-    (employee) => 
-      employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      employee.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.department?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredEmployees = employees.filter((employee) => 
+    employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    employee.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    employee.position?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    employee.department?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Get status badge
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch(status) {
       case 'active':
       case 'Actif':
         return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
@@ -60,12 +58,12 @@ const EmployeesDashboard = () => {
   };
 
   // Helper to get employee initials for avatar fallback
-  const getInitials = (employee: Employee) => {
+  const getInitials = (employee: any) => {
     return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
   };
 
   // Handle export to PDF
-  const handleExportPdf = (employee: Employee) => {
+  const handleExportPdf = (employee: any) => {
     try {
       const success = exportEmployeePdf(employee);
       if (success) {
@@ -80,7 +78,7 @@ const EmployeesDashboard = () => {
   };
 
   // Handle view employee details
-  const handleViewEmployee = (employee: Employee) => {
+  const handleViewEmployee = (employee: any) => {
     navigate(`/modules/employees/profiles/${employee.id}`);
   };
 
@@ -88,14 +86,14 @@ const EmployeesDashboard = () => {
   const columns = [
     {
       header: "Nom",
-      cell: ({ row }: { row: { original: Employee } }) => {
+      cell: ({ row }: { row: { original: any } }) => {
         const employee = row.original;
         return (
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage 
                 src={employee.photoURL || employee.photo} 
-                alt={`${employee.firstName} ${employee.lastName}`} 
+                alt={`${employee.firstName} ${employee.lastName}`}
               />
               <AvatarFallback className="bg-primary/10 text-primary">
                 {getInitials(employee)}
@@ -107,15 +105,15 @@ const EmployeesDashboard = () => {
             </div>
           </div>
         );
-      },
+      }
     },
     {
       header: "Département",
-      cell: ({ row }: { row: { original: Employee } }) => row.original.department || 'Non spécifié',
+      cell: ({ row }: { row: { original: any } }) => row.original.department || 'Non spécifié'
     },
     {
       header: "Email",
-      cell: ({ row }: { row: { original: Employee } }) => {
+      cell: ({ row }: { row: { original: any } }) => {
         const employee = row.original;
         return (
           <div>
@@ -125,19 +123,19 @@ const EmployeesDashboard = () => {
             )}
           </div>
         );
-      },
+      }
     },
     {
       header: "Date d'embauche",
-      cell: ({ row }: { row: { original: Employee } }) => formatDate(row.original.hireDate),
+      cell: ({ row }: { row: { original: any } }) => formatDate(row.original.hireDate)
     },
     {
       header: "Statut",
-      cell: ({ row }: { row: { original: Employee } }) => getStatusBadge(row.original.status),
+      cell: ({ row }: { row: { original: any } }) => getStatusBadge(row.original.status)
     },
     {
       header: "Actions",
-      cell: ({ row }: { row: { original: Employee } }) => {
+      cell: ({ row }: { row: { original: any } }) => {
         return (
           <div className="flex space-x-2 justify-end">
             <Button variant="ghost" size="icon" onClick={() => handleViewEmployee(row.original)}>
@@ -148,8 +146,8 @@ const EmployeesDashboard = () => {
             </Button>
           </div>
         );
-      },
-    },
+      }
+    }
   ];
 
   return (
@@ -161,11 +159,9 @@ const EmployeesDashboard = () => {
           Ajouter un employé
         </Button>
       </div>
-
-      {/* Statistics Cards */}
+      
       <EmployeesDashboardCards />
-
-      {/* Recent Employees Section */}
+      
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-700">Derniers employés</h2>
