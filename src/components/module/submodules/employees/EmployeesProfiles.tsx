@@ -1,191 +1,286 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { Button } from '@/components/ui/button';
-import { PlusIcon, SearchIcon, FilterIcon } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee } from '@/types/employee';
-import { filterEmployees } from '@/components/module/submodules/employees/utils/employeeUtils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { PlusCircle, X, SearchIcon, Trash2, Edit, Eye } from 'lucide-react';
 import EmployeeViewDialog from './EmployeeViewDialog';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
+import EmployeeDeleteDialog from './EmployeeDeleteDialog';
+import { updateEmployee, createEmployee } from './services/employeeService';
+import EmployeeForm from './EmployeeForm';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { EmployeeFilter } from './EmployeeFilter';
 
-interface EmployeesProfilesProps {
-  // Add any props here
-}
+export default function EmployeesProfiles() {
+  const { employees, isLoading } = useEmployeeData();
+  const [search, setSearch] = useState('');
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [activeEmployee, setActiveEmployee] = useState<Employee | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    department: 'all',
+    status: 'all'
+  });
+  const queryClient = useQueryClient();
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ /* props */ }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  
-  const { employees, departments, isLoading, error } = useEmployeeData();
-  
-  const filteredEmployees = useMemo(() => {
-    return filterEmployees(employees, searchTerm, { 
-      status: statusFilter || undefined,
-      department: departmentFilter || undefined
-    });
-  }, [employees, searchTerm, statusFilter, departmentFilter]);
-  
-  const columns = useMemo(() => [
-    {
-      accessorKey: "firstName",
-      header: "Prénom",
-      cell: ({ row }) => row.original.firstName,
-    },
-    {
-      accessorKey: "lastName",
-      header: "Nom",
-      cell: ({ row }) => row.original.lastName,
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      cell: ({ row }) => row.original.email,
-    },
-    {
-      accessorKey: "position",
-      header: "Poste",
-      cell: ({ row }) => row.original.position,
-    },
-    {
-      accessorKey: "department",
-      header: "Département",
-      cell: ({ row }) => row.original.department,
-    },
-    {
-      accessorKey: "status",
-      header: "Statut",
-      cell: ({ row }) => (
-        <StatusBadge status={row.original.status || 'inactive'}>
-          {row.original.status || 'Inactive'}
-        </StatusBadge>
-      ),
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => setSelectedEmployee(row.original)}>
-            Voir
-          </Button>
-        </div>
-      ),
-    },
-  ], []);
-  
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  useEffect(() => {
+    if (!employees) return;
+
+    let filtered = [...employees];
+    
+    // Apply search filter
+    if (search.trim() !== '') {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        (employee) => 
+          employee.firstName?.toLowerCase().includes(searchLower) || 
+          employee.lastName?.toLowerCase().includes(searchLower) ||
+          employee.email?.toLowerCase().includes(searchLower) ||
+          employee.position?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply department filter
+    if (filters.department !== 'all') {
+      filtered = filtered.filter(
+        (employee) => 
+          employee.department === filters.department || 
+          employee.departmentId === filters.department
+      );
+    }
+    
+    // Apply status filter
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(
+        (employee) => employee.status === filters.status
+      );
+    }
+
+    setFilteredEmployees(filtered);
+  }, [employees, search, filters]);
+
+  const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
+    try {
+      await createEmployee(newEmployee);
+      toast.success("Nouvel employé créé avec succès");
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      setIsAddOpen(false);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      toast.error("Erreur lors de la création de l'employé");
+    }
   };
-  
-  const handleStatusFilter = (status: string | null) => {
-    setStatusFilter(status);
+
+  const handleUpdateEmployee = async (updatedEmployee: Partial<Employee>) => {
+    if (!activeEmployee?.id) return;
+
+    try {
+      await updateEmployee(activeEmployee.id, updatedEmployee);
+      toast.success("Employé mis à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      setIsEditOpen(false);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      toast.error("Erreur lors de la mise à jour de l'employé");
+    }
   };
-  
-  const handleDepartmentFilter = (department: string | null) => {
-    setDepartmentFilter(department);
+
+  const handleDeleteSuccess = () => {
+    // Refresh the employees list after successful deletion
+    queryClient.invalidateQueries({ queryKey: ['employees'] });
   };
-  
-  const clearFilters = () => {
-    setStatusFilter(null);
-    setDepartmentFilter(null);
-    setSearchTerm('');
+
+  const handleViewEmployee = (employee: Employee) => {
+    setActiveEmployee(employee);
+    setIsViewOpen(true);
   };
-  
-  if (isLoading) {
-    return <div>Chargement des employés...</div>;
-  }
-  
-  if (error) {
-    return <div>Erreur lors du chargement des employés: {error.message}</div>;
-  }
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Card>
-          <CardHeader>
-            <CardTitle>Liste des employés</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                type="text"
-                placeholder="Rechercher un employé..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="md:w-80"
-              />
-              <div className="flex items-center space-x-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <FilterIcon className="h-4 w-4 mr-2" />
-                      Filtrer
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleStatusFilter('active')}>
-                      Actif
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusFilter('inactive')}>
-                      Inactif
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusFilter('onLeave')}>
-                      En congé
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Marketing')}>
-                      Marketing
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Ventes')}>
-                      Ventes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDepartmentFilter('RH')}>
-                      RH
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Finance')}>
-                      Finance
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Réinitialiser
-                </Button>
-              </div>
+
+  const handleEditEmployee = (employee: Employee) => {
+    setActiveEmployee(employee);
+    setIsEditOpen(true);
+  };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    setActiveEmployee(employee);
+    setIsDeleteOpen(true);
+  };
+
+  const renderEmployee = (employee: Employee) => {
+    const status = {
+      active: "bg-green-100 text-green-800",
+      inactive: "bg-gray-100 text-gray-800",
+      onLeave: "bg-yellow-100 text-yellow-800",
+      Actif: "bg-green-100 text-green-800",
+      "En congé": "bg-yellow-100 text-yellow-800",
+      Suspendu: "bg-red-100 text-red-800",
+      Inactif: "bg-gray-100 text-gray-800"
+    }[employee.status] || "bg-gray-100 text-gray-800";
+
+    return (
+      <tr key={employee.id} className="hover:bg-gray-50">
+        <td className="px-4 py-2 whitespace-nowrap">
+          <div className="flex items-center">
+            <div className="h-10 w-10 flex-shrink-0">
+              {employee.photoURL || employee.photo ? (
+                <img
+                  className="h-10 w-10 rounded-full"
+                  src={employee.photoURL || employee.photo}
+                  alt=""
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                  {employee.firstName?.charAt(0)}{employee.lastName?.charAt(0)}
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <PlusIcon className="h-4 w-4 mr-2" />
+            <div className="ml-4">
+              <div className="font-medium text-gray-900">{employee.firstName} {employee.lastName}</div>
+              <div className="text-sm text-gray-500">{employee.email}</div>
+            </div>
+          </div>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap">
+          <div className="text-sm text-gray-900">{employee.position || "-"}</div>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap">
+          <div className="text-sm text-gray-900">{employee.department || "-"}</div>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap">
+          <span className={`inline-flex rounded-full px-2 text-xs font-semibold ${status}`}>
+            {employee.status}
+          </span>
+        </td>
+        <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium space-x-2">
+          <Button variant="ghost" size="sm" onClick={() => handleViewEmployee(employee)}>
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleEditEmployee(employee)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleDeleteEmployee(employee)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </td>
+      </tr>
+    );
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold">Employés</h1>
+        <Button onClick={() => setIsAddOpen(true)}>
+          <PlusCircle className="h-4 w-4 mr-2" />
           Ajouter un employé
         </Button>
       </div>
-      
-      <DataTable columns={columns} data={filteredEmployees} />
-      
-      {selectedEmployee && (
-        <EmployeeViewDialog 
-          open={true}
-          onOpenChange={() => setSelectedEmployee(null)}
-          employee={selectedEmployee}
+
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-grow">
+          <SearchIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Rechercher un employé..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+            >
+              <X className="h-4 w-4 text-gray-400" />
+            </button>
+          )}
+        </div>
+        <EmployeeFilter onFilterChange={setFilters} />
+      </div>
+
+      <div className="bg-white shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Employé
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Poste
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Département
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Statut
+                </th>
+                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-4">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees.map(renderEmployee)
+              ) : (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-gray-500">
+                    {search ? "Aucun employé ne correspond à votre recherche" : "Aucun employé trouvé"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <CreateEmployeeDialog
+          open={isAddOpen}
+          onOpenChange={setIsAddOpen}
+          onSubmit={handleAddEmployee}
         />
+      </Dialog>
+
+      {activeEmployee && (
+        <>
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <EmployeeForm 
+              employee={activeEmployee} 
+              isEditing={true}
+              onSubmit={handleUpdateEmployee}
+              onCancel={() => setIsEditOpen(false)}
+            />
+          </Dialog>
+
+          <EmployeeViewDialog
+            open={isViewOpen}
+            onOpenChange={setIsViewOpen}
+            employee={activeEmployee}
+          />
+
+          <EmployeeDeleteDialog
+            open={isDeleteOpen}
+            onOpenChange={setIsDeleteOpen}
+            employee={activeEmployee}
+            onSuccess={handleDeleteSuccess}
+          />
+        </>
       )}
-      
-      <CreateEmployeeDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
     </div>
   );
-};
-
-export default EmployeesProfiles;
+}

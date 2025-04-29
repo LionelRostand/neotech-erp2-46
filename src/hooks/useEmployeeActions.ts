@@ -73,6 +73,7 @@ export const useEmployeeActions = () => {
   const deleteEmployee = async (id: string): Promise<void> => {
     setIsLoading(true);
     try {
+      console.log("Deleting employee with ID:", id);
       await apiDeleteEmployee(id);
       
       toast.success("Employé supprimé avec succès");
