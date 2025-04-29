@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { useFirestoreCollectionData } from 'reactfire';
-import { collection, query, where } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Bell, MessageSquare } from 'lucide-react';
@@ -22,20 +21,38 @@ const getUnreadMessagesCount = (data: any[] | undefined): number => {
 };
 
 const TopBar: React.FC = () => {
-  // Using optional chaining to handle possible undefined COLLECTIONS.MESSAGES
-  const messagesCollection = COLLECTIONS.MESSAGES?.INBOX 
-    ? collection(db, COLLECTIONS.MESSAGES.INBOX)
-    : null;
+  const [unreadMessages, setUnreadMessages] = useState<any[]>([]);
   
-  // Only proceed with the query if the collection exists
-  const messagesQuery = messagesCollection 
-    ? query(messagesCollection, where('read', '==', false))
-    : null;
-  
-  // Handle the case where query might be null
-  const { data: unreadMessages = [] } = messagesQuery 
-    ? useFirestoreCollectionData(messagesQuery, { idField: 'id' })
-    : { data: [] };
+  useEffect(() => {
+    // Check if the MESSAGES collection exists in COLLECTIONS
+    if (!COLLECTIONS.MESSAGES?.INBOX) {
+      console.warn('MESSAGES.INBOX path not found in COLLECTIONS');
+      return;
+    }
+    
+    const messagesCollection = collection(db, COLLECTIONS.MESSAGES.INBOX);
+    const messagesQuery = query(messagesCollection, where('read', '==', false));
+    
+    // Set up a listener for unread messages
+    const unsubscribe = onSnapshot(
+      messagesQuery,
+      (snapshot) => {
+        const messages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setUnreadMessages(messages);
+      },
+      (error) => {
+        console.error('Error fetching unread messages:', error);
+        // In case of error, just set empty array to avoid UI issues
+        setUnreadMessages([]);
+      }
+    );
+    
+    // Clean up the listener when component unmounts
+    return () => unsubscribe();
+  }, []);
   
   const unreadCount = getUnreadMessagesCount(unreadMessages);
 
