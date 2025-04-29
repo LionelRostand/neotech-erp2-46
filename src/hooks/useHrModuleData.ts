@@ -92,7 +92,7 @@ export const useHrModuleData = () => {
               // Only has the id, create a basic company object
               companiesMap.set(companyId, {
                 id: companyId,
-                name: 'Neotech Consulting',  // Default company name
+                name: 'Entreprise',
                 address: {
                   street: '',
                   city: '',
@@ -120,7 +120,7 @@ export const useHrModuleData = () => {
               companiesMap.set(companyId, {
                 ...company,
                 id: companyId,
-                name: company.name || 'Neotech Consulting',  // Default company name
+                name: company.name || 'Entreprise',
                 address: company.address || {
                   street: '',
                   city: '',
@@ -147,38 +147,16 @@ export const useHrModuleData = () => {
       // Convert map to array
       setCompanies(Array.from(companiesMap.values()));
     } else {
-      // If no employees with companies, create at least one default company
-      setCompanies([{
-        id: 'default-company',
-        name: 'Neotech Consulting',
-        address: {
-          street: '',
-          city: '',
-          postalCode: '',
-          country: ''
-        },
-        siret: '',
-        logo: '',
-        logoUrl: '',
-        phone: '',
-        email: '',
-        website: '',
-        industry: '',
-        size: '',
-        status: 'active',
-        employeesCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }]);
+      setCompanies([]);
     }
   }, [employees]);
 
   return {
     employees,
-    companies,
     payslips,
     contracts,
     departments,
+    companies,
     leaveRequests: leaveRequests || [],
     attendance: attendance || [],
     absenceRequests: absenceRequests || [],
@@ -186,7 +164,7 @@ export const useHrModuleData = () => {
     timeSheets: timeSheets || [],
     evaluations: evaluations || [],
     trainings: trainings || [],
-    hrReports: hrReports || [],
+    hrReports: hrReports || [], 
     hrAlerts: hrAlerts || [],
     isLoading,
     error

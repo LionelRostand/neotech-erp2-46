@@ -7,10 +7,10 @@ import { Employee } from '@/types/employee';
  * Get company name from employee data
  */
 export const getCompanyName = (employee: Employee | null): string => {
-  if (!employee) return 'Non spécifiée';
+  if (!employee) return 'Neotech Consulting';
   
   if (typeof employee.company === 'string') {
-    return 'Neotech Consulting'; // Default company name
+    return employee.company || 'Neotech Consulting';
   }
   
   if (employee.company && typeof employee.company === 'object') {
@@ -65,8 +65,8 @@ export const generateBadgePdf = (
   doc.setFontSize(8);
   doc.text(`Département: ${badge.department || 'N/A'}`, 10, 38);
   doc.text(`Niveau d'accès: ${badge.accessLevel || 'Standard'}`, 10, 44);
-  doc.text(`Statut: ${badge.statusText}`, 10, 50);
-  doc.text(`Date d'émission: ${badge.date}`, 10, 56);
+  doc.text(`Statut: ${badge.statusText || 'N/A'}`, 10, 50);
+  doc.text(`Date d'émission: ${badge.date || 'N/A'}`, 10, 56);
   
   // Add extra employee info if available
   if (employee) {
