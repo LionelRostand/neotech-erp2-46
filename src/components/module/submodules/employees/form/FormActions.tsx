@@ -90,7 +90,10 @@ const FormActions: React.FC<FormActionsProps> = ({
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="none">Aucun responsable</SelectItem>
                 {sortedEmployees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id || 'fallback-id'}>
+                  <SelectItem 
+                    key={employee.id} 
+                    value={employee.id || 'fallback-id'}
+                  >
                     {`${employee.lastName || ''} ${employee.firstName || ''}`.trim() || 'Employé sans nom'}
                   </SelectItem>
                 ))}
