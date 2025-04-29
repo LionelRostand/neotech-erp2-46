@@ -1,99 +1,151 @@
 
-import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import EmployeeProfileHeader from './EmployeeProfileHeader';
-import InformationsTab from './tabs/InformationsTab';
-import DocumentsTab from './tabs/DocumentsTab';
-import CompetencesTab from './tabs/CompetencesTab';
-import HorairesTab from './tabs/HorairesTab';
-import CongesTab from './tabs/CongesTab';
-import EvaluationsTab from './tabs/EvaluationsTab';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/utils';
+import { FilePdf, FileText, Mail, Phone } from 'lucide-react';
+import { exportEmployeePdf } from './utils/employeePdfUtils';
+import { toast } from 'sonner';
 
-interface EmployeeViewDialogProps {
-  employee: Employee;
+export interface EmployeeViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate?: (employee: Partial<Employee>) => void;
+  employee: Employee;
+  onEdit: () => void;
 }
 
-const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({ 
-  employee, 
-  open, 
+const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
+  open,
   onOpenChange,
-  onUpdate 
+  employee,
+  onEdit
 }) => {
-  const [activeTab, setActiveTab] = useState("informations");
-  // Fetch departments to get department names
-  const { departments } = useAvailableDepartments();
-  
-  // Prepare employee data with full department name
-  const enhancedEmployee = React.useMemo(() => {
-    // Find the department from departments list if it exists
-    const employeeDepartment = departments?.find(dept => 
-      dept.id === employee.department || 
-      dept.id === employee.departmentId
-    );
-    
-    return {
-      ...employee,
-      departmentName: employeeDepartment?.name || employee.department || 'Département non spécifié'
-    };
-  }, [employee, departments]);
+  const handleExportPdf = () => {
+    try {
+      const success = exportEmployeePdf(employee);
+      if (success) {
+        toast.success('PDF exporté avec succès');
+      } else {
+        toast.error('Erreur lors de l\'exportation du PDF');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Erreur lors de l\'exportation du PDF');
+    }
+  };
+
+  if (!employee) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Fiche employé</DialogTitle>
+          <DialogTitle>Fiche employé</DialogTitle>
+          <DialogDescription>
+            Informations détaillées sur l'employé
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-6">
-          <EmployeeProfileHeader 
-            employee={enhancedEmployee} 
-            onEmployeeUpdate={onUpdate} 
-          />
-          
-          <Tabs 
-            value={activeTab} 
-            onValueChange={setActiveTab} 
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full">
-              <TabsTrigger value="informations">Informations</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="compétences">Compétences</TabsTrigger>
-              <TabsTrigger value="horaires">Horaires</TabsTrigger>
-              <TabsTrigger value="congés">Congés</TabsTrigger>
-              <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
-            </TabsList>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+          {/* Left column - Photo and basic info */}
+          <div className="flex flex-col items-center text-center space-y-4">
+            <Avatar className="h-32 w-32">
+              <AvatarImage src={employee.photo || employee.photoURL} />
+              <AvatarFallback className="text-xl">
+                {getInitials(`${employee.firstName} ${employee.lastName}`)}
+              </AvatarFallback>
+            </Avatar>
             
-            <TabsContent value="informations">
-              <InformationsTab employee={enhancedEmployee} />
-            </TabsContent>
-            <TabsContent value="documents">
-              <DocumentsTab employee={enhancedEmployee} />
-            </TabsContent>
-            <TabsContent value="compétences">
-              <CompetencesTab employee={enhancedEmployee} />
-            </TabsContent>
-            <TabsContent value="horaires">
-              <HorairesTab employee={enhancedEmployee} />
-            </TabsContent>
-            <TabsContent value="congés">
-              <CongesTab employee={enhancedEmployee} />
-            </TabsContent>
-            <TabsContent value="evaluations">
-              <EvaluationsTab employee={enhancedEmployee} />
-            </TabsContent>
-          </Tabs>
+            <div>
+              <h3 className="text-xl font-bold">{employee.firstName} {employee.lastName}</h3>
+              <p className="text-muted-foreground">{employee.position}</p>
+              {employee.company && (
+                <p className="text-sm text-muted-foreground">
+                  {typeof employee.company === 'string' ? employee.company : employee.company.name}
+                </p>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                Modifier
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportPdf}>
+                <FilePdf className="h-4 w-4 mr-1" />
+                PDF
+              </Button>
+            </div>
+          </div>
+          
+          {/* Right column - Detailed info */}
+          <div className="col-span-2 space-y-6">
+            {/* Contact info */}
+            <div>
+              <h4 className="font-medium border-b pb-2 mb-3">Contact</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{employee.email}</span>
+                </div>
+                {employee.professionalEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{employee.professionalEmail}</span>
+                  </div>
+                )}
+                {employee.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{employee.phone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Employment info */}
+            <div>
+              <h4 className="font-medium border-b pb-2 mb-3">Information professionnelle</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Département</p>
+                  <p>{employee.department}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Statut</p>
+                  <p>{employee.status}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Contrat</p>
+                  <p>{employee.contract}</p>
+                </div>
+                {employee.hireDate && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date d'embauche</p>
+                    <p>{new Date(employee.hireDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Documents section */}
+            <div>
+              <h4 className="font-medium border-b pb-2 mb-3">Documents</h4>
+              {employee.documents && employee.documents.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {employee.documents.map((doc, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>{doc.name || 'Document'}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Aucun document disponible</p>
+              )}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
