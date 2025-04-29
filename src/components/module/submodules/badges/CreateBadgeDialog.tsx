@@ -6,21 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { BadgeData, generateBadgeNumber } from '../employees/badges/BadgeTypes';
-import { Employee } from '@/types/employee';
+import { employees } from '@/data/employees';
+import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onBadgeCreated: (badge: BadgeData) => void;
-  employees?: Employee[];
 }
 
 const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({ 
   isOpen, 
   onOpenChange, 
-  onBadgeCreated,
-  employees = []
+  onBadgeCreated 
 }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
@@ -43,12 +41,13 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     // Create a new badge
     const newBadge: BadgeData = {
       id: badgeNumber,
+      date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      badgeNumber: badgeNumber,
-      issueDate: new Date().toISOString().split('T')[0],
-      status: 'active',
-      accessLevels: [accessLevel]
+      department: employee.department,
+      accessLevel: accessLevel,
+      status: "success",
+      statusText: "Actif"
     };
     
     // Callback to add the badge
@@ -70,9 +69,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     resetForm();
     onOpenChange(false);
   };
-
-  // Make sure employees is an array
-  const safeEmployees = Array.isArray(employees) ? employees : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -99,7 +95,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none" disabled>Sélectionner un employé</SelectItem>
-                  {safeEmployees.map((employee) => (
+                  {employees.map((employee) => (
                     <SelectItem 
                       key={employee.id} 
                       value={`${employee.firstName} ${employee.lastName}|${employee.id}`}

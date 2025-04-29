@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { BadgeIcon, Plus, RefreshCw } from 'lucide-react';
+import { Badge as BadgeIcon, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
@@ -20,9 +19,9 @@ const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [badgesList, setBadgesList] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const { employees = [] } = useHrModuleData();
+  const { employees } = useHrModuleData();
   const { isAdmin } = usePermissions('employees-badges');
-  const { departments = [] } = useAvailableDepartments();
+  const { departments } = useAvailableDepartments();
   
   const [isBadgePreviewOpen, setIsBadgePreviewOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeData | null>(null);
@@ -40,12 +39,10 @@ const EmployeesBadges: React.FC = () => {
     try {
       setLoading(true);
       const data = await getBadges();
-      // Ensure we always have an array
-      setBadgesList(Array.isArray(data) ? data : []);
+      setBadgesList(data);
     } catch (error) {
       console.error("Erreur lors du chargement des badges:", error);
       toast.error("Échec du chargement des badges");
-      setBadgesList([]);
     } finally {
       setLoading(false);
     }
@@ -82,10 +79,8 @@ const EmployeesBadges: React.FC = () => {
     if (badge) {
       setSelectedBadge(badge);
       
-      // Make sure employees is an array before searching
-      const safeEmployees = Array.isArray(employees) ? employees : [];
-      const employee = safeEmployees.find(emp => emp.id === badge.employeeId) || 
-                       safeEmployees.find(emp => `${emp.firstName} ${emp.lastName}` === badge.employeeName);
+      const employee = employees.find(emp => emp.id === badge.employeeId) || 
+                       employees.find(emp => `${emp.firstName} ${emp.lastName}` === badge.employeeName);
                        
       setSelectedBadgeEmployee(employee || null);
       setIsBadgePreviewOpen(true);
@@ -122,9 +117,6 @@ const EmployeesBadges: React.FC = () => {
     }
   };
 
-  // Ensure employees is always an array
-  const safeEmployees = Array.isArray(employees) ? employees : [];
-
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -141,7 +133,7 @@ const EmployeesBadges: React.FC = () => {
         </div>
       </div>
       
-      <BadgeStats badgesList={badgesList} employeesCount={safeEmployees.length} />
+      <BadgeStats badgesList={badgesList} employeesCount={employees.length} />
 
       <BadgesTable 
         badgesList={badgesList} 
@@ -153,7 +145,7 @@ const EmployeesBadges: React.FC = () => {
         isOpen={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
         onBadgeCreated={handleCreateBadge} 
-        employees={safeEmployees}
+        employees={employees}
       />
       
       <BadgePreviewDialog 

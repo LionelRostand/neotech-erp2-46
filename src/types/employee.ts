@@ -89,7 +89,6 @@ export interface Employee {
   workAddress?: Address;
   salary?: number;
   manager?: string;
-  managerId?: string;
   isManager?: boolean;
   photoUrl?: string;
   photoMeta?: EmployeePhotoMeta;
@@ -107,5 +106,4 @@ export interface Employee {
   region?: string;
   photoURL?: string;
   photo?: string;
-  company?: string | any; // Company can be string ID or object
 }

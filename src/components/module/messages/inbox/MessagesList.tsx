@@ -22,7 +22,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
 }) => {
   // Filter messages based on filter and search term
   const filteredMessages = React.useMemo(() => {
-    if (!messages || !Array.isArray(messages)) return [];
+    if (!messages) return [];
     
     let result = [...messages];
     
@@ -37,9 +37,8 @@ const MessagesList: React.FC<MessagesListProps> = ({
     if (searchTerm && searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       result = result.filter(
-        msg => 
-          (msg.subject?.toLowerCase().includes(term) || false) || 
-          (msg.content?.toLowerCase().includes(term) || false)
+        msg => msg.subject.toLowerCase().includes(term) || 
+               msg.content.toLowerCase().includes(term)
       );
     }
     

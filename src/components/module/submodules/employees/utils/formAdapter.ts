@@ -10,23 +10,6 @@ export const formValuesToEmployee = (formValues: EmployeeFormValues, existingEmp
   const safeFormValues = formValues || {};
   const safeExistingEmployee = existingEmployee || {};
   
-  // Build personal address
-  const personalAddress = {
-    street: `${safeFormValues.streetNumber || ''} ${safeFormValues.streetName || ''}`.trim(),
-    city: safeFormValues.city || '',
-    postalCode: safeFormValues.zipCode || '',
-    country: safeFormValues.country || '',
-    state: safeFormValues.region || ''
-  };
-
-  // Build work address
-  const workAddress = safeFormValues.workAddress || {
-    street: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  };
-  
   const employeeData: Partial<Employee> = {
     firstName: safeFormValues.firstName || '',
     lastName: safeFormValues.lastName || '',
@@ -45,17 +28,6 @@ export const formValuesToEmployee = (formValues: EmployeeFormValues, existingEmp
       createdAt: safeExistingEmployee.createdAt,
       photoURL: safeExistingEmployee.photoURL,
     }),
-    // Add address data
-    address: personalAddress,
-    workAddress: workAddress,
-    // Store individual address components for compatibility
-    streetNumber: safeFormValues.streetNumber || '',
-    streetName: safeFormValues.streetName || '',
-    city: safeFormValues.city || '',
-    zipCode: safeFormValues.zipCode || '',
-    postalCode: safeFormValues.zipCode || '',
-    region: safeFormValues.region || '',
-    country: safeFormValues.country || '',
     // New fields
     updatedAt: new Date().toISOString()
   };
@@ -77,14 +49,6 @@ export const formValuesToEmployee = (formValues: EmployeeFormValues, existingEmp
     employeeData.photoURL = safeFormValues.photo;
   }
   
-  if (safeFormValues.professionalEmail) {
-    employeeData.professionalEmail = safeFormValues.professionalEmail;
-  }
-
-  if (safeFormValues.contract) {
-    employeeData.contract = safeFormValues.contract;
-  }
-  
   return employeeData;
 };
 
@@ -95,44 +59,6 @@ export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormV
   // Ensure we have a valid employee object
   const safeEmployee = employee || {};
   
-  // Extract address data
-  let streetNumber = '';
-  let streetName = '';
-  let city = '';
-  let zipCode = '';
-  let region = '';
-  let country = '';
-  
-  // Extract from address object if it exists
-  if (safeEmployee.address && typeof safeEmployee.address === 'object') {
-    const address = safeEmployee.address;
-    // Try to extract street number and name from street field
-    if (address.street) {
-      const streetParts = address.street.split(' ');
-      if (streetParts.length > 1) {
-        streetNumber = streetParts[0];
-        streetName = streetParts.slice(1).join(' ');
-      } else {
-        streetName = address.street;
-      }
-    }
-    city = address.city || '';
-    zipCode = address.postalCode || '';
-    region = address.state || '';
-    country = address.country || '';
-  } else {
-    // Use flat properties if no address object
-    streetNumber = safeEmployee.streetNumber || '';
-    streetName = safeEmployee.streetName || '';
-    city = safeEmployee.city || '';
-    zipCode = safeEmployee.zipCode || safeEmployee.postalCode || '';
-    region = safeEmployee.region || '';
-    country = safeEmployee.country || '';
-  }
-  
-  // Prepare work address if it exists
-  const workAddress = safeEmployee.workAddress as any;
-
   return {
     firstName: safeEmployee.firstName || '',
     lastName: safeEmployee.lastName || '',
@@ -154,24 +80,17 @@ export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormV
     forceManager: Boolean(safeEmployee.forceManager),
     isManager: Boolean(safeEmployee.isManager),
     professionalEmail: safeEmployee.professionalEmail || '',
-    // Address fields
-    streetNumber,
-    streetName,
-    city,
-    zipCode,
-    region,
-    country,
-    // Work address
-    workAddress: workAddress ? {
-      street: workAddress.street || '',
-      city: workAddress.city || '',
-      postalCode: workAddress.postalCode || '',
-      country: workAddress.country || ''
-    } : {
-      street: '',
-      city: '',
-      postalCode: '',
-      country: ''
-    }
+    streetNumber: safeEmployee.streetNumber || '',
+    streetName: safeEmployee.streetName || '',
+    city: safeEmployee.city || '',
+    zipCode: safeEmployee.zipCode || '',
+    region: safeEmployee.region || '',
+    country: safeEmployee.country || '',
+    workAddress: safeEmployee.workAddress ? {
+      street: safeEmployee.workAddress.street || '',
+      city: safeEmployee.workAddress.city || '',
+      postalCode: safeEmployee.workAddress.postalCode || '',
+      country: safeEmployee.workAddress.country || ''
+    } : undefined
   };
 };
