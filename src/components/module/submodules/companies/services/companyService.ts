@@ -32,22 +32,28 @@ class CompanyService {
       
       let queryRef = query(q);
       
-      if (filters.status) {
-        queryRef = query(queryRef, where('status', '==', filters.status));
-      }
-      if (filters.industry) {
-        queryRef = query(queryRef, where('industry', '==', filters.industry));
-      }
-      if (filters.name) {
-        queryRef = query(queryRef, where('name', '==', filters.name));
-      }
-      if (filters.location) {
-        queryRef = query(queryRef, where('address.city', '==', filters.location));
-      }
-      
-      if (filters.sortBy) {
-        const sortOrder = filters.sortOrder === 'desc' ? 'desc' : 'asc';
-        queryRef = query(queryRef, orderBy(filters.sortBy, sortOrder));
+      // Handle potentially undefined filters
+      if (filters) {
+        if (filters.status) {
+          queryRef = query(queryRef, where('status', '==', filters.status));
+        }
+        if (filters.industry) {
+          queryRef = query(queryRef, where('industry', '==', filters.industry));
+        }
+        if (filters.name) {
+          queryRef = query(queryRef, where('name', '==', filters.name));
+        }
+        if (filters.location) {
+          queryRef = query(queryRef, where('address.city', '==', filters.location));
+        }
+        
+        if (filters.sortBy) {
+          const sortOrder = filters.sortOrder === 'desc' ? 'desc' : 'asc';
+          queryRef = query(queryRef, orderBy(filters.sortBy, sortOrder));
+        }
+      } else {
+        // Default sorting if no filters provided
+        queryRef = query(queryRef, orderBy('name', 'asc'));
       }
       
       const querySnapshot = await getDocs(queryRef || q);

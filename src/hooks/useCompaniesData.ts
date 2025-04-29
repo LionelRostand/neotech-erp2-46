@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { companyService } from '@/components/module/submodules/companies/services/companyService';
 import { Company } from '@/components/module/submodules/companies/types';
+import { toast } from 'sonner';
 
 export const useCompaniesData = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -13,10 +14,12 @@ export const useCompaniesData = () => {
       try {
         setIsLoading(true);
         const response = await companyService.getCompanies();
-        setCompanies(response.companies);
-        setIsLoading(false);
+        setCompanies(response.companies || []);
       } catch (err) {
+        console.error("Error fetching companies:", err);
         setError(err instanceof Error ? err : new Error('Unknown error'));
+        toast.error("Erreur lors du chargement des entreprises");
+      } finally {
         setIsLoading(false);
       }
     };
