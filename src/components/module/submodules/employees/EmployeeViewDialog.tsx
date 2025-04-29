@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
-import { FilePdf, FileText, Mail, Phone } from 'lucide-react';
+import { FileText, Mail, Phone } from 'lucide-react';
 import { exportEmployeePdf } from './utils/employeePdfUtils';
 import { toast } from 'sonner';
 
@@ -73,7 +73,7 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
                 Modifier
               </Button>
               <Button variant="outline" size="sm" onClick={handleExportPdf}>
-                <FilePdf className="h-4 w-4 mr-1" />
+                <FileText className="h-4 w-4 mr-1" />
                 PDF
               </Button>
             </div>
