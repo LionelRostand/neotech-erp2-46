@@ -43,6 +43,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
       if (!fetchedDepartments || !Array.isArray(fetchedDepartments)) {
         console.warn("Fetched departments is not an array:", fetchedDepartments);
         setDepartments([]);
+        setIsLoading(false);
         return;
       }
       
