@@ -94,3 +94,57 @@ export const formatDateFR = (dateStr?: string): string => {
     return dateStr;
   }
 };
+
+/**
+ * Filter employees based on search term and other filters
+ * @param employees List of employees to filter
+ * @param searchTerm Search term to match against employee data
+ * @param filters Additional filters to apply
+ * @returns Filtered list of employees
+ */
+export const filterEmployees = (
+  employees: Employee[],
+  searchTerm: string = '',
+  filters: { status?: string; department?: string } = {}
+): Employee[] => {
+  if (!employees || !Array.isArray(employees)) {
+    return [];
+  }
+  
+  // Convert search term to lowercase for case-insensitive comparison
+  const search = searchTerm.toLowerCase().trim();
+  
+  return employees.filter(employee => {
+    // Skip null/undefined employees
+    if (!employee) return false;
+    
+    // Apply search term filter if provided
+    if (search) {
+      const fullName = getEmployeeFullName(employee).toLowerCase();
+      const email = (employee.email || '').toLowerCase();
+      const position = (employee.position || '').toLowerCase();
+      const department = (employee.department || '').toLowerCase();
+      
+      // Return false if none of the fields match the search term
+      if (!fullName.includes(search) && 
+          !email.includes(search) && 
+          !position.includes(search) && 
+          !department.includes(search)) {
+        return false;
+      }
+    }
+    
+    // Apply status filter if provided
+    if (filters.status && employee.status !== filters.status) {
+      return false;
+    }
+    
+    // Apply department filter if provided
+    if (filters.department && employee.department !== filters.department) {
+      return false;
+    }
+    
+    // If all filters pass, include this employee
+    return true;
+  });
+};
