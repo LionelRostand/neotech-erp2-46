@@ -13,13 +13,15 @@ export const getBadges = async (): Promise<BadgeData[]> => {
     const badgesCollection = collection(db, COLLECTIONS.HR.BADGES);
     const snapshot = await getDocs(badgesCollection);
     
+    // Ensure we return an array even if there are no documents
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as BadgeData[];
   } catch (error) {
     console.error('Error fetching badges:', error);
-    throw error;
+    // Return an empty array instead of throwing an error to prevent the "cannot read properties of undefined" error
+    return [];
   }
 };
 
@@ -55,10 +57,12 @@ export const deleteDocument = async (collectionPath: string, documentId: string)
     let actualPath = collectionPath;
 
     // Check if it's a nested path using dot notation
-    if (collectionPath.includes('.')) {
+    if (collectionPath && collectionPath.includes('.')) {
       const segments = collectionPath.split('.');
       // Handle HR.BADGES by accessing COLLECTIONS.HR.BADGES
-      if (segments.length === 2 && COLLECTIONS[segments[0]] && COLLECTIONS[segments[0]][segments[1]]) {
+      if (segments.length === 2 && 
+          COLLECTIONS[segments[0]] && 
+          COLLECTIONS[segments[0]][segments[1]]) {
         actualPath = COLLECTIONS[segments[0]][segments[1]];
       }
     } else if (COLLECTIONS[collectionPath]) {

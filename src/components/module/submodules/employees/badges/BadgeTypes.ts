@@ -43,7 +43,7 @@ export const getInitials = (firstName: string, lastName: string) => {
   return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
 };
 
-// Generate a unique badge number
+// Generate a unique badge number - make sure this is exported for CreateBadgeDialog
 export const generateBadgeNumber = (): string => {
   return `B-${Math.floor(2460 + Math.random() * 100)}`;
 };

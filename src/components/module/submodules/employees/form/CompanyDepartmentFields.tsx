@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -11,10 +11,12 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useCompaniesQuery } from '../hooks/useCompaniesQuery';
 
 const CompanyDepartmentFields = () => {
   const { register, setValue, watch } = useFormContext();
   const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
+  const { data: companies = [], isLoading: isLoadingCompanies } = useCompaniesQuery();
   
   // Set the department field to empty when company changes
   const selectedCompany = watch('company');
@@ -31,8 +33,20 @@ const CompanyDepartmentFields = () => {
             <SelectValue placeholder="Sélectionner une entreprise" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="main">Entreprise principale</SelectItem>
-            <SelectItem value="subsidiary">Filiale</SelectItem>
+            {isLoadingCompanies ? (
+              <SelectItem value="loading" disabled>Chargement des entreprises...</SelectItem>
+            ) : companies && companies.length > 0 ? (
+              companies.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))
+            ) : (
+              <>
+                <SelectItem value="none" disabled>Aucune entreprise disponible</SelectItem>
+                <SelectItem value="main">Entreprise principale</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>
