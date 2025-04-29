@@ -14,13 +14,15 @@ import EmployeeViewDialog from './EmployeeViewDialog';
 import { toast } from 'sonner';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CreateEmployeeDialog from './CreateEmployeeDialog';
 
 const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading?: boolean }> = ({ 
   employees = [], 
   isLoading = false 
 }) => {
-  const { updateEmployee, deleteEmployee } = useEmployeeActions();
+  const { updateEmployee, deleteEmployee, createEmployee } = useEmployeeActions();
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   // Ensure employees is always a valid array
@@ -66,6 +68,11 @@ const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading
         toast.error('Erreur lors de la suppression de l\'employé');
       }
     }
+  };
+
+  const handleCreateEmployee = (newEmployee: Employee) => {
+    toast.success(`L'employé ${newEmployee.firstName} ${newEmployee.lastName} a été créé avec succès`);
+    // The employee will be added to the list via query invalidation
   };
 
   const columns: Column<Employee>[] = [
@@ -146,7 +153,7 @@ const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading
       <div className="mb-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Employés</h1>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Ajouter un employé
           </Button>
@@ -174,6 +181,12 @@ const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading
           onUpdate={handleUpdateEmployee}
         />
       )}
+
+      <CreateEmployeeDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreated={handleCreateEmployee}
+      />
     </div>
   );
 };

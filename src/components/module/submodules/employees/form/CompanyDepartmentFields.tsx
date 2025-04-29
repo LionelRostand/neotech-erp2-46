@@ -1,185 +1,220 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { 
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage
+} from "@/components/ui/form";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
-import { useCompaniesQuery } from '../hooks/useCompaniesQuery';
-import { Building, MapPin, Landmark, Briefcase } from 'lucide-react';
+  RadioGroup,
+  RadioGroupItem
+} from "@/components/ui/radio-group";
+import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const CompanyDepartmentFields = () => {
-  const { register, setValue, watch } = useFormContext();
-  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
-  const { data: companies = [], isLoading: isLoadingCompanies } = useCompaniesQuery();
+  const { register, control, formState: { errors }, setValue, watch } = useFormContext();
+  const { departments = [], isLoading } = useAvailableDepartments();
   
-  // Set the department field to empty when company changes
-  const selectedCompany = watch('company');
+  const contractType = watch('contract');
+  const hireDate = watch('hireDate');
   
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setValue('hireDate', date.toISOString().split('T')[0]);
+    }
+  };
+
   return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="company">Entreprise</Label>
-        <Select 
-          onValueChange={(value) => setValue('company', value)}
-          value={watch('company') || ''}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Sélectionner une entreprise" />
-          </SelectTrigger>
-          <SelectContent>
-            {isLoadingCompanies ? (
-              <SelectItem value="loading" disabled>Chargement des entreprises...</SelectItem>
-            ) : companies && companies.length > 0 ? (
-              companies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))
-            ) : (
-              <>
-                <SelectItem value="none" disabled>Aucune entreprise disponible</SelectItem>
-                <SelectItem value="main">Entreprise principale</SelectItem>
-              </>
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="department">Département</Label>
-        <Select 
-          onValueChange={(value) => setValue('department', value)}
-          value={watch('department') || ''}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Sélectionner un département" />
-          </SelectTrigger>
-          <SelectContent>
-            {isLoadingDepartments ? (
-              <SelectItem value="loading" disabled>Chargement...</SelectItem>
-            ) : !departments || departments.length === 0 ? (
-              <SelectItem value="none" disabled>Aucun département disponible</SelectItem>
-            ) : (
-              departments.map((department) => (
-                <SelectItem key={department.id} value={department.id}>
-                  {department.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="position">Poste</Label>
-        <Input 
-          id="position" 
-          {...register('position')} 
-          placeholder="Ex: Développeur Web"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="professionalEmail">Email professionnel</Label>
-        <Input 
-          id="professionalEmail" 
-          {...register('professionalEmail')} 
-          placeholder="email.professionnel@entreprise.com"
-          type="email"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="contract">Type de contrat</Label>
-        <Select 
-          onValueChange={(value) => setValue('contract', value)}
-          value={watch('contract') || 'cdi'}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Type de contrat" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cdi">CDI</SelectItem>
-            <SelectItem value="cdd">CDD</SelectItem>
-            <SelectItem value="interim">Intérim</SelectItem>
-            <SelectItem value="stage">Stage</SelectItem>
-            <SelectItem value="alternance">Alternance</SelectItem>
-            <SelectItem value="freelance">Freelance</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="hireDate">Date d'embauche</Label>
-        <Input 
-          id="hireDate" 
-          type="date" 
-          {...register('hireDate')}
-        />
-      </div>
-
-      {/* Adresse professionnelle */}
-      <div className="space-y-4 pt-3 border-t border-gray-200">
-        <h3 className="text-sm font-medium">Adresse professionnelle</h3>
-        
-        <div className="space-y-2">
-          <Label htmlFor="workAddress.street">Rue</Label>
-          <div className="flex items-center">
-            <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-            <Input 
-              id="workAddress.street" 
-              {...register('workAddress.street')} 
-              placeholder="123 Rue de l'entreprise"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="workAddress.city">Ville</Label>
-            <div className="flex items-center">
-              <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+    <div className="space-y-4">
+      <h3 className="font-semibold text-lg">Informations professionnelles</h3>
+      
+      {/* Company field */}
+      <FormField
+        control={control}
+        name="company"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Entreprise</FormLabel>
+            <FormControl>
               <Input 
-                id="workAddress.city" 
-                {...register('workAddress.city')} 
-                placeholder="Paris"
+                placeholder="Nom de l'entreprise" 
+                {...field} 
               />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="workAddress.postalCode">Code postal</Label>
-            <div className="flex items-center">
-              <Landmark className="h-4 w-4 mr-2 text-muted-foreground" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {/* Department field */}
+      <FormField
+        control={control}
+        name="department"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Département</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+              value={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un département">
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Chargement...
+                      </div>
+                    ) : field.value}
+                  </SelectValue>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {/* Position field */}
+      <FormField
+        control={control}
+        name="position"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Poste</FormLabel>
+            <FormControl>
               <Input 
-                id="workAddress.postalCode" 
-                {...register('workAddress.postalCode')} 
-                placeholder="75000"
+                placeholder="Poste occupé" 
+                {...field} 
               />
-            </div>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="workAddress.country">Pays</Label>
-          <div className="flex items-center">
-            <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
-            <Input 
-              id="workAddress.country" 
-              {...register('workAddress.country')} 
-              placeholder="France"
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Contract type */}
+      <FormField
+        control={control}
+        name="contract"
+        render={({ field }) => (
+          <FormItem className="space-y-3">
+            <FormLabel>Type de contrat</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+                className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cdi" id="cdi" />
+                  <Label htmlFor="cdi">CDI</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cdd" id="cdd" />
+                  <Label htmlFor="cdd">CDD</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="interim" id="interim" />
+                  <Label htmlFor="interim">Intérim</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="freelance" id="freelance" />
+                  <Label htmlFor="freelance">Freelance</Label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {/* Hire date */}
+      <FormField
+        control={control}
+        name="hireDate"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Date d'embauche</FormLabel>
+            <DatePicker 
+              value={field.value ? new Date(field.value) : undefined}
+              onChange={handleDateChange}
             />
-          </div>
-        </div>
-      </div>
-    </>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Employee status */}
+      <FormField
+        control={control}
+        name="status"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Statut</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+              value={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Statut de l'employé" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+                <SelectItem value="onLeave">En congé</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {/* Pro Email */}
+      <FormField
+        control={control}
+        name="professionalEmail"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email Professionnel</FormLabel>
+            <FormControl>
+              <Input 
+                type="email"
+                placeholder="Email professionnel" 
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
   );
 };
 

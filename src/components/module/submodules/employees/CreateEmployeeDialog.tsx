@@ -11,12 +11,10 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import EmployeeForm from './EmployeeForm';
-import { useEmployeeService } from '@/hooks/useEmployeeService';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from './form/employeeFormSchema';
 import { formValuesToEmployee } from './utils/formAdapter';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument } from '@/hooks/firestore/create-operations';
 import { toast } from 'sonner';
 
 interface CreateEmployeeDialogProps {
@@ -31,26 +29,25 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   onCreated,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addEmployee } = useEmployeeService();
+  const { createEmployee } = useEmployeeActions();
 
   const handleSubmit = async (data: EmployeeFormValues) => {
     setIsSubmitting(true);
     try {
+      console.log("Form data submitted:", data);
+      
+      // Convert form values to employee data
       const employeeData = formValuesToEmployee(data);
       
-      // Remove the id field if it's undefined to avoid Firestore errors
-      if (employeeData.id === undefined) {
-        delete employeeData.id;
-      }
+      // Create the new employee
+      const newEmployee = await createEmployee(employeeData);
       
-      const result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
-      
-      if (result && result.id) {
+      if (newEmployee) {
         toast.success(`L'employé ${data.firstName} ${data.lastName} a été créé avec succès`);
-        onCreated(result as Employee);
+        onCreated(newEmployee);
         onOpenChange(false);
       } else {
-        toast.error("Erreur lors de la création de l'employé");
+        throw new Error("Failed to create employee");
       }
     } catch (error) {
       console.error('Error creating employee:', error);
