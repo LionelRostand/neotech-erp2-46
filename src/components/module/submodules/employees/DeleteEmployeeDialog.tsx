@@ -30,6 +30,23 @@ const DeleteEmployeeDialog: React.FC<DeleteEmployeeDialogProps> = ({
 }) => {
   if (!employee) return null;
 
+  // Obtenir le nom de l'entreprise
+  const getCompanyName = () => {
+    if (!employee.company) return 'Neotech Consulting';
+    
+    if (typeof employee.company === 'string') {
+      return employee.company || 'Neotech Consulting';
+    }
+    
+    if (employee.company && typeof employee.company === 'object') {
+      return employee.company.name || 'Neotech Consulting';
+    }
+    
+    return 'Neotech Consulting';
+  };
+
+  const companyName = getCompanyName();
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
@@ -37,6 +54,7 @@ const DeleteEmployeeDialog: React.FC<DeleteEmployeeDialogProps> = ({
           <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
           <AlertDialogDescription>
             Êtes-vous sûr de vouloir supprimer l'employé {employee.firstName} {employee.lastName} ?
+            <p className="mt-2 text-sm text-gray-500">Entreprise: {companyName}</p>
             <p className="mt-2 text-red-500">Cette action est irréversible.</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
