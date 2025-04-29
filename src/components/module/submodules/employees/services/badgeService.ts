@@ -9,6 +9,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
  */
 export const getBadges = async (): Promise<BadgeData[]> => {
   try {
+    // Use the correct path from COLLECTIONS
     const badgesCollection = collection(db, COLLECTIONS.HR.BADGES);
     const snapshot = await getDocs(badgesCollection);
     
@@ -27,6 +28,7 @@ export const getBadges = async (): Promise<BadgeData[]> => {
  */
 export const addBadge = async (badgeData: BadgeData): Promise<BadgeData> => {
   try {
+    // Use the correct path from COLLECTIONS
     const badgesCollection = collection(db, COLLECTIONS.HR.BADGES);
     const { id, ...dataWithoutId } = badgeData;
     const docRef = await addDoc(badgesCollection, {
@@ -50,12 +52,19 @@ export const addBadge = async (badgeData: BadgeData): Promise<BadgeData> => {
 export const deleteDocument = async (collectionPath: string, documentId: string) => {
   try {
     // Handle nested collection paths (e.g., "HR.BADGES")
-    const actualPath = collectionPath.includes('.') 
-      ? collectionPath.split('.').reduce(
-          (path, segment) => path + (COLLECTIONS[segment] || segment) + '/', 
-          ''
-        ).slice(0, -1) // Remove trailing slash
-      : COLLECTIONS[collectionPath] || collectionPath;
+    let actualPath = collectionPath;
+
+    // Check if it's a nested path using dot notation
+    if (collectionPath.includes('.')) {
+      const segments = collectionPath.split('.');
+      // Handle HR.BADGES by accessing COLLECTIONS.HR.BADGES
+      if (segments.length === 2 && COLLECTIONS[segments[0]] && COLLECTIONS[segments[0]][segments[1]]) {
+        actualPath = COLLECTIONS[segments[0]][segments[1]];
+      }
+    } else if (COLLECTIONS[collectionPath]) {
+      // Handle direct top-level collections
+      actualPath = COLLECTIONS[collectionPath];
+    }
     
     const documentRef = doc(db, actualPath, documentId);
     await deleteDoc(documentRef);

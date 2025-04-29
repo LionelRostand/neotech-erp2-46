@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { BadgeData } from './employees/badges/BadgeTypes';
-import CreateBadgeDialog from './employees/badges/CreateBadgeDialog';
+import CreateBadgeDialog from './badges/CreateBadgeDialog';
 import BadgePreviewDialog from './employees/badges/BadgePreviewDialog';
 import BadgeStats from './employees/badges/BadgeStats';
 import BadgesTable from './employees/badges/BadgesTable';
@@ -90,7 +90,7 @@ const EmployeesBadges: React.FC = () => {
     if (!badge || !badge.id) return;
     
     try {
-      // Delete from Firebase using the correct function signature
+      // Delete from Firebase
       await deleteDocument('HR.BADGES', badge.id);
       
       // Update local state
@@ -125,10 +125,10 @@ const EmployeesBadges: React.FC = () => {
         </div>
       </div>
       
-      <BadgeStats badgesList={badgesList} employeesCount={safeEmployees.length} />
+      <BadgeStats badgesList={badgesList || []} employeesCount={safeEmployees.length} />
 
       <BadgesTable 
-        badgesList={badgesList} 
+        badgesList={badgesList || []} 
         onBadgeClick={handleViewBadge} 
         loading={loading} 
       />
