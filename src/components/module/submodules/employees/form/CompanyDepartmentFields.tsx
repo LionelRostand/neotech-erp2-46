@@ -1,242 +1,188 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-  FormDescription
-} from '@/components/ui/form';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { EmployeeFormValues } from './employeeFormSchema';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useCompaniesQuery } from '../hooks/useCompaniesQuery';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@/components/ui/radio-group';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useCompaniesQuery } from '@/components/module/submodules/employees/hooks/useCompaniesQuery';
+import { format } from 'date-fns';
 
-const CompanyDepartmentFields: React.FC = () => {
-  const { control, watch } = useFormContext();
-  const isManager = watch('isManager');
-  const forceManager = watch('forceManager');
-  
-  // Récupérer la liste des entreprises
+const CompanyDepartmentFields = () => {
+  const { register, setValue, getValues, watch } = useFormContext<EmployeeFormValues>();
+  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
   const { data: companies = [], isLoading: isLoadingCompanies } = useCompaniesQuery();
   
-  // Récupérer la liste des employés pour les managers
-  const { employees = [], isLoading: isLoadingEmployees } = useEmployeeData();
+  const hireDate = watch('hireDate');
+  const contract = watch('contract');
   
-  // Filtrer pour obtenir seulement les employés qui peuvent être managers
-  const potentialManagers = employees.filter(employee => 
-    employee.isManager || employee.status === 'active' || employee.status === 'Actif'
-  );
+  const handleCompanyChange = (value: string) => {
+    setValue('company', value);
+    setValue('department', ''); // Reset department when company changes
+  };
+  
+  const handleDepartmentChange = (value: string) => {
+    setValue('department', value);
+  };
+  
+  const handleHireDateChange = (date: Date | undefined) => {
+    if (date) {
+      const dateString = format(date, 'yyyy-MM-dd');
+      setValue('hireDate', dateString);
+    }
+  };
+  
+  useEffect(() => {
+    // Set default hire date if not already set
+    if (!getValues('hireDate')) {
+      setValue('hireDate', format(new Date(), 'yyyy-MM-dd'));
+    }
+  }, [getValues, setValue]);
 
   return (
-    <div className="space-y-4 border p-4 rounded-md">
-      <h2 className="font-semibold text-lg">Informations professionnelles</h2>
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Informations professionnelles</h3>
       
-      <FormField
-        control={control}
-        name="company"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Entreprise</FormLabel>
-            <Select
-              disabled={isLoadingCompanies}
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              value={field.value}
-            >
-              <FormControl>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
+      {/* Company selection */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <Label htmlFor="company" className="md:text-right">
+          Entreprise
+        </Label>
+        <div className="md:col-span-3">
+          <Select 
+            value={getValues('company') || 'default'} 
+            onValueChange={handleCompanyChange}
+            disabled={isLoadingCompanies}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une entreprise" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* Default option with a non-empty value */}
+              <SelectItem value="default" disabled>
+                Sélectionner une entreprise
+              </SelectItem>
+              {companies.map((company) => (
+                <SelectItem key={company.id} value={company.id || 'company-id-missing'}>
+                  {company.name || 'Entreprise sans nom'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Department selection */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <Label htmlFor="department" className="md:text-right">
+          Département
+        </Label>
+        <div className="md:col-span-3">
+          <Select 
+            value={getValues('department') || 'default'} 
+            onValueChange={handleDepartmentChange}
+            disabled={isLoadingDepartments}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un département" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* Default option with a non-empty value */}
+              <SelectItem value="default" disabled>
+                Sélectionner un département
+              </SelectItem>
+              {departments
+                .filter(dept => !getValues('company') || dept.companyId === getValues('company'))
+                .map((department) => (
+                  <SelectItem key={department.id} value={department.id || 'dept-id-missing'}>
+                    {department.name || 'Département sans nom'}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       
-      <FormField
-        control={control}
-        name="department"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Département</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="Département" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Position */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <Label htmlFor="position" className="md:text-right">
+          Poste
+        </Label>
+        <div className="md:col-span-3">
+          <Input
+            id="position"
+            {...register('position')}
+            placeholder="Ex: Développeur Full-Stack"
+          />
+        </div>
+      </div>
       
-      <FormField
-        control={control}
-        name="position"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Poste</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="Poste" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={control}
-        name="contract"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Type de contrat</FormLabel>
-            <FormControl>
-              <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                className="flex flex-col space-y-1"
-              >
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="cdi" />
-                  </FormControl>
-                  <FormLabel className="font-normal">CDI</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="cdd" />
-                  </FormControl>
-                  <FormLabel className="font-normal">CDD</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="interim" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Intérim</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="apprentissage" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Apprentissage</FormLabel>
-                </FormItem>
-              </RadioGroup>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={control}
-        name="hireDate"
-        render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Date d'embauche</FormLabel>
-            <DatePicker 
-              value={field.value ? new Date(field.value) : undefined}
-              onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="status"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Statut</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              value={field.value}
-            >
-              <FormControl>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un statut" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="active">Actif</SelectItem>
-                <SelectItem value="onLeave">En congé</SelectItem>
-                <SelectItem value="inactive">Inactif</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="isManager"
-        render={({ field }) => (
-          <FormItem>
+      {/* Contract type */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <Label className="md:text-right">Type de contrat</Label>
+        <div className="md:col-span-3">
+          <RadioGroup
+            defaultValue={getValues('contract') || "cdi"}
+            className="flex flex-wrap gap-4"
+            onValueChange={(value) => setValue('contract', value)}
+          >
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isManager"
-                checked={field.value || forceManager}
-                onChange={(e) => field.onChange(e.target.checked)}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-                disabled={forceManager}
-              />
-              <FormLabel htmlFor="isManager" className="font-normal cursor-pointer">
-                Ce collaborateur est un manager
-              </FormLabel>
+              <RadioGroupItem value="cdi" id="cdi" />
+              <Label htmlFor="cdi" className="cursor-pointer">CDI</Label>
             </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {!isManager && !forceManager && (
-        <FormField
-          control={control}
-          name="managerId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Responsable</FormLabel>
-              <Select
-                disabled={isLoadingEmployees}
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value || ''}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sélectionner un responsable" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="">Aucun responsable</SelectItem>
-                  {potentialManagers.map((manager) => (
-                    <SelectItem key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Le responsable hiérarchique de cet employé
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="cdd" id="cdd" />
+              <Label htmlFor="cdd" className="cursor-pointer">CDD</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="internship" id="internship" />
+              <Label htmlFor="internship" className="cursor-pointer">Stage</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="freelance" id="freelance" />
+              <Label htmlFor="freelance" className="cursor-pointer">Freelance</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      </div>
+      
+      {/* Hire date */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <Label className="md:text-right">Date d'embauche</Label>
+        <div className="md:col-span-3">
+          <DatePicker 
+            value={hireDate ? new Date(hireDate) : undefined} 
+            onChange={handleHireDateChange}
+          />
+        </div>
+      </div>
+      
+      {/* Professional Email */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <Label htmlFor="professionalEmail" className="md:text-right">
+          Email professionnel
+        </Label>
+        <div className="md:col-span-3">
+          <Input
+            id="professionalEmail"
+            {...register('professionalEmail')}
+            type="email"
+            placeholder="email.professionnel@entreprise.com"
+          />
+        </div>
+      </div>
     </div>
   );
 };
