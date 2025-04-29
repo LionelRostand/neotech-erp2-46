@@ -20,46 +20,27 @@ import EmployeesCompanies from "@/components/module/submodules/employees/Employe
 import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
 
-// Helper component to pass props to EmployeesProfiles
-const EmployeesProfilesWithProps = () => {
-  const { employees = [], isLoading = true } = useEmployeeData();
-  // Make sure we have a valid array of employees before rendering the component
-  const safeEmployees = Array.isArray(employees) ? employees : [];
-  
-  console.log("Rendering EmployeesProfiles with", { 
-    employeesCount: safeEmployees.length, 
-    isLoading 
-  });
-  
-  return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
+// Don't use hooks directly in the routes file - that can cause inconsistent hook calls
+// Instead, use wrapper components that properly handle data loading
+
+// Helper component to encapsulate data loading for EmployeesProfiles
+const EmployeesProfilesWithData = () => {
+  return <EmployeesProfiles />;
 };
 
-// Helper component to pass props to EmployeesDepartments
-const EmployeesDepartmentsWithProps = () => {
-  const { departments = [], employees = [], isLoading = true } = useHrModuleData();
-  // Make sure we have valid arrays
-  const safeDepartments = Array.isArray(departments) ? departments : [];
-  const safeEmployees = Array.isArray(employees) ? employees : [];
-  
-  console.log("Rendering EmployeesDepartments with", { 
-    departmentsCount: safeDepartments.length,
-    employeesCount: safeEmployees.length,
-    isLoading 
-  });
-  
-  return <EmployeesDepartments departments={safeDepartments} employees={safeEmployees} />;
+// Helper component to encapsulate data loading for EmployeesDepartments
+const EmployeesDepartmentsWithData = () => {
+  return <EmployeesDepartments />;
 };
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    <Route path="profiles" element={<EmployeesProfilesWithProps />} />
+    <Route path="profiles" element={<EmployeesProfilesWithData />} />
     <Route path="badges" element={<EmployeesBadges />} />
-    <Route path="departments" element={<EmployeesDepartmentsWithProps />} />
+    <Route path="departments" element={<EmployeesDepartmentsWithData />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />
     <Route path="attendance" element={<EmployeesAttendance />} />
     <Route path="timesheet" element={<EmployeesTimesheet />} />

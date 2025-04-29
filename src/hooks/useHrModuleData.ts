@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useHrData } from './modules/useHrData';
 import { Company } from '@/components/module/submodules/companies/types';
 import { Employee } from '@/types/employee';
@@ -8,24 +8,24 @@ import { Employee } from '@/types/employee';
  * Hook to fetch and process HR module data
  */
 export const useHrModuleData = () => {
+  // Always destructure with default values for consistency
   const { 
-    employees: rawEmployees, 
-    payslips, 
-    contracts, 
-    departments, 
-    leaveRequests, 
-    attendance,
-    absenceRequests,
-    hrDocuments,
-    timeSheets,
-    evaluations,
-    trainings,
-    hrReports,
-    hrAlerts,
-    isLoading, 
-    error,
-    fetchAllHrData
-  } = useHrData();
+    employees: rawEmployees = [], 
+    payslips = [], 
+    contracts = [], 
+    departments = [], 
+    leaveRequests = [], 
+    attendance = [],
+    absenceRequests = [],
+    hrDocuments = [],
+    timeSheets = [],
+    evaluations = [],
+    trainings = [],
+    hrReports = [],
+    hrAlerts = [],
+    isLoading = true, 
+    error = null 
+  } = useHrData() || {};
   
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -33,59 +33,60 @@ export const useHrModuleData = () => {
   // Process employees data
   useEffect(() => {
     if (rawEmployees && Array.isArray(rawEmployees)) {
-      const processedEmployees = rawEmployees.map(emp => ({
-        id: emp.id,
-        firstName: emp.firstName || '',
-        lastName: emp.lastName || '',
-        email: emp.email || '',
-        phone: emp.phone || '',
-        position: emp.position || emp.role || 'Employé',
-        department: emp.department || 'Non spécifié',
-        departmentId: emp.departmentId || emp.department || '',
-        photo: emp.photoURL || emp.photo || '',
-        photoURL: emp.photoURL || emp.photo || '',
-        hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
-        startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
-        status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
-        address: emp.address || {},
-        contract: emp.contract || '',
-        socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
-        birthDate: emp.birthDate || '',
-        documents: emp.documents || [],
-        company: emp.company || '',
-        role: emp.role || emp.position || '',
-        title: emp.title || emp.position || '',
-        manager: emp.manager || '',
-        managerId: emp.managerId || '',
-        professionalEmail: emp.professionalEmail || emp.email || '',
-        skills: emp.skills || [],
-        education: emp.education || [],
-        workSchedule: emp.workSchedule || {
-          monday: '09:00 - 18:00',
-          tuesday: '09:00 - 18:00',
-          wednesday: '09:00 - 18:00',
-          thursday: '09:00 - 18:00',
-          friday: '09:00 - 17:00',
-        },
-        payslips: emp.payslips || [],
-      })) as Employee[];
+      const processedEmployees = rawEmployees
+        .filter(emp => emp !== null && emp !== undefined)
+        .map(emp => ({
+          id: emp.id || `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          firstName: emp.firstName || '',
+          lastName: emp.lastName || '',
+          email: emp.email || '',
+          phone: emp.phone || '',
+          position: emp.position || emp.role || 'Employé',
+          department: emp.department || 'Non spécifié',
+          departmentId: emp.departmentId || emp.department || '',
+          photo: emp.photoURL || emp.photo || '',
+          photoURL: emp.photoURL || emp.photo || '',
+          hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
+          startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
+          status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
+          address: emp.address || {},
+          contract: emp.contract || '',
+          socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
+          birthDate: emp.birthDate || '',
+          documents: emp.documents || [],
+          company: emp.company || '',
+          role: emp.role || emp.position || '',
+          title: emp.title || emp.position || '',
+          manager: emp.manager || '',
+          managerId: emp.managerId || '',
+          professionalEmail: emp.professionalEmail || emp.email || '',
+          skills: emp.skills || [],
+          education: emp.education || [],
+          workSchedule: emp.workSchedule || {
+            monday: '09:00 - 18:00',
+            tuesday: '09:00 - 18:00',
+            wednesday: '09:00 - 18:00',
+            thursday: '09:00 - 18:00',
+            friday: '09:00 - 17:00',
+          },
+          payslips: emp.payslips || [],
+        })) as Employee[];
       
       setEmployees(processedEmployees);
     } else {
-      // Set empty array if rawEmployees is undefined or not an array
       setEmployees([]);
     }
   }, [rawEmployees]);
 
-  // Extract companies from employees if available
+  // Extract companies from employees if available - always called in the same order
   useEffect(() => {
-    if (employees && employees.length > 0) {
+    if (employees && Array.isArray(employees) && employees.length > 0) {
       // Create a map to ensure unique companies
       const companiesMap = new Map<string, Company>();
       
       employees.forEach(emp => {
-        if (emp.company) {
-          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
+        if (emp && emp.company) {
+          const companyId = typeof emp.company === 'string' ? emp.company : (emp.company?.id || '');
           
           if (companyId && !companiesMap.has(companyId)) {
             if (typeof emp.company === 'string') {
@@ -112,22 +113,21 @@ export const useHrModuleData = () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
               });
-            } else if (typeof emp.company === 'object' && emp.company !== null) {
+            } else if (emp.company && typeof emp.company === 'object') {
               // Has the full company object
               const company = emp.company as Company;
               
               // Add missing properties if needed
-              if (!company.address) {
-                company.address = {
+              companiesMap.set(companyId, {
+                ...company,
+                id: companyId,
+                name: company.name || 'Entreprise',
+                address: company.address || {
                   street: '',
                   city: '',
                   postalCode: '',
                   country: ''
-                };
-              }
-              
-              companiesMap.set(companyId, {
-                ...company,
+                },
                 logo: company.logo || '',
                 logoUrl: company.logoUrl || '',
                 phone: company.phone || '',
@@ -148,25 +148,16 @@ export const useHrModuleData = () => {
       // Convert map to array
       setCompanies(Array.from(companiesMap.values()));
     } else {
-      // Set empty array if employees is undefined, not an array, or empty
       setCompanies([]);
     }
   }, [employees]);
-  
-  // Function to refetch employees data
-  const refetchEmployees = useCallback(async () => {
-    console.log("Refetching employees data...");
-    if (fetchAllHrData) {
-      await fetchAllHrData();
-    }
-  }, [fetchAllHrData]);
 
   return {
-    employees: employees || [],
-    payslips: payslips || [],
-    contracts: contracts || [],
-    departments: departments || [],
-    companies: companies || [],
+    employees,
+    payslips,
+    contracts,
+    departments,
+    companies,
     leaveRequests: leaveRequests || [],
     attendance: attendance || [],
     absenceRequests: absenceRequests || [],
@@ -177,7 +168,6 @@ export const useHrModuleData = () => {
     hrReports: hrReports || [],
     hrAlerts: hrAlerts || [],
     isLoading,
-    error,
-    refetchEmployees // Export the refetchEmployees function
+    error
   };
 };

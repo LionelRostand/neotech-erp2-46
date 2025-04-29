@@ -7,6 +7,7 @@ import { Department } from '@/components/module/submodules/departments/types';
 import { toast } from 'sonner';
 
 export const useHrData = () => {
+  // Define all state variables at the beginning
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [payslips, setPayslips] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -72,25 +73,26 @@ export const useHrData = () => {
     }
   }, []);
   
-  // Initial data fetch
+  // Initial data fetch - only called once
   useEffect(() => {
     fetchAllHrData();
   }, [fetchAllHrData]);
   
+  // Always return the same structure, with default values for undefined properties
   return {
-    employees,
-    payslips,
-    contracts,
-    departments,
-    leaveRequests,
-    attendance,
-    absenceRequests,
-    hrDocuments,
-    timeSheets,
-    evaluations,
-    trainings,
-    hrReports, 
-    hrAlerts,
+    employees: employees || [],
+    payslips: payslips || [],
+    contracts: contracts || [],
+    departments: departments || [],
+    leaveRequests: leaveRequests || [],
+    attendance: attendance || [],
+    absenceRequests: absenceRequests || [],
+    hrDocuments: hrDocuments || [],
+    timeSheets: timeSheets || [],
+    evaluations: evaluations || [],
+    trainings: trainings || [],
+    hrReports: hrReports || [], 
+    hrAlerts: hrAlerts || [],
     isLoading,
     error,
     fetchAllHrData

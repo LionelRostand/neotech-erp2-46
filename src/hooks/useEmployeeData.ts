@@ -8,7 +8,13 @@ import { Department } from '@/components/module/submodules/departments/types';
  * Hook centralisé pour accéder aux données des employés et départements
  */
 export const useEmployeeData = () => {
-  const { employees: rawEmployees = [], departments: hrDepartments = [], isLoading = true, error } = useHrModuleData();
+  // Always destructure with default values to ensure consistent structure
+  const { 
+    employees: rawEmployees = [], 
+    departments: hrDepartments = [], 
+    isLoading = true, 
+    error = null 
+  } = useHrModuleData();
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
