@@ -39,7 +39,7 @@ const EmployeeDeleteDialog: React.FC<EmployeeDeleteDialogProps> = ({
     setDeleting(true);
     try {
       await deleteEmployee(employee.id);
-      toast.success(`${employee.firstName} ${employee.lastName} a été supprimé(e) avec succès`);
+      toast.success(`${employee.firstName || 'Employé'} ${employee.lastName || ''} a été supprimé(e) avec succès`);
       
       if (onSuccess) {
         onSuccess();
@@ -54,7 +54,13 @@ const EmployeeDeleteDialog: React.FC<EmployeeDeleteDialogProps> = ({
     }
   };
 
+  // Don't render anything if there's no employee
   if (!employee) return null;
+
+  // Make sure we have valid names to display
+  const firstName = employee.firstName || 'Employé';
+  const lastName = employee.lastName || '';
+  const fullName = `${firstName} ${lastName}`.trim();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -62,7 +68,7 @@ const EmployeeDeleteDialog: React.FC<EmployeeDeleteDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer {employee.firstName || ''} {employee.lastName || ''} ? Cette action est irréversible et supprimera toutes les données associées à cet employé.
+            Êtes-vous sûr de vouloir supprimer {fullName} ? Cette action est irréversible et supprimera toutes les données associées à cet employé.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

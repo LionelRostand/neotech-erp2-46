@@ -14,7 +14,7 @@ export const useAvailableDepartments = () => {
         .filter(dept => dept && dept.id && typeof dept.id === 'string' && dept.id.trim() !== '') // Ensure we have a valid ID
         .map(dept => ({
           id: dept.id || `dept-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          name: dept.name || 'Département sans nom',
+          name: dept.name || `Département ${dept.id?.substring(0, 4) || 'inconnu'}`,
           description: dept.description || '',
           managerId: dept.managerId || '',
           managerName: dept.managerName || '',
