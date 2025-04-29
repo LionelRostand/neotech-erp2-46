@@ -4,6 +4,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import DepartmentHeader from './DepartmentHeader';
 import DepartmentTable from './DepartmentTable';
+import DepartmentStats from './DepartmentStats';
 import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
@@ -25,6 +26,7 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
     currentDepartment,
     activeTab,
     selectedEmployees,
+    employees,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen,
@@ -44,15 +46,21 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
     getDepartmentEmployees
   } = useDepartments(propDepartments, propEmployees);
 
-  // Débogage pour vérifier la présence de départements
   console.log("Rendering EmployeesDepartments with", departments?.length, "departments");
 
   return (
     <div className="space-y-6">
       <DepartmentHeader onAddDepartment={handleAddDepartment} />
+      
+      <DepartmentStats 
+        departments={departments || []} 
+        employees={employees || []}
+        loading={loading}
+      />
 
       <Card>
         <CardContent className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Liste des départements</h2>
           <DepartmentTable 
             departments={departments || []}
             loading={loading}

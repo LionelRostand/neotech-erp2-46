@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash, Users } from 'lucide-react';
+import { Eye, Edit, Trash2, Users } from 'lucide-react';
 import { Department } from './types';
 
 interface DepartmentTableProps {
@@ -54,33 +54,31 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
     <div className="relative w-full overflow-auto">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">ID</TableHead>
-            <TableHead>Nom</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Manager</TableHead>
-            <TableHead>Entreprise</TableHead>
-            <TableHead>Employés</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+          <TableRow className="bg-gray-50">
+            <TableHead className="w-[200px]">NOM</TableHead>
+            <TableHead>DESCRIPTION</TableHead>
+            <TableHead>MANAGER</TableHead>
+            <TableHead>ENTREPRISE</TableHead>
+            <TableHead>EMPLOYÉS</TableHead>
+            <TableHead className="text-right">ACTIONS</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={6} className="text-center py-4">
                 Chargement...
               </TableCell>
             </TableRow>
           ) : validDepartments.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={6} className="text-center py-4">
                 Aucun département trouvé.
               </TableCell>
             </TableRow>
           ) : (
             validDepartments.map((department) => (
-              <TableRow key={department.id}>
-                <TableCell className="font-medium">{department.id.substring(0, 12)}</TableCell>
+              <TableRow key={department.id} className="border-b">
                 <TableCell>
                   <div className="flex items-center">
                     {department.color && (
@@ -89,26 +87,37 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                         style={{ backgroundColor: department.color || '#3b82f6' }}
                       />
                     )}
-                    {department.name}
+                    <span className="font-medium">{department.name}</span>
                   </div>
                 </TableCell>
                 <TableCell>{department.description}</TableCell>
-                <TableCell className="font-medium">{department.managerName || 'N/A'}</TableCell>
+                <TableCell>{department.managerName || 'N/A'}</TableCell>
                 <TableCell>{department.companyName || 'N/A'}</TableCell>
                 <TableCell>{department.employeesCount || (department.employeeIds?.length || 0)}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onDeleteDepartment(department.id, department.name || 'Sans nom')}>
-                    <Trash className="h-4 w-4 mr-2" />
-                    Supprimer
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onManageEmployees(department.id)}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Gérer
-                  </Button>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onDeleteDepartment(department.id, department.name || 'Sans nom')}
+                      className="hover:text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onManageEmployees(department.id)}
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

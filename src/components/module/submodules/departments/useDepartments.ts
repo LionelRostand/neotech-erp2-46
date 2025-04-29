@@ -26,29 +26,30 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
     formData,
     activeTab,
     selectedEmployees,
-    resetForm,
-    initFormWithDepartment,
+    setSelectedEmployees,
+    setFormData,
     setActiveTab,
     handleInputChange,
     handleManagerChange,
     handleCompanyChange,
     handleColorChange,
-    handleEmployeeSelection,
-    setSelectedEmployees
-  } = useDepartmentForm(departments);
+    resetForm
+  } = useDepartmentForm();
 
   // Utiliser le hook d'opérations pour gérer les opérations CRUD
   const {
     handleSaveDepartment,
     handleUpdateDepartment,
+    handleSaveEmployeeAssignments,
     handleDeleteDepartment,
-    handleSaveEmployeeAssignments
+    getDepartmentEmployees
   } = useDepartmentOperations();
 
   // Log pour voir les départements disponibles
   useEffect(() => {
     console.log("Departments in useDepartments:", departments?.length || 0);
-  }, [departments]);
+    console.log("Employees in useDepartments:", employees?.length || 0);
+  }, [departments, employees]);
 
   // Ouvrir le formulaire d'ajout
   const handleAddDepartment = useCallback(() => {
@@ -56,90 +57,52 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
     setIsAddDialogOpen(true);
   }, [resetForm]);
 
-  // Ouvrir le formulaire de modification
+  // Ouvrir le formulaire d'édition
   const handleEditDepartment = useCallback((department: Department) => {
-    initFormWithDepartment(department);
+    setFormData({
+      id: department.id,
+      name: department.name || '',
+      description: department.description || '',
+      managerId: department.managerId || '',
+      managerName: department.managerName || '',
+      companyId: department.companyId || '',
+      companyName: department.companyName || '',
+      color: department.color || '#3b82f6',
+      employeeIds: department.employeeIds || []
+    });
+    
+    // Récupérer les employés du département
+    const deptEmployees = getDepartmentEmployees(department.id);
+    setSelectedEmployees(deptEmployees);
+    
+    // Ouvrir le dialogue
+    setActiveTab('informations');
     setCurrentDepartment(department);
     setIsEditDialogOpen(true);
-  }, [initFormWithDepartment]);
+  }, [setFormData, setSelectedEmployees, setActiveTab, getDepartmentEmployees]);
 
-  // Ouvrir le gestionnaire d'employés
+  // Ouvrir le dialogue de gestion des employés
   const handleManageEmployees = useCallback((department: Department) => {
     setCurrentDepartment(department);
-    setSelectedEmployees(department.employeeIds || []);
+    const deptEmployees = getDepartmentEmployees(department.id);
+    setSelectedEmployees(deptEmployees);
     setIsManageEmployeesDialogOpen(true);
+  }, [getDepartmentEmployees, setSelectedEmployees]);
+
+  // Gérer la sélection des employés
+  const handleEmployeeSelection = useCallback((employeeId: string, isSelected: boolean) => {
+    setSelectedEmployees(prev => {
+      if (isSelected) {
+        return [...prev, employeeId];
+      } else {
+        return prev.filter(id => id !== employeeId);
+      }
+    });
   }, [setSelectedEmployees]);
-
-  // Enregistrer un nouveau département
-  const handleSaveDepartmentWrapper = useCallback(async () => {
-    const success = await handleSaveDepartment(formData, selectedEmployees);
-    if (success) {
-      setIsAddDialogOpen(false);
-      resetForm();
-      // S'assurer d'avoir la fonction refetch
-      if (typeof refetchDepartments === 'function') {
-        refetchDepartments();
-      }
-    }
-  }, [formData, selectedEmployees, handleSaveDepartment, resetForm, refetchDepartments]);
-
-  // Mettre à jour un département
-  const handleUpdateDepartmentWrapper = useCallback(async () => {
-    const success = await handleUpdateDepartment(formData, selectedEmployees, currentDepartment);
-    if (success) {
-      setIsEditDialogOpen(false);
-      resetForm();
-      setCurrentDepartment(null);
-      // S'assurer d'avoir la fonction refetch
-      if (typeof refetchDepartments === 'function') {
-        refetchDepartments();
-      }
-    }
-  }, [formData, selectedEmployees, currentDepartment, handleUpdateDepartment, resetForm, refetchDepartments]);
-
-  // Enregistrer les assignations d'employés
-  const handleSaveEmployeeAssignmentsWrapper = useCallback(async () => {
-    const success = await handleSaveEmployeeAssignments(currentDepartment, selectedEmployees);
-    if (success) {
-      setIsManageEmployeesDialogOpen(false);
-      setCurrentDepartment(null);
-      setSelectedEmployees([]);
-      // S'assurer d'avoir la fonction refetch
-      if (typeof refetchDepartments === 'function') {
-        refetchDepartments();
-      }
-    }
-  }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, setSelectedEmployees, refetchDepartments]);
-
-  // Supprimer un département
-  const handleDeleteDepartmentWrapper = useCallback(async (id: string, name: string) => {
-    const success = await handleDeleteDepartment(id, name);
-    if (success && typeof refetchDepartments === 'function') {
-      refetchDepartments();
-    }
-  }, [handleDeleteDepartment, refetchDepartments]);
-
-  // Obtenir les employés d'un département
-  const getDepartmentEmployees = useCallback((departmentId: string) => {
-    if (!departmentId || !Array.isArray(employees)) {
-      return [];
-    }
-    
-    // Trouver le département
-    const department = departments.find(d => d.id === departmentId);
-    if (!department) {
-      return [];
-    }
-    
-    // Obtenir les IDs des employés du département
-    const employeeIds = department.employeeIds || [];
-    
-    // Trouver les employés correspondants
-    return employees.filter(employee => employeeIds.includes(employee.id));
-  }, [employees, departments]);
 
   return {
     departments,
+    employees,
     loading,
     isAddDialogOpen,
     isEditDialogOpen,
@@ -160,10 +123,10 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
     handleEditDepartment,
     handleManageEmployees,
     handleEmployeeSelection,
-    handleSaveDepartment: handleSaveDepartmentWrapper,
-    handleUpdateDepartment: handleUpdateDepartmentWrapper,
-    handleDeleteDepartment: handleDeleteDepartmentWrapper,
-    handleSaveEmployeeAssignments: handleSaveEmployeeAssignmentsWrapper,
+    handleSaveDepartment,
+    handleUpdateDepartment,
+    handleDeleteDepartment,
+    handleSaveEmployeeAssignments,
     getDepartmentEmployees
   };
 };
