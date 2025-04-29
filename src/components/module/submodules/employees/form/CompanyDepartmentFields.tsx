@@ -11,14 +11,14 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 
 const CompanyDepartmentFields = () => {
   const { register, setValue, watch } = useFormContext();
   const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
   
   const selectedCompany = watch('company');
-  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments(selectedCompany);
+  const { departments, isLoading: isLoadingDepartments } = useFirebaseDepartments(selectedCompany);
   
   // Set the department field to empty when company changes
   useEffect(() => {
