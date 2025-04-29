@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ const CompanyDepartmentFields: React.FC = () => {
   const { companies = [], isLoading: isLoadingCompanies } = useFirebaseCompanies();
   
   // Fetch departments avec le filtre d'entreprise sélectionnée
+  // Only fetch departments when a company is selected
   const { 
     departments = [], 
     isLoading: isLoadingDepartments 
@@ -30,20 +31,40 @@ const CompanyDepartmentFields: React.FC = () => {
   // Watch for department changes
   const selectedDepartmentId = watch('department');
   
-  // Update department name display when ID changes
+  // Memoize the filtered companies to avoid re-renders
+  const activeCompanies = useMemo(() => {
+    if (!Array.isArray(companies)) return [];
+    return companies.filter(company => company && company.status === 'active');
+  }, [companies]);
+  
+  // Update department name display when ID changes - use useEffect with proper dependencies
   useEffect(() => {
-    if (selectedDepartmentId && Array.isArray(departments) && departments.length > 0) {
-      const dept = departments.find(d => d && d.id === selectedDepartmentId);
-      if (dept) {
-        setSelectedDepartmentName(dept.name || '');
-      }
+    if (!selectedDepartmentId || !Array.isArray(departments) || !departments.length) {
+      return;
+    }
+    
+    const dept = departments.find(d => d && d.id === selectedDepartmentId);
+    if (dept) {
+      setSelectedDepartmentName(dept.name || '');
     }
   }, [selectedDepartmentId, departments]);
 
-  // Filtrer les entreprises qui sont actives
-  const activeCompanies = Array.isArray(companies) 
-    ? companies.filter(company => company && company.status === 'active')
-    : [];
+  // Handle company change
+  const handleCompanyChange = (value: string) => {
+    setValue('company', value);
+    // Reset department when company changes
+    setValue('department', '');
+    setSelectedDepartmentName('');
+  };
+  
+  // Handle department change
+  const handleDepartmentChange = (value: string) => {
+    setValue('department', value);
+    if (Array.isArray(departments)) {
+      const dept = departments.find(d => d && d.id === value);
+      setSelectedDepartmentName(dept?.name || '');
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -51,12 +72,7 @@ const CompanyDepartmentFields: React.FC = () => {
         <div className="space-y-2">
           <Label htmlFor="company">Entreprise</Label>
           <Select
-            onValueChange={(value) => {
-              setValue('company', value);
-              // Reset department when company changes
-              setValue('department', '');
-              setSelectedDepartmentName('');
-            }}
+            onValueChange={handleCompanyChange}
             value={selectedCompany || ''}
             disabled={isLoadingCompanies}
           >
@@ -92,13 +108,7 @@ const CompanyDepartmentFields: React.FC = () => {
       <div className="space-y-2">
         <Label htmlFor="department">Département</Label>
         <Select
-          onValueChange={(value) => {
-            setValue('department', value);
-            if (Array.isArray(departments)) {
-              const dept = departments.find(d => d && d.id === value);
-              setSelectedDepartmentName(dept?.name || '');
-            }
-          }}
+          onValueChange={handleDepartmentChange}
           value={selectedDepartmentId || ''}
           disabled={isLoadingDepartments || !selectedCompany}
         >

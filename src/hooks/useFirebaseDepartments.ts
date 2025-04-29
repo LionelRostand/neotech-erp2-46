@@ -15,6 +15,8 @@ export const useFirebaseDepartments = (companyId?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const previousCompanyId = useRef<string | undefined>(companyId);
+  const isMounted = useRef(true);
+  const hasInitialFetch = useRef(false);
   
   // Préparer les contraintes de requête si un ID d'entreprise est fourni
   const queryConstraints: QueryConstraint[] = [];
@@ -23,10 +25,15 @@ export const useFirebaseDepartments = (companyId?: string) => {
     queryConstraints.push(where('companyId', '==', companyId));
   }
 
-  // Ajouter un tri par nom
+  // Trier par nom seulement (pas d'orderBy composé avec companyId pour éviter des erreurs d'index)
   queryConstraints.push(orderBy('name', 'asc'));
   
   const fetchDepartments = useCallback(async () => {
+    // Prevent refetching with the same parameters
+    if (!isMounted.current || (hasInitialFetch.current && previousCompanyId.current === companyId)) {
+      return;
+    }
+    
     if (previousCompanyId.current !== companyId) {
       // Réinitialiser les départements lors du changement d'entreprise
       previousCompanyId.current = companyId;
@@ -37,13 +44,15 @@ export const useFirebaseDepartments = (companyId?: string) => {
     try {
       console.log("Fetching departments from collection:", COLLECTIONS.HR.DEPARTMENTS, companyId ? `for company ${companyId}` : 'for all companies');
       const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints);
-      console.log("Departments fetched:", fetchedDepartments);
+      
+      if (!isMounted.current) return;
       
       // Ensure valid data with strict type checking
       if (!fetchedDepartments || !Array.isArray(fetchedDepartments)) {
         console.warn("Fetched departments is not an array:", fetchedDepartments);
         setDepartments([]);
         setIsLoading(false);
+        hasInitialFetch.current = true;
         return;
       }
       
@@ -73,25 +82,41 @@ export const useFirebaseDepartments = (companyId?: string) => {
       
       setDepartments(uniqueData);
       setError(null);
+      hasInitialFetch.current = true;
     } catch (err) {
+      if (!isMounted.current) return;
+      
       console.error("Error fetching departments:", err);
       setError(err instanceof Error ? err : new Error("Unknown error fetching departments"));
       // Always set a valid empty array in case of error
       setDepartments([]);
-      toast.error("Erreur lors du chargement des départements");
+      
+      // Don't show toast on initial error to avoid overwhelming the user
+      if (hasInitialFetch.current) {
+        toast.error("Erreur lors du chargement des départements");
+      }
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+        hasInitialFetch.current = true;
+      }
     }
   }, [companyId, queryConstraints]);
   
   // Fetch departments on mount or when companyId changes
   useEffect(() => {
+    isMounted.current = true;
     fetchDepartments();
+    
+    return () => {
+      isMounted.current = false;
+    };
   }, [fetchDepartments]); // Re-fetch when companyId changes or query constraints update
   
-  const refetch = async () => {
-    await fetchDepartments();
-  };
+  const refetch = useCallback(async () => {
+    hasInitialFetch.current = false;
+    return fetchDepartments();
+  }, [fetchDepartments]);
 
   return { 
     departments: departments || [], // Ensure we always return an array
