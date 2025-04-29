@@ -6,7 +6,7 @@ import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
 import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
 import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeaves";
 import EmployeesProfiles from "@/components/module/submodules/employees/EmployeesProfiles";
-import EmployeesHierarchy from "@/components/module/submodules/employees/EmployeesHierarchy";
+import EmployeesHierarchy from "@/components/module/submodules/employees/hierarchy/EmployeesHierarchy";
 import EmployeesRecruitment from "@/components/module/submodules/EmployeesRecruitment";
 import EmployeesBadges from "@/components/module/submodules/employees/EmployeesBadges";
 import EmployeesAttendance from "@/components/module/submodules/EmployeesAttendance";
@@ -27,6 +27,12 @@ const EmployeesProfilesWithProps = () => {
   const { employees = [], isLoading = true } = useEmployeeData();
   // Make sure we have a valid array of employees before rendering the component
   const safeEmployees = Array.isArray(employees) ? employees : [];
+  
+  console.log("Rendering EmployeesProfiles with", { 
+    employeesCount: safeEmployees.length, 
+    isLoading 
+  });
+  
   return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
 };
 

@@ -47,9 +47,11 @@ export const useFirebaseDepartments = (companyId?: string) => {
             name: dept.name || `Department ${dept.id.substring(0, 5)}`,
             description: dept.description || '',
             managerId: dept.managerId || '',
+            managerName: dept.managerName || '',
             companyId: dept.companyId || companyId || '',
             color: dept.color || '#3b82f6',
-            employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : []
+            employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
+            employeesCount: typeof dept.employeesCount === 'number' ? dept.employeesCount : 0
           });
         }
       });
