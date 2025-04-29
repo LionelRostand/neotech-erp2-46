@@ -1,208 +1,188 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import useEmployeeActions from './hooks/useEmployeeActions';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PlusIcon, SearchIcon, FilterIcon } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Employee } from '@/types/employee';
+import { filterEmployees } from '@/components/module/submodules/employees/utils/employeeUtils';
 import EmployeeViewDialog from './EmployeeViewDialog';
-import EmployeeFormDialog from './EmployeeFormDialog';
-import { getInitials } from '@/lib/utils';
-import DeleteEmployeeDialog from './DeleteEmployeeDialog';
-import { toast } from 'sonner';
-import { useFirestore } from '@/hooks/useFirestore';
-import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
+import CreateEmployeeDialog from './CreateEmployeeDialog';
 
-const EmployeesProfiles = () => {
-  const { employees, departments, isLoading } = useEmployeeData();
-  const { addEmployee, updateEmployee, deleteEmployee } = useEmployeeActions();
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const firestore = useFirestore('employees');
+interface EmployeesProfilesProps {
+  // Add any props here
+}
 
-  useEffect(() => {
-    console.log('Employees loaded:', employees.length);
-  }, [employees]);
-
-  const handleViewEmployee = (employee) => {
-    setSelectedEmployee(employee);
-    setViewDialogOpen(true);
-  };
-
-  const handleAddEmployee = () => {
-    setAddDialogOpen(true);
-  };
-
-  const handleEditEmployee = () => {
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteEmployee = (employee) => {
-    setSelectedEmployee(employee);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedEmployee) return;
-    try {
-      setIsDeleting(true);
-      await deleteEmployee(selectedEmployee.id);
-      setDeleteDialogOpen(false);
-      toast.success(`L'employé ${selectedEmployee.firstName} ${selectedEmployee.lastName} a été supprimé`);
-    } catch (error) {
-      console.error("Error deleting employee:", error);
-      toast.error("Erreur lors de la suppression de l'employé");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleAddSubmit = async (newEmployee) => {
-    try {
-      await addEmployee(newEmployee);
-      setAddDialogOpen(false);
-      toast.success("Employé ajouté avec succès");
-    } catch (error) {
-      console.error("Error adding employee:", error);
-      toast.error("Erreur lors de l'ajout de l'employé");
-    }
-  };
-
-  const handleEditSubmit = async (updatedEmployee) => {
-    if (!selectedEmployee) return;
-    try {
-      await updateEmployee({
-        ...updatedEmployee,
-        id: selectedEmployee.id
-      });
-      setEditDialogOpen(false);
-      toast.success("Employé mis à jour avec succès");
-    } catch (error) {
-      console.error("Error updating employee:", error);
-      toast.error("Erreur lors de la mise à jour de l'employé");
-    }
-  };
-
-  // We don't need to duplicate the data retrieval
-  // The same hook is already used above for employees and departments
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ /* props */ }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
-  return (
-    <div className="space-y-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">Tableau de bord des employés</h1>
-        <p className="text-muted-foreground">Statistiques et informations sur les employés de l'entreprise</p>
-      </div>
-
-      <EmployeesDashboardCards />
-      
-      {/* Employee list section */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold">Gestion des employés</h2>
-            <p className="text-muted-foreground">Consultez, ajoutez, modifiez ou supprimez des employés</p>
-          </div>
-          
-          <Button onClick={handleAddEmployee}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter un employé
+  const { employees, departments, isLoading, error } = useEmployeeData();
+  
+  const filteredEmployees = useMemo(() => {
+    return filterEmployees(employees, searchTerm, { 
+      status: statusFilter || undefined,
+      department: departmentFilter || undefined
+    });
+  }, [employees, searchTerm, statusFilter, departmentFilter]);
+  
+  const columns = useMemo(() => [
+    {
+      accessorKey: "firstName",
+      header: "Prénom",
+      cell: ({ row }) => row.original.firstName,
+    },
+    {
+      accessorKey: "lastName",
+      header: "Nom",
+      cell: ({ row }) => row.original.lastName,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => row.original.email,
+    },
+    {
+      accessorKey: "position",
+      header: "Poste",
+      cell: ({ row }) => row.original.position,
+    },
+    {
+      accessorKey: "department",
+      header: "Département",
+      cell: ({ row }) => row.original.department,
+    },
+    {
+      accessorKey: "status",
+      header: "Statut",
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status || 'inactive'}>
+          {row.original.status || 'Inactive'}
+        </StatusBadge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm" onClick={() => setSelectedEmployee(row.original)}>
+            Voir
           </Button>
         </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <p>Chargement des employés...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {employees.map((employee) => (
-              <Card key={employee.id} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center text-center">
-                    <Avatar className="h-24 w-24 mb-4">
-                      <AvatarImage src={employee.photo} />
-                      <AvatarFallback>
-                        {getInitials(`${employee.firstName} ${employee.lastName}`)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="font-semibold text-lg">
-                      {employee.firstName} {employee.lastName}
-                    </h3>
-                    <p className="text-muted-foreground">{employee.position}</p>
-                    {employee.company && (
-                      <p className="text-sm text-muted-foreground">
-                        {typeof employee.company === 'string'
-                          ? employee.company
-                          : employee.company.name || 'Neotech Consulting'}
-                      </p>
-                    )}
-                    <div className="flex justify-center mt-4 space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewEmployee(employee)}>
-                        Voir
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEmployee(employee);
-                          handleEditEmployee();
-                        }}>
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteEmployee(employee)}>
-                        Supprimer
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+      ),
+    },
+  ], []);
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  const handleStatusFilter = (status: string | null) => {
+    setStatusFilter(status);
+  };
+  
+  const handleDepartmentFilter = (department: string | null) => {
+    setDepartmentFilter(department);
+  };
+  
+  const clearFilters = () => {
+    setStatusFilter(null);
+    setDepartmentFilter(null);
+    setSearchTerm('');
+  };
+  
+  if (isLoading) {
+    return <div>Chargement des employés...</div>;
+  }
+  
+  if (error) {
+    return <div>Erreur lors du chargement des employés: {error.message}</div>;
+  }
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Card>
+          <CardHeader>
+            <CardTitle>Liste des employés</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                type="text"
+                placeholder="Rechercher un employé..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="md:w-80"
+              />
+              <div className="flex items-center space-x-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <FilterIcon className="h-4 w-4 mr-2" />
+                      Filtrer
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleStatusFilter('active')}>
+                      Actif
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusFilter('inactive')}>
+                      Inactif
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusFilter('onLeave')}>
+                      En congé
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Marketing')}>
+                      Marketing
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Ventes')}>
+                      Ventes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('RH')}>
+                      RH
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Finance')}>
+                      Finance
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Réinitialiser
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <PlusIcon className="h-4 w-4 mr-2" />
+          Ajouter un employé
+        </Button>
       </div>
-
+      
+      <DataTable columns={columns} data={filteredEmployees} />
+      
       {selectedEmployee && (
-        <EmployeeViewDialog
-          open={viewDialogOpen}
-          onOpenChange={setViewDialogOpen}
+        <EmployeeViewDialog 
+          open={true}
+          onOpenChange={() => setSelectedEmployee(null)}
           employee={selectedEmployee}
-          onEdit={handleEditEmployee}
         />
       )}
-
-      <EmployeeFormDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        onSubmit={handleAddSubmit}
-      />
-
-      {selectedEmployee && (
-        <EmployeeFormDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          onSubmit={handleEditSubmit}
-          employee={selectedEmployee}
-          isEditing={true}
-        />
-      )}
-
-      <DeleteEmployeeDialog
-        isOpen={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={handleConfirmDelete}
-        employee={selectedEmployee}
-        isDeleting={isDeleting}
+      
+      <CreateEmployeeDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
       />
     </div>
   );

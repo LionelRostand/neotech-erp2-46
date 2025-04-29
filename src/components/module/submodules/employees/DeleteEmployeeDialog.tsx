@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -9,9 +9,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Employee } from '@/types/employee';
-import { Loader2 } from 'lucide-react';
 
 interface DeleteEmployeeDialogProps {
   isOpen: boolean;
@@ -29,34 +29,49 @@ const DeleteEmployeeDialog: React.FC<DeleteEmployeeDialogProps> = ({
   isDeleting
 }) => {
   if (!employee) return null;
-  
+
+  // Obtenir le nom de l'entreprise
+  const getCompanyName = () => {
+    if (!employee.company) return 'Neotech Consulting';
+    
+    if (typeof employee.company === 'string') {
+      return employee.company || 'Neotech Consulting';
+    }
+    
+    if (employee.company && typeof employee.company === 'object') {
+      return employee.company.name || 'Neotech Consulting';
+    }
+    
+    return 'Neotech Consulting';
+  };
+
+  const companyName = getCompanyName();
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer l'employé</AlertDialogTitle>
+          <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer {employee.firstName} {employee.lastName} ?
-            Cette action ne peut pas être annulée.
+            Êtes-vous sûr de vouloir supprimer l'employé {employee.firstName} {employee.lastName} ?
+            <p className="mt-2 text-sm text-gray-500">Entreprise: {companyName}</p>
+            <p className="mt-2 text-red-500">Cette action est irréversible.</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={(e) => {
-              e.preventDefault();
-              onConfirm();
-            }} 
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
             disabled={isDeleting}
+            className="bg-red-600 hover:bg-red-700"
           >
             {isDeleting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Suppression...
-              </>
+              </div>
             ) : (
-              'Supprimer'
+              "Supprimer"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
