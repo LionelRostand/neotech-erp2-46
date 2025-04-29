@@ -17,6 +17,9 @@ const BadgeActions: React.FC<BadgeActionsProps> = ({
   onDelete,
   badge
 }) => {
+  // Only render delete button if both onDelete function and a valid badge exist
+  const showDeleteButton = onDelete && badge && badge.id;
+
   return (
     <div className="flex gap-2">
       <Button 
@@ -37,9 +40,9 @@ const BadgeActions: React.FC<BadgeActionsProps> = ({
         Imprimer le badge
       </Button>
       
-      {onDelete && badge && (
+      {showDeleteButton && (
         <Button 
-          onClick={() => onDelete(badge)}
+          onClick={() => onDelete && badge && onDelete(badge)}
           variant="destructive"
           className="flex-shrink-0"
         >

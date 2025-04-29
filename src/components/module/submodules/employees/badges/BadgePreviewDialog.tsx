@@ -25,7 +25,8 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
 }) => {
   const [isPrinted, setIsPrinted] = useState(false);
   
-  if (!selectedBadge) return null;
+  // Early return with null if no badge is selected
+  if (!isOpen || !selectedBadge) return null;
   
   const companyName = getCompanyName(selectedEmployee);
   

@@ -35,7 +35,8 @@ export interface BadgeStatsData {
 }
 
 export const getInitials = (firstName: string, lastName: string) => {
-  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  if (!firstName && !lastName) return 'ID';
+  return ((firstName?.charAt(0) || '') + (lastName?.charAt(0) || '')).toUpperCase() || 'ID';
 };
 
 export const generateBadgeNumber = (): string => {

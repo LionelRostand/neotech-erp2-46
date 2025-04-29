@@ -12,6 +12,8 @@ interface BadgesTableProps {
 }
 
 const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loading }) => {
+  // Safety check - ensure badgesList is an array
+  const safeBadgesList = Array.isArray(badgesList) ? badgesList : [];
   
   const renderStatus = (status: string) => {
     if (status === 'success') {
@@ -34,7 +36,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loa
     );
   }
   
-  if (badgesList.length === 0) {
+  if (safeBadgesList.length === 0) {
     return (
       <div className="mt-6 text-center p-8 border border-dashed rounded-md">
         <p className="text-muted-foreground">Aucun badge trouvé</p>
@@ -57,7 +59,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loa
           </TableRow>
         </TableHeader>
         <TableBody>
-          {badgesList.map((badge) => (
+          {safeBadgesList.map((badge) => (
             <TableRow 
               key={badge.id} 
               className="cursor-pointer hover:bg-muted/50"

@@ -16,7 +16,7 @@ const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [badgesList, setBadgesList] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const { employees } = useHrModuleData();
+  const { employees = [] } = useHrModuleData();
   
   const [isBadgePreviewOpen, setIsBadgePreviewOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeData | null>(null);
@@ -31,10 +31,11 @@ const EmployeesBadges: React.FC = () => {
     try {
       setLoading(true);
       const data = await getBadges();
-      setBadgesList(data);
+      setBadgesList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Erreur lors du chargement des badges:", error);
       toast.error("Échec du chargement des badges");
+      setBadgesList([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
@@ -70,8 +71,9 @@ const EmployeesBadges: React.FC = () => {
       setSelectedBadge(badge);
       
       // Trouver l'employé correspondant
-      const employee = employees.find(emp => emp.id === badge.employeeId) || 
-                       employees.find(emp => `${emp.firstName} ${emp.lastName}` === badge.employeeName);
+      const safeEmployees = Array.isArray(employees) ? employees : [];
+      const employee = safeEmployees.find(emp => emp.id === badge.employeeId) || 
+                       safeEmployees.find(emp => `${emp.firstName} ${emp.lastName}` === badge.employeeName);
                        
       setSelectedBadgeEmployee(employee || null);
       setIsBadgePreviewOpen(true);
@@ -82,6 +84,30 @@ const EmployeesBadges: React.FC = () => {
     await loadBadges();
     toast.success("Données des badges actualisées");
   };
+  
+  // Handle badge deletion
+  const handleDeleteBadge = async (badge: BadgeData) => {
+    if (!badge || !badge.id) return;
+    
+    try {
+      // Delete from Firebase
+      await deleteDocument(badge.id);
+      
+      // Update local state
+      setBadgesList(prev => prev.filter(b => b.id !== badge.id));
+      
+      // Close preview dialog
+      setIsBadgePreviewOpen(false);
+      
+      toast.success("Badge supprimé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la suppression du badge:", error);
+      toast.error("Échec de la suppression du badge");
+    }
+  };
+  
+  // Make sure employees is always an array
+  const safeEmployees = Array.isArray(employees) ? employees : [];
   
   return (
     <>
@@ -99,7 +125,7 @@ const EmployeesBadges: React.FC = () => {
         </div>
       </div>
       
-      <BadgeStats badgesList={badgesList} employeesCount={employees.length} />
+      <BadgeStats badgesList={badgesList} employeesCount={safeEmployees.length} />
 
       <BadgesTable 
         badgesList={badgesList} 
@@ -111,14 +137,15 @@ const EmployeesBadges: React.FC = () => {
         isOpen={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
         onBadgeCreated={handleCreateBadge} 
-        employees={employees}
+        employees={safeEmployees}
       />
       
       <BadgePreviewDialog 
         isOpen={isBadgePreviewOpen} 
         onOpenChange={setIsBadgePreviewOpen} 
         selectedBadge={selectedBadge} 
-        selectedEmployee={selectedBadgeEmployee} 
+        selectedEmployee={selectedBadgeEmployee}
+        onDeleteClick={handleDeleteBadge}
       />
     </>
   );
