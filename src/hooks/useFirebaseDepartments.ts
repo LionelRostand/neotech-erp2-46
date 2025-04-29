@@ -1,9 +1,10 @@
 
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { where, QueryConstraint } from 'firebase/firestore';
+import { where, QueryConstraint, orderBy } from 'firebase/firestore';
 import { Department } from '@/components/module/submodules/departments/types';
 import { fetchCollectionData } from './fetchCollectionData';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Hook pour récupérer les départements depuis Firebase avec mise à jour en temps réel
@@ -13,6 +14,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const previousCompanyId = useRef<string | undefined>(companyId);
   
   // Préparer les contraintes de requête si un ID d'entreprise est fourni
   const queryConstraints: QueryConstraint[] = [];
@@ -20,8 +22,17 @@ export const useFirebaseDepartments = (companyId?: string) => {
   if (companyId) {
     queryConstraints.push(where('companyId', '==', companyId));
   }
+
+  // Ajouter un tri par nom
+  queryConstraints.push(orderBy('name', 'asc'));
   
   const fetchDepartments = useCallback(async () => {
+    if (previousCompanyId.current !== companyId) {
+      // Réinitialiser les départements lors du changement d'entreprise
+      previousCompanyId.current = companyId;
+      setDepartments([]);
+    }
+
     setIsLoading(true);
     try {
       console.log("Fetching departments from collection:", COLLECTIONS.HR.DEPARTMENTS, companyId ? `for company ${companyId}` : 'for all companies');
@@ -66,6 +77,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
       setError(err instanceof Error ? err : new Error("Unknown error fetching departments"));
       // Always set a valid empty array in case of error
       setDepartments([]);
+      toast.error("Erreur lors du chargement des départements");
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +86,7 @@ export const useFirebaseDepartments = (companyId?: string) => {
   // Fetch departments on mount or when companyId changes
   useEffect(() => {
     fetchDepartments();
-  }, [fetchDepartments]); // Re-fetch when companyId changes
+  }, [fetchDepartments]); // Re-fetch when companyId changes or query constraints update
   
   const refetch = async () => {
     await fetchDepartments();

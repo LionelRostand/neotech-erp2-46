@@ -3,8 +3,12 @@ import { useFirebaseDepartments } from './useFirebaseDepartments';
 import { useMemo } from 'react';
 import { Department } from '@/components/module/submodules/departments/types';
 
+/**
+ * Hook personnalisé qui renvoie les départements disponibles pour une entreprise spécifique
+ * @param companyId Optionnel - ID de l'entreprise pour filtrer les départements
+ */
 export const useAvailableDepartments = (companyId?: string) => {
-  // Explicitly add default values to departments and isLoading to handle undefined cases
+  // Utiliser useFirebaseDepartments pour récupérer les départements avec le filtre d'entreprise
   const { departments = [], isLoading = false, error, refetch } = useFirebaseDepartments(companyId);
 
   // Ensure we have valid departments data with all required fields
@@ -27,7 +31,8 @@ export const useAvailableDepartments = (companyId?: string) => {
         color: dept.color || '#3b82f6',
         employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
         employeesCount: typeof dept.employeesCount === 'number' ? dept.employeesCount : 0
-      }));
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)); // Trier par nom pour une meilleure expérience utilisateur
   }, [departments, companyId]);
 
   // Always return a valid array, even if empty

@@ -11,17 +11,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 const CompanyDepartmentFields: React.FC = () => {
   const { register, setValue, watch } = useFormContext();
   const selectedCompany = watch('company');
   const [selectedDepartmentName, setSelectedDepartmentName] = useState<string>('');
   
-  // Fetch companies data
-  const { companies = [], isLoading: isLoadingCompanies } = useCompaniesData();
+  // Utiliser useFirebaseCompanies au lieu de useCompaniesData pour une meilleure intégration
+  const { companies = [], isLoading: isLoadingCompanies } = useFirebaseCompanies();
   
-  // Fetch departments with the selected company filter
+  // Fetch departments avec le filtre d'entreprise sélectionnée
   const { 
     departments = [], 
     isLoading: isLoadingDepartments 
@@ -39,6 +39,9 @@ const CompanyDepartmentFields: React.FC = () => {
       }
     }
   }, [selectedDepartmentId, departments]);
+
+  // Filtrer les entreprises qui sont actives
+  const activeCompanies = companies.filter(company => company.status === 'active');
 
   return (
     <div className="space-y-4">
@@ -59,7 +62,7 @@ const CompanyDepartmentFields: React.FC = () => {
               <SelectValue placeholder="Sélectionner une entreprise" />
             </SelectTrigger>
             <SelectContent>
-              {companies.map((company) => (
+              {activeCompanies.map((company) => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
                 </SelectItem>
