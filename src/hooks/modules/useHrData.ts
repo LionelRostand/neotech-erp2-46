@@ -34,11 +34,13 @@ export const useHrData = () => {
       // Ensure collection path is not empty
       const safePath = collectionPath || 'default_collection';
       const data = await fetchCollectionData<T>(safePath);
-      setDataFn(data);
-      return data;
+      // Ensure we always set an array, even if data is undefined
+      setDataFn(data || []);
+      return data || [];
     } catch (err) {
       console.error(`Error fetching ${collectionPath}:`, err);
       setError(err as Error);
+      // Always return an empty array in case of error
       return [];
     }
   };
@@ -78,7 +80,7 @@ export const useHrData = () => {
     fetchAllHrData();
   }, [fetchAllHrData]);
   
-  // Always return the same structure, with default values for undefined properties
+  // Always return the same structure, with default empty arrays for all properties
   return {
     employees: employees || [],
     payslips: payslips || [],

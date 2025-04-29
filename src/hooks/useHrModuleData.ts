@@ -8,7 +8,6 @@ import { Employee } from '@/types/employee';
  * Hook to fetch and process HR module data
  */
 export const useHrModuleData = () => {
-  // Always destructure with default values for consistency
   const { 
     employees: rawEmployees = [], 
     payslips = [], 
@@ -74,11 +73,12 @@ export const useHrModuleData = () => {
       
       setEmployees(processedEmployees);
     } else {
+      // If rawEmployees is undefined or not an array, set employees to empty array
       setEmployees([]);
     }
   }, [rawEmployees]);
 
-  // Extract companies from employees if available - always called in the same order
+  // Extract companies from employees if available
   useEffect(() => {
     if (employees && Array.isArray(employees) && employees.length > 0) {
       // Create a map to ensure unique companies
@@ -153,11 +153,11 @@ export const useHrModuleData = () => {
   }, [employees]);
 
   return {
-    employees,
-    payslips,
-    contracts,
-    departments,
-    companies,
+    employees: employees || [],
+    payslips: payslips || [],
+    contracts: contracts || [],
+    departments: departments || [],
+    companies: companies || [],
     leaveRequests: leaveRequests || [],
     attendance: attendance || [],
     absenceRequests: absenceRequests || [],

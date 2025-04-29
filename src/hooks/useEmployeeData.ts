@@ -18,7 +18,7 @@ export const useEmployeeData = () => {
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
-    if (!rawEmployees || !Array.isArray(rawEmployees) || rawEmployees.length === 0) {
+    if (!rawEmployees || !Array.isArray(rawEmployees)) {
       console.log("No employees data available or invalid data format");
       return [];
     }
@@ -52,12 +52,13 @@ export const useEmployeeData = () => {
   
   // Formater les départements pour les enrichir avec les données des managers
   const formattedDepartments = useMemo(() => {
-    if (!hrDepartments || !Array.isArray(hrDepartments) || hrDepartments.length === 0) {
+    if (!hrDepartments || !Array.isArray(hrDepartments)) {
       console.log("No department data available or invalid data format");
       return [];
     }
     
-    if (!formattedEmployees || formattedEmployees.length === 0) {
+    // Handle case where employees data is not available yet
+    if (!formattedEmployees || !Array.isArray(formattedEmployees)) {
       console.log("Using departments without employee data");
       return hrDepartments.map(dept => {
         if (!dept) return null;
@@ -102,8 +103,8 @@ export const useEmployeeData = () => {
   }, [hrDepartments, formattedEmployees]);
   
   return {
-    employees: formattedEmployees,
-    departments: formattedDepartments,
+    employees: formattedEmployees || [],
+    departments: formattedDepartments || [],
     isLoading,
     error,
     // Expose a refetch function if needed in the future

@@ -21,26 +21,13 @@ import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 
-// Don't use hooks directly in the routes file - that can cause inconsistent hook calls
-// Instead, use wrapper components that properly handle data loading
-
-// Helper component to encapsulate data loading for EmployeesProfiles
-const EmployeesProfilesWithData = () => {
-  return <EmployeesProfiles />;
-};
-
-// Helper component to encapsulate data loading for EmployeesDepartments
-const EmployeesDepartmentsWithData = () => {
-  return <EmployeesDepartments />;
-};
-
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    <Route path="profiles" element={<EmployeesProfilesWithData />} />
+    <Route path="profiles" element={<EmployeesProfiles />} />
     <Route path="badges" element={<EmployeesBadges />} />
-    <Route path="departments" element={<EmployeesDepartmentsWithData />} />
+    <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />
     <Route path="attendance" element={<EmployeesAttendance />} />
     <Route path="timesheet" element={<EmployeesTimesheet />} />
