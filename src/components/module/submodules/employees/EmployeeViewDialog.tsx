@@ -36,21 +36,6 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
     }
   };
 
-  // Récupérer le nom de l'entreprise de l'employé
-  const getCompanyName = () => {
-    if (!employee.company) return 'Non spécifiée';
-    
-    if (typeof employee.company === 'string') {
-      return employee.company;
-    }
-    
-    if (employee.company && typeof employee.company === 'object') {
-      return employee.company.name || 'Non spécifiée';
-    }
-    
-    return 'Non spécifiée';
-  };
-
   if (!employee) return null;
 
   return (
@@ -78,7 +63,7 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
               <p className="text-muted-foreground">{employee.position}</p>
               {employee.company && (
                 <p className="text-sm text-muted-foreground">
-                  {getCompanyName()}
+                  {typeof employee.company === 'string' ? employee.company : employee.company.name}
                 </p>
               )}
             </div>
