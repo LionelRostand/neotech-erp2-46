@@ -121,7 +121,7 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
             department={currentDepartment}
             selectedEmployees={selectedEmployees}
             onEmployeeSelection={handleEmployeeSelection}
-            getDepartmentEmployees={(departmentId: string) => getDepartmentEmployees(departmentId)}
+            getDepartmentEmployees={getDepartmentEmployees}
             onClose={() => setIsManageEmployeesDialogOpen(false)}
             onSave={handleSaveEmployeeAssignments}
           />

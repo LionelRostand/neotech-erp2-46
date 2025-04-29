@@ -18,8 +18,8 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
   const { employees: fetchedEmployees } = useEmployeeData();
   
   // Utiliser les props si fournis, sinon utiliser les données récupérées
-  const departments = propDepartments || fetchedDepartments || [];
-  const employees = propEmployees || fetchedEmployees || [];
+  const departments = Array.isArray(propDepartments) ? propDepartments : (Array.isArray(fetchedDepartments) ? fetchedDepartments : []);
+  const employees = Array.isArray(propEmployees) ? propEmployees : (Array.isArray(fetchedEmployees) ? fetchedEmployees : []);
 
   // Utiliser le hook de formulaire pour gérer l'état du formulaire
   const {
@@ -87,6 +87,8 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
 
   // Ouvrir le dialogue de gestion des employés
   const handleManageEmployees = useCallback((department: Department) => {
+    if (!department) return;
+    
     setCurrentDepartment(department);
     const deptEmployees = getDepartmentEmployees(department.id);
     setSelectedEmployees(deptEmployees);
@@ -95,6 +97,8 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
 
   // Gérer la sélection des employés
   const handleEmployeeSelection = useCallback((employeeId: string, isSelected: boolean) => {
+    if (!employeeId) return;
+    
     setSelectedEmployees(prev => {
       if (isSelected) {
         return [...prev, employeeId];
@@ -105,8 +109,8 @@ export const useDepartments = (propDepartments?: any[], propEmployees?: any[]) =
   }, [setSelectedEmployees]);
 
   return {
-    departments,
-    employees,
+    departments: departments || [],
+    employees: employees || [],
     loading,
     isAddDialogOpen,
     isEditDialogOpen,

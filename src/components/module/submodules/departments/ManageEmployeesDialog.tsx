@@ -3,7 +3,7 @@ import React from 'react';
 import { Department } from './types';
 import { DialogHeader, DialogTitle, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { EmployeesList } from './EmployeesList';
+import EmployeesList from './EmployeesList';
 
 interface ManageEmployeesDialogProps {
   department: Department;
@@ -40,8 +40,10 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       </DialogHeader>
       <DialogContent className="max-h-[70vh] overflow-y-auto">
         <EmployeesList 
+          employees={[]} // We need to pass employees here
           selectedEmployees={selectedEmployees} 
           onEmployeeSelection={onEmployeeSelection}
+          id={`manage-employees-${department.id}`}
         />
       </DialogContent>
       <DialogFooter className="flex justify-between">
