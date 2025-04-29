@@ -1,17 +1,11 @@
 
 import React from 'react';
-import { BadgeData } from './BadgeTypes';
+import { BadgeData, BadgesTableProps } from './BadgeTypes';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Building, Check, X, AlertCircle } from 'lucide-react';
 
-interface BadgesTableProps {
-  badgesList: BadgeData[];
-  onBadgeClick: (badgeId: string) => void;
-  loading: boolean;
-}
-
-const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loading }) => {
+const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick, loading = false }) => {
   // Safety check - ensure badgesList is an array
   const safeBadgesList = Array.isArray(badgesList) ? badgesList : [];
   
@@ -67,7 +61,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loa
             >
               <TableCell className="font-medium">{badge.id}</TableCell>
               <TableCell>{badge.employeeName}</TableCell>
-              <TableCell>{badge.department}</TableCell>
+              <TableCell>{badge.department || 'Non spécifié'}</TableCell>
               <TableCell>
                 {badge.company ? (
                   <div className="flex items-center">

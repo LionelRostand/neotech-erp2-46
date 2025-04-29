@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BadgeCheck, BadgeIcon, User } from 'lucide-react';
+import { BadgeIcon, Check, User } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { BadgeData } from './BadgeTypes';
 
@@ -9,15 +9,18 @@ interface BadgeStatsProps {
   employeesCount: number;
 }
 
-const BadgeStats: React.FC<BadgeStatsProps> = ({ badgesList, employeesCount }) => {
+const BadgeStats: React.FC<BadgeStatsProps> = ({ badgesList = [], employeesCount = 0 }) => {
+  // Ensure badgesList is an array
+  const safeBadgesList = Array.isArray(badgesList) ? badgesList : [];
+
   // Calculate active badges (success status)
-  const activeBadges = badgesList.filter(badge => badge.status === "success").length;
+  const activeBadges = safeBadgesList.filter(badge => badge.status === "success").length;
   
   // Calculate pending badges (warning status)
-  const pendingBadges = badgesList.filter(badge => badge.status === "warning").length;
+  const pendingBadges = safeBadgesList.filter(badge => badge.status === "warning").length;
   
   // Calculate disabled badges (danger status)
-  const disabledBadges = badgesList.filter(badge => badge.status === "danger").length;
+  const disabledBadges = safeBadgesList.filter(badge => badge.status === "danger").length;
   
   // Calculate percentage of employees with badges
   const employeesWithBadgesPercentage = employeesCount > 0 
@@ -29,7 +32,7 @@ const BadgeStats: React.FC<BadgeStatsProps> = ({ badgesList, employeesCount }) =
       <StatCard
         title="Badges Actifs"
         value={activeBadges.toString()}
-        icon={<BadgeCheck className="h-8 w-8 text-green-500" />}
+        icon={<Check className="h-8 w-8 text-green-500" />}
         description="Total des badges actuellement actifs"
       />
       

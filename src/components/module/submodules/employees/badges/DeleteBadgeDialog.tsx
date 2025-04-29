@@ -9,7 +9,7 @@ import {
   DialogFooter 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge, AlertTriangle } from 'lucide-react';
+import { BadgeIcon, AlertTriangle } from 'lucide-react';
 import { BadgeData } from './BadgeTypes';
 
 interface DeleteBadgeDialogProps {
@@ -44,7 +44,7 @@ const DeleteBadgeDialog: React.FC<DeleteBadgeDialogProps> = ({
 
         <div className="py-4">
           <div className="flex items-center gap-3 p-3 border rounded-md bg-muted/50">
-            <Badge className="h-8 w-8 text-gray-500" />
+            <BadgeIcon className="h-8 w-8 text-gray-500" />
             <div>
               <p className="font-medium">{badge.id}</p>
               <p className="text-sm text-muted-foreground">Appartient à: {badge.employeeName}</p>
