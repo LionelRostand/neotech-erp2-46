@@ -14,7 +14,7 @@ import EmployeeViewDialog from './EmployeeViewDialog';
 import { toast } from 'sonner';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 
-const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }> = ({ 
+const EmployeesProfiles: React.FC<{ employees: Employee[] | undefined, isLoading?: boolean }> = ({ 
   employees = [], 
   isLoading = false 
 }) => {
