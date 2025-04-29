@@ -34,15 +34,16 @@ export async function fetchCollectionData<T>(
         return [];
       }
       
-      const results = querySnapshot.docs.map(doc => {
-        if (!doc) return null;
-        return { 
-          id: doc.id, 
-          ...doc.data() 
-        };
-      }).filter(Boolean) as T[];
+      const results = querySnapshot.docs
+        .filter(doc => doc != null) // Filter out null/undefined docs
+        .map(doc => {
+          return { 
+            id: doc.id, 
+            ...doc.data() 
+          };
+        }) as T[];
       
-      return results;
+      return Array.isArray(results) ? results : [];
     } catch (fetchErr) {
       console.error(`Error in getDocs for ${collectionPath}:`, fetchErr);
       return [];

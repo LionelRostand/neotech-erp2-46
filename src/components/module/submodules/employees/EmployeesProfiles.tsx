@@ -22,11 +22,15 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
+  // Ensure employees is always a valid array
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
     try {
       return format(new Date(dateStr), 'dd/MM/yyyy', { locale: fr });
     } catch (e) {
-      return dateStr;
+      return dateStr || "-";
     }
   };
 
@@ -66,46 +70,51 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
   const columns: Column<Employee>[] = [
     {
       header: "Nom",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <div className="flex-shrink-0 h-8 w-8">
-            {row.original.photoUrl ? (
-              <img
-                src={row.original.photoUrl}
-                alt={`${row.original.firstName} ${row.original.lastName}`}
-                className="rounded-full object-cover h-full w-full"
-              />
-            ) : (
-              <div className="bg-gray-200 rounded-full h-full w-full flex items-center justify-center">
-                <span className="text-xs font-medium">
-                  {row.original.firstName?.[0]}{row.original.lastName?.[0]}
-                </span>
-              </div>
-            )}
+      cell: ({ row }) => {
+        const employee = row.original || {};
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex-shrink-0 h-8 w-8">
+              {employee.photoUrl ? (
+                <img
+                  src={employee.photoUrl}
+                  alt={`${employee.firstName || ''} ${employee.lastName || ''}`}
+                  className="rounded-full object-cover h-full w-full"
+                />
+              ) : (
+                <div className="bg-gray-200 rounded-full h-full w-full flex items-center justify-center">
+                  <span className="text-xs font-medium">
+                    {(employee.firstName || '')[0]}{(employee.lastName || '')[0]}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="font-medium">{employee.firstName || ''} {employee.lastName || ''}</div>
+              <div className="text-sm text-gray-500">{employee.position || ''}</div>
+            </div>
           </div>
-          <div>
-            <div className="font-medium">{row.original.firstName} {row.original.lastName}</div>
-            <div className="text-sm text-gray-500">{row.original.position}</div>
-          </div>
-        </div>
-      )
+        );
+      }
     },
     {
       header: "Département",
       accessorKey: "department",
+      cell: ({ row }) => row.original?.department || "-"
     },
     {
       header: "Email",
       accessorKey: "email",
+      cell: ({ row }) => row.original?.email || "-"
     },
     {
       header: "Date d'embauche",
-      cell: ({ row }) => row.original.hireDate ? formatDate(row.original.hireDate) : "-"
+      cell: ({ row }) => row.original?.hireDate ? formatDate(row.original.hireDate) : "-"
     },
     {
       header: "Statut",
       cell: ({ row }) => {
-        const status = row.original.status || '';
+        const status = row.original?.status || '';
         return <StatusBadge status={status} />;
       }
     },
@@ -143,7 +152,7 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
           </Button>
         </div>
         
-        <EmployeesStats employees={employees} />
+        <EmployeesStats employees={safeEmployees} />
       </div>
       
       <div className="bg-white p-6 rounded-lg shadow">
@@ -151,7 +160,7 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
         
         <DataTable
           columns={columns}
-          data={employees}
+          data={safeEmployees}
           isLoading={isLoading}
           emptyMessage="Aucun employé trouvé"
         />
