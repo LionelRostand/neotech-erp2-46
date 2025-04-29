@@ -37,6 +37,7 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
   }, [moduleId, location.pathname, navigate]);
 
   if (!module) {
+    console.error(`Module with ID ${moduleId} not found`);
     return (
       <DashboardLayout>
         <Card className="p-6">
