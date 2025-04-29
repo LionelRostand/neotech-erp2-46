@@ -20,20 +20,23 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
   id
 }) => {
   // Use the hook to get employees if none are provided
-  const { employees: hookEmployees } = useEmployeeData();
+  const { employees: hookEmployees = [] } = useEmployeeData() || {};
   
   // Use provided employees or fall back to hook data
-  const employees = providedEmployees && providedEmployees.length > 0 
+  const employees = Array.isArray(providedEmployees) && providedEmployees.length > 0 
     ? providedEmployees 
-    : hookEmployees || [];
+    : (Array.isArray(hookEmployees) ? hookEmployees : []);
 
-  if (!employees || !Array.isArray(employees) || employees.length === 0) {
+  if (!employees || employees.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Aucun employé disponible</p>
       </div>
     );
   }
+  
+  // Ensure selectedEmployees is always an array
+  const safeSelectedEmployees = Array.isArray(selectedEmployees) ? selectedEmployees : [];
   
   return (
     <ScrollArea className="h-[300px] border rounded-md p-4">
@@ -43,7 +46,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
             return null; // Skip invalid employees
           }
           
-          const isSelected = selectedEmployees.includes(employee.id);
+          const isSelected = safeSelectedEmployees.includes(employee.id);
           return (
             <div 
               key={employee.id}
@@ -56,17 +59,17 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
               />
               <Avatar className="h-8 w-8">
                 {(employee.photoURL || employee.photo) ? (
-                  <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+                  <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName || ''} ${employee.lastName || ''}`} />
                 ) : null}
                 <AvatarFallback>
-                  {employee.firstName?.[0]}{employee.lastName?.[0]}
+                  {employee.firstName?.[0] || ''}{employee.lastName?.[0] || ''}
                 </AvatarFallback>
               </Avatar>
               <label 
                 htmlFor={`${id}-employee-${employee.id}`}
                 className="text-sm font-medium leading-none cursor-pointer flex-1"
               >
-                {employee.firstName} {employee.lastName}
+                {employee.firstName || ''} {employee.lastName || ''}
                 <br />
                 <span className="text-xs text-muted-foreground">
                   {employee.title || employee.position || "Sans poste"}

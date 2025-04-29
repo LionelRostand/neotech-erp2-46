@@ -34,7 +34,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   const handleDownloadBadge = () => {
     try {
       const doc = generateBadgePdf(selectedBadge, selectedEmployee, companyName);
-      doc.save(`badge-${selectedBadge.id}.pdf`);
+      doc.save(`badge-${selectedBadge.id || 'unknown'}.pdf`);
       
       toast.success("Badge téléchargé avec succès");
       setIsPrinted(true);
@@ -71,7 +71,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
           <BadgeActions 
             onDownload={handleDownloadBadge} 
             onPrint={handlePrintBadge} 
-            onDelete={selectedBadge ? () => onDeleteClick?.(selectedBadge) : undefined}
+            onDelete={onDeleteClick ? () => onDeleteClick(selectedBadge) : undefined}
             badge={selectedBadge}
           />
         </div>

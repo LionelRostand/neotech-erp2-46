@@ -40,9 +40,9 @@ export const generateBadgePdf = (
   doc.setTextColor(0, 0, 0);
   
   // Add Badge header with color
-  if (badge.status === 'success') {
+  if (badge?.status === 'success') {
     doc.setFillColor(34, 197, 94); // green-500
-  } else if (badge.status === 'warning') {
+  } else if (badge?.status === 'warning') {
     doc.setFillColor(245, 158, 11); // amber-500
   } else {
     doc.setFillColor(239, 68, 68); // red-500
@@ -53,20 +53,20 @@ export const generateBadgePdf = (
   
   // Add badge content
   doc.setFontSize(8);
-  doc.text(`ID: ${badge.id}`, 37, 15, { align: 'center' });
+  doc.text(`ID: ${badge?.id || 'N/A'}`, 37, 15, { align: 'center' });
   
   doc.setFontSize(14);
-  doc.text(badge.employeeName || 'Employé', 37, 22, { align: 'center' });
+  doc.text(badge?.employeeName || 'Employé', 37, 22, { align: 'center' });
   
   doc.setFontSize(10);
-  doc.text(`Entreprise: ${companyName}`, 37, 28, { align: 'center' });
+  doc.text(`Entreprise: ${companyName || 'Neotech Consulting'}`, 37, 28, { align: 'center' });
   
   // Add information
   doc.setFontSize(8);
-  doc.text(`Département: ${badge.department || 'N/A'}`, 10, 38);
-  doc.text(`Niveau d'accès: ${badge.accessLevel || 'Standard'}`, 10, 44);
-  doc.text(`Statut: ${badge.statusText || 'N/A'}`, 10, 50);
-  doc.text(`Date d'émission: ${badge.date || 'N/A'}`, 10, 56);
+  doc.text(`Département: ${badge?.department || 'N/A'}`, 10, 38);
+  doc.text(`Niveau d'accès: ${badge?.accessLevel || 'Standard'}`, 10, 44);
+  doc.text(`Statut: ${badge?.statusText || 'N/A'}`, 10, 50);
+  doc.text(`Date d'émission: ${badge?.date || 'N/A'}`, 10, 56);
   
   // Add extra employee info if available
   if (employee) {

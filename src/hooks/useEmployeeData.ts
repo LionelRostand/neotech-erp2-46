@@ -14,7 +14,7 @@ export const useEmployeeData = () => {
     departments: hrDepartments = [], 
     isLoading = true, 
     error = null 
-  } = useHrModuleData();
+  } = useHrModuleData() || { employees: [], departments: [], isLoading: true, error: null };
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
