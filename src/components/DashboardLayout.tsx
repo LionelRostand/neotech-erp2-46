@@ -1,67 +1,114 @@
 
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
-import SidebarNavigation from '@/components/dashboard/SidebarNavigation';
-import SidebarHeader from '@/components/dashboard/SidebarHeader';
-import SidebarFooter from '@/components/dashboard/SidebarFooter';
-import DashboardNavbar from '@/components/DashboardNavbar';
-import { useSidebar } from '@/components/dashboard/SidebarContext';
+import { useNavigate, useLocation } from "react-router-dom";
+import { modules } from '@/data/modules';
+import SidebarHeader from './dashboard/SidebarHeader';
+import SidebarNavigation from './dashboard/SidebarNavigation';
+import SidebarFooter from './dashboard/SidebarFooter';
+import TopBar from './dashboard/TopBar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarOpen, toggleSidebar } = useSidebar();
-  const [settingsActive, setSettingsActive] = useState(location.pathname.startsWith('/settings'));
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [installedModules, setInstalledModules] = useState<number[]>([]);
+  
+  // Load installed modules from localStorage on load
+  useEffect(() => {
+    const loadInstalledModules = () => {
+      const savedModules = localStorage.getItem('installedModules');
+      if (savedModules) {
+        setInstalledModules(JSON.parse(savedModules));
+      }
+    };
+    
+    // Load on startup
+    loadInstalledModules();
+    
+    // Configure event listener for module changes
+    const handleModulesChanged = () => loadInstalledModules();
+    window.addEventListener('modulesChanged', handleModulesChanged);
+    
+    // Clean up listener on unmount
+    return () => {
+      window.removeEventListener('modulesChanged', handleModulesChanged);
+    };
+  }, []);
 
-  const handleNavigate = (href: string) => {
+  // Add a class to the body when the sidebar is collapsed
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.remove('sidebar-collapsed');
+    } else {
+      document.body.classList.add('sidebar-collapsed');
+    }
+  }, [sidebarOpen]);
+
+  const handleNavigation = (href: string) => {
     navigate(href);
-    setSettingsActive(href.startsWith('/settings'));
   };
+  
+  // Filter installed modules
+  const installedModuleDetails = modules.filter(module => 
+    installedModules.includes(module.id)
+  );
+
+  // Check if we're on any settings page
+  const isSettingsActive = 
+    location.pathname.startsWith('/settings/');
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen w-full bg-neotech-background">
       {/* Sidebar */}
-      <aside
+      <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-20 w-64 transform bg-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out transform bg-white border-r border-gray-100 shadow-sm",
+          sidebarOpen ? "w-64" : "w-20"
         )}
       >
-        <div className="flex h-full flex-col">
-          <SidebarHeader />
-          <div className="flex-1 overflow-y-auto px-3 py-4">
-            <SidebarNavigation />
-          </div>
+        <div className="flex flex-col h-full">
+          {/* Logo - Clickable to go to Welcome page */}
+          <SidebarHeader 
+            sidebarOpen={sidebarOpen} 
+            onClick={() => navigate('/welcome')} 
+          />
+
+          {/* Navigation */}
+          <SidebarNavigation 
+            installedModules={installedModuleDetails} 
+            onNavigate={handleNavigation} 
+          />
+
+          {/* Collapse button and company info */}
           <SidebarFooter 
             sidebarOpen={sidebarOpen} 
-            onToggleSidebar={toggleSidebar}
-            onNavigate={handleNavigate}
-            isSettingsActive={settingsActive}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+            onNavigate={handleNavigation}
+            isSettingsActive={isSettingsActive}
           />
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardNavbar />
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+      <main 
+        className={cn(
+          "flex-1 transition-all duration-300 ease-in-out",
+          sidebarOpen ? "ml-64" : "ml-20"
+        )}
+      >
+        {/* Top bar */}
+        <TopBar />
+
+        {/* Page content */}
+        <div className="p-6 animate-fade-up">
           {children}
-        </main>
-      </div>
-      
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-10 bg-black bg-opacity-20 lg:hidden" 
-          onClick={toggleSidebar}
-          aria-hidden="true"
-        />
-      )}
+        </div>
+      </main>
     </div>
   );
 };

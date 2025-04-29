@@ -1,52 +1,60 @@
-
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import ProtectedRoute from './ProtectedRoute';
+import { Routes, Route, Navigate } from "react-router-dom";
 
-// Import all route groups
-import { AuthRoutes } from './modules/authRoutes';
+// Import route modules
 import { IndexRoutes } from './modules/indexRoutes';
+import { AuthRoutes } from './modules/authRoutes';
 import { SettingsRoutes } from './modules/settingsRoutes';
-// Import other route groups as needed
+import { EmployeesRoutes } from './modules/employeesRoutes';
+import { FreightRoutes } from './modules/freightRoutes';
+import { ProjectsRoutes } from './modules/projectsRoutes';
+import { AccountingRoutes } from './modules/accountingRoutes';
+import { MessagesRoutes } from './modules/messagesRoutes';
+import { DocumentsRoutes } from './modules/documentsRoutes';
+import { CrmRoutes } from './modules/crmRoutes';
+import { CompaniesRoutes } from './modules/companiesRoutes';
+import { HealthRoutes } from './modules/healthRoutes';
+import { RentalRoutes } from './modules/rentalRoutes';
+import { TransportRoutes } from './modules/transportRoutes';
+import { GarageRoutes } from './modules/garageRoutes';
+import { WebsiteRoutes } from './modules/websiteRoutes';
+import { AcademyRoutes } from './modules/academyRoutes';
+import { OtherModulesRoutes } from './modules/otherModulesRoutes';
+import NotFound from '@/pages/NotFound';
 
-// Loading component
-const LoadingScreen = () => (
-  <div className="flex h-screen w-screen items-center justify-center bg-gray-50">
-    <div className="text-center">
-      <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-neotech-primary"></div>
-      <div className="mt-4 text-lg font-medium text-gray-500">Chargement...</div>
-    </div>
-  </div>
+const AppRoutes = () => (
+  <Routes>
+    {/* Auth routes */}
+    {AuthRoutes}
+    
+    {/* Main application routes */}
+    {IndexRoutes}
+    
+    {/* Settings routes */}
+    {SettingsRoutes}
+    
+    {/* Module routes */}
+    {EmployeesRoutes}
+    {FreightRoutes}
+    {ProjectsRoutes}
+    {AccountingRoutes}
+    {MessagesRoutes}
+    {DocumentsRoutes}
+    {CrmRoutes}
+    {CompaniesRoutes}
+    {HealthRoutes}
+    {RentalRoutes}
+    {TransportRoutes}
+    {GarageRoutes}
+    {WebsiteRoutes}
+    {AcademyRoutes}
+    
+    {/* Other module routes */}
+    {OtherModulesRoutes}
+    
+    {/* Catch-all route for 404s */}
+    <Route path="*" element={<NotFound />} />
+  </Routes>
 );
-
-const AppRoutes = () => {
-  const { loading } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  return (
-    <Routes>
-      {/* Public authentication routes */}
-      {AuthRoutes}
-      
-      {/* Protected routes */}
-      <Route path="*" element={
-        <ProtectedRoute>
-          <Routes>
-            {IndexRoutes}
-            {SettingsRoutes}
-            {/* Add other route groups here */}
-            
-            {/* Fallback redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </ProtectedRoute>
-      } />
-    </Routes>
-  );
-};
 
 export default AppRoutes;

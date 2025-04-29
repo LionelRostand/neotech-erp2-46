@@ -97,16 +97,10 @@ export const authService = {
     try {
       await signOut(auth);
       localStorage.removeItem('user');
-      // Clear any other auth related data
-      localStorage.removeItem('token');
-      // If you have any other stored user data, clear them here
-      sessionStorage.clear(); // Optional: clear session storage as well
-      console.log('User logged out successfully');
       toast.success('Déconnexion réussie');
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
       toast.error("Erreur lors de la déconnexion");
-      throw error; // Rethrow to handle in the component
     }
   },
   
@@ -127,9 +121,4 @@ export const authService = {
   isAuthenticated: (): boolean => {
     return auth.currentUser !== null || localStorage.getItem('user') !== null;
   }
-};
-
-// Exporter une fonction pour la connexion directe depuis les composants
-export const loginUser = async (email: string, password: string): Promise<User | null> => {
-  return await authService.login(email, password);
 };

@@ -1,22 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
-import { FileText, Mail, Phone } from 'lucide-react';
+import { FilePdf, FileText, Mail, Phone } from 'lucide-react';
 import { exportEmployeePdf } from './utils/employeePdfUtils';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Import des composants d'onglets
-import DocumentsTab from './tabs/DocumentsTab';
-import CompetencesTab from './tabs/CompetencesTab';
-import EvaluationsTab from './tabs/EvaluationsTab';
-import AbsencesTab from './tabs/AbsencesTab';
-import CongesTab from './tabs/CongesTab';
-import HorairesTab from './tabs/HorairesTab';
 
 export interface EmployeeViewDialogProps {
   open: boolean;
@@ -31,8 +22,6 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
   employee,
   onEdit
 }) => {
-  const [activeTab, setActiveTab] = useState("informations");
-
   const handleExportPdf = () => {
     try {
       const success = exportEmployeePdf(employee);
@@ -84,94 +73,78 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
                 Modifier
               </Button>
               <Button variant="outline" size="sm" onClick={handleExportPdf}>
-                <FileText className="h-4 w-4 mr-1" />
+                <FilePdf className="h-4 w-4 mr-1" />
                 PDF
               </Button>
             </div>
           </div>
           
-          {/* Right column - Tabbed info */}
-          <div className="col-span-2">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
-                <TabsTrigger value="informations">Informations</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="competences">Compétences</TabsTrigger>
-                <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
-                <TabsTrigger value="conges">Congés</TabsTrigger>
-                <TabsTrigger value="horaires">Horaires</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="informations" className="mt-4 space-y-6">
-                {/* Contact info */}
-                <div>
-                  <h4 className="font-medium border-b pb-2 mb-3">Contact</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{employee.email}</span>
-                    </div>
-                    {employee.professionalEmail && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{employee.professionalEmail}</span>
-                      </div>
-                    )}
-                    {employee.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{employee.phone}</span>
-                      </div>
-                    )}
-                  </div>
+          {/* Right column - Detailed info */}
+          <div className="col-span-2 space-y-6">
+            {/* Contact info */}
+            <div>
+              <h4 className="font-medium border-b pb-2 mb-3">Contact</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{employee.email}</span>
                 </div>
-                
-                {/* Employment info */}
-                <div>
-                  <h4 className="font-medium border-b pb-2 mb-3">Information professionnelle</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Département</p>
-                      <p>{employee.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Statut</p>
-                      <p>{employee.status}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Contrat</p>
-                      <p>{employee.contract}</p>
-                    </div>
-                    {employee.hireDate && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Date d'embauche</p>
-                        <p>{new Date(employee.hireDate).toLocaleDateString()}</p>
-                      </div>
-                    )}
+                {employee.professionalEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{employee.professionalEmail}</span>
                   </div>
+                )}
+                {employee.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{employee.phone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Employment info */}
+            <div>
+              <h4 className="font-medium border-b pb-2 mb-3">Information professionnelle</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Département</p>
+                  <p>{employee.department}</p>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="documents" className="mt-4">
-                <DocumentsTab employee={employee} />
-              </TabsContent>
-              
-              <TabsContent value="competences" className="mt-4">
-                <CompetencesTab employee={employee} />
-              </TabsContent>
-              
-              <TabsContent value="evaluations" className="mt-4">
-                <EvaluationsTab employee={employee} />
-              </TabsContent>
-              
-              <TabsContent value="conges" className="mt-4">
-                <CongesTab employee={employee} />
-              </TabsContent>
-              
-              <TabsContent value="horaires" className="mt-4">
-                <HorairesTab employee={employee} />
-              </TabsContent>
-            </Tabs>
+                <div>
+                  <p className="text-sm text-muted-foreground">Statut</p>
+                  <p>{employee.status}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Contrat</p>
+                  <p>{employee.contract}</p>
+                </div>
+                {employee.hireDate && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date d'embauche</p>
+                    <p>{new Date(employee.hireDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Documents section */}
+            <div>
+              <h4 className="font-medium border-b pb-2 mb-3">Documents</h4>
+              {employee.documents && employee.documents.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {employee.documents.map((doc, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>{doc.name || 'Document'}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Aucun document disponible</p>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
