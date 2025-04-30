@@ -5,6 +5,7 @@ import { FileText } from 'lucide-react';
 import { Contract } from '@/hooks/useContractsData';
 import { generateContractPdf } from './utils/contractPdfUtils';
 import { toast } from 'sonner';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface GeneratePdfButtonProps {
   contract: Contract;
@@ -13,13 +14,24 @@ interface GeneratePdfButtonProps {
 
 const GeneratePdfButton: React.FC<GeneratePdfButtonProps> = ({ contract, onSuccess }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  // On récupère les données de l'employé directement depuis le hook central
+  const { employees } = useHrModuleData();
 
   const handleGeneratePdf = async () => {
     if (!contract) return;
     
     setIsGenerating(true);
     try {
-      const success = await generateContractPdf(contract);
+      // Trouver l'employé correspondant au contrat
+      const employee = employees?.find(emp => emp.id === contract.employeeId);
+      
+      if (!employee) {
+        toast.error("Impossible de trouver les informations de l'employé");
+        setIsGenerating(false);
+        return;
+      }
+      
+      const success = await generateContractPdf(contract, employee);
       
       if (success) {
         toast.success("Le PDF du contrat a été généré avec succès");
