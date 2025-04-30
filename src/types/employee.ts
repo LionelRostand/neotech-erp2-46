@@ -35,8 +35,12 @@ export interface Document {
   type: 'contract' | 'id' | 'certificate' | 'other';
   date: string;
   fileUrl: string;
+  fileData?: string;
+  fileType?: string;
+  name?: string;
   description?: string;
   uploadedAt: string;
+  documentId?: string;
 }
 
 export interface Evaluation {

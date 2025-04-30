@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Contract } from '@/hooks/useContractsData';
+import GeneratePdfButton from './GeneratePdfButton';
 
 interface ViewContractDialogProps {
   contract: Contract | null;
@@ -85,7 +86,8 @@ const ViewContractDialog: React.FC<ViewContractDialogProps> = ({ contract, open,
           </div>
         </div>
         
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex justify-between gap-2 mt-4">
+          <GeneratePdfButton contract={contract} />
           <DialogClose asChild>
             <Button variant="outline">Fermer</Button>
           </DialogClose>
