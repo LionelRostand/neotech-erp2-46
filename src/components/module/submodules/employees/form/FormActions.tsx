@@ -33,46 +33,60 @@ const FormActions: React.FC<FormActionsProps> = ({
   showManagerOption = true,
   error
 }) => {
-  const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
+  const { employees = [], isLoading: isLoadingEmployees } = useEmployeeData();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
   // Safely filter and sort employees
   useEffect(() => {
-    // Ensure employees is an array before processing
-    if (employees && Array.isArray(employees) && employees.length > 0) {
-      const managerEmployees = employees.filter(emp => 
-        emp && (emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || ''))
-      );
+    try {
+      // Ensure employees is a valid array before processing
+      const safeEmployees = Array.isArray(employees) ? employees : [];
       
-      const sorted = [...managerEmployees].sort((a, b) => {
-        const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
-        const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
-        return nameA.localeCompare(nameB);
-      });
+      // Make sure we're not working with undefined or null employees
+      const validEmployees = safeEmployees.filter(emp => emp != null);
       
-      setSortedEmployees(sorted);
-      
-      // Only update form if it exists and has setValue method
-      if (form?.setValue) {
-        const position = form.getValues('position');
-        const forceManager = form.getValues('forceManager');
+      if (validEmployees.length > 0) {
+        const managerEmployees = validEmployees.filter(emp => 
+          emp && (
+            (emp.isManager === true) || 
+            (typeof emp.position === 'string' && isEmployeeManager(emp.position)) || 
+            (typeof emp.role === 'string' && isEmployeeManager(emp.role))
+          )
+        );
         
-        if (position && !forceManager) {
-          const shouldBeManager = isEmployeeManager(position);
-          if (shouldBeManager) {
-            form.setValue('forceManager', true);
+        const sorted = [...managerEmployees].sort((a, b) => {
+          const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+          const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        
+        setSortedEmployees(sorted);
+        
+        // Only update form if it exists and has setValue method
+        if (form?.setValue && form?.getValues) {
+          const position = form.getValues('position');
+          const forceManager = form.getValues('forceManager');
+          
+          if (position && !forceManager && typeof position === 'string') {
+            const shouldBeManager = isEmployeeManager(position);
+            if (shouldBeManager) {
+              form.setValue('forceManager', true);
+            }
           }
         }
+      } else {
+        // If employees is undefined, empty, or invalid, set an empty array
+        setSortedEmployees([]);
       }
-    } else {
-      // If employees is undefined or empty, set an empty array
+    } catch (err) {
+      console.error('Error processing employees in FormActions:', err);
       setSortedEmployees([]);
     }
   }, [employees, isLoadingEmployees, form]);
   
   // Ensure form exists before accessing its methods
   const handleManagerChange = (value: string) => {
-    if (form) {
+    if (form?.setValue) {
       if (value === 'none') {
         form.setValue('managerId', '');
       } else {
@@ -91,7 +105,7 @@ const FormActions: React.FC<FormActionsProps> = ({
           <div className="col-span-3">
             <Select
               onValueChange={handleManagerChange}
-              value={form.getValues('managerId') || 'none'}
+              value={form.getValues ? (form.getValues('managerId') || 'none') : 'none'}
               disabled={isLoadingEmployees}
             >
               <SelectTrigger id="managerSelect">
@@ -99,10 +113,12 @@ const FormActions: React.FC<FormActionsProps> = ({
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="none">Aucun responsable</SelectItem>
-                {sortedEmployees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {`${employee.lastName || ''} ${employee.firstName || ''}`}
-                  </SelectItem>
+                {Array.isArray(sortedEmployees) && sortedEmployees.map((employee) => (
+                  employee && employee.id ? (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {`${employee.lastName || ''} ${employee.firstName || ''}`}
+                    </SelectItem>
+                  ) : null
                 ))}
               </SelectContent>
             </Select>

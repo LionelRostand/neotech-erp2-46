@@ -28,7 +28,7 @@ const EmployeesProfilesWithProps = () => {
   
   // Make sure we have a valid array of employees and memoize it
   const safeEmployees = useMemo(() => {
-    return Array.isArray(employees) ? employees : [];
+    return Array.isArray(employees) ? employees.filter(employee => employee != null) : [];
   }, [employees]);
   
   return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;

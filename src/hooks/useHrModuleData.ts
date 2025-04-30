@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 
 /**
  * Hook to fetch HR module data (employees and departments) with optimized Firebase requests
@@ -33,22 +33,26 @@ export const useHrModuleData = () => {
             getDocs(departmentsQuery)
           ]);
           
-          const employeesData = employeesSnapshot.docs.map(doc => ({
+          // Make sure we're creating valid arrays even if the snapshot is empty
+          const employeesData = employeesSnapshot.docs ? employeesSnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-          }));
+          })) : [];
           
-          const departmentsData = departmentsSnapshot.docs.map(doc => ({
+          const departmentsData = departmentsSnapshot.docs ? departmentsSnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-          }));
+          })) : [];
           
-          setEmployees(employeesData);
-          setDepartments(departmentsData);
+          setEmployees(employeesData || []);
+          setDepartments(departmentsData || []);
           setLastFetched(Date.now());
         } catch (err) {
           console.error("Error fetching HR module data:", err);
           setError(err);
+          // Make sure we set empty arrays even on error to avoid undefined
+          setEmployees([]);
+          setDepartments([]);
         } finally {
           setIsLoading(false);
         }
@@ -64,8 +68,8 @@ export const useHrModuleData = () => {
   };
   
   return {
-    employees,
-    departments,
+    employees: employees || [],
+    departments: departments || [],
     isLoading,
     error,
     refreshData

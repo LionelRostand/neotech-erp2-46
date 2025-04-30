@@ -1,5 +1,5 @@
 
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -41,6 +41,23 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
       // Remove the id field if it's undefined to avoid Firestore errors
       if (employeeData.id === undefined) {
         delete employeeData.id;
+      }
+      
+      // Make sure all arrays are properly initialized to avoid "length" errors
+      if (!employeeData.skills || !Array.isArray(employeeData.skills)) {
+        employeeData.skills = [];
+      }
+      
+      if (!employeeData.documents || !Array.isArray(employeeData.documents)) {
+        employeeData.documents = [];
+      }
+      
+      if (!employeeData.evaluations || !Array.isArray(employeeData.evaluations)) {
+        employeeData.evaluations = [];
+      }
+      
+      if (!employeeData.absences || !Array.isArray(employeeData.absences)) {
+        employeeData.absences = [];
       }
       
       // Direct Firestore operation without using a listener service
