@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
-import { useHrModuleData } from './useHrModuleData';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { formatDate } from '@/lib/formatters';
 
 export interface Contract {
@@ -21,11 +22,13 @@ export interface Contract {
  * Hook pour accéder aux données des contrats directement depuis Firebase
  */
 export const useContractsData = () => {
-  const { contracts, employees, isLoading, error } = useHrModuleData();
+  // Utiliser useFirebaseCollection pour récupérer les données de contrats et d'employés
+  const { data: contracts = [], isLoading: contractsLoading, error: contractsError } = useFirebaseCollection<any>(COLLECTIONS.HR.CONTRACTS);
+  const { data: employees = [], isLoading: employeesLoading } = useFirebaseCollection<any>(COLLECTIONS.HR.EMPLOYEES);
   
   // Enrichir les contrats avec les noms des employés
   const formattedContracts = useMemo(() => {
-    if (!contracts || contracts.length === 0) return [];
+    if (contracts.length === 0) return [];
     
     return contracts.map(contract => {
       // Trouver l'employé associé à ce contrat
@@ -48,7 +51,7 @@ export const useContractsData = () => {
       return {
         id: contract.id,
         employeeId: contract.employeeId,
-        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+        employeeName: employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() : 'Employé inconnu',
         employeePhoto: employee?.photoURL || employee?.photo || '',
         type: contract.type || 'CDI',
         startDate: formatDate(contract.startDate),
@@ -56,7 +59,7 @@ export const useContractsData = () => {
         status,
         position: contract.position || 'Non spécifié',
         salary: contract.salary,
-        department: employee?.department || 'Non spécifié',
+        department: employee?.department || contract.department || 'Non spécifié',
       } as Contract;
     });
   }, [contracts, employees]);
@@ -74,7 +77,7 @@ export const useContractsData = () => {
   return {
     contracts: formattedContracts,
     stats: contractStats,
-    isLoading,
-    error
+    isLoading: contractsLoading || employeesLoading,
+    error: contractsError
   };
 };
