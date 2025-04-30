@@ -1,3 +1,4 @@
+
 /**
  * Constantes pour les chemins des collections Firestore
  */

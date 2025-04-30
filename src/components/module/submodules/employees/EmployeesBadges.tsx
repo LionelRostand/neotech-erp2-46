@@ -17,7 +17,7 @@ const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { employees } = useHrModuleData();
   
-  // Use the Firebase collection hook to fetch badge data
+  // Use the Firebase collection hook to fetch badge data with the correct path
   const { data: badgesList, isLoading, refetch } = useFirebaseCollection<BadgeData>(
     COLLECTIONS.HR.BADGES
   );

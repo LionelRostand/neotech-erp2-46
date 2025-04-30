@@ -5,11 +5,15 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import TimesheetTable from './timesheet/TimesheetTable';
 import TimesheetStats from './timesheet/TimesheetStats';
-import { useTimeSheetData } from '@/hooks/useTimeSheetData';
+import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import CreateTimesheetDialog from './timesheet/CreateTimesheetDialog';
 
 const EmployeesTimesheet = () => {
-  const { timeSheets, isLoading, refetch } = useTimeSheetData();
+  // Use the Firebase collection hook with the correct path
+  const { data: timeSheets, isLoading, refetch } = useFirebaseCollection(
+    COLLECTIONS.HR.TIMESHEET
+  );
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
