@@ -6,7 +6,7 @@ import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
 import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
 import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeaves";
 import EmployeesProfiles from "@/components/module/submodules/employees/EmployeesProfiles";
-import EmployeesHierarchy from "@/components/module/submodules/employees/hierarchy/EmployeesHierarchy";
+import EmployeesHierarchy from "@/components/module/submodules/employees/EmployeesHierarchy";
 import EmployeesRecruitment from "@/components/module/submodules/EmployeesRecruitment";
 import EmployeesBadges from "@/components/module/submodules/employees/EmployeesBadges";
 import EmployeesAttendance from "@/components/module/submodules/EmployeesAttendance";
@@ -20,12 +20,21 @@ import EmployeesCompanies from "@/components/module/submodules/employees/Employe
 import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+
+// Helper component to pass props to EmployeesProfiles
+const EmployeesProfilesWithProps = () => {
+  const { employees = [], isLoading = true } = useEmployeeData();
+  // Make sure we have a valid array of employees before rendering the component
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
+};
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    <Route path="profiles" element={<EmployeesProfiles />} />
+    <Route path="profiles" element={<EmployeesProfilesWithProps />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />

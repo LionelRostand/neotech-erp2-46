@@ -4,30 +4,21 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface EmployeesListProps {
-  employees?: Employee[];
+  employees: Employee[];
   selectedEmployees: string[];
   onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   id: string;
 }
 
 const EmployeesList: React.FC<EmployeesListProps> = ({ 
-  employees: providedEmployees, 
+  employees, 
   selectedEmployees, 
   onEmployeeSelection,
   id
 }) => {
-  // Use the hook to get employees if none are provided
-  const { employees: hookEmployees } = useEmployeeData();
-  
-  // Use provided employees or fall back to hook data
-  const employees = providedEmployees && providedEmployees.length > 0 
-    ? providedEmployees 
-    : hookEmployees || [];
-
-  if (!employees || !Array.isArray(employees) || employees.length === 0) {
+  if (!employees.length) {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Aucun employé disponible</p>
@@ -39,11 +30,6 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
     <ScrollArea className="h-[300px] border rounded-md p-4">
       <div className="space-y-4">
         {employees.map((employee) => {
-          // Skip invalid employees or employees without an id
-          if (!employee || !employee.id) {
-            return null;
-          }
-          
           const isSelected = selectedEmployees.includes(employee.id);
           return (
             <div 

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface EditCompanyPositionDialogProps {
   employee: Employee;
@@ -25,45 +24,30 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
   onOpenChange,
   onEmployeeUpdated
 }) => {
-  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
-  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
+  const { companies, isLoading } = useCompaniesData();
   const [position, setPosition] = useState(employee.position || '');
-  const [departmentId, setDepartmentId] = useState(employee.departmentId || '');
+  const [department, setDepartment] = useState(employee.department || '');
   const [companyId, setCompanyId] = useState<string>(
     typeof employee.company === 'string' ? employee.company : employee.company?.id || ''
   );
   const [professionalEmail, setProfessionalEmail] = useState(employee.professionalEmail || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when employee changes
-  useEffect(() => {
-    if (employee) {
-      setPosition(employee.position || '');
-      setDepartmentId(employee.departmentId || '');
-      setProfessionalEmail(employee.professionalEmail || '');
-      setCompanyId(typeof employee.company === 'string' ? employee.company : employee.company?.id || '');
-    }
-  }, [employee]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Get department name from selected departmentId
-      const selectedDepartment = departments.find(dept => dept.id === departmentId);
-      
-      // Prepare data to update
+      // Préparer les données à mettre à jour
       const updatedData: Partial<Employee> = {
         position,
-        departmentId,
-        department: selectedDepartment?.name || employee.department || '',
+        department,
         professionalEmail
       };
 
-      // If company has changed, update company
+      // Si l'entreprise a changé, mettre à jour l'entreprise
       if (companyId) {
-        // Find complete company object
+        // Trouver l'objet entreprise complet
         const selectedCompany = companies.find(company => company.id === companyId);
         
         if (selectedCompany) {
@@ -73,14 +57,14 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
         }
       }
 
-      // Update employee in Firestore
+      // Mettre à jour l'employé dans Firestore
       if (employee.id) {
         const result = await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, updatedData);
         
         if (result) {
           toast.success("Informations professionnelles mises à jour avec succès");
           
-          // Update employee in the interface
+          // Mettre à jour l'employé dans l'interface
           if (onEmployeeUpdated) {
             const updatedEmployee = {
               ...employee,
@@ -116,7 +100,7 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
               <Select
                 value={companyId}
                 onValueChange={setCompanyId}
-                disabled={isLoadingCompanies}
+                disabled={isLoading}
               >
                 <SelectTrigger id="company">
                   <SelectValue placeholder="Sélectionner une entreprise" />
@@ -143,23 +127,12 @@ export const EditCompanyPositionDialog: React.FC<EditCompanyPositionDialogProps>
             
             <div className="space-y-2">
               <Label htmlFor="department">Département</Label>
-              <Select
-                value={departmentId}
-                onValueChange={setDepartmentId}
-                disabled={isLoadingDepartments}
-              >
-                <SelectTrigger id="department" className="bg-popover">
-                  <SelectValue placeholder="Sélectionner un département" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value="">Aucun département</SelectItem>
-                  {departments.map((department) => (
-                    <SelectItem key={department.id} value={department.id}>
-                      {department.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="Département"
+              />
             </div>
             
             <div className="space-y-2">

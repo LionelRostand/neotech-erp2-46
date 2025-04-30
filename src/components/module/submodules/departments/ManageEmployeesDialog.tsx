@@ -1,19 +1,18 @@
 
-import React, { useEffect, useState } from 'react';
-import { Department } from './types';
-import { DialogHeader, DialogTitle, DialogContent, DialogFooter } from '@/components/ui/dialog';
+import React, { useEffect } from 'react';
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Department } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { Employee } from '@/types/employee';
 
 interface ManageEmployeesDialogProps {
   department: Department;
   selectedEmployees: string[];
-  onEmployeeSelection: (employeeId: string, isSelected: boolean) => void;
-  getDepartmentEmployees: (departmentId: string) => string[];
+  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
+  getDepartmentEmployees: (departmentId: string) => any[];
   onClose: () => void;
-  onSave: (departmentId: string, departmentName: string, selectedEmployeeIds: string[]) => Promise<boolean>;
+  onSave: () => void;
 }
 
 const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
@@ -24,51 +23,38 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  // Get employees data for display
   const { employees } = useEmployeeData();
-  const [departmentEmployees, setDepartmentEmployees] = useState<Employee[]>([]);
 
-  // Filter employees to only show valid ones (with ID)
+  // Set selected employees based on department
   useEffect(() => {
-    if (employees && Array.isArray(employees)) {
-      const validEmployees = employees.filter(emp => emp && emp.id && emp.id.trim() !== '');
-      setDepartmentEmployees(validEmployees);
+    // This is just to ensure department employees are loaded
+    if (department && department.id) {
+      getDepartmentEmployees(department.id);
     }
-  }, [employees]);
-
-  const handleSubmit = async () => {
-    try {
-      const success = await onSave(department.id, department.name, selectedEmployees);
-      if (success) {
-        onClose();
-      }
-    } catch (error) {
-      console.error('Error saving employee assignments:', error);
-    }
-  };
+  }, [department, getDepartmentEmployees]);
 
   return (
-    <>
+    <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
-        <DialogTitle>Gérer les employés - {department.name}</DialogTitle>
+        <DialogTitle>Gérer les employés: {department.name}</DialogTitle>
       </DialogHeader>
-      <DialogContent className="max-h-[70vh] overflow-y-auto">
+      
+      <div className="py-4">
         <EmployeesList 
-          employees={departmentEmployees} 
-          selectedEmployees={selectedEmployees} 
+          employees={employees || []}
+          selectedEmployees={selectedEmployees}
           onEmployeeSelection={onEmployeeSelection}
-          id={`manage-employees-${department.id}`}
+          id="manage"
         />
-      </DialogContent>
-      <DialogFooter className="flex justify-between">
+      </div>
+      
+      <DialogFooter>
         <Button variant="outline" onClick={onClose}>
           Annuler
         </Button>
-        <Button onClick={handleSubmit}>
-          Enregistrer
-        </Button>
+        <Button onClick={onSave}>Enregistrer</Button>
       </DialogFooter>
-    </>
+    </DialogContent>
   );
 };
 

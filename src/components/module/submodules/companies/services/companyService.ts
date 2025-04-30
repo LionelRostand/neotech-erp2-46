@@ -28,72 +28,56 @@ const determineCompanySize = (employeesCount: number): string => {
 class CompanyService {
   async getCompanies(filters?: CompanyFilters): Promise<{ companies: Company[] }> {
     try {
-      const q = collection(db, COLLECTIONS.COMPANIES);
+      let q = collection(db, COLLECTIONS.COMPANIES);
       
-      // Start with a basic query
       let queryRef = query(q);
       
-      // Handle potentially undefined filters
-      if (filters) {
-        // Only add valid filters
-        if (filters.status) {
-          queryRef = query(queryRef, where('status', '==', filters.status));
-        }
-        if (filters.industry) {
-          queryRef = query(queryRef, where('industry', '==', filters.industry));
-        }
-        if (filters.name) {
-          queryRef = query(queryRef, where('name', '==', filters.name));
-        }
-        if (filters.location) {
-          queryRef = query(queryRef, where('address.city', '==', filters.location));
-        }
-        
-        if (filters.sortBy) {
-          const sortOrder = filters.sortOrder === 'desc' ? 'desc' : 'asc';
-          queryRef = query(queryRef, orderBy(filters.sortBy, sortOrder));
-        }
-      } else {
-        // Default sorting if no filters provided
-        queryRef = query(queryRef, orderBy('name', 'asc'));
+      if (filters.status) {
+        queryRef = query(queryRef, where('status', '==', filters.status));
+      }
+      if (filters.industry) {
+        queryRef = query(queryRef, where('industry', '==', filters.industry));
+      }
+      if (filters.name) {
+        queryRef = query(queryRef, where('name', '==', filters.name));
+      }
+      if (filters.location) {
+        queryRef = query(queryRef, where('address.city', '==', filters.location));
       }
       
-      const querySnapshot = await getDocs(queryRef);
+      if (filters.sortBy) {
+        const sortOrder = filters.sortOrder === 'desc' ? 'desc' : 'asc';
+        queryRef = query(queryRef, orderBy(filters.sortBy, sortOrder));
+      }
+      
+      const querySnapshot = await getDocs(queryRef || q);
       const companies: Company[] = [];
       
       for (const doc of querySnapshot.docs) {
-        try {
-          const employeesQuery = query(
-            collection(db, COLLECTIONS.HR.EMPLOYEES),
-            where('company', '==', doc.id)
-          );
-          const employeesSnapshot = await getDocs(employeesQuery);
-          const employeesCount = employeesSnapshot.size;
-          
-          const companyData = doc.data();
-          const size = determineCompanySize(employeesCount);
-          
-          // Only update if the data exists
-          if (companyData) {
-            if (companyData.size !== size || companyData.employeesCount !== employeesCount) {
-              await updateDoc(doc.ref, {
-                size,
-                employeesCount,
-                updatedAt: serverTimestamp()
-              });
-            }
-            
-            companies.push({
-              id: doc.id,
-              ...companyData,
-              size,
-              employeesCount
-            } as Company);
-          }
-        } catch (docError) {
-          console.error(`Error processing company document ${doc.id}:`, docError);
-          // Continue with other documents even if one fails
+        const employeesQuery = query(
+          collection(db, COLLECTIONS.HR.EMPLOYEES),
+          where('company', '==', doc.id)
+        );
+        const employeesSnapshot = await getDocs(employeesQuery);
+        const employeesCount = employeesSnapshot.size;
+        
+        const companyData = doc.data();
+        const size = determineCompanySize(employeesCount);
+        
+        if (companyData.size !== size || companyData.employeesCount !== employeesCount) {
+          await updateDoc(doc.ref, {
+            size,
+            employeesCount,
+            updatedAt: serverTimestamp()
+          });
         }
+        
+        companies.push({
+          id: doc.id,
+          ...companyData,
+          size,
+          employeesCount
+        } as Company);
       }
       
       return { companies };

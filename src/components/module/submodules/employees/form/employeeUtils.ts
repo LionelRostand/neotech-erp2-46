@@ -1,6 +1,5 @@
-
 import { EmployeeFormValues } from './employeeFormSchema';
-import { Employee, EmployeePhotoMeta, Address } from '@/types/employee';
+import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from '../utils/photoUtils';
 
 /**
@@ -29,19 +28,8 @@ export const formToEmployee = (formData: EmployeeFormValues, existingEmployee?: 
     streetName: formData.streetName,
     city: formData.city,
     zipCode: formData.zipCode,
-    region: formData.region,
-    country: formData.country
+    region: formData.region
   };
-
-  // Add work address if provided
-  if (formData.workAddress) {
-    employee.workAddress = {
-      street: formData.workAddress.street,
-      city: formData.workAddress.city,
-      postalCode: formData.workAddress.postalCode,
-      country: formData.workAddress.country
-    };
-  }
 
   // Handle photo and photoURL
   if (formData.photo) {
@@ -94,9 +82,6 @@ export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues 
     };
   }
 
-  // Prepare work address if it exists
-  const workAddress = employee.workAddress as Address | undefined;
-
   return {
     firstName: employee.firstName || '',
     lastName: employee.lastName || '',
@@ -115,19 +100,10 @@ export const employeeToForm = (employee: Partial<Employee>): EmployeeFormValues 
     photoMeta: photoMeta,
     forceManager: employee.forceManager || false,
     isManager: employee.isManager || false,
-    // Personal address
     streetNumber: employee.streetNumber || '',
     streetName: employee.streetName || '',
     city: employee.city || '',
     zipCode: employee.zipCode || '',
-    region: employee.region || '',
-    country: employee.country || '',
-    // Work address
-    workAddress: workAddress ? {
-      street: workAddress.street || '',
-      city: workAddress.city || '',
-      postalCode: workAddress.postalCode || '',
-      country: workAddress.country || ''
-    } : undefined
+    region: employee.region || ''
   };
 };

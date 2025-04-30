@@ -4,18 +4,12 @@ import { Dialog } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import DepartmentHeader from './DepartmentHeader';
 import DepartmentTable from './DepartmentTable';
-import DepartmentStats from './DepartmentStats';
 import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
 import { useDepartments } from './useDepartments';
 
-interface EmployeesDepartmentsProps {
-  departments?: any[];
-  employees?: any[];
-}
-
-const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments: propDepartments, employees: propEmployees }) => {
+const EmployeesDepartments: React.FC = () => {
   const {
     departments,
     loading,
@@ -26,7 +20,6 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
     currentDepartment,
     activeTab,
     selectedEmployees,
-    employees,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen,
@@ -44,35 +37,20 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
     handleDeleteDepartment,
     handleSaveEmployeeAssignments,
     getDepartmentEmployees
-  } = useDepartments(propDepartments, propEmployees);
-
-  console.log("Rendering EmployeesDepartments with", departments?.length, "departments");
+  } = useDepartments();
 
   return (
     <div className="space-y-6">
       <DepartmentHeader onAddDepartment={handleAddDepartment} />
-      
-      <DepartmentStats 
-        departments={departments || []} 
-        employees={employees || []}
-        loading={loading}
-      />
 
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Liste des départements</h2>
           <DepartmentTable 
-            departments={departments || []}
+            departments={departments}
             loading={loading}
-            onEditDepartment={(id) => {
-              const dept = departments.find(d => d.id === id);
-              if (dept) handleEditDepartment(dept);
-            }}
+            onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
             onDeleteDepartment={handleDeleteDepartment}
-            onManageEmployees={(id) => {
-              const dept = departments.find(d => d.id === id);
-              if (dept) handleManageEmployees(dept);
-            }}
+            onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
           />
         </CardContent>
       </Card>
@@ -121,7 +99,7 @@ const EmployeesDepartments: React.FC<EmployeesDepartmentsProps> = ({ departments
             department={currentDepartment}
             selectedEmployees={selectedEmployees}
             onEmployeeSelection={handleEmployeeSelection}
-            getDepartmentEmployees={getDepartmentEmployees}
+            getDepartmentEmployees={(departmentId: string) => getDepartmentEmployees(departmentId)}
             onClose={() => setIsManageEmployeesDialogOpen(false)}
             onSave={handleSaveEmployeeAssignments}
           />

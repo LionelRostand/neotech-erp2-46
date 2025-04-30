@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { companyService } from '@/components/module/submodules/companies/services/companyService';
 import { Company } from '@/components/module/submodules/companies/types';
-import { toast } from 'sonner';
 
 export const useCompaniesData = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -14,13 +13,10 @@ export const useCompaniesData = () => {
       try {
         setIsLoading(true);
         const response = await companyService.getCompanies();
-        // Ensure we handle potentially undefined companies properly
-        setCompanies(response?.companies || []);
+        setCompanies(response.companies);
+        setIsLoading(false);
       } catch (err) {
-        console.error("Error fetching companies:", err);
         setError(err instanceof Error ? err : new Error('Unknown error'));
-        toast.error("Erreur lors du chargement des entreprises");
-      } finally {
         setIsLoading(false);
       }
     };
@@ -29,7 +25,7 @@ export const useCompaniesData = () => {
   }, []);
 
   return {
-    companies: companies || [], // Ensure we always return an array even if companies is undefined
+    companies,
     isLoading,
     error
   };

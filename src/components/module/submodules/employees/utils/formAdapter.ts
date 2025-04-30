@@ -1,177 +1,130 @@
 
-import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
+import { Employee, EmployeePhotoMeta } from '@/types/employee';
+import { createPhotoMeta } from './photoUtils';
 
 /**
- * Convert employee form values to employee data object
+ * Convertit les valeurs du formulaire en format d'employé
+ * @param formValues Valeurs du formulaire
+ * @param existingEmployee Données existantes de l'employé (pour la mise à jour)
+ * @returns Objet employé formaté
  */
-export const formValuesToEmployee = (formValues: EmployeeFormValues, existingEmployee?: Partial<Employee>): Partial<Employee> => {
-  // Ensure we have valid input objects
-  const safeFormValues = formValues || {};
-  const safeExistingEmployee = existingEmployee || {};
-  
-  // Build personal address
-  const personalAddress = {
-    street: `${safeFormValues.streetNumber || ''} ${safeFormValues.streetName || ''}`.trim(),
-    city: safeFormValues.city || '',
-    postalCode: safeFormValues.zipCode || '',
-    country: safeFormValues.country || '',
-    state: safeFormValues.region || ''
-  };
-
-  // Build work address
-  const workAddress = safeFormValues.workAddress || {
-    street: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  };
-  
+export const formValuesToEmployee = (
+  formValues: EmployeeFormValues, 
+  existingEmployee?: Partial<Employee>
+): Partial<Employee> => {
+  // Créer l'objet employé à partir des valeurs du formulaire
   const employeeData: Partial<Employee> = {
-    firstName: safeFormValues.firstName || '',
-    lastName: safeFormValues.lastName || '',
-    email: safeFormValues.email || '',
-    phone: safeFormValues.phone || '',
-    company: safeFormValues.company || '',
-    // Ensure department is never an empty string
-    department: safeFormValues.department && safeFormValues.department !== "" 
-      ? safeFormValues.department === "no_department" ? "Aucun" : safeFormValues.department 
-      : "Aucun",
-    position: safeFormValues.position || '',
-    status: safeFormValues.status || 'active',
-    // Preserve existing fields
-    ...(safeExistingEmployee && {
-      id: safeExistingEmployee.id,
-      createdAt: safeExistingEmployee.createdAt,
-      photoURL: safeExistingEmployee.photoURL,
-    }),
-    // Add address data
-    address: personalAddress,
-    workAddress: workAddress,
-    // Store individual address components for compatibility
-    streetNumber: safeFormValues.streetNumber || '',
-    streetName: safeFormValues.streetName || '',
-    city: safeFormValues.city || '',
-    zipCode: safeFormValues.zipCode || '',
-    postalCode: safeFormValues.zipCode || '',
-    region: safeFormValues.region || '',
-    country: safeFormValues.country || '',
-    // New fields
-    updatedAt: new Date().toISOString()
+    firstName: formValues.firstName,
+    lastName: formValues.lastName,
+    email: formValues.email,
+    phone: formValues.phone,
+    company: formValues.company,
+    department: formValues.department,
+    position: formValues.position,
+    contract: formValues.contract,
+    hireDate: formValues.hireDate,
+    birthDate: formValues.birthDate,
+    managerId: formValues.managerId,
+    status: formValues.status,
+    professionalEmail: formValues.professionalEmail,
+    forceManager: formValues.forceManager,
+    isManager: formValues.isManager,
+    streetNumber: formValues.streetNumber,
+    streetName: formValues.streetName,
+    city: formValues.city,
+    zipCode: formValues.zipCode,
+    region: formValues.region,
+    updatedAt: new Date().toISOString(),
   };
 
-  if (safeFormValues.hireDate) {
-    employeeData.hireDate = safeFormValues.hireDate;
+  // Keep existing ID if it exists (for updates)
+  if (existingEmployee?.id) {
+    employeeData.id = existingEmployee.id;
   }
 
-  if (safeFormValues.birthDate) {
-    employeeData.birthDate = safeFormValues.birthDate;
+  // Preserve existing photo if no new one is provided
+  if (formValues.photo) {
+    employeeData.photo = formValues.photo;
+    employeeData.photoURL = formValues.photo;
+    employeeData.photoData = formValues.photo;
+  } else if (existingEmployee?.photo) {
+    employeeData.photo = existingEmployee.photo;
+    employeeData.photoURL = existingEmployee.photoURL;
+    employeeData.photoData = existingEmployee.photoData;
   }
 
-  if (safeFormValues.photoMeta) {
-    employeeData.photoMeta = safeFormValues.photoMeta;
+  // Gestion des métadonnées de photo
+  if (formValues.photoMeta) {
+    const photoMeta: EmployeePhotoMeta = {
+      fileName: formValues.photoMeta.fileName || `photo_${Date.now()}.jpg`,
+      fileType: formValues.photoMeta.fileType || 'image/jpeg',
+      fileSize: formValues.photoMeta.fileSize || 0,
+      updatedAt: formValues.photoMeta.updatedAt || new Date().toISOString()
+    };
+    
+    if (formValues.photoMeta.data) {
+      photoMeta.data = formValues.photoMeta.data;
+    }
+    
+    employeeData.photoMeta = photoMeta;
+  } else if (formValues.photo && !employeeData.photoMeta) {
+    employeeData.photoMeta = createPhotoMeta(formValues.photo);
+  } else if (existingEmployee?.photoMeta) {
+    // Preserve existing photoMeta if no new photo is provided
+    employeeData.photoMeta = existingEmployee.photoMeta;
   }
 
-  if (safeFormValues.photo) {
-    employeeData.photo = safeFormValues.photo;
-    employeeData.photoURL = safeFormValues.photo;
-  }
-  
-  if (safeFormValues.professionalEmail) {
-    employeeData.professionalEmail = safeFormValues.professionalEmail;
+  // Si c'est un nouvel employé, ajouter la date de création
+  if (!existingEmployee || !existingEmployee.id) {
+    employeeData.createdAt = new Date().toISOString();
   }
 
-  if (safeFormValues.contract) {
-    employeeData.contract = safeFormValues.contract;
-  }
-  
   return employeeData;
 };
 
 /**
- * Convert employee data object to form values
+ * Convertit un objet employé en valeurs de formulaire
+ * @param employee Données de l'employé
+ * @returns Valeurs du formulaire
  */
-export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormValues => {
-  // Ensure we have a valid employee object
-  const safeEmployee = employee || {};
-  
-  // Extract address data
-  let streetNumber = '';
-  let streetName = '';
-  let city = '';
-  let zipCode = '';
-  let region = '';
-  let country = '';
-  
-  // Extract from address object if it exists
-  if (safeEmployee.address && typeof safeEmployee.address === 'object') {
-    const address = safeEmployee.address;
-    // Try to extract street number and name from street field
-    if (address.street) {
-      const streetParts = address.street.split(' ');
-      if (streetParts.length > 1) {
-        streetNumber = streetParts[0];
-        streetName = streetParts.slice(1).join(' ');
-      } else {
-        streetName = address.street;
-      }
-    }
-    city = address.city || '';
-    zipCode = address.postalCode || '';
-    region = address.state || '';
-    country = address.country || '';
-  } else {
-    // Use flat properties if no address object
-    streetNumber = safeEmployee.streetNumber || '';
-    streetName = safeEmployee.streetName || '';
-    city = safeEmployee.city || '';
-    zipCode = safeEmployee.zipCode || safeEmployee.postalCode || '';
-    region = safeEmployee.region || '';
-    country = safeEmployee.country || '';
+export const employeeToFormValues = (
+  employee: Partial<Employee>
+): EmployeeFormValues => {
+  // Make sure we have default values for required photoMeta fields if they exist
+  let photoMeta = employee.photoMeta;
+  if (photoMeta && (!photoMeta.fileName || !photoMeta.fileType || !photoMeta.fileSize || !photoMeta.updatedAt)) {
+    photoMeta = {
+      ...photoMeta,
+      fileName: photoMeta.fileName || `photo_${Date.now()}.jpg`,
+      fileType: photoMeta.fileType || 'image/jpeg',
+      fileSize: photoMeta.fileSize || 100000,
+      updatedAt: photoMeta.updatedAt || new Date().toISOString()
+    };
   }
-  
-  // Prepare work address if it exists
-  const workAddress = safeEmployee.workAddress as any;
 
   return {
-    firstName: safeEmployee.firstName || '',
-    lastName: safeEmployee.lastName || '',
-    email: safeEmployee.email || '',
-    phone: safeEmployee.phone || '',
-    company: safeEmployee.company || '',
-    // Ensure department is never an empty string
-    department: safeEmployee.department && safeEmployee.department !== "" 
-      ? safeEmployee.department === "Aucun" ? "no_department" : safeEmployee.department
-      : "no_department",
-    position: safeEmployee.position || '',
-    hireDate: safeEmployee.hireDate || '',
-    birthDate: safeEmployee.birthDate || '',
-    status: (safeEmployee.status || 'active') as any,
-    photo: safeEmployee.photo || safeEmployee.photoURL || '',
-    photoMeta: safeEmployee.photoMeta || undefined,
-    contract: safeEmployee.contract || 'cdi',
-    managerId: safeEmployee.managerId || '',
-    forceManager: Boolean(safeEmployee.forceManager),
-    isManager: Boolean(safeEmployee.isManager),
-    professionalEmail: safeEmployee.professionalEmail || '',
-    // Address fields
-    streetNumber,
-    streetName,
-    city,
-    zipCode,
-    region,
-    country,
-    // Work address
-    workAddress: workAddress ? {
-      street: workAddress.street || '',
-      city: workAddress.city || '',
-      postalCode: workAddress.postalCode || '',
-      country: workAddress.country || ''
-    } : {
-      street: '',
-      city: '',
-      postalCode: '',
-      country: ''
-    }
+    firstName: employee.firstName || '',
+    lastName: employee.lastName || '',
+    email: employee.email || '',
+    phone: employee.phone || '',
+    company: typeof employee.company === 'string' ? employee.company : '',
+    department: employee.department || '',
+    position: employee.position || '',
+    contract: employee.contract || 'cdi',
+    hireDate: employee.hireDate || new Date().toISOString().split('T')[0],
+    birthDate: employee.birthDate || '',
+    managerId: employee.managerId || '',
+    status: (employee.status || 'active') as any,
+    photo: employee.photo || employee.photoURL || employee.photoData || '',
+    photoMeta: photoMeta,
+    professionalEmail: employee.professionalEmail || '',
+    forceManager: employee.forceManager || false,
+    isManager: employee.isManager || false,
+    streetNumber: employee.streetNumber || '',
+    streetName: employee.streetName || '',
+    city: employee.city || '',
+    zipCode: employee.zipCode || '',
+    region: employee.region || ''
   };
 };

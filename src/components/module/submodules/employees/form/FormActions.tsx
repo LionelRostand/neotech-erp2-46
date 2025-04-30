@@ -36,27 +36,21 @@ const FormActions: React.FC<FormActionsProps> = ({
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
-  // Ensure employees is always an array even if undefined
+  // Utiliser les données des employés dédupliquées depuis useEmployeeData
   useEffect(() => {
-    // Guard against undefined or non-array employees
-    if (employees && Array.isArray(employees)) {
-      // Show all employees, no manager filtering
-      const allEmployees = [...employees];
+    if (employees && employees.length > 0) {
+      const managerEmployees = employees.filter(emp => 
+        emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || '')
+      );
       
-      // Sort employees by name and surname
-      const sorted = allEmployees.sort((a, b) => {
-        // Safely handle potentially undefined lastName/firstName
-        const nameA = `${a?.lastName || ''} ${a?.firstName || ''}`.toLowerCase();
-        const nameB = `${b?.lastName || ''} ${b?.firstName || ''}`.toLowerCase();
+      const sorted = [...managerEmployees].sort((a, b) => {
+        const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+        const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
         return nameA.localeCompare(nameB);
       });
       
-      // Filter out employees without valid IDs
-      const validEmployees = sorted.filter(emp => emp && emp.id);
+      setSortedEmployees(sorted);
       
-      setSortedEmployees(validEmployees);
-      
-      // Update form values if form is available
       if (form) {
         const position = form.getValues('position');
         const forceManager = form.getValues('forceManager');
@@ -68,8 +62,6 @@ const FormActions: React.FC<FormActionsProps> = ({
           }
         }
       }
-    } else {
-      setSortedEmployees([]);
     }
   }, [employees, isLoadingEmployees, form]);
   
@@ -97,23 +89,11 @@ const FormActions: React.FC<FormActionsProps> = ({
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="none">Aucun responsable</SelectItem>
-                {(sortedEmployees || []).map((employee) => {
-                  // Ensure we only render SelectItems with valid (non-empty) values
-                  if (!employee?.id) return null;
-                  
-                  const displayName = `${employee?.lastName || ''} ${employee?.firstName || ''}`.trim();
-                  // Only render if we have a valid employee ID and name
-                  if (!employee.id || !displayName) return null;
-                  
-                  return (
-                    <SelectItem 
-                      key={employee.id} 
-                      value={employee.id}
-                    >
-                      {displayName || 'Employé sans nom'}
-                    </SelectItem>
-                  );
-                })}
+                {sortedEmployees.map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {`${employee.lastName || ''} ${employee.firstName || ''}`}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

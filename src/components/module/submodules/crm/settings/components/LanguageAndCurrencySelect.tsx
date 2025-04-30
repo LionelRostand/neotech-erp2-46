@@ -14,16 +14,12 @@ export const LanguageAndCurrencySelect: React.FC<LanguageAndCurrencySelectProps>
   language,
   onSelect
 }) => {
-  // Ensure we have valid non-empty default values
-  const currencyValue = defaultCurrency || "EUR";
-  const languageValue = language || "fr";
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <Label htmlFor="defaultCurrency">Devise par défaut</Label>
         <Select 
-          value={currencyValue}
+          value={defaultCurrency}
           onValueChange={(value) => onSelect("defaultCurrency", value)}
         >
           <SelectTrigger className="w-full">
@@ -42,7 +38,7 @@ export const LanguageAndCurrencySelect: React.FC<LanguageAndCurrencySelectProps>
       <div>
         <Label htmlFor="language">Langue</Label>
         <Select 
-          value={languageValue}
+          value={language}
           onValueChange={(value) => onSelect("language", value)}
         >
           <SelectTrigger className="w-full">

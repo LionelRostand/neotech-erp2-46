@@ -9,28 +9,17 @@ const photoMetaSchema = z.object({
   data: z.string().optional()
 }).required();
 
-const addressSchema = z.object({
-  street: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().optional()
-});
-
 export const employeeFormSchema = z.object({
   firstName: z.string().min(1, { message: 'Le prénom est requis' }),
   lastName: z.string().min(1, { message: 'Le nom est requis' }),
   email: z.string().email({ message: 'Email personnel invalide' }),
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   phone: z.string().optional(),
-  // Adresse personnelle
   streetNumber: z.string().optional(),
   streetName: z.string().optional(),
   city: z.string().optional(),
   zipCode: z.string().optional(),
   region: z.string().optional(),
-  country: z.string().optional(),
-  // Adresse professionnelle
-  workAddress: addressSchema.optional(),
   company: z.string().min(1, { message: 'L\'entreprise est requise' }),
   department: z.string().min(1, { message: 'Le département est requis' }),
   position: z.string().optional(),

@@ -7,7 +7,6 @@ import { Department } from '@/components/module/submodules/departments/types';
 import { toast } from 'sonner';
 
 export const useHrData = () => {
-  // Define all state variables at the beginning
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [payslips, setPayslips] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -34,13 +33,11 @@ export const useHrData = () => {
       // Ensure collection path is not empty
       const safePath = collectionPath || 'default_collection';
       const data = await fetchCollectionData<T>(safePath);
-      // Ensure we always set an array, even if data is undefined
-      setDataFn(data || []);
-      return data || [];
+      setDataFn(data);
+      return data;
     } catch (err) {
       console.error(`Error fetching ${collectionPath}:`, err);
       setError(err as Error);
-      // Always return an empty array in case of error
       return [];
     }
   };
@@ -75,26 +72,25 @@ export const useHrData = () => {
     }
   }, []);
   
-  // Initial data fetch - only called once
+  // Initial data fetch
   useEffect(() => {
     fetchAllHrData();
   }, [fetchAllHrData]);
   
-  // Always return the same structure, with default empty arrays for all properties
   return {
-    employees: employees || [],
-    payslips: payslips || [],
-    contracts: contracts || [],
-    departments: departments || [],
-    leaveRequests: leaveRequests || [],
-    attendance: attendance || [],
-    absenceRequests: absenceRequests || [],
-    hrDocuments: hrDocuments || [],
-    timeSheets: timeSheets || [],
-    evaluations: evaluations || [],
-    trainings: trainings || [],
-    hrReports: hrReports || [], 
-    hrAlerts: hrAlerts || [],
+    employees,
+    payslips,
+    contracts,
+    departments,
+    leaveRequests,
+    attendance,
+    absenceRequests,
+    hrDocuments,
+    timeSheets,
+    evaluations,
+    trainings,
+    hrReports, 
+    hrAlerts,
     isLoading,
     error,
     fetchAllHrData

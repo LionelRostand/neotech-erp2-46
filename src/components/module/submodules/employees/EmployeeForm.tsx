@@ -48,8 +48,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       streetName: '',
       city: '',
       zipCode: '',
-      region: '',
-      country: 'France'
+      region: ''
     };
 
   const methods = useForm<EmployeeFormValues>({

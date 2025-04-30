@@ -1,67 +1,7 @@
 
-export interface EmployeePhotoMeta {
-  data: string;
-  updatedAt: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-}
+import { Company } from '@/components/module/submodules/companies/types';
 
-export interface Skill {
-  id: string;
-  name: string;
-  level: string;
-}
-
-export interface WorkDay {
-  isWorkDay: boolean;
-  shifts: { start: string; end: string }[];
-}
-
-export interface Schedule {
-  monday?: WorkDay;
-  tuesday?: WorkDay;
-  wednesday?: WorkDay;
-  thursday?: WorkDay;
-  friday?: WorkDay;
-  saturday?: WorkDay;
-  sunday?: WorkDay;
-  [key: string]: WorkDay | undefined;
-}
-
-export interface Document {
-  id: string;
-  title: string;
-  type: 'contract' | 'id' | 'certificate' | 'other';
-  date: string;
-  fileUrl: string;
-  description?: string;
-  uploadedAt: string;
-}
-
-export interface Evaluation {
-  id: string;
-  date: string;
-  type: 'performance' | 'skills' | 'objectives';
-  score: string;
-  evaluator: string;
-  comments?: string;
-}
-
-export interface Absence {
-  id: string;
-  type: string;
-  startDate: string;
-  endDate: string;
-  status: 'approved' | 'pending' | 'rejected';
-  reason?: string;
-  submittedAt: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  notes?: string;
-}
-
-export interface Address {
+export interface EmployeeAddress {
   street: string;
   city: string;
   postalCode: string;
@@ -69,43 +9,132 @@ export interface Address {
   state?: string;
 }
 
+export interface Education {
+  degree: string;
+  school: string;
+  year: string;
+}
+
+export interface Document {
+  name: string;
+  date: string;
+  type: string;
+  fileUrl?: string;
+  fileData?: string; // Base64 data for document
+  fileHex?: string;  // Hexadecimal data for document
+  fileType?: string; // MIME type of the document
+  id?: string;
+  employeeId?: string; // ID de l'employé associé
+  filePath?: string;  // Chemin dans Firebase Storage
+  fileSize?: number;  // Taille du fichier
+  storedInFirebase?: boolean; // Indique si stocké dans Firebase
+  documentId?: string; // ID du document dans la collection hr_documents
+  binaryData?: boolean; // Indique si les données sont stockées sous format binaire
+  storedInHrDocuments?: boolean; // Indique si stocké dans hr_documents
+  storageFormat?: 'base64' | 'binary' | 'hex'; // Format de stockage des données
+  base64Data?: string; // Données au format base64
+}
+
+export interface LeaveRequest {
+  id: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  status: 'pending' | 'approved' | 'rejected' | 'En attente' | 'Approuvé' | 'Refusé';
+  comments?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface Evaluation {
+  id: string;
+  date: string;
+  title?: string;
+  rating?: number;
+  comments?: string;
+  evaluator?: string;
+  evaluatorId?: string;
+  evaluatorName?: string;
+  employeeId?: string;
+  status?: 'Planifiée' | 'Complétée' | 'Annulée';
+  score?: number;
+  maxScore?: number;
+  department?: string;
+  goals?: string[];
+  strengths?: string[];
+  improvements?: string[];
+  fromEmployeeRecord?: boolean;
+}
+
+export interface EmployeePhotoMeta {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  updatedAt: string;
+  data?: string; // Keep data property to match usage in code
+}
+
 export interface Employee {
   id: string;
+  firebaseId?: string; // ID généré par Firestore
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
+  phone: string;
   position: string;
   department: string;
-  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
-  hireDate?: string;
-  birthDate?: string;
-  // Adresse personnelle
-  address?: string | Address;
-  city?: string;
-  postalCode?: string;
-  country?: string;
-  // Adresse professionnelle
-  workAddress?: Address;
-  salary?: number;
-  manager?: string;
-  managerId?: string;
-  isManager?: boolean;
-  photoUrl?: string;
+  departmentId: string;
+  photo: string;
+  photoURL: string;
+  photoData?: string; // Base64 data for the photo
+  photoHex?: string;  // Hexadecimal data for the photo
   photoMeta?: EmployeePhotoMeta;
-  skills?: (Skill | string)[];
-  schedule?: Schedule;
-  documents?: Document[];
-  evaluations?: Evaluation[];
-  absences?: Absence[];
-  contract?: string;
-  departmentId?: string;
-  professionalEmail?: string;
+  hireDate: string;
+  startDate: string;
+  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
+  address: string | EmployeeAddress;
+  contract: string;
+  socialSecurityNumber: string;
+  birthDate: string;
+  documents: Document[] | any[];
+  company: string | Company;
+  role: string;
+  title: string;
+  manager: string;
+  managerId: string;
+  professionalEmail: string;
+  skills: string[];
+  education: Education[] | any[];
+  workSchedule?: {
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday?: string;
+    sunday?: string;
+  };
+  payslips: any[];
+  address_string?: string; // For backward compatibility
+  createdAt?: string; // Adding timestamp for creation date
+  updatedAt?: string; // Adding timestamp for last update
+  leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
+  evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
+  isManager?: boolean;
+  forceManager?: boolean;
+  conges?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  rtt?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
   streetNumber?: string;
   streetName?: string;
+  city?: string;
   zipCode?: string;
   region?: string;
-  photoURL?: string;
-  photo?: string;
-  company?: string | any; // Company can be string ID or object
 }

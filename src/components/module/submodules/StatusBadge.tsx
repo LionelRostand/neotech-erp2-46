@@ -9,7 +9,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
+const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
   const statusClasses = {
     success: "bg-green-100 text-green-800 border-green-200",
     warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -42,5 +42,4 @@ export const StatusBadge = ({ status, children, className }: StatusBadgeProps) =
   );
 };
 
-// Default export for backward compatibility
 export default StatusBadge;

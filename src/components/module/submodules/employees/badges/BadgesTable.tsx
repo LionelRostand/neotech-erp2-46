@@ -1,21 +1,25 @@
 
 import React from 'react';
-import { BadgeData, BadgesTableProps } from './BadgeTypes';
+import { BadgeData } from './BadgeTypes';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Building, Check, X, AlertCircle } from 'lucide-react';
 
-const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick, loading = false }) => {
-  // Safety check - ensure badgesList is an array
-  const safeBadgesList = Array.isArray(badgesList) ? badgesList : [];
+interface BadgesTableProps {
+  badgesList: BadgeData[];
+  onBadgeClick: (badgeId: string) => void;
+  loading: boolean;
+}
+
+const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loading }) => {
   
   const renderStatus = (status: string) => {
     if (status === 'success') {
       return <Badge className="bg-green-100 text-green-800 border-green-300"><Check className="h-3 w-3 mr-1" /> Actif</Badge>;
-    } else if (status === 'danger') {
+    } else if (status === 'error') {
       return <Badge className="bg-red-100 text-red-800 border-red-300"><X className="h-3 w-3 mr-1" /> Désactivé</Badge>;
     } else if (status === 'warning') {
-      return <Badge className="bg-amber-100 text-amber-800 border-amber-300"><AlertCircle className="h-3 w-3 mr-1" /> En attente</Badge>;
+      return <Badge className="bg-amber-100 text-amber-800 border-amber-300"><AlertCircle className="h-3 w-3 mr-1" /> Expiré</Badge>;
     }
     return <Badge variant="outline">{status}</Badge>;
   };
@@ -30,7 +34,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick
     );
   }
   
-  if (safeBadgesList.length === 0) {
+  if (badgesList.length === 0) {
     return (
       <div className="mt-6 text-center p-8 border border-dashed rounded-md">
         <p className="text-muted-foreground">Aucun badge trouvé</p>
@@ -53,7 +57,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick
           </TableRow>
         </TableHeader>
         <TableBody>
-          {safeBadgesList.map((badge) => (
+          {badgesList.map((badge) => (
             <TableRow 
               key={badge.id} 
               className="cursor-pointer hover:bg-muted/50"
@@ -61,7 +65,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList = [], onBadgeClick
             >
               <TableCell className="font-medium">{badge.id}</TableCell>
               <TableCell>{badge.employeeName}</TableCell>
-              <TableCell>{badge.department || 'Non spécifié'}</TableCell>
+              <TableCell>{badge.department}</TableCell>
               <TableCell>
                 {badge.company ? (
                   <div className="flex items-center">
