@@ -36,11 +36,12 @@ const FormActions: React.FC<FormActionsProps> = ({
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
-  // Utiliser les données des employés dédupliquées depuis useEmployeeData
+  // Safely filter and sort employees
   useEffect(() => {
-    if (employees && employees.length > 0) {
+    // Ensure employees is an array before processing
+    if (employees && Array.isArray(employees) && employees.length > 0) {
       const managerEmployees = employees.filter(emp => 
-        emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || '')
+        emp && (emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || ''))
       );
       
       const sorted = [...managerEmployees].sort((a, b) => {
@@ -51,7 +52,8 @@ const FormActions: React.FC<FormActionsProps> = ({
       
       setSortedEmployees(sorted);
       
-      if (form) {
+      // Only update form if it exists and has setValue method
+      if (form?.setValue) {
         const position = form.getValues('position');
         const forceManager = form.getValues('forceManager');
         
@@ -62,8 +64,22 @@ const FormActions: React.FC<FormActionsProps> = ({
           }
         }
       }
+    } else {
+      // If employees is undefined or empty, set an empty array
+      setSortedEmployees([]);
     }
   }, [employees, isLoadingEmployees, form]);
+  
+  // Ensure form exists before accessing its methods
+  const handleManagerChange = (value: string) => {
+    if (form) {
+      if (value === 'none') {
+        form.setValue('managerId', '');
+      } else {
+        form.setValue('managerId', value);
+      }
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -74,13 +90,7 @@ const FormActions: React.FC<FormActionsProps> = ({
           </Label>
           <div className="col-span-3">
             <Select
-              onValueChange={(value) => {
-                if (value === 'none') {
-                  form.setValue('managerId', '');
-                } else {
-                  form.setValue('managerId', value);
-                }
-              }}
+              onValueChange={handleManagerChange}
               value={form.getValues('managerId') || 'none'}
               disabled={isLoadingEmployees}
             >

@@ -12,7 +12,10 @@ export const useEmployeeData = () => {
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
-    if (!rawEmployees || !Array.isArray(rawEmployees) || rawEmployees.length === 0) return [];
+    // Make sure rawEmployees is a valid array
+    if (!rawEmployees || !Array.isArray(rawEmployees) || rawEmployees.length === 0) {
+      return [];
+    }
     
     return rawEmployees.map(employee => ({
       ...employee,
@@ -23,17 +26,34 @@ export const useEmployeeData = () => {
   
   // Formater les départements pour les enrichir avec les données des managers
   const formattedDepartments = useMemo(() => {
-    if (!hrDepartments || !Array.isArray(hrDepartments) || hrDepartments.length === 0) return [];
-    if (!formattedEmployees || formattedEmployees.length === 0) return hrDepartments || [];
+    // Make sure hrDepartments is a valid array
+    if (!hrDepartments || !Array.isArray(hrDepartments) || hrDepartments.length === 0) {
+      return [];
+    }
+    
+    // Make sure formattedEmployees is a valid array
+    if (!formattedEmployees || !Array.isArray(formattedEmployees) || formattedEmployees.length === 0) {
+      return hrDepartments;
+    }
     
     return hrDepartments.map(department => {
+      // Make sure department has an id and isn't null/undefined
+      if (!department || !department.id) {
+        return {
+          id: `dept-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: 'Unknown Department',
+          managerName: null,
+          employeesCount: 0
+        };
+      }
+      
       const manager = department.managerId 
-        ? formattedEmployees.find(emp => emp.id === department.managerId) 
+        ? formattedEmployees.find(emp => emp && emp.id === department.managerId) 
         : null;
       
-      // Calculer le nombre d'employés dans ce département
+      // Calculer le nombre d'employés dans ce département (safely)
       const deptEmployeesCount = formattedEmployees.filter(
-        emp => emp.department === department.id || emp.departmentId === department.id
+        emp => emp && (emp.department === department.id || emp.departmentId === department.id)
       ).length;
       
       return {

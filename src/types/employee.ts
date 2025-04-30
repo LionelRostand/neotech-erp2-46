@@ -89,6 +89,7 @@ export interface Employee {
   workAddress?: Address;
   salary?: number;
   manager?: string;
+  managerId?: string;
   isManager?: boolean;
   photoUrl?: string;
   photoMeta?: EmployeePhotoMeta;
@@ -106,4 +107,11 @@ export interface Employee {
   region?: string;
   photoURL?: string;
   photo?: string;
+  photoData?: string;
+  company?: string;
+  role?: string;
+  title?: string;
+  forceManager?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

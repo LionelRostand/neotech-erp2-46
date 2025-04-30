@@ -44,3 +44,29 @@ export const employeeFormSchema = z.object({
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
+
+// Provide a default form values object that can be used to initialize forms
+export const getDefaultEmployeeFormValues = (): EmployeeFormValues => ({
+  firstName: '',
+  lastName: '',
+  email: '',
+  professionalEmail: '',
+  phone: '',
+  streetNumber: '',
+  streetName: '',
+  city: '',
+  zipCode: '',
+  region: '',
+  country: '',
+  company: '',
+  department: '',
+  position: '',
+  contract: 'CDI', // Default contract type
+  hireDate: new Date().toISOString().split('T')[0], // Current date as default
+  birthDate: '',
+  managerId: '',
+  status: 'active' as const, // Default status
+  photo: '',
+  forceManager: false,
+  isManager: false,
+});

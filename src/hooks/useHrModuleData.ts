@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useHrData } from './modules/useHrData';
 import { Company } from '@/components/module/submodules/companies/types';
 import { Employee } from '@/types/employee';
@@ -23,8 +23,7 @@ export const useHrModuleData = () => {
     hrReports,
     hrAlerts,
     isLoading, 
-    error,
-    fetchAllHrData
+    error 
   } = useHrData();
   
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -34,7 +33,7 @@ export const useHrModuleData = () => {
   useEffect(() => {
     if (rawEmployees && Array.isArray(rawEmployees)) {
       const processedEmployees = rawEmployees.map(emp => ({
-        id: emp.id,
+        id: emp.id || `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         firstName: emp.firstName || '',
         lastName: emp.lastName || '',
         email: emp.email || '',
@@ -68,18 +67,26 @@ export const useHrModuleData = () => {
           friday: '09:00 - 17:00',
         },
         payslips: emp.payslips || [],
+        streetNumber: emp.streetNumber || '',
+        streetName: emp.streetName || '',
+        city: emp.city || '',
+        zipCode: emp.zipCode || '',
+        region: emp.region || '',
+        country: emp.country || '',
+        isManager: emp.isManager || false,
+        forceManager: emp.forceManager || false,
       })) as Employee[];
       
       setEmployees(processedEmployees);
     } else {
-      // Set empty array if rawEmployees is undefined or not an array
+      // Set empty array if no valid employees data
       setEmployees([]);
     }
   }, [rawEmployees]);
 
   // Extract companies from employees if available
   useEffect(() => {
-    if (employees && employees.length > 0) {
+    if (employees && Array.isArray(employees) && employees.length > 0) {
       // Create a map to ensure unique companies
       const companiesMap = new Map<string, Company>();
       
@@ -87,7 +94,7 @@ export const useHrModuleData = () => {
         if (emp.company) {
           const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
           
-          if (companyId && !companiesMap.has(companyId)) {
+          if (!companiesMap.has(companyId)) {
             if (typeof emp.company === 'string') {
               // Only has the id, create a basic company object
               companiesMap.set(companyId, {
@@ -112,9 +119,9 @@ export const useHrModuleData = () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
               });
-            } else if (typeof emp.company === 'object' && emp.company !== null) {
+            } else {
               // Has the full company object
-              const company = emp.company as Company;
+              const company = emp.company as any;
               
               // Add missing properties if needed
               if (!company.address) {
@@ -148,18 +155,10 @@ export const useHrModuleData = () => {
       // Convert map to array
       setCompanies(Array.from(companiesMap.values()));
     } else {
-      // Set empty array if employees is undefined, not an array, or empty
+      // Set empty array if no valid employees data
       setCompanies([]);
     }
   }, [employees]);
-  
-  // Function to refetch employees data
-  const refetchEmployees = useCallback(async () => {
-    console.log("Refetching employees data...");
-    if (fetchAllHrData) {
-      await fetchAllHrData();
-    }
-  }, [fetchAllHrData]);
 
   return {
     employees: employees || [],
@@ -177,7 +176,6 @@ export const useHrModuleData = () => {
     hrReports: hrReports || [],
     hrAlerts: hrAlerts || [],
     isLoading,
-    error,
-    refetchEmployees // Export the refetchEmployees function
+    error
   };
 };
