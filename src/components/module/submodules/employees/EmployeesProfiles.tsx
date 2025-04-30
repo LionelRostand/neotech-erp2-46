@@ -1,435 +1,417 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
-import { Eye, Pencil, Trash2, UserPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Eye, Pencil, Trash2, UserPlus } from "lucide-react";
 import { Employee } from '@/types/employee';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
-import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import EmployeeForm from '../employees/EmployeeForm';
-import { EmployeeFormValues } from './form/employeeFormSchema';
+import { useAddEmployee } from '@/hooks/useAddEmployee';
 import DeleteConfirmDialog from './dialogs/DeleteConfirmDialog';
-import { formToEmployee } from './form/employeeUtils';
+import EmployeeViewDialog from './EmployeeViewDialog';
+import CreateEmployeeDialog from './CreateEmployeeDialog';
 
+// Interface for the component props
 interface EmployeesProfilesProps {
   employees: Employee[];
   isLoading?: boolean;
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], isLoading = false }) => {
-  const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isViewingDetails, setIsViewingDetails] = useState(false);
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ 
+  employees = [], 
+  isLoading = false 
+}) => {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { createEmployee, updateEmployee, deleteEmployee } = useEmployeeActions();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  const { deleteEmployee, updateEmployee, isLoading: isActionLoading } = useEmployeeActions();
+  const { addEmployee, isLoading: isAddLoading } = useAddEmployee();
 
-  const columns = [
-    {
-      header: "Photo",
-      cell: ({ row }) => {
-        const employee = row.original;
-        return (
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={employee.photo || employee.photoURL} alt={`${employee.firstName} ${employee.lastName}`} />
-            <AvatarFallback>{employee.firstName?.[0]}{employee.lastName?.[0]}</AvatarFallback>
-          </Avatar>
-        );
-      }
-    },
-    {
-      header: "Nom",
-      cell: ({ row }) => `${row.original.lastName || ''} ${row.original.firstName || ''}`,
-    },
-    {
-      header: "Email",
-      accessorKey: "email",
-    },
-    {
-      header: "Poste",
-      accessorKey: "position",
-    },
-    {
-      header: "Département",
-      accessorKey: "department",
-    },
-    {
-      header: "Entreprise",
-      accessorKey: "company",
-    },
-    {
-      header: "Statut",
-      cell: ({ row }) => {
-        const status = row.original.status;
-        let variant: "default" | "destructive" | "outline" | "secondary" = "default";
-        let label = "Inconnu";
+  // Filter employees based on search term
+  const filteredEmployees = searchTerm
+    ? employees.filter(employee => 
+        `${employee.firstName} ${employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.position?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : employees;
 
-        switch (status) {
-          case "active":
-          case "Actif":
-            variant = "default";
-            label = "Actif";
-            break;
-          case "inactive":
-          case "Inactif":
-            variant = "secondary";
-            label = "Inactif";
-            break;
-          case "onLeave":
-          case "En congé":
-            variant = "outline";
-            label = "En congé";
-            break;
-          case "Suspendu":
-            variant = "destructive";
-            label = "Suspendu";
-            break;
-        }
-
-        return <Badge variant={variant}>{label}</Badge>;
-      }
-    },
-    {
-      header: "Actions",
-      cell: ({ row }) => {
-        const employee = row.original;
-        return (
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => handleViewDetails(employee)}
-              title="Voir les détails"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => handleEdit(employee)}
-              title="Modifier"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => handleDelete(employee)}
-              title="Supprimer"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      }
-    }
-  ];
-
-  const handleViewDetails = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsViewingDetails(true);
-  };
-
-  const handleEdit = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsEditing(true);
-  };
-
-  const handleDelete = (employee: Employee) => {
+  // Handle employee deletion
+  const handleDeleteClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleCreateSubmit = async (data: EmployeeFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const employeeData = formToEmployee(data);
-      await createEmployee(employeeData as any);
-      toast.success("Employé créé avec succès");
-      setIsCreating(false);
-    } catch (error) {
-      console.error("Erreur lors de la création de l'employé:", error);
-      toast.error("Erreur lors de la création de l'employé");
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Handle employee view
+  const handleViewClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsViewDialogOpen(true);
   };
 
-  const handleUpdateSubmit = async (data: EmployeeFormValues) => {
-    if (!selectedEmployee) return;
-    
-    setIsSubmitting(true);
-    try {
-      const employeeData = formToEmployee(data, selectedEmployee);
-      await updateEmployee(employeeData);
-      toast.success("Employé mis à jour avec succès");
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'employé:", error);
-      toast.error("Erreur lors de la mise à jour de l'employé");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  // Confirm employee deletion
   const handleDeleteConfirm = async () => {
-    if (!selectedEmployee) return;
+    if (selectedEmployee?.id) {
+      try {
+        await deleteEmployee(selectedEmployee.id);
+        toast({
+          title: "Employé supprimé",
+          description: `${selectedEmployee.firstName} ${selectedEmployee.lastName} a été supprimé avec succès.`,
+        });
+        setIsDeleteDialogOpen(false);
+      } catch (error) {
+        console.error("Error deleting employee:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la suppression de l'employé.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Handle employee update
+  const handleEmployeeUpdate = async (data: Partial<Employee>) => {
+    if (!data.id) return;
     
     try {
-      await deleteEmployee(selectedEmployee.id);
-      toast.success("Employé supprimé avec succès");
-      setIsDeleteDialogOpen(false);
+      await updateEmployee(data);
+      toast({
+        title: "Employé mis à jour",
+        description: "Les informations de l'employé ont été mises à jour avec succès.",
+      });
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'employé:", error);
-      toast.error("Erreur lors de la suppression de l'employé");
+      console.error("Error updating employee:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour de l'employé.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle employee creation
+  const handleCreateEmployee = async (data: Partial<Employee>) => {
+    try {
+      await addEmployee(data);
+      toast({
+        title: "Employé créé",
+        description: "Le nouvel employé a été créé avec succès.",
+      });
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création de l'employé.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-purple-700">Employés</h1>
-        </div>
-        <Button onClick={() => setIsCreating(true)} className="bg-purple-600 hover:bg-purple-700">
-          <UserPlus className="h-5 w-5 mr-2" />
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold">Employés</h2>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
           Nouveau Employé
         </Button>
       </div>
-
-      <DataTable
-        columns={columns}
-        data={employees}
-        isLoading={isLoading}
-        emptyMessage="Aucun employé trouvé"
-      />
-
-      {/* Modal pour créer un nouvel employé */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Créer un nouvel employé</DialogTitle>
-          </DialogHeader>
-          <EmployeeForm 
-            onSubmit={handleCreateSubmit} 
-            onCancel={() => setIsCreating(false)} 
-            isSubmitting={isSubmitting}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal pour modifier un employé */}
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Modifier un employé</DialogTitle>
-          </DialogHeader>
-          {selectedEmployee && (
-            <EmployeeForm 
-              defaultValues={selectedEmployee} 
-              onSubmit={handleUpdateSubmit} 
-              onCancel={() => setIsEditing(false)}
-              isSubmitting={isSubmitting} 
+      
+      <Card>
+        <CardContent className="p-6">
+          <div className="mb-4">
+            <Input
+              placeholder="Rechercher un employé..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
             />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal pour afficher les détails d'un employé */}
-      <Dialog open={isViewingDetails} onOpenChange={setIsViewingDetails}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {selectedEmployee && (
-            <>
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage 
-                    src={selectedEmployee.photo || selectedEmployee.photoURL} 
-                    alt={`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} 
-                  />
-                  <AvatarFallback className="text-xl">
-                    {selectedEmployee.firstName?.[0]}{selectedEmployee.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="text-2xl font-bold">{selectedEmployee.firstName} {selectedEmployee.lastName}</h2>
-                  <p className="text-gray-600">{selectedEmployee.position} @ {selectedEmployee.company}</p>
-                  <Badge className="mt-1">Actif</Badge>
-                </div>
-              </div>
-
-              <Tabs defaultValue="informations" className="w-full mt-4">
-                <TabsList className="grid grid-cols-6 mb-4">
-                  <TabsTrigger value="informations">Informations</TabsTrigger>
-                  <TabsTrigger value="documents">Documents</TabsTrigger>
-                  <TabsTrigger value="presences">Présences</TabsTrigger>
-                  <TabsTrigger value="conges">Congés</TabsTrigger>
-                  <TabsTrigger value="competences">Compétences</TabsTrigger>
-                  <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
-                </TabsList>
-                <TabsContent value="informations">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Informations personnelles</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="text-sm text-gray-500">Nom</div>
-                        <div>{selectedEmployee.lastName}</div>
-                        <div className="text-sm text-gray-500">Prénom</div>
-                        <div>{selectedEmployee.firstName}</div>
-                        <div className="text-sm text-gray-500">Email</div>
-                        <div>{selectedEmployee.email}</div>
-                        <div className="text-sm text-gray-500">Téléphone</div>
-                        <div>{selectedEmployee.phone || '-'}</div>
-                        <div className="text-sm text-gray-500">Adresse</div>
-                        <div>{selectedEmployee.streetNumber} {selectedEmployee.streetName}</div>
-                        <div className="text-sm text-gray-500">Ville</div>
-                        <div>{selectedEmployee.city}</div>
-                        <div className="text-sm text-gray-500">Code postal</div>
-                        <div>{selectedEmployee.zipCode}</div>
-                        <div className="text-sm text-gray-500">Région</div>
-                        <div>{selectedEmployee.region}</div>
-                        <div className="text-sm text-gray-500">Pays</div>
-                        <div>{selectedEmployee.country}</div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Informations professionnelles</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="text-sm text-gray-500">Poste</div>
-                        <div>{selectedEmployee.position}</div>
-                        <div className="text-sm text-gray-500">Email professionnel</div>
-                        <div>{selectedEmployee.professionalEmail || '-'}</div>
-                        <div className="text-sm text-gray-500">Type de contrat</div>
-                        <div>{selectedEmployee.contract}</div>
-                        <div className="text-sm text-gray-500">Département</div>
-                        <div>{selectedEmployee.department}</div>
-                        <div className="text-sm text-gray-500">Entreprise</div>
-                        <div>{selectedEmployee.company}</div>
-                        <div className="text-sm text-gray-500">Date d'embauche</div>
-                        <div>{selectedEmployee.hireDate || '-'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="documents">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Documents</h3>
-                    {selectedEmployee.documents && selectedEmployee.documents.length > 0 ? (
-                      <ul className="divide-y">
-                        {selectedEmployee.documents.map((doc) => (
-                          <li key={doc.id} className="py-2">
-                            <div className="flex justify-between">
-                              <div>
-                                <p className="font-medium">{doc.title}</p>
-                                <p className="text-sm text-gray-600">{doc.type} - {doc.date}</p>
-                              </div>
-                              <Button variant="outline" size="sm">Voir</Button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employé
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Poste
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Département
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center">
+                      Chargement...
+                    </td>
+                  </tr>
+                ) : filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center">
+                      Aucun employé trouvé
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEmployees.map((employee) => (
+                    <tr key={employee.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage 
+                              src={employee.photoUrl || employee.photoURL || employee.photo || employee.photoMeta?.data || ''} 
+                              alt={`${employee.firstName} ${employee.lastName}`} 
+                            />
+                            <AvatarFallback>
+                              {employee.firstName?.[0]}{employee.lastName?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {employee.firstName} {employee.lastName}
                             </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-gray-500">Aucun document disponible</p>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="presences">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Registre des présences</h3>
-                    <p className="text-gray-500">Les données de présence ne sont pas encore disponibles.</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="conges">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Congés et RTT</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <p className="text-gray-500">Congés payés</p>
-                        <p className="text-2xl font-bold">25 jours</p>
-                        <p className="text-sm text-gray-500">Solde disponible</p>
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <p className="text-gray-500">RTT</p>
-                        <p className="text-2xl font-bold">12 jours</p>
-                        <p className="text-sm text-gray-500">Solde disponible</p>
-                      </div>
-                    </div>
-
-                    <h4 className="font-medium mt-6">Historique des congés</h4>
-                    <p className="text-gray-500">Aucun congé n'a été pris.</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="competences">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Compétences</h3>
-                    {selectedEmployee.skills && selectedEmployee.skills.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedEmployee.skills.map((skill, index) => {
-                          const skillName = typeof skill === 'string' ? skill : skill.name;
-                          return (
-                            <Badge key={index} variant="outline" className="px-3 py-1">
-                              {skillName}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500">Aucune compétence enregistrée</p>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="evaluations">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Évaluations</h3>
-                    {selectedEmployee.evaluations && selectedEmployee.evaluations.length > 0 ? (
-                      <ul className="divide-y">
-                        {selectedEmployee.evaluations.map((eval) => (
-                          <li key={eval.id} className="py-2">
-                            <div>
-                              <p className="font-medium">{eval.type} - {eval.date}</p>
-                              <p className="text-sm">Score: {eval.score}</p>
-                              <p className="text-sm text-gray-600">Évaluateur: {eval.evaluator}</p>
-                              {eval.comments && <p className="mt-1 text-sm">{eval.comments}</p>}
+                            <div className="text-sm text-gray-500">
+                              {employee.status === 'active' || employee.status === 'Actif' 
+                                ? 'Actif' 
+                                : employee.status === 'onLeave' || employee.status === 'En congé'
+                                ? 'En congé'
+                                : 'Inactif'}
                             </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-gray-500">Aucune évaluation disponible</p>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{employee.professionalEmail || employee.email}</div>
+                        <div className="text-sm text-gray-500">{employee.phone || 'Non renseigné'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{employee.position || 'Non renseigné'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{employee.department || 'Non renseigné'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleViewClick(employee)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleViewClick(employee)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleDeleteClick(employee)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Dialog de confirmation de suppression */}
+      {/* Employee View/Edit Dialog */}
+      {selectedEmployee && (
+        <EmployeeViewDialog
+          employee={selectedEmployee}
+          open={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          onUpdate={handleEmployeeUpdate}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
         title="Supprimer l'employé"
-        description={`Êtes-vous sûr de vouloir supprimer ${selectedEmployee?.firstName} ${selectedEmployee?.lastName} ? Cette action est irréversible.`}
+        description={`Êtes-vous sûr de vouloir supprimer ${selectedEmployee?.firstName} ${selectedEmployee?.lastName}? Cette action est irréversible.`}
+        isLoading={isActionLoading}
       />
+
+      {/* Create Employee Dialog */}
+      <CreateEmployeeDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreateEmployee}
+      />
+
+      {/* Preview of Selected Employee */}
+      {selectedEmployee && !isViewDialogOpen && (
+        <div className="mt-8 p-4 border rounded-md">
+          <h3 className="text-lg font-semibold mb-4">Aperçu de l'employé sélectionné</h3>
+          
+          <div className="flex items-center mb-6">
+            <Avatar className="h-16 w-16">
+              <AvatarImage 
+                src={selectedEmployee.photoUrl || selectedEmployee.photoURL || selectedEmployee.photo || selectedEmployee.photoMeta?.data || ''} 
+                alt={`${selectedEmployee.firstName} ${selectedEmployee.lastName}`} 
+              />
+              <AvatarFallback>
+                {selectedEmployee.firstName?.[0]}{selectedEmployee.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="ml-4">
+              <h4 className="text-xl font-bold">{selectedEmployee.firstName} {selectedEmployee.lastName}</h4>
+              <p className="text-gray-500">{selectedEmployee.position || 'Poste non renseigné'}</p>
+            </div>
+          </div>
+          
+          <Tabs defaultValue="informations">
+            <TabsList>
+              <TabsTrigger value="informations">Informations</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="presences">Présences</TabsTrigger>
+              <TabsTrigger value="conges">Congés</TabsTrigger>
+              <TabsTrigger value="competences">Compétences</TabsTrigger>
+              <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="informations" className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h5 className="font-semibold mb-2">Informations personnelles</h5>
+                  <p><span className="font-medium">Email :</span> {selectedEmployee.email}</p>
+                  <p><span className="font-medium">Téléphone :</span> {selectedEmployee.phone || 'Non renseigné'}</p>
+                  <p><span className="font-medium">Adresse :</span> {
+                    typeof selectedEmployee.address === 'string' 
+                      ? selectedEmployee.address 
+                      : selectedEmployee.address 
+                        ? `${selectedEmployee.address.street || ''}, ${selectedEmployee.address.city || ''}, ${selectedEmployee.address.postalCode || ''}` 
+                        : 'Non renseignée'
+                  }</p>
+                </div>
+                
+                <div>
+                  <h5 className="font-semibold mb-2">Informations professionnelles</h5>
+                  <p><span className="font-medium">Email pro :</span> {selectedEmployee.professionalEmail || 'Non renseigné'}</p>
+                  <p><span className="font-medium">Département :</span> {selectedEmployee.department || 'Non renseigné'}</p>
+                  <p><span className="font-medium">Type de contrat :</span> {selectedEmployee.contract || 'Non renseigné'}</p>
+                  <p><span className="font-medium">Date d'embauche :</span> {selectedEmployee.hireDate || 'Non renseignée'}</p>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="documents" className="pt-4">
+              <h5 className="font-semibold mb-2">Documents</h5>
+              {selectedEmployee.documents && selectedEmployee.documents.length > 0 ? (
+                <ul className="divide-y">
+                  {selectedEmployee.documents.map((doc) => (
+                    <li key={doc.id} className="py-2">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{doc.title}</p>
+                          <p className="text-sm text-gray-500">Ajouté le {new Date(doc.uploadedAt).toLocaleDateString()}</p>
+                        </div>
+                        <Button variant="outline" size="sm">Voir</Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">Aucun document disponible</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="presences" className="pt-4">
+              <h5 className="font-semibold mb-2">Registre des présences</h5>
+              <p className="text-gray-500">Fonctionnalité à venir</p>
+            </TabsContent>
+            
+            <TabsContent value="conges" className="pt-4">
+              <h5 className="font-semibold mb-2">Congés</h5>
+              {selectedEmployee.absences && selectedEmployee.absences.length > 0 ? (
+                <ul className="divide-y">
+                  {selectedEmployee.absences.map((absence) => (
+                    <li key={absence.id} className="py-2">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{absence.type}</p>
+                          <p className="text-sm text-gray-500">
+                            Du {new Date(absence.startDate).toLocaleDateString()} au {new Date(absence.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          absence.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                          absence.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {absence.status === 'approved' ? 'Approuvé' : 
+                           absence.status === 'pending' ? 'En attente' : 'Rejeté'}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">Aucun congé enregistré</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="competences" className="pt-4">
+              <h5 className="font-semibold mb-2">Compétences</h5>
+              {selectedEmployee.skills && selectedEmployee.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedEmployee.skills.map((skill, index) => {
+                    const skillName = typeof skill === 'string' ? skill : skill.name;
+                    return (
+                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {skillName}
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-500">Aucune compétence enregistrée</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="evaluations" className="pt-4">
+              <h5 className="font-semibold mb-2">Évaluations</h5>
+              {selectedEmployee.evaluations && selectedEmployee.evaluations.length > 0 ? (
+                <ul className="divide-y">
+                  {selectedEmployee.evaluations.map((evaluation) => (
+                    <li key={evaluation.id} className="py-2">
+                      <div>
+                        <p className="font-medium">{evaluation.type} - {new Date(evaluation.date).toLocaleDateString()}</p>
+                        <p className="text-sm">Score: {evaluation.score}</p>
+                        <p className="text-sm text-gray-500">Évaluateur: {evaluation.evaluator}</p>
+                        {evaluation.comments && (
+                          <p className="text-sm mt-1">{evaluation.comments}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">Aucune évaluation disponible</p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </div>
   );
 };
