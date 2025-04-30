@@ -1,4 +1,3 @@
-
 /**
  * Constantes pour les chemins des collections Firestore
  */
@@ -16,7 +15,8 @@ export const COLLECTIONS = {
     EVALUATIONS: 'hr_evaluations',
     TRAININGS: 'hr_trainings',
     REPORTS: 'hr_reports',
-    ALERTS: 'hr_alerts'
+    ALERTS: 'hr_alerts',
+    BADGES: 'hr_badges'
   },
   CRM: {
     CLIENTS: 'crm_clients',
