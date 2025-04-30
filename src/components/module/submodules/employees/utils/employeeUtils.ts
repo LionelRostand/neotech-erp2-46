@@ -2,151 +2,149 @@
 import { Employee } from '@/types/employee';
 
 /**
- * Vérifie si un employé est un manager basé sur son poste ou le flag isManager
+ * Vérifie si un intitulé de poste correspond à un manager
+ * @param position Intitulé du poste à vérifier
+ * @returns true si le poste est un poste de manager
  */
-export const isEmployeeManager = (position?: string): boolean => {
+export const isEmployeeManager = (position: string): boolean => {
   if (!position) return false;
   
-  const managerKeywords = [
-    'manager', 
-    'directeur', 
-    'directrice', 
-    'responsable', 
-    'chef',
-    'superviseur',
-    'lead',
-    'pdg',
-    'président',
-    'p.d.g'
-  ];
-  
   const lowerPosition = position.toLowerCase();
+  
+  // Liste des mots-clés indiquant un poste de management
+  const managerKeywords = [
+    'manager', 'directeur', 'directrice', 'chef', 'responsable',
+    'supervisor', 'lead', 'head', 'président', 'ceo', 'cto', 'coo', 'cfo',
+    'vp', 'vice-président', 'dirigeant'
+  ];
   
   return managerKeywords.some(keyword => lowerPosition.includes(keyword));
 };
 
 /**
- * Récupère le nom complet d'un employé
+ * Génère une chaîne formatée avec le nom et prénom
  */
-export const getEmployeeFullName = (employee?: Employee): string => {
-  if (!employee) return 'Employé inconnu';
-  return `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employé sans nom';
-};
-
-/**
- * Formatter le statut d'un employé pour l'affichage
- */
-export const getStatusDisplay = (status?: string): string => {
-  if (!status) return 'Inconnu';
-  
-  switch(status.toLowerCase()) {
-    case 'active':
-    case 'actif':
-      return 'Actif';
-    case 'inactive':
-    case 'inactif':
-      return 'Inactif';
-    case 'onleave':
-    case 'en congé':
-      return 'En congé';
-    case 'suspended':
-    case 'suspendu':
-      return 'Suspendu';
-    default:
-      return status;
-  }
-};
-
-/**
- * Formatter le type de contrat d'un employé pour l'affichage
- */
-export const getContractTypeDisplay = (contractType?: string): string => {
-  if (!contractType) return 'Non spécifié';
-  
-  switch(contractType.toLowerCase()) {
-    case 'cdi':
-      return 'CDI';
-    case 'cdd':
-      return 'CDD';
-    case 'stage':
-      return 'Stage';
-    case 'alternance':
-      return 'Alternance';
-    case 'freelance':
-      return 'Freelance';
-    case 'autre':
-      return 'Autre';
-    default:
-      return contractType;
-  }
-};
-
-/**
- * Récupère l'URL de la photo d'un employé
- */
-export const getEmployeePhotoUrl = (employee?: Employee): string => {
+export const getEmployeeFullName = (employee: Partial<Employee>): string => {
   if (!employee) return '';
-  return employee.photoURL || employee.photo || '';
+  return `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
 };
 
 /**
- * Format a phone number for display
+ * Génère les initiales d'un employé
  */
-export const formatPhoneNumber = (phone?: string): string => {
-  if (!phone) return '';
+export const getEmployeeInitials = (employee: Partial<Employee>): string => {
+  if (!employee) return '';
+  const firstName = employee.firstName || '';
+  const lastName = employee.lastName || '';
+  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+};
+
+/**
+ * Génère une couleur d'avatar basée sur le nom
+ */
+export const getAvatarColorFromName = (name: string): string => {
+  const colors = [
+    'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500',
+    'bg-red-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'
+  ];
   
-  // Remove non-digit characters
-  const digits = phone.replace(/\D/g, '');
+  if (!name) return colors[0];
   
-  // Format based on length
-  if (digits.length === 10) {
-    return `${digits.slice(0, 2)} ${digits.slice(2, 4)} ${digits.slice(4, 6)} ${digits.slice(6, 8)} ${digits.slice(8)}`;
+  // Simple hash function to get a consistent color for a given name
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
+
+/**
+ * Génère des classes CSS pour styliser un poste spécifique
+ */
+export const getPositionStyleClasses = (position: string): string => {
+  if (!position) return 'text-gray-600';
+  
+  const lowerPosition = position.toLowerCase();
+  
+  if (lowerPosition.includes('manager') || 
+      lowerPosition.includes('directeur') || 
+      lowerPosition.includes('responsable')) {
+    return 'text-blue-600 font-medium';
   }
   
-  // Return as is if not matching expected format
-  return phone;
+  if (lowerPosition.includes('senior') || lowerPosition.includes('lead')) {
+    return 'text-purple-600 font-medium';
+  }
+  
+  return 'text-gray-600';
 };
 
 /**
- * Format a date string for display
+ * Convertit une date au format français
  */
-export const formatDate = (dateString?: string): string => {
-  if (!dateString) return '';
+export const formatDateFR = (dateStr?: string): string => {
+  if (!dateStr) return '';
   
   try {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
-    }).format(date);
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return dateString;
+      year: 'numeric'
+    });
+  } catch (e) {
+    console.error('Erreur de formatage de date:', e);
+    return dateStr;
   }
 };
 
 /**
- * Calculate age from birthdate
+ * Filter employees based on search term and other filters
+ * @param employees List of employees to filter
+ * @param searchTerm Search term to match against employee data
+ * @param filters Additional filters to apply
+ * @returns Filtered list of employees
  */
-export const calculateAge = (birthDate?: string): number | null => {
-  if (!birthDate) return null;
+export const filterEmployees = (
+  employees: Employee[],
+  searchTerm: string = '',
+  filters: { status?: string; department?: string } = {}
+): Employee[] => {
+  if (!employees || !Array.isArray(employees)) {
+    return [];
+  }
   
-  try {
-    const dob = new Date(birthDate);
-    const today = new Date();
+  // Convert search term to lowercase for case-insensitive comparison
+  const search = searchTerm.toLowerCase().trim();
+  
+  return employees.filter(employee => {
+    // Skip null/undefined employees
+    if (!employee) return false;
     
-    let age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-    
-    // Adjust age if birthday hasn't occurred yet this year
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-      age--;
+    // Apply search term filter if provided
+    if (search) {
+      const fullName = getEmployeeFullName(employee).toLowerCase();
+      const email = (employee.email || '').toLowerCase();
+      const position = (employee.position || '').toLowerCase();
+      const department = (employee.department || '').toLowerCase();
+      
+      // Return false if none of the fields match the search term
+      if (!fullName.includes(search) && 
+          !email.includes(search) && 
+          !position.includes(search) && 
+          !department.includes(search)) {
+        return false;
+      }
     }
     
-    return age;
-  } catch (error) {
-    console.error("Error calculating age:", error);
-    return null;
-  }
+    // Apply status filter if provided
+    if (filters.status && employee.status !== filters.status) {
+      return false;
+    }
+    
+    // Apply department filter if provided
+    if (filters.department && employee.department !== filters.department) {
+      return false;
+    }
+    
+    // If all filters pass, include this employee
+    return true;
+  });
 };

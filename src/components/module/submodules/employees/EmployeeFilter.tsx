@@ -32,11 +32,8 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
   // Extract unique departments from the departments collection
   useEffect(() => {
     if (departments && departments.length > 0) {
-      const deptNames = departments
-        .map(dept => dept.name || '')
-        .filter(name => name.trim() !== ''); // Filter out empty department names
-      
-      const uniqueDepts = [...new Set(deptNames)];
+      const deptNames = departments.map(dept => dept.name || '');
+      const uniqueDepts = [...new Set(deptNames)].filter(name => name.trim() !== '');
       setUniqueDepartments(uniqueDepts);
     }
   }, [departments]);
@@ -76,7 +73,7 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
           <SelectContent>
             <SelectItem value="all">Tous les départements</SelectItem>
             {uniqueDepartments.map((dept, index) => (
-              <SelectItem key={index} value={dept || `dept-${index}`}>{dept || "Département sans nom"}</SelectItem>
+              <SelectItem key={index} value={dept}>{dept}</SelectItem>
             ))}
           </SelectContent>
         </Select>

@@ -87,7 +87,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </Label>
             <div className="col-span-3">
               <Select 
-                value={selectedEmployee || undefined} 
+                value={selectedEmployee || "none"} 
                 onValueChange={(value) => {
                   setSelectedEmployee(value);
                   const empId = value.split('|')[1];
@@ -98,6 +98,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none" disabled>Sélectionner un employé</SelectItem>
                   {safeEmployees.map((employee) => (
                     <SelectItem 
                       key={employee.id} 
@@ -115,11 +116,12 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
               Niveau d'accès
             </Label>
             <div className="col-span-3">
-              <Select value={accessLevel || undefined} onValueChange={setAccessLevel}>
+              <Select value={accessLevel || "none"} onValueChange={setAccessLevel}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un niveau d'accès" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
                   <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
                   <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
                   <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>

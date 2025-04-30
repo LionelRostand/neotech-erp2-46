@@ -1,108 +1,66 @@
 
 import React from 'react';
-import { Employee, Schedule, WorkDay } from '@/types/employee';
-import { Clock, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import { Employee } from '@/types/employee';
 
 interface HorairesTabProps {
   employee: Employee;
 }
 
 const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
-  const schedule = employee.schedule || {
-    monday: { isWorkDay: true, shifts: [{ start: '09:00', end: '17:00' }] },
-    tuesday: { isWorkDay: true, shifts: [{ start: '09:00', end: '17:00' }] },
-    wednesday: { isWorkDay: true, shifts: [{ start: '09:00', end: '17:00' }] },
-    thursday: { isWorkDay: true, shifts: [{ start: '09:00', end: '17:00' }] },
-    friday: { isWorkDay: true, shifts: [{ start: '09:00', end: '17:00' }] },
-    saturday: { isWorkDay: false, shifts: [] },
-    sunday: { isWorkDay: false, shifts: [] }
+  // Ensure workSchedule is an object with day properties
+  const workSchedule = employee.workSchedule || {
+    monday: '09:00 - 18:00',
+    tuesday: '09:00 - 18:00',
+    wednesday: '09:00 - 18:00',
+    thursday: '09:00 - 18:00',
+    friday: '09:00 - 17:00'
   };
-  
-  // Liste des jours de la semaine en français
-  const weekDays = [
-    { key: 'monday', name: 'Lundi' },
-    { key: 'tuesday', name: 'Mardi' },
-    { key: 'wednesday', name: 'Mercredi' },
-    { key: 'thursday', name: 'Jeudi' },
-    { key: 'friday', name: 'Vendredi' },
-    { key: 'saturday', name: 'Samedi' },
-    { key: 'sunday', name: 'Dimanche' }
+
+  // Helper to ensure values are strings
+  const ensureString = (value: any) => {
+    if (value === undefined || value === null) return '-';
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  };
+
+  const days = [
+    { key: 'monday', label: 'Lundi' },
+    { key: 'tuesday', label: 'Mardi' },
+    { key: 'wednesday', label: 'Mercredi' },
+    { key: 'thursday', label: 'Jeudi' },
+    { key: 'friday', label: 'Vendredi' },
+    { key: 'saturday', label: 'Samedi' },
+    { key: 'sunday', label: 'Dimanche' },
   ];
-  
-  // Fonction pour formater les heures de travail
-  const formatWorkHours = (day: WorkDay | undefined): string => {
-    if (!day || !day.isWorkDay || !day.shifts || day.shifts.length === 0) {
-      return 'Jour non travaillé';
-    }
-    
-    return day.shifts.map(shift => `${shift.start} - ${shift.end}`).join(', ');
-  };
-  
-  // Calculer le nombre d'heures travaillées par semaine
-  const calculateWeeklyHours = (): number => {
-    let totalMinutes = 0;
-    
-    weekDays.forEach(({ key }) => {
-      const day = schedule[key as keyof Schedule];
-      if (day?.isWorkDay && day.shifts) {
-        day.shifts.forEach(shift => {
-          const startParts = shift.start.split(':');
-          const endParts = shift.end.split(':');
-          
-          const startMinutes = parseInt(startParts[0]) * 60 + parseInt(startParts[1] || '0');
-          const endMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1] || '0');
-          
-          totalMinutes += endMinutes - startMinutes;
-        });
-      }
-    });
-    
-    return Math.round(totalMinutes / 60 * 10) / 10; // Arrondi à 1 décimale
-  };
-  
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Horaires de travail</h3>
       
-      <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-blue-700" />
-          <span className="text-blue-800 font-medium">Heures hebdomadaires:</span>
-        </div>
-        <span className="font-bold text-blue-800">{calculateWeeklyHours()}h</span>
-      </div>
-      
-      <div className="grid gap-4">
-        {weekDays.map(({ key, name }) => {
-          const day = schedule[key as keyof Schedule];
-          const isWorkDay = day?.isWorkDay || false;
-          
-          return (
-            <div 
-              key={key}
-              className={`p-4 rounded-lg border ${
-                isWorkDay ? 'border-green-100 bg-green-50' : 'border-gray-200 bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isWorkDay ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-gray-400" />
-                  )}
-                  <span className={`font-medium ${isWorkDay ? 'text-green-800' : 'text-gray-700'}`}>
-                    {name}
-                  </span>
-                </div>
-                
-                <span className="text-sm">
-                  {formatWorkHours(day)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+      <div className="border rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Jour
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Horaires
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {days.map((day) => (
+              <tr key={day.key}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {day.label}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {ensureString(workSchedule[day.key as keyof typeof workSchedule]) || 'Non défini'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

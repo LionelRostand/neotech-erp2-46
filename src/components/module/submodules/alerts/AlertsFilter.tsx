@@ -116,7 +116,7 @@ const AlertsFilter: React.FC<AlertsFilterProps> = ({ filterCriteria, setFilterCr
               <SelectContent>
                 <SelectItem value="all_employees">Tous les employés</SelectItem>
                 {employees.map(employee => (
-                  <SelectItem key={employee.id} value={employee.id || `emp-${employee.firstName}-${employee.lastName}`}>
+                  <SelectItem key={employee.id} value={employee.id}>
                     {employee.firstName} {employee.lastName}
                   </SelectItem>
                 ))}

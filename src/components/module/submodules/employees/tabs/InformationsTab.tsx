@@ -1,164 +1,162 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { 
-  Briefcase, 
-  Building, 
-  Calendar, 
-  Mail, 
-  MapPin, 
-  Phone, 
-  User
-} from 'lucide-react';
-import { formatPhoneNumber, formatDate, calculateAge } from '../utils/employeeUtils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface InformationsTabProps {
-  employee: Employee & {
-    departmentName?: string;
-    managerName?: string;
-    companyName?: string;
-  };
+  employee: Employee;
 }
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
-  // Calculer l'âge si date de naissance disponible
-  const age = employee.birthDate ? calculateAge(employee.birthDate) : null;
-  
-  // Formatage de l'adresse complète
-  const formatAddress = () => {
-    // Si l'adresse est un objet complet
-    if (typeof employee.address === 'object' && employee.address) {
-      const { street, city, postalCode, country } = employee.address;
-      return [street, city, postalCode, country].filter(Boolean).join(', ');
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Non spécifié';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return dateString;
     }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    if (!status) return <Badge variant="outline">Non spécifié</Badge>;
     
-    // Si les champs d'adresse sont séparés
-    const addressParts = [
-      employee.streetNumber && employee.streetName 
-        ? `${employee.streetNumber} ${employee.streetName}`
-        : (employee.streetName || ''),
-      employee.city,
-      employee.zipCode || employee.postalCode,
-      employee.region,
-      employee.country
-    ];
-    
-    return addressParts.filter(Boolean).join(', ');
+    switch(status.toLowerCase()) {
+      case 'active':
+      case 'actif':
+        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
+      case 'inactive':
+      case 'inactif':
+        return <Badge variant="outline">Inactif</Badge>;
+      case 'onleave':
+      case 'en congé':
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>;
+      case 'suspended':
+      case 'suspendu':
+        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500" />
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p className="text-sm text-gray-500">Nom complet</p>
-              <p>{employee.firstName} {employee.lastName}</p>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Prénom</div>
+                <div className="font-medium">{employee.firstName || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Nom</div>
+                <div className="font-medium">{employee.lastName || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Email</div>
+                <div className="font-medium">{employee.email || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Téléphone</div>
+                <div className="font-medium">{employee.phone || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Date de naissance</div>
+                <div className="font-medium">{formatDate(employee.birthDate)}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Statut</div>
+                <div className="font-medium">{getStatusBadge(employee.status)}</div>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-gray-500" />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p className="text-sm text-gray-500">Email personnel</p>
-              <p>{employee.email || 'Non spécifié'}</p>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Poste</div>
+                <div className="font-medium">{employee.position || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Département</div>
+                <div className="font-medium">{employee.departmentName || employee.department || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Email professionnel</div>
+                <div className="font-medium">{employee.professionalEmail || employee.email || 'Non spécifié'}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Date d'embauche</div>
+                <div className="font-medium">{formatDate(employee.hireDate || employee.startDate)}</div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Entreprise</div>
+                <div className="font-medium">
+                  {typeof employee.company === 'object' ? 
+                    employee.company?.name || 'Non spécifiée' : 
+                    employee.company || 'Non spécifiée'}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-500">Responsable</div>
+                <div className="font-medium">{employee.managerName || 'Non spécifié'}</div>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Téléphone</p>
-              <p>{formatPhoneNumber(employee.phone) || 'Non spécifié'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Date de naissance</p>
-              <p>
-                {employee.birthDate 
-                  ? `${formatDate(employee.birthDate)}${age ? ` (${age} ans)` : ''}`
-                  : 'Non spécifiée'}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 md:col-span-2">
-            <MapPin className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Adresse</p>
-              <p>{formatAddress() || 'Non spécifiée'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
       
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium mb-4">Informations professionnelles</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Poste</p>
-              <p>{employee.position || 'Non spécifié'}</p>
+      {employee.address && (
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4">Adresse</h3>
+            <div className="space-y-2">
+              <div>
+                {employee.address.street && <div>{employee.address.street}</div>}
+                {employee.address.postalCode && employee.address.city && (
+                  <div>{employee.address.postalCode} {employee.address.city}</div>
+                )}
+                {employee.address.country && <div>{employee.address.country}</div>}
+                {(!employee.address.street && !employee.address.city && !employee.address.postalCode && !employee.address.country) && (
+                  <div>Adresse non spécifiée</div>
+                )}
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Email professionnel</p>
-              <p>{employee.professionalEmail || employee.email || 'Non spécifié'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Département</p>
-              <p>{employee.departmentName || 'Non spécifié'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Entreprise</p>
-              <p>{employee.companyName || 'Non spécifiée'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Responsable</p>
-              <p>{employee.managerName || 'Aucun responsable'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Date d'embauche</p>
-              <p>{employee.hireDate ? formatDate(employee.hireDate) : 'Non spécifiée'}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Type de contrat</p>
-              <p>{employee.contract ? employee.contract.toUpperCase() : 'Non spécifié'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

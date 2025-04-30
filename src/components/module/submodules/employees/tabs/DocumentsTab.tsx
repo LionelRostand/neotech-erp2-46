@@ -1,63 +1,76 @@
 
 import React from 'react';
-import { Employee } from '@/types/employee';
-import { FileText, FileUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { formatDate } from '../utils/employeeUtils';
+import { Employee, Document } from '@/types/employee';
+import { FileText, AlertCircle } from 'lucide-react';
 
 interface DocumentsTabProps {
   employee: Employee;
 }
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
-  const { documents = [] } = employee;
+  // Ensure documents is an array
+  const documents = Array.isArray(employee.documents) ? employee.documents : [];
   
+  // Helper to format date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  // Helper to ensure values are strings
+  const ensureString = (value: any) => {
+    if (value === undefined || value === null) return '-';
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Documents</h3>
-        <Button size="sm">
-          <FileUp className="h-4 w-4 mr-2" />
-          Ajouter un document
-        </Button>
-      </div>
+      <h3 className="text-lg font-medium">Documents</h3>
       
-      {documents && documents.length > 0 ? (
-        <div className="space-y-4">
-          {documents.map((doc) => (
-            <div 
-              key={doc.id} 
-              className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-md">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium">{doc.title}</p>
-                  <p className="text-sm text-gray-500">
-                    {doc.type} • Ajouté le {formatDate(doc.uploadedAt)}
-                  </p>
-                </div>
-              </div>
-              <a 
-                href={doc.fileUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline text-sm"
-              >
-                Télécharger
-              </a>
-            </div>
-          ))}
+      {documents.length === 0 ? (
+        <div className="text-center py-8 bg-gray-50 rounded-md">
+          <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucun document</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Aucun document n'a été ajouté pour cet employé.
+          </p>
         </div>
       ) : (
-        <div className="p-8 text-center border border-dashed rounded-md">
-          <FileText className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-          <h3 className="text-lg font-medium">Aucun document</h3>
-          <p className="text-gray-500 mt-1">
-            Aucun document n'a été ajouté pour cet employé
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {documents.map((document, index) => {
+            const title = ensureString(document.name || document.title);
+            const type = ensureString(document.type);
+            const date = ensureString(document.date);
+            const fileUrl = ensureString(document.fileUrl);
+            
+            return (
+              <div key={document.id || index} className="border rounded-lg p-4 flex space-x-4">
+                <div className="flex-shrink-0">
+                  <FileText className="h-8 w-8 text-blue-500" />
+                </div>
+                <div className="flex-grow">
+                  <h4 className="font-medium">{title}</h4>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Type: {type} | Date: {formatDate(date)}
+                  </div>
+                  {fileUrl && fileUrl !== '-' && (
+                    <a 
+                      href={fileUrl} 
+                      className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      Voir le document
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -2,137 +2,172 @@
 import { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { 
-  createEmployee as createEmployeeService,
-  updateEmployee as updateEmployeeService,
-  deleteEmployee as deleteEmployeeService,
-  syncManagerStatus
+  updateEmployee as apiUpdateEmployee,
+  deleteEmployee as apiDeleteEmployee,
+  createEmployee as apiCreateEmployee,
+  updateEmployeeDoc
 } from '@/components/module/submodules/employees/services/employeeService';
-import { checkForDuplicateEmail } from '@/components/module/submodules/employees/services/employeeService';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useHrModuleData } from './useHrModuleData';
 
 export const useEmployeeActions = () => {
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { fetchAllHrData } = useHrModuleData() || { fetchAllHrData: () => Promise.resolve() };
-  
-  const createEmployee = async (employeeData: Omit<Employee, 'id'>) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const updateEmployee = async (data: Partial<Employee>): Promise<void> => {
+    setIsLoading(true);
     try {
-      setIsCreating(true);
-      
-      // Vérifier si l'email existe déjà
-      const emailExists = await checkForDuplicateEmail(employeeData.email);
-      if (emailExists) {
-        toast.error("Un employé avec cet email existe déjà");
-        return null;
+      if (!data.id) {
+        throw new Error("Employee ID is required for update");
       }
       
-      // Créer l'employé
-      const newEmployee = await createEmployeeService(employeeData);
+      console.log("Updating employee data:", data);
       
-      // Si l'employé est un manager, mettre à jour son statut de manager
-      if (employeeData.isManager || employeeData.forceManager) {
-        await syncManagerStatus({
-          ...newEmployee,
-          isManager: true
-        });
+      // Ensure skills are properly formatted before sending to API
+      if (data.skills && Array.isArray(data.skills)) {
+        // Filter out null/undefined values and transform any invalid objects
+        data.skills = data.skills
+          .filter(skill => skill !== null && skill !== undefined)
+          .map(skill => {
+            if (typeof skill === 'string') {
+              return skill;
+            }
+            // Ensure skill objects have the required properties
+            const skillObj = skill as any;
+            if (!skillObj.name) {
+              return JSON.stringify(skillObj);
+            }
+            return {
+              ...skillObj,
+              id: skillObj.id || Date.now().toString(),
+              level: skillObj.level || 'other',
+              // Ensure name is a string to avoid rendering issues
+              name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
+            };
+          });
+      } else {
+        // Ensure skills is a valid array to prevent errors
+        data.skills = [];
       }
       
-      // Mettre à jour les données
-      await fetchAllHrData();
+      // Use updateEmployeeDoc for better handling of nested objects like addresses
+      const updatedEmployee = await updateEmployeeDoc(data.id, data);
       
-      // Notification à l'utilisateur
-      toast.success("Employé créé avec succès");
+      if (updatedEmployee) {
+        toast.success("Employé mis à jour avec succès");
+      }
       
-      // Renvoyer le nouvel employé créé
-      return newEmployee;
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      
+      return Promise.resolve();
     } catch (error) {
-      console.error("Erreur lors de la création de l'employé:", error);
-      toast.error("Erreur lors de la création de l'employé");
-      return null;
-    } finally {
-      setIsCreating(false);
-    }
-  };
-  
-  const updateEmployee = async (updateData: Partial<Employee>) => {
-    if (!updateData.id) {
-      toast.error("ID d'employé manquant");
-      return null;
-    }
-    
-    try {
-      setIsUpdating(true);
-      
-      // Vérifier si l'email existe déjà (sauf pour cet employé)
-      if (updateData.email) {
-        const emailExists = await checkForDuplicateEmail(updateData.email, updateData.id);
-        if (emailExists) {
-          toast.error("Un autre employé utilise déjà cet email");
-          return null;
-        }
-      }
-      
-      // Mettre à jour l'employé
-      await updateEmployeeService(updateData.id, updateData);
-      
-      // Gérer le statut de manager si nécessaire
-      if (updateData.isManager !== undefined || updateData.forceManager !== undefined) {
-        await syncManagerStatus({
-          id: updateData.id,
-          isManager: updateData.isManager || updateData.forceManager || false,
-          firstName: updateData.firstName || '',
-          lastName: updateData.lastName || '',
-          email: updateData.email || ''
-        } as Employee);
-      }
-      
-      // Mettre à jour les données
-      await fetchAllHrData();
-      
-      // Notification à l'utilisateur
-      toast.success("Employé mis à jour avec succès");
-      
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'employé:", error);
+      console.error("Error updating employee:", error);
       toast.error("Erreur lors de la mise à jour de l'employé");
-      return null;
+      return Promise.reject(error);
     } finally {
-      setIsUpdating(false);
+      setIsLoading(false);
     }
   };
-  
-  const deleteEmployee = async (id: string) => {
+
+  const deleteEmployee = async (id: string): Promise<void> => {
+    setIsLoading(true);
     try {
-      setIsDeleting(true);
+      await apiDeleteEmployee(id);
       
-      // Supprimer l'employé
-      await deleteEmployeeService(id);
-      
-      // Mettre à jour les données
-      await fetchAllHrData();
-      
-      // Notification à l'utilisateur
       toast.success("Employé supprimé avec succès");
       
-      return true;
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      
+      return Promise.resolve();
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'employé:", error);
+      console.error("Error deleting employee:", error);
       toast.error("Erreur lors de la suppression de l'employé");
-      return false;
+      return Promise.reject(error);
     } finally {
-      setIsDeleting(false);
+      setIsLoading(false);
     }
   };
-  
+
+  const createEmployee = async (data: Omit<Employee, 'id'>): Promise<Employee | null> => {
+    setIsLoading(true);
+    try {
+      console.log("Creating new employee:", data);
+      
+      // Create a copy of the data to ensure we don't mutate the original
+      const employeeData = {...data};
+      
+      // Ensure skills are properly formatted before sending to API
+      if (employeeData.skills && Array.isArray(employeeData.skills)) {
+        // Filter out null/undefined values and transform any invalid objects
+        employeeData.skills = employeeData.skills
+          .filter(skill => skill !== null && skill !== undefined)
+          .map(skill => {
+            if (typeof skill === 'string') {
+              return skill;
+            }
+            // Ensure skill objects have the required properties
+            const skillObj = skill as any;
+            if (!skillObj.name) {
+              return JSON.stringify(skillObj);
+            }
+            return {
+              ...skillObj,
+              id: skillObj.id || Date.now().toString(),
+              level: skillObj.level || 'other',
+              // Ensure name is a string to avoid rendering issues
+              name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
+            };
+          });
+      } else {
+        // Ensure skills is a valid array to prevent errors
+        employeeData.skills = [];
+      }
+      
+      // Ensure address objects are properly initialized
+      if (!employeeData.address || typeof employeeData.address !== 'object') {
+        employeeData.address = {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: '',
+          state: ''
+        };
+      }
+      
+      if (!employeeData.workAddress || typeof employeeData.workAddress !== 'object') {
+        employeeData.workAddress = {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: ''
+        };
+      }
+      
+      const newEmployee = await apiCreateEmployee(employeeData);
+      
+      if (newEmployee) {
+        toast.success("Nouvel employé créé avec succès");
+      }
+      
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      
+      return newEmployee;
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      toast.error("Erreur lors de la création de l'employé");
+      return Promise.reject(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
-    createEmployee,
     updateEmployee,
     deleteEmployee,
-    isCreating,
-    isUpdating,
-    isDeleting
+    createEmployee,
+    isLoading
   };
 };

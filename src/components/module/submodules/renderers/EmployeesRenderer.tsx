@@ -4,7 +4,7 @@ import EmployeesDashboard from '../EmployeesDashboard';
 import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesBadges from '../employees/EmployeesBadges';
 import EmployeesProfiles from '../employees/EmployeesProfiles';
-import EmployeesHierarchy from '../employees/hierarchy/EmployeesHierarchy';
+import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 import EmployeesLeaves from '../leaves/EmployeesLeaves';
 import SalarySlips from '../salaries/SalarySlips';
 import EmployeesTimesheet from '../EmployeesTimesheet';
@@ -20,7 +20,6 @@ import EmployeesSettings from '../settings/EmployeesSettings';
 import { SubModule } from '@/data/types/modules';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
-import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   const { 
@@ -28,7 +27,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     departments = [],
     companies = [],
     isLoading = true
-  } = useHrModuleData() || { employees: [], departments: [], companies: [], isLoading: true };
+  } = useHrModuleData();
   
   console.log(`Rendering employee submodule: ${submoduleId}`);
   console.log(`Loaded ${employees?.length || 0} employees from collection`);
@@ -82,7 +81,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     default:
       return (
         <div className="container mx-auto py-4">
-          <h2 className="text-2xl font-bold">{submodule?.name || "Module inconnu"}</h2>
+          <h2 className="text-2xl font-bold">{submodule.name}</h2>
           <div className="p-4 mt-4 border border-gray-200 rounded-md">
             <p>Ce module est en cours de développement.</p>
           </div>

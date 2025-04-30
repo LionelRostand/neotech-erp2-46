@@ -2,53 +2,74 @@
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Employee } from '@/types/employee';
 import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
-import { formValuesToEmployee, employeeToFormValues } from './utils/formAdapter';
 import PersonalInfoFields from './form/PersonalInfoFields';
 import CompanyDepartmentFields from './form/CompanyDepartmentFields';
 import FormActions from './form/FormActions';
-import ManagerCheckbox from './form/ManagerCheckbox';
+import PhotoUploadField from './form/PhotoUploadField';
+import { Employee } from '@/types/employee';
+import { getPhotoUrl } from './utils/photoUtils';
+import { employeeToFormValues } from './utils/formAdapter';
 
 interface EmployeeFormProps {
-  onSubmit: (employee: Partial<Employee>) => void;
-  onCancel: () => void;
   defaultValues?: Partial<Employee>;
+  onSubmit: (data: EmployeeFormValues) => void;
+  onCancel: () => void;
   isSubmitting?: boolean;
 }
 
 const EmployeeForm: React.FC<EmployeeFormProps> = ({
+  defaultValues,
   onSubmit,
   onCancel,
-  defaultValues = {},
   isSubmitting = false
 }) => {
-  // Préparer les valeurs par défaut
-  const initialValues = employeeToFormValues(defaultValues);
-  
+  const formDefaultValues = defaultValues ? 
+    employeeToFormValues(defaultValues) : 
+    {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      company: '',
+      department: '',
+      position: '',
+      contract: 'cdi',
+      hireDate: new Date().toISOString().split('T')[0],
+      birthDate: '',
+      status: 'active' as const,
+      photo: '',
+      photoMeta: undefined,
+      forceManager: false,
+      isManager: false,
+      managerId: '',
+      professionalEmail: '',
+      streetNumber: '',
+      streetName: '',
+      city: '',
+      zipCode: '',
+      region: '',
+      country: 'France'
+    };
+
   const methods = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
-    defaultValues: initialValues,
-    mode: 'onChange'
+    defaultValues: formDefaultValues
   });
-  
-  const handleSubmit = (data: EmployeeFormValues) => {
-    // Convertir les données du formulaire en objet Employee
-    const employeeData = formValuesToEmployee(data, defaultValues);
-    onSubmit(employeeData);
-  };
-  
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        <PhotoUploadField 
+          defaultPhotoUrl={defaultValues?.photoURL || defaultValues?.photo || getPhotoUrl(defaultValues?.photoMeta) || ''} 
+        />
         <PersonalInfoFields />
         <CompanyDepartmentFields />
-        <ManagerCheckbox form={methods} />
-        
         <FormActions 
-          onCancel={onCancel}
-          isSubmitting={isSubmitting}
+          onCancel={onCancel} 
+          isSubmitting={isSubmitting} 
           form={methods}
+          showManagerOption={true}
         />
       </form>
     </FormProvider>

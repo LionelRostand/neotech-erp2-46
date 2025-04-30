@@ -1,182 +1,189 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useEmployeeActions } from '@/hooks/useEmployeeActions';
-import { Employee } from '@/types/employee';
-import { toast } from 'sonner';
-import SubmoduleHeader from '../SubmoduleHeader';
-import EmployeesTable from './EmployeesTable';
-import EmployeeViewDialog from './dialogs/EmployeeViewDialog';
-import CreateEmployeeDialog from './CreateEmployeeDialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Download, Plus } from 'lucide-react';
-import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
+import { PlusIcon, SearchIcon, FilterIcon } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Employee } from '@/types/employee';
+import { filterEmployees } from '@/components/module/submodules/employees/utils/employeeUtils';
+import EmployeeViewDialog from './EmployeeViewDialog';
+import CreateEmployeeDialog from './CreateEmployeeDialog';
 
-const EmployeesProfiles: React.FC<{ employees?: Employee[], isLoading?: boolean }> = ({
-  employees: propEmployees,
-  isLoading: propIsLoading
-}) => {
-  const { employees: hookEmployees, isLoading: hookIsLoading } = useEmployeeData();
-  const { createEmployee, updateEmployee, deleteEmployee, isDeleting } = useEmployeeActions();
-  
-  // Use either the props or the hook data
-  const employees = propEmployees || hookEmployees || [];
-  const isLoading = propIsLoading !== undefined ? propIsLoading : hookIsLoading;
-  
-  // State for search
+interface EmployeesProfilesProps {
+  // Add any props here
+}
+
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ /* props */ }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Dialog states
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [viewEmployee, setViewEmployee] = useState<Employee | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
-  // Filtered employees based on search
-  const filteredEmployees = React.useMemo(() => {
-    if (!searchTerm) return employees;
-    
-    const term = searchTerm.toLowerCase();
-    return employees.filter(employee => {
-      return (
-        (employee?.firstName?.toLowerCase() || '').includes(term) ||
-        (employee?.lastName?.toLowerCase() || '').includes(term) ||
-        (employee?.email?.toLowerCase() || '').includes(term) ||
-        (employee?.position?.toLowerCase() || '').includes(term) ||
-        (employee?.phone?.toLowerCase() || '').includes(term)
-      );
+  const { employees, departments, isLoading, error } = useEmployeeData();
+  
+  const filteredEmployees = useMemo(() => {
+    return filterEmployees(employees, searchTerm, { 
+      status: statusFilter || undefined,
+      department: departmentFilter || undefined
     });
-  }, [employees, searchTerm]);
+  }, [employees, searchTerm, statusFilter, departmentFilter]);
   
-  // Handler for creating a new employee
-  const handleCreateEmployee = async (employee: Partial<Employee>) => {
-    const result = await createEmployee(employee as Omit<Employee, 'id'>);
-    if (result) {
-      setIsCreateDialogOpen(false);
-    }
+  const columns = useMemo(() => [
+    {
+      accessorKey: "firstName",
+      header: "Prénom",
+      cell: ({ row }) => row.original.firstName,
+    },
+    {
+      accessorKey: "lastName",
+      header: "Nom",
+      cell: ({ row }) => row.original.lastName,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => row.original.email,
+    },
+    {
+      accessorKey: "position",
+      header: "Poste",
+      cell: ({ row }) => row.original.position,
+    },
+    {
+      accessorKey: "department",
+      header: "Département",
+      cell: ({ row }) => row.original.department,
+    },
+    {
+      accessorKey: "status",
+      header: "Statut",
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status || 'inactive'}>
+          {row.original.status || 'Inactive'}
+        </StatusBadge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm" onClick={() => setSelectedEmployee(row.original)}>
+            Voir
+          </Button>
+        </div>
+      ),
+    },
+  ], []);
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
   
-  // Handler for updating an employee
-  const handleUpdateEmployee = async (employee: Partial<Employee>) => {
-    if (!employee.id) {
-      toast.error("ID d'employé manquant");
-      return;
-    }
-    
-    const result = await updateEmployee(employee);
-    if (result) {
-      setViewEmployee(null);
-    }
+  const handleStatusFilter = (status: string | null) => {
+    setStatusFilter(status);
   };
   
-  // Handler for deleting an employee
-  const handleConfirmDelete = async () => {
-    if (!employeeToDelete?.id) return;
-    
-    const result = await deleteEmployee(employeeToDelete.id);
-    if (result) {
-      setEmployeeToDelete(null);
-      setDeleteConfirmOpen(false);
-    }
+  const handleDepartmentFilter = (department: string | null) => {
+    setDepartmentFilter(department);
   };
   
-  // Handler for exporting employee data
-  const handleExport = () => {
-    toast.info("Fonctionnalité d'exportation en cours de développement");
+  const clearFilters = () => {
+    setStatusFilter(null);
+    setDepartmentFilter(null);
+    setSearchTerm('');
   };
+  
+  if (isLoading) {
+    return <div>Chargement des employés...</div>;
+  }
+  
+  if (error) {
+    return <div>Erreur lors du chargement des employés: {error.message}</div>;
+  }
   
   return (
-    <div className="container mx-auto py-4 space-y-6">
-      <SubmoduleHeader 
-        title="Fiches Employés" 
-        description="Gérez les fiches des employés de votre entreprise" 
-      />
-      
-      {/* Dashboard Cards */}
-      <EmployeesDashboardCards />
-      
-      {/* Actions Bar */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Rechercher un employé..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Button 
-            variant="outline" 
-            onClick={handleExport}
-            className="whitespace-nowrap"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Exporter
-          </Button>
-          <Button 
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau Employé
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Card>
+          <CardHeader>
+            <CardTitle>Liste des employés</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                type="text"
+                placeholder="Rechercher un employé..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="md:w-80"
+              />
+              <div className="flex items-center space-x-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <FilterIcon className="h-4 w-4 mr-2" />
+                      Filtrer
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleStatusFilter('active')}>
+                      Actif
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusFilter('inactive')}>
+                      Inactif
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusFilter('onLeave')}>
+                      En congé
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Marketing')}>
+                      Marketing
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Ventes')}>
+                      Ventes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('RH')}>
+                      RH
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDepartmentFilter('Finance')}>
+                      Finance
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Réinitialiser
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <PlusIcon className="h-4 w-4 mr-2" />
+          Ajouter un employé
+        </Button>
       </div>
       
-      {/* Employees Table */}
-      <EmployeesTable 
-        employees={filteredEmployees} 
-        isLoading={isLoading}
-        onView={(employee) => setViewEmployee(employee)}
-        onEdit={(employee) => setViewEmployee(employee)}
-        onDelete={(employee) => {
-          setEmployeeToDelete(employee);
-          setDeleteConfirmOpen(true);
-        }}
-      />
+      <DataTable columns={columns} data={filteredEmployees} />
       
-      {/* Employee View Dialog */}
-      {viewEmployee && (
-        <EmployeeViewDialog
-          employee={viewEmployee}
-          open={!!viewEmployee}
-          onOpenChange={() => setViewEmployee(null)}
-          onUpdate={handleUpdateEmployee}
+      {selectedEmployee && (
+        <EmployeeViewDialog 
+          open={true}
+          onOpenChange={() => setSelectedEmployee(null)}
+          employee={selectedEmployee}
         />
       )}
       
-      {/* Create Employee Dialog */}
       <CreateEmployeeDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
-        onSubmit={handleCreateEmployee}
       />
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer cet employé ? Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Suppression...' : 'Supprimer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
