@@ -1,138 +1,130 @@
 
 import React from 'react';
-import { Employee, LeaveRequest } from '@/types/employee';
-import { StatusBadge } from '@/components/ui/status-badge';
+import { Employee } from '@/types/employee';
 
 interface CongesTabProps {
   employee: Employee;
 }
 
-const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
-  // Ensure conges is an object with the expected properties
-  const conges = employee.conges || {
-    acquired: 25,
-    taken: 0,
-    balance: 25
+export const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
+  // Données fictives pour l'exemple
+  const conges = {
+    annuel: { total: 25, pris: 12, restant: 13 },
+    rtt: { total: 11, pris: 5, restant: 6 },
+    maladie: { total: 'Illimité', pris: 3, restant: '-' }
   };
 
-  // Ensure rtt is an object with the expected properties
-  const rtt = employee.rtt || {
-    acquired: 10,
-    taken: 0,
-    balance: 10
-  };
-
-  // Ensure leaveRequests is an array
-  const leaveRequests = Array.isArray(employee.leaveRequests) ? employee.leaveRequests : [];
-
-  // Helper to ensure values are strings
-  const ensureString = (value: any) => {
-    if (value === undefined || value === null) return '-';
-    return typeof value === 'object' ? JSON.stringify(value) : String(value);
-  };
-
-  // Helper to format date
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    try {
-      return new Date(dateString).toLocaleDateString('fr-FR');
-    } catch (error) {
-      return dateString;
+  // Absences fictives
+  const absences = employee.absences || [
+    {
+      id: '1',
+      type: 'Congés payés',
+      startDate: '2023-07-10',
+      endDate: '2023-07-14',
+      status: 'approved',
+      submittedAt: '2023-06-15'
+    },
+    {
+      id: '2',
+      type: 'RTT',
+      startDate: '2023-09-22',
+      endDate: '2023-09-22',
+      status: 'approved',
+      submittedAt: '2023-08-30'
+    },
+    {
+      id: '3',
+      type: 'Maladie',
+      startDate: '2023-11-02',
+      endDate: '2023-11-03',
+      status: 'approved',
+      submittedAt: '2023-11-02'
     }
-  };
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border rounded-lg p-4 space-y-4">
-          <h3 className="font-medium text-lg">Congés payés</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm text-gray-500">Acquis</div>
-              <div className="font-medium text-lg">{conges.acquired}</div>
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Solde de congés</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-sm text-blue-600 mb-1">Congés annuels</p>
+            <div className="flex items-end">
+              <p className="text-2xl font-bold">{conges.annuel.restant}</p>
+              <p className="text-sm text-gray-500 ml-2">/ {conges.annuel.total} jours</p>
             </div>
-            <div>
-              <div className="text-sm text-gray-500">Pris</div>
-              <div className="font-medium text-lg">{conges.taken}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">Solde</div>
-              <div className="font-medium text-lg">{conges.balance}</div>
-            </div>
+            <p className="text-xs text-gray-500 mt-1">{conges.annuel.pris} jours pris</p>
           </div>
-        </div>
-        
-        <div className="border rounded-lg p-4 space-y-4">
-          <h3 className="font-medium text-lg">RTT</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm text-gray-500">Acquis</div>
-              <div className="font-medium text-lg">{rtt.acquired}</div>
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+            <p className="text-sm text-purple-600 mb-1">RTT</p>
+            <div className="flex items-end">
+              <p className="text-2xl font-bold">{conges.rtt.restant}</p>
+              <p className="text-sm text-gray-500 ml-2">/ {conges.rtt.total} jours</p>
             </div>
-            <div>
-              <div className="text-sm text-gray-500">Pris</div>
-              <div className="font-medium text-lg">{rtt.taken}</div>
+            <p className="text-xs text-gray-500 mt-1">{conges.rtt.pris} jours pris</p>
+          </div>
+          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
+            <p className="text-sm text-amber-600 mb-1">Maladie</p>
+            <div className="flex items-end">
+              <p className="text-2xl font-bold">-</p>
+              <p className="text-sm text-gray-500 ml-2">/ {conges.maladie.total}</p>
             </div>
-            <div>
-              <div className="text-sm text-gray-500">Solde</div>
-              <div className="font-medium text-lg">{rtt.balance}</div>
-            </div>
+            <p className="text-xs text-gray-500 mt-1">{conges.maladie.pris} jours pris</p>
           </div>
         </div>
       </div>
       
-      <div className="space-y-4">
-        <h3 className="font-medium text-lg">Demandes de congé</h3>
-        
-        {leaveRequests.length > 0 ? (
-          <div className="border rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Début
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fin
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {leaveRequests.map((request, index) => (
-                  <tr key={request.id || index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.startDate)}
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Historique des absences</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-4 py-2 text-left">Type</th>
+                <th className="px-4 py-2 text-left">Du</th>
+                <th className="px-4 py-2 text-left">Au</th>
+                <th className="px-4 py-2 text-left">Durée</th>
+                <th className="px-4 py-2 text-left">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {absences.map((absence, index) => {
+                const start = new Date(absence.startDate);
+                const end = new Date(absence.endDate);
+                
+                // Calculer la durée en jours
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                
+                return (
+                  <tr key={absence.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-2 border-t">{absence.type}</td>
+                    <td className="px-4 py-2 border-t">
+                      {start.toLocaleDateString('fr-FR')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.endDate)}
+                    <td className="px-4 py-2 border-t">
+                      {end.toLocaleDateString('fr-FR')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {ensureString(request.type)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={request.status}>{ensureString(request.status)}</StatusBadge>
+                    <td className="px-4 py-2 border-t">{diffDays} jour(s)</td>
+                    <td className="px-4 py-2 border-t">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        absence.status === 'approved' 
+                          ? 'bg-green-100 text-green-800'
+                          : absence.status === 'pending'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {absence.status === 'approved' ? 'Approuvé' : 
+                         absence.status === 'pending' ? 'En attente' : 'Refusé'}
+                      </span>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 bg-gray-50 rounded-md">
-            <p className="text-gray-500">
-              Aucune demande de congé n'a été enregistrée pour cet employé.
-            </p>
-          </div>
-        )}
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
-
-export default CongesTab;

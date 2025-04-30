@@ -1,186 +1,125 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { EmployeeFormValues } from './employeeFormSchema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { EmployeeFormValues } from './employeeFormSchema';
-import { DatePicker } from '@/components/ui/date-picker';
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from '@/components/ui/radio-group';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
-import { useCompaniesQuery } from '@/components/module/submodules/employees/hooks/useCompaniesQuery';
-import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const CompanyDepartmentFields = () => {
-  const { register, setValue, getValues, watch } = useFormContext<EmployeeFormValues>();
-  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
-  const { data: companies = [], isLoading: isLoadingCompanies } = useCompaniesQuery();
+  const { register, formState: { errors }, setValue, watch } = useFormContext<EmployeeFormValues>();
+  const { departments = [] } = useEmployeeData();
+  const contractTypes = ['cdi', 'cdd', 'stage', 'alternance', 'freelance', 'autre'];
   
-  const hireDate = watch('hireDate');
-  const contract = watch('contract');
+  // Liste fictive d'entreprises (à remplacer par des données réelles)
+  const companies = [
+    { id: 'company1', name: 'Entreprise A' },
+    { id: 'company2', name: 'Entreprise B' },
+    { id: 'company3', name: 'Entreprise C' },
+  ];
   
-  const handleCompanyChange = (value: string) => {
-    setValue('company', value);
-    setValue('department', ''); // Reset department when company changes
-  };
-  
-  const handleDepartmentChange = (value: string) => {
-    setValue('department', value);
-  };
-  
-  const handleHireDateChange = (date: Date | undefined) => {
-    if (date) {
-      const dateString = format(date, 'yyyy-MM-dd');
-      setValue('hireDate', dateString);
-    }
-  };
-  
-  useEffect(() => {
-    // Set default hire date if not already set
-    if (!getValues('hireDate')) {
-      setValue('hireDate', format(new Date(), 'yyyy-MM-dd'));
-    }
-  }, [getValues, setValue]);
+  const watchDepartment = watch('department');
+  const watchCompany = watch('company');
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Informations professionnelles</h3>
+      <h3 className="text-lg font-semibold">Informations professionnelles</h3>
       
-      {/* Company selection */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Label htmlFor="company" className="md:text-right">
-          Entreprise
-        </Label>
-        <div className="md:col-span-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Poste */}
+        <div>
+          <Label htmlFor="position">Poste</Label>
+          <Input 
+            id="position" 
+            placeholder="Poste" 
+            {...register('position')} 
+          />
+        </div>
+        
+        {/* Email professionnel */}
+        <div>
+          <Label htmlFor="professionalEmail">Email professionnel</Label>
+          <Input 
+            id="professionalEmail" 
+            type="email" 
+            placeholder="pro@exemple.com" 
+            {...register('professionalEmail')} 
+            className={errors.professionalEmail ? 'border-red-500' : ''}
+          />
+          {errors.professionalEmail && (
+            <p className="text-red-500 text-xs mt-1">{errors.professionalEmail.message}</p>
+          )}
+        </div>
+        
+        {/* Type de contrat */}
+        <div>
+          <Label htmlFor="contract">Type de contrat</Label>
           <Select 
-            value={getValues('company') || 'default'} 
-            onValueChange={handleCompanyChange}
-            disabled={isLoadingCompanies}
+            defaultValue={watch('contract')}
+            onValueChange={(value) => setValue('contract', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une entreprise" />
+              <SelectValue placeholder="Sélectionner un type de contrat" />
             </SelectTrigger>
             <SelectContent>
-              {/* Default option with a non-empty value */}
-              <SelectItem value="default" disabled>
-                Sélectionner une entreprise
-              </SelectItem>
-              {companies.map((company) => (
-                <SelectItem key={company.id} value={company.id || 'company-id-missing'}>
-                  {company.name || 'Entreprise sans nom'}
+              {contractTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type.toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {/* Department selection */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Label htmlFor="department" className="md:text-right">
-          Département
-        </Label>
-        <div className="md:col-span-3">
+        
+        {/* Date d'embauche */}
+        <div>
+          <Label htmlFor="hireDate">Date d'embauche</Label>
+          <Input 
+            id="hireDate" 
+            type="date" 
+            {...register('hireDate')} 
+          />
+        </div>
+        
+        {/* Département */}
+        <div>
+          <Label htmlFor="department">Département</Label>
           <Select 
-            value={getValues('department') || 'default'} 
-            onValueChange={handleDepartmentChange}
-            disabled={isLoadingDepartments}
+            value={watchDepartment}
+            onValueChange={(value) => setValue('department', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un département" />
             </SelectTrigger>
             <SelectContent>
-              {/* Default option with a non-empty value */}
-              <SelectItem value="default" disabled>
-                Sélectionner un département
-              </SelectItem>
-              {departments
-                .filter(dept => !getValues('company') || dept.companyId === getValues('company'))
-                .map((department) => (
-                  <SelectItem key={department.id} value={department.id || 'dept-id-missing'}>
-                    {department.name || 'Département sans nom'}
-                  </SelectItem>
-                ))}
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-      </div>
-      
-      {/* Position */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Label htmlFor="position" className="md:text-right">
-          Poste
-        </Label>
-        <div className="md:col-span-3">
-          <Input
-            id="position"
-            {...register('position')}
-            placeholder="Ex: Développeur Full-Stack"
-          />
-        </div>
-      </div>
-      
-      {/* Contract type */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Label className="md:text-right">Type de contrat</Label>
-        <div className="md:col-span-3">
-          <RadioGroup
-            defaultValue={getValues('contract') || "cdi"}
-            className="flex flex-wrap gap-4"
-            onValueChange={(value) => setValue('contract', value)}
+        
+        {/* Entreprise */}
+        <div>
+          <Label htmlFor="company">Entreprise</Label>
+          <Select 
+            value={watchCompany}
+            onValueChange={(value) => setValue('company', value)}
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="cdi" id="cdi" />
-              <Label htmlFor="cdi" className="cursor-pointer">CDI</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="cdd" id="cdd" />
-              <Label htmlFor="cdd" className="cursor-pointer">CDD</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="internship" id="internship" />
-              <Label htmlFor="internship" className="cursor-pointer">Stage</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="freelance" id="freelance" />
-              <Label htmlFor="freelance" className="cursor-pointer">Freelance</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      </div>
-      
-      {/* Hire date */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Label className="md:text-right">Date d'embauche</Label>
-        <div className="md:col-span-3">
-          <DatePicker 
-            value={hireDate ? new Date(hireDate) : undefined} 
-            onChange={handleHireDateChange}
-          />
-        </div>
-      </div>
-      
-      {/* Professional Email */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Label htmlFor="professionalEmail" className="md:text-right">
-          Email professionnel
-        </Label>
-        <div className="md:col-span-3">
-          <Input
-            id="professionalEmail"
-            {...register('professionalEmail')}
-            type="email"
-            placeholder="email.professionnel@entreprise.com"
-          />
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une entreprise" />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

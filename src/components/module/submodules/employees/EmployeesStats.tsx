@@ -1,14 +1,17 @@
 
 import React from 'react';
-import { Users, UserCheck, Calendar, UsersIcon } from 'lucide-react';
+import { Users, Building2, UserCheck } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import { Employee } from '@/types/employee';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface EmployeesStatsProps {
   employees: Employee[];
 }
 
 const EmployeesStats: React.FC<EmployeesStatsProps> = ({ employees = [] }) => {
+  const { departments = [] } = useEmployeeData();
+  
   // Ensure employees is always an array
   const safeEmployees = Array.isArray(employees) ? employees : [];
   
@@ -17,19 +20,24 @@ const EmployeesStats: React.FC<EmployeesStatsProps> = ({ employees = [] }) => {
   const activeEmployees = safeEmployees.filter(emp => 
     emp.status === 'active' || emp.status === 'Actif'
   ).length;
-  const onLeaveEmployees = safeEmployees.filter(emp => 
-    emp.status === 'onLeave' || emp.status === 'En congé'
-  ).length;
-  const todayDate = new Date().toLocaleDateString('fr-FR');
+  const totalDepartments = departments.length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-3">
       <StatCard
-        title="Employés du jour"
-        value={todayDate}
-        icon={<Calendar className="h-5 w-5 text-blue-600" />}
-        description={`${totalEmployees} employés au total`}
+        title="Employés totaux"
+        value={totalEmployees.toString()}
+        icon={<Users className="h-5 w-5 text-blue-600" />}
+        description={`Effectif total de l'entreprise`}
         className="bg-blue-50 border-blue-100"
+      />
+      
+      <StatCard
+        title="Départements actifs"
+        value={totalDepartments.toString()}
+        icon={<Building2 className="h-5 w-5 text-purple-600" />}
+        description="Départements avec employés"
+        className="bg-purple-50 border-purple-100"
       />
       
       <StatCard
@@ -38,22 +46,6 @@ const EmployeesStats: React.FC<EmployeesStatsProps> = ({ employees = [] }) => {
         icon={<UserCheck className="h-5 w-5 text-green-600" />}
         description="Employés en activité"
         className="bg-green-50 border-green-100"
-      />
-      
-      <StatCard
-        title="En congé"
-        value={onLeaveEmployees.toString()}
-        icon={<Calendar className="h-5 w-5 text-amber-600" />}
-        description="Employés absents ou en congé"
-        className="bg-amber-50 border-amber-100"
-      />
-      
-      <StatCard
-        title="Total employés"
-        value={totalEmployees.toString()}
-        icon={<Users className="h-5 w-5 text-purple-600" />}
-        description="Effectif total de l'entreprise"
-        className="bg-purple-50 border-purple-100"
       />
     </div>
   );

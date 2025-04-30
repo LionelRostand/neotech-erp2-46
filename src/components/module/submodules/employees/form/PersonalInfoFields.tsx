@@ -1,193 +1,148 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { EmployeeFormValues } from './employeeFormSchema';
-import { Home, MapPin, Building, Landmark, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-const PersonalInfoFields: React.FC = () => {
-  const form = useFormContext<EmployeeFormValues>();
+const PersonalInfoFields = () => {
+  const { register, formState: { errors } } = useFormContext<EmployeeFormValues>();
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prénom</FormLabel>
-              <FormControl>
-                <Input placeholder="Prénom" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom</FormLabel>
-              <FormControl>
-                <Input placeholder="Nom" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Informations personnelles</h3>
+      
+      {/* Photo upload */}
+      <div className="mb-4">
+        <Label htmlFor="photo">Photo</Label>
+        <Input id="photo" type="file" accept="image/*" {...register('photo')} />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="email@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Téléphone</FormLabel>
-              <FormControl>
-                <Input placeholder="+33 6 12 34 56 78" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-      
-      <FormField
-        control={form.control}
-        name="birthDate"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Date de naissance</FormLabel>
-            <FormControl>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                <Input 
-                  type="date" 
-                  {...field} 
-                  placeholder="JJ/MM/AAAA"
-                />
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium">Adresse</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="streetNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Numéro de rue</FormLabel>
-                <FormControl>
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <Input placeholder="123" {...field} />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        {/* Nom */}
+        <div>
+          <Label htmlFor="lastName">Nom</Label>
+          <Input 
+            id="lastName" 
+            placeholder="Nom" 
+            {...register('lastName')} 
+            className={errors.lastName ? 'border-red-500' : ''}
           />
-          
-          <FormField
-            control={form.control}
-            name="streetName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nom de rue</FormLabel>
-                <FormControl>
-                  <div className="flex items-center">
-                    <Home className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <Input placeholder="Rue de l'exemple" {...field} />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {errors.lastName && (
+            <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
+          )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ville</FormLabel>
-                <FormControl>
-                  <div className="flex items-center">
-                    <Landmark className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <Input placeholder="Paris" {...field} />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        {/* Prénom */}
+        <div>
+          <Label htmlFor="firstName">Prénom</Label>
+          <Input 
+            id="firstName" 
+            placeholder="Prénom" 
+            {...register('firstName')} 
+            className={errors.firstName ? 'border-red-500' : ''}
           />
-          
-          <FormField
-            control={form.control}
-            name="zipCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Code postal</FormLabel>
-                <FormControl>
-                  <Input placeholder="75000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {errors.firstName && (
+            <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
+          )}
         </div>
         
-        <FormField
-          control={form.control}
-          name="region"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Département</FormLabel>
-              <FormControl>
-                <div className="flex items-center">
-                  <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <Input placeholder="Île-de-France" {...field} />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        {/* Email */}
+        <div>
+          <Label htmlFor="email">Email personnel</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            placeholder="email@exemple.com" 
+            {...register('email')} 
+            className={errors.email ? 'border-red-500' : ''}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
           )}
-        />
+        </div>
+        
+        {/* Téléphone */}
+        <div>
+          <Label htmlFor="phone">Téléphone</Label>
+          <Input 
+            id="phone" 
+            placeholder="Téléphone" 
+            {...register('phone')} 
+            className={errors.phone ? 'border-red-500' : ''}
+          />
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+          )}
+        </div>
       </div>
-    </>
+      
+      <div className="mt-4">
+        <h4 className="font-medium mb-2">Adresse</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Numéro de rue */}
+          <div>
+            <Label htmlFor="streetNumber">Numéro de rue</Label>
+            <Input 
+              id="streetNumber" 
+              placeholder="Numéro" 
+              {...register('streetNumber')} 
+            />
+          </div>
+          
+          {/* Nom de rue */}
+          <div>
+            <Label htmlFor="streetName">Nom de rue</Label>
+            <Input 
+              id="streetName" 
+              placeholder="Rue" 
+              {...register('streetName')} 
+            />
+          </div>
+          
+          {/* Code postal */}
+          <div>
+            <Label htmlFor="zipCode">Code postal</Label>
+            <Input 
+              id="zipCode" 
+              placeholder="Code postal" 
+              {...register('zipCode')} 
+            />
+          </div>
+          
+          {/* Ville */}
+          <div>
+            <Label htmlFor="city">Ville</Label>
+            <Input 
+              id="city" 
+              placeholder="Ville" 
+              {...register('city')} 
+            />
+          </div>
+          
+          {/* Région */}
+          <div>
+            <Label htmlFor="region">Région</Label>
+            <Input 
+              id="region" 
+              placeholder="Région" 
+              {...register('region')} 
+            />
+          </div>
+          
+          {/* Pays */}
+          <div>
+            <Label htmlFor="country">Pays</Label>
+            <Input 
+              id="country" 
+              placeholder="Pays" 
+              {...register('country')} 
+              defaultValue="France"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

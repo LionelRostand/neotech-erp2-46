@@ -1,164 +1,130 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface InformationsTabProps {
   employee: Employee;
 }
 
-const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Non spécifié';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (e) {
-      return dateString;
-    }
+export const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
+  const { departments } = useEmployeeData();
+  
+  const getDepartmentName = (id: string) => {
+    const department = departments?.find(d => d.id === id);
+    return department ? department.name : id;
   };
-
-  const getStatusBadge = (status?: string) => {
-    if (!status) return <Badge variant="outline">Non spécifié</Badge>;
+  
+  const renderAddressSection = () => {
+    const hasAddress = employee.streetNumber || employee.streetName || employee.city || 
+                     employee.zipCode || employee.region || employee.country;
     
-    switch(status.toLowerCase()) {
-      case 'active':
-      case 'actif':
-        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
-      case 'inactive':
-      case 'inactif':
-        return <Badge variant="outline">Inactif</Badge>;
-      case 'onleave':
-      case 'en congé':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>;
-      case 'suspended':
-      case 'suspendu':
-        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+    if (!hasAddress) return <p className="text-gray-500 italic">Aucune adresse enregistrée</p>;
+    
+    return (
+      <div className="space-y-1">
+        {(employee.streetNumber || employee.streetName) && (
+          <p>{employee.streetNumber} {employee.streetName}</p>
+        )}
+        {(employee.zipCode || employee.city) && (
+          <p>{employee.zipCode} {employee.city}</p>
+        )}
+        {employee.region && <p>{employee.region}</p>}
+        {employee.country && <p>{employee.country}</p>}
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Informations personnelles */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Prénom</div>
-                <div className="font-medium">{employee.firstName || 'Non spécifié'}</div>
-              </div>
+              <p className="text-sm text-gray-500">Prénom</p>
+              <p>{employee.firstName || '-'}</p>
             </div>
             <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Nom</div>
-                <div className="font-medium">{employee.lastName || 'Non spécifié'}</div>
-              </div>
+              <p className="text-sm text-gray-500">Nom</p>
+              <p>{employee.lastName || '-'}</p>
             </div>
             <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Email</div>
-                <div className="font-medium">{employee.email || 'Non spécifié'}</div>
-              </div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="break-all">{employee.email || '-'}</p>
             </div>
             <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Téléphone</div>
-                <div className="font-medium">{employee.phone || 'Non spécifié'}</div>
-              </div>
+              <p className="text-sm text-gray-500">Téléphone</p>
+              <p>{employee.phone || '-'}</p>
             </div>
             <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Date de naissance</div>
-                <div className="font-medium">{formatDate(employee.birthDate)}</div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Statut</div>
-                <div className="font-medium">{getStatusBadge(employee.status)}</div>
-              </div>
+              <p className="text-sm text-gray-500">Date de naissance</p>
+              <p>
+                {employee.birthDate 
+                  ? new Date(employee.birthDate).toLocaleDateString('fr-FR')
+                  : '-'}
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Poste</div>
-                <div className="font-medium">{employee.position || 'Non spécifié'}</div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Département</div>
-                <div className="font-medium">{employee.departmentName || employee.department || 'Non spécifié'}</div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Email professionnel</div>
-                <div className="font-medium">{employee.professionalEmail || employee.email || 'Non spécifié'}</div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Date d'embauche</div>
-                <div className="font-medium">{formatDate(employee.hireDate || employee.startDate)}</div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Entreprise</div>
-                <div className="font-medium">
-                  {typeof employee.company === 'object' ? 
-                    employee.company?.name || 'Non spécifiée' : 
-                    employee.company || 'Non spécifiée'}
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-500">Responsable</div>
-                <div className="font-medium">{employee.managerName || 'Non spécifié'}</div>
-              </div>
-            </div>
+          
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Adresse</p>
+            {renderAddressSection()}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       
-      {employee.address && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Adresse</h3>
-            <div className="space-y-2">
-              <div>
-                {employee.address.street && <div>{employee.address.street}</div>}
-                {employee.address.postalCode && employee.address.city && (
-                  <div>{employee.address.postalCode} {employee.address.city}</div>
-                )}
-                {employee.address.country && <div>{employee.address.country}</div>}
-                {(!employee.address.street && !employee.address.city && !employee.address.postalCode && !employee.address.country) && (
-                  <div>Adresse non spécifiée</div>
-                )}
-              </div>
+      {/* Informations professionnelles */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <div>
+              <p className="text-sm text-gray-500">Poste</p>
+              <p>{employee.position || '-'}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div>
+              <p className="text-sm text-gray-500">Email professionnel</p>
+              <p className="break-all">{employee.professionalEmail || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Département</p>
+              <p>{employee.department ? getDepartmentName(employee.department) : '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Entreprise</p>
+              <p>
+                {employee.company 
+                  ? (typeof employee.company === 'string' 
+                      ? employee.company 
+                      : employee.company.name)
+                  : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Date d'embauche</p>
+              <p>
+                {employee.hireDate 
+                  ? new Date(employee.hireDate).toLocaleDateString('fr-FR')
+                  : '-'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Type de contrat</p>
+              <p>{employee.contract || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Statut</p>
+              <p>{employee.status || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Manager</p>
+              <p>{employee.isManager ? 'Oui' : 'Non'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
-
-export default InformationsTab;

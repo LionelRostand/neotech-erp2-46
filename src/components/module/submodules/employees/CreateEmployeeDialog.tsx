@@ -13,6 +13,7 @@ import { formValuesToEmployee } from './utils/formAdapter';
 import { Employee } from '@/types/employee';
 import PersonalInfoFields from './form/PersonalInfoFields';
 import CompanyDepartmentFields from './form/CompanyDepartmentFields';
+import { Button } from '@/components/ui/button';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -40,7 +41,14 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
       contract: 'cdi',
       hireDate: new Date().toISOString().split('T')[0],
       forceManager: false,
-      isManager: false
+      isManager: false,
+      // Ajout des champs d'adresse
+      streetNumber: '',
+      streetName: '',
+      city: '',
+      zipCode: '',
+      region: '',
+      country: ''
     },
     mode: 'onChange'
   });
@@ -63,19 +71,18 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
             <CompanyDepartmentFields />
             
             <div className="flex justify-end gap-2">
-              <button 
+              <Button 
                 type="button" 
                 onClick={() => onOpenChange(false)}
-                className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 transition-colors"
+                variant="outline"
               >
                 Annuler
-              </button>
-              <button 
+              </Button>
+              <Button 
                 type="submit" 
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition-colors"
               >
                 Enregistrer
-              </button>
+              </Button>
             </div>
           </form>
         </FormProvider>

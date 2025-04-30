@@ -1,75 +1,101 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Employee, Skill } from '@/types/employee';
+import { Button } from '@/components/ui/button';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import { toast } from 'sonner';
+import { Plus, X } from 'lucide-react';
 
 interface CompetencesTabProps {
   employee: Employee;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
-  // Helper to ensure values are strings
-  const ensureString = (value: any) => {
-    if (value === undefined || value === null) return '-';
-    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+export const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
+  const [newSkill, setNewSkill] = useState('');
+  const [skills, setSkills] = useState<(Skill | string)[]>(employee.skills || []);
+  const { updateEmployee } = useEmployeeActions();
+  
+  const handleAddSkill = () => {
+    if (!newSkill.trim()) return;
+    
+    const updatedSkills = [...skills, newSkill];
+    setSkills(updatedSkills);
+    
+    // Mettre à jour l'employé avec les nouvelles compétences
+    updateEmployee({
+      id: employee.id,
+      skills: updatedSkills
+    }).then(() => {
+      toast.success('Compétence ajoutée avec succès');
+      setNewSkill('');
+    }).catch(error => {
+      console.error('Erreur lors de l\'ajout de la compétence:', error);
+      toast.error('Erreur lors de l\'ajout de la compétence');
+    });
   };
-
-  // Ensure skills is an array and filter out any null/undefined values
-  const skills = Array.isArray(employee.skills) 
-    ? employee.skills.filter(skill => skill !== null && skill !== undefined) 
-    : [];
-
-  // Define badge colors for different skill levels
-  const skillLevelColors = {
-    débutant: 'bg-blue-100 text-blue-800',
-    intermédiaire: 'bg-green-100 text-green-800',
-    avancé: 'bg-yellow-100 text-yellow-800',
-    expert: 'bg-purple-100 text-purple-800'
+  
+  const handleRemoveSkill = (index: number) => {
+    const updatedSkills = [...skills];
+    updatedSkills.splice(index, 1);
+    setSkills(updatedSkills);
+    
+    // Mettre à jour l'employé avec les compétences restantes
+    updateEmployee({
+      id: employee.id,
+      skills: updatedSkills
+    }).then(() => {
+      toast.success('Compétence supprimée avec succès');
+    }).catch(error => {
+      console.error('Erreur lors de la suppression de la compétence:', error);
+      toast.error('Erreur lors de la suppression de la compétence');
+    });
   };
 
   return (
     <div className="space-y-6">
-      <h3 className="font-medium text-lg">Compétences</h3>
-      
-      {skills.length > 0 ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {skills.map((skill, index) => {
-              // Handle both string and object types of skills
-              const skillName = typeof skill === 'string' 
-                ? skill 
-                : ensureString((skill as Skill).name);
-              
-              // Default level if skill is just a string
-              const skillLevel = typeof skill === 'string' 
-                ? 'débutant' 
-                : ensureString((skill as Skill).level);
-              
-              // Get the appropriate color class for the badge
-              const colorClass = skillLevelColors[skillLevel as keyof typeof skillLevelColors] || 'bg-gray-100 text-gray-800';
-              
-              return (
-                <div 
-                  key={index} 
-                  className="p-3 border rounded-md flex justify-between items-center"
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Compétences</h3>
+        <div className="flex flex-wrap gap-2">
+          {skills.length > 0 ? (
+            skills.map((skill, index) => (
+              <div 
+                key={index} 
+                className="px-3 py-1 bg-gray-100 rounded-full flex items-center gap-2"
+              >
+                <span>{typeof skill === 'string' ? skill : skill.name}</span>
+                <button 
+                  onClick={() => handleRemoveSkill(index)}
+                  className="text-gray-500 hover:text-red-500"
                 >
-                  <div>{skillName}</div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${colorClass}`}>
-                    {skillLevel}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                  <X size={14} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 italic">Aucune compétence enregistrée</p>
+          )}
         </div>
-      ) : (
-        <div className="text-center py-8 bg-gray-50 rounded-md">
-          <p className="text-gray-500">
-            Aucune compétence n'a été enregistrée pour cet employé.
-          </p>
+      </div>
+      
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <label htmlFor="skill" className="block text-sm font-medium text-gray-700 mb-1">
+            Ajouter une compétence
+          </label>
+          <input
+            type="text"
+            id="skill"
+            className="w-full p-2 border rounded-md"
+            placeholder="Nom de la compétence"
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+          />
         </div>
-      )}
+        <Button onClick={handleAddSkill}>
+          <Plus className="h-4 w-4 mr-1" />
+          Ajouter
+        </Button>
+      </div>
     </div>
   );
 };
-
-export default CompetencesTab;
