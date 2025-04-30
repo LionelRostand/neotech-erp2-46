@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Employee } from '@/types/employee';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface EmployeeViewDialogProps {
   employee: Employee | null;
@@ -24,7 +25,20 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
   onOpenChange,
   onEdit
 }) => {
+  // Get employees data to find manager details
+  const { employees } = useEmployeeData();
+  
   if (!employee) return null;
+  
+  // Find manager information if managerId exists
+  const managerInfo = employee.managerId 
+    ? employees.find(emp => emp.id === employee.managerId)
+    : null;
+    
+  // Display manager name if found, otherwise show default message
+  const managerDisplay = managerInfo 
+    ? `${managerInfo.firstName} ${managerInfo.lastName}`
+    : employee.manager || "Aucun manager";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -104,7 +118,7 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Manager</h3>
-              <p className="mt-1">{employee.manager || "Aucun manager"}</p>
+              <p className="mt-1">{managerDisplay}</p>
             </div>
             {employee.skills && employee.skills.length > 0 && (
               <div>

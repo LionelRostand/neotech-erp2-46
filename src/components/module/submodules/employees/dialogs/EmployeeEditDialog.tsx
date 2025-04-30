@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import { Employee } from '@/types/employee';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { toast } from 'sonner';
 import EmployeeForm from '../EmployeeForm';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface EmployeeEditDialogProps {
   employee: Employee | null;
@@ -26,6 +27,27 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { updateEmployee } = useEmployeeActions();
+  const { employees } = useEmployeeData();
+
+  // Prepare employee data with manager information
+  const prepareEmployeeData = () => {
+    if (!employee) return null;
+    
+    // If employee has managerId, find the manager to include full name
+    if (employee.managerId) {
+      const managerInfo = employees.find(emp => emp.id === employee.managerId);
+      if (managerInfo) {
+        return {
+          ...employee,
+          manager: `${managerInfo.firstName} ${managerInfo.lastName}`
+        };
+      }
+    }
+    
+    return employee;
+  };
+  
+  const preparedEmployee = prepareEmployeeData();
 
   const handleSubmit = async (data: any) => {
     if (!employee || !employee.id) {
@@ -38,6 +60,8 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
       await updateEmployee({
         ...data,
         id: employee.id,
+        // Preserve the managerId if it exists in the original employee data
+        managerId: employee.managerId
       });
 
       toast.success("Employé mis à jour avec succès");
@@ -54,19 +78,19 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
   };
 
   // Ne rien rendre si l'employé est null
-  if (!employee) return null;
+  if (!preparedEmployee) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            Modifier l'employé: {employee.firstName} {employee.lastName}
+            Modifier l'employé: {preparedEmployee.firstName} {preparedEmployee.lastName}
           </DialogTitle>
         </DialogHeader>
         
         <EmployeeForm 
-          defaultValues={employee}
+          defaultValues={preparedEmployee}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           isSubmitting={isSubmitting}
