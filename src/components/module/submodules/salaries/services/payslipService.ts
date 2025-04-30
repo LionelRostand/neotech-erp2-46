@@ -9,13 +9,34 @@ import { PaySlipData } from '../types/payslip-types';
 // Create a new payslip
 export const createPaySlip = async (payslipData: Omit<PaySlipData, 'id'>): Promise<PaySlipData> => {
   try {
-    // Ensure we use a valid collection path
-    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
-    const docRef = await addDoc(payslipsRef, {
+    // Ensure all required fields are present and have default values if undefined
+    const sanitizedData = {
       ...payslipData,
+      // Make sure we have valid values for all fields
+      employeeId: payslipData.employeeId || '',
+      employeeName: payslipData.employeeName || 'Non spécifié',
+      period: payslipData.period || new Date().toISOString(),
+      grossSalary: payslipData.grossSalary || 0,
+      netSalary: payslipData.netSalary || 0,
+      taxes: payslipData.taxes || 0,
+      contributions: payslipData.contributions || 0,
+      // Make sure employee object exists and has all required fields with default values
+      employee: {
+        ...(payslipData.employee || {}),
+        firstName: payslipData.employee?.firstName || '',
+        lastName: payslipData.employee?.lastName || '',
+        employeeId: payslipData.employee?.employeeId || payslipData.employeeId || '',
+        role: payslipData.employee?.role || 'Employé', // Default role to prevent undefined
+        socialSecurityNumber: payslipData.employee?.socialSecurityNumber || '',
+        startDate: payslipData.employee?.startDate || '',
+      },
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
-    });
+    };
+
+    // Ensure we use a valid collection path
+    const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+    const docRef = await addDoc(payslipsRef, sanitizedData);
 
     // Get the document to return complete data
     const docSnap = await getDoc(docRef);

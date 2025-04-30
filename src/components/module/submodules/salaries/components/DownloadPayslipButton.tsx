@@ -33,19 +33,33 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
         };
       }
       
+      // Make sure employee object has all required fields with default values
+      const sanitizedPayslip = {
+        ...payslip,
+        employee: {
+          ...(payslip.employee || {}),
+          firstName: payslip.employee?.firstName || '',
+          lastName: payslip.employee?.lastName || '',
+          employeeId: payslip.employee?.employeeId || payslip.employeeId || '',
+          role: payslip.employee?.role || 'Employé', // Default role
+          socialSecurityNumber: payslip.employee?.socialSecurityNumber || '',
+          startDate: payslip.employee?.startDate || '',
+        }
+      };
+      
       // Vérifier la présence des données essentielles
-      if (!payslip.employee || !payslip.employee.firstName || !payslip.employee.lastName) {
+      if (!sanitizedPayslip.employee?.firstName || !sanitizedPayslip.employee?.lastName) {
         throw new Error('Les informations de l\'employé sont manquantes');
       }
       
       // Construction du nom de fichier français
-      const formattedMonth = payslip.month?.toLowerCase() || 'periode';
-      const year = payslip.year || new Date().getFullYear();
-      const employeeName = payslip.employee.lastName.toLowerCase();
+      const formattedMonth = sanitizedPayslip.month?.toLowerCase() || 'periode';
+      const year = sanitizedPayslip.year || new Date().getFullYear();
+      const employeeName = sanitizedPayslip.employee.lastName.toLowerCase();
       const fileName = `bulletin_de_paie_${employeeName}_${formattedMonth}_${year}.pdf`;
       
       // Génération du PDF selon le format français
-      const doc = generatePayslipPdf(payslip);
+      const doc = generatePayslipPdf(sanitizedPayslip);
       
       // Obtenir le PDF en Base64 pour le stockage
       const pdfBase64 = doc.output('datauristring');
