@@ -13,6 +13,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { getDepartmentName } from '../utils/departmentUtils';
 
+// Import des onglets
+import InformationsTab from '../tabs/InformationsTab';
+import DocumentsTab from '../tabs/DocumentsTab';
+import CompetencesTab from '../tabs/CompetencesTab';
+import HorairesTab from '../tabs/HorairesTab';
+import CongesTab from '../tabs/CongesTab';
+import EvaluationsTab from '../tabs/EvaluationsTab';
+
 interface EmployeeViewDialogProps {
   employee: Employee | null;
   open: boolean;
@@ -47,6 +55,13 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
     departments
   );
 
+  // Prepare employee with all needed data for tabs
+  const enhancedEmployee = {
+    ...employee,
+    departmentName: departmentDisplay,
+    managerName: managerDisplay,
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -62,83 +77,37 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="informations" className="mt-4">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="informations">Informations</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="emploi">Emploi</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="compétences">Compétences</TabsTrigger>
+            <TabsTrigger value="horaires">Horaires</TabsTrigger>
+            <TabsTrigger value="congés">Congés</TabsTrigger>
+            <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="informations" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">ID</h3>
-                <p className="text-sm font-mono">{employee.id?.substring(0, 10)}...</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Date d'embauche</h3>
-                <p>{employee.hireDate || "Non spécifié"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Date de naissance</h3>
-                <p>{employee.birthDate || "Non spécifié"}</p>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Statut</h3>
-              <p className="mt-1 capitalize">{employee.status || "Actif"}</p>
-            </div>
+          <TabsContent value="informations">
+            <InformationsTab employee={enhancedEmployee} />
           </TabsContent>
           
-          <TabsContent value="contact" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                <p>{employee.email || "Non spécifié"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Téléphone</h3>
-                <p>{employee.phone || "Non spécifié"}</p>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Adresse</h3>
-              <p className="mt-1">
-                {typeof employee.address === 'string' 
-                  ? employee.address || "Non spécifiée"
-                  : employee.address
-                    ? `${employee.address.street || ""}, ${employee.address.city || ""}, ${employee.address.postalCode || ""}`
-                    : "Non spécifiée"}
-              </p>
-            </div>
+          <TabsContent value="documents">
+            <DocumentsTab employee={enhancedEmployee} />
           </TabsContent>
           
-          <TabsContent value="emploi" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Position</h3>
-                <p>{employee.position || "Non spécifié"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Département</h3>
-                <p>{departmentDisplay}</p>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Manager</h3>
-              <p className="mt-1">{managerDisplay}</p>
-            </div>
-            {employee.skills && employee.skills.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Compétences</h3>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {employee.skills.map((skill, index) => (
-                    <div key={index} className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      {typeof skill === 'string' ? skill : skill.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <TabsContent value="compétences">
+            <CompetencesTab employee={enhancedEmployee} />
+          </TabsContent>
+          
+          <TabsContent value="horaires">
+            <HorairesTab employee={enhancedEmployee} />
+          </TabsContent>
+          
+          <TabsContent value="congés">
+            <CongesTab employee={enhancedEmployee} />
+          </TabsContent>
+          
+          <TabsContent value="evaluations">
+            <EvaluationsTab employee={enhancedEmployee} />
           </TabsContent>
         </Tabs>
 
