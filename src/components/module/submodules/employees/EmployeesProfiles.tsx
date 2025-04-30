@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import { useAddEmployee } from '@/hooks/useAddEmployee';
 import DeleteConfirmDialog from './dialogs/DeleteConfirmDialog';
 import EmployeeViewDialog from './EmployeeViewDialog';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
+import { formValuesToEmployee } from './utils/formAdapter';
 
 // Interface for the component props
 interface EmployeesProfilesProps {

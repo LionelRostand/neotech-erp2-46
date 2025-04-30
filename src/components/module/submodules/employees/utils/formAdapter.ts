@@ -1,4 +1,3 @@
-
 import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 
@@ -39,7 +38,7 @@ export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormV
 /**
  * Convertit des données de formulaire en objet employee
  */
-export const formValuesToEmployee = (formData: EmployeeFormValues): Partial<Employee> => {
+export const formValuesToEmployee = (formData: EmployeeFormValues, existingEmployee?: Partial<Employee>): Partial<Employee> => {
   const employee: Partial<Employee> = {
     firstName: formData.firstName,
     lastName: formData.lastName,
@@ -74,6 +73,18 @@ export const formValuesToEmployee = (formData: EmployeeFormValues): Partial<Empl
   // Add work address if provided
   if (formData.workAddress) {
     employee.workAddress = formData.workAddress;
+  }
+
+  // Keep existing ID if updating
+  if (existingEmployee?.id) {
+    employee.id = existingEmployee.id;
+  }
+
+  // Add createdAt if it's a new employee
+  if (!existingEmployee?.createdAt) {
+    employee.createdAt = new Date().toISOString();
+  } else {
+    employee.createdAt = existingEmployee.createdAt;
   }
 
   // Add updatedAt timestamp
