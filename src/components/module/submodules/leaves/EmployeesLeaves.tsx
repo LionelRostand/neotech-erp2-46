@@ -8,6 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import CreateLeaveDialog from './CreateLeaveDialog';
 
+const getLeaveTypeName = (type: string): string => {
+  switch (type) {
+    case 'paid': return 'Congés payés';
+    case 'rtt': return 'RTT';
+    case 'rtte': return 'RTTe';
+    case 'unpaid': return 'Sans solde';
+    case 'sick': return 'Maladie';
+    case 'family': return 'Familial';
+    case 'other': return 'Autre';
+    default: return type;
+  }
+};
+
 const EmployeesLeaves: React.FC = () => {
   const { leaves, stats, isLoading, refetch } = useLeaveData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -123,7 +136,7 @@ const LeavesTable: React.FC<LeavesTableProps> = ({ leaves }) => {
           {leaves.map((leave) => (
             <tr key={leave.id} className="border-t hover:bg-gray-50">
               <td className="px-4 py-2">{leave.employeeName}</td>
-              <td className="px-4 py-2">{leave.type}</td>
+              <td className="px-4 py-2">{getLeaveTypeName(leave.type)}</td>
               <td className="px-4 py-2">{leave.startDate}</td>
               <td className="px-4 py-2">{leave.endDate}</td>
               <td className="px-4 py-2">{leave.days}</td>

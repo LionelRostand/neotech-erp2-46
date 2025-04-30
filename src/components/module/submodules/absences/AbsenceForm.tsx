@@ -1,14 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AbsenceFormProps {
   onSubmit: (data: any) => void;
@@ -25,10 +23,13 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
   const [employeeId, setEmployeeId] = useState('');
   const [employeeName, setEmployeeName] = useState('');
   const [type, setType] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
+  
+  // Récupérer la liste des employés
+  const { employees, isLoading: employeesLoading } = useEmployeeData();
 
   // Gestionnaire de soumission du formulaire
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,23 +54,35 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
     onSubmit(formData);
   };
 
+  // Mettre à jour le nom de l'employé lorsque l'ID change
+  useEffect(() => {
+    if (employeeId && employees) {
+      const selectedEmployee = employees.find(emp => emp.id === employeeId);
+      if (selectedEmployee) {
+        setEmployeeName(`${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
+      }
+    }
+  }, [employeeId, employees]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Sélection de l'employé */}
       <div className="space-y-2">
         <Label htmlFor="employee">Employé</Label>
-        <Select value={employeeId} onValueChange={(value) => {
-          setEmployeeId(value);
-          // Ici, vous pourriez également mettre à jour employeeName en fonction de l'ID sélectionné
-        }}>
+        <Select value={employeeId} onValueChange={setEmployeeId}>
           <SelectTrigger id="employee">
             <SelectValue placeholder="Sélectionner un employé" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="emp1">Jean Dupont</SelectItem>
-            <SelectItem value="emp2">Marie Martin</SelectItem>
-            <SelectItem value="emp3">Pierre Durand</SelectItem>
-            {/* Ces options devraient être générées dynamiquement à partir des données d'employés */}
+            {employeesLoading ? (
+              <SelectItem value="loading" disabled>Chargement...</SelectItem>
+            ) : (
+              employees && employees.map(emp => (
+                <SelectItem key={emp.id} value={emp.id}>
+                  {`${emp.firstName} ${emp.lastName}`}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -83,9 +96,8 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="paid">Congés payés</SelectItem>
-            <SelectItem value="unpaid">Congés sans solde</SelectItem>
-            <SelectItem value="sick">Arrêt maladie</SelectItem>
-            <SelectItem value="family">Congés familiaux</SelectItem>
+            <SelectItem value="rtt">RTT</SelectItem>
+            <SelectItem value="rtte">RTTe</SelectItem>
             <SelectItem value="other">Autre</SelectItem>
           </SelectContent>
         </Select>
@@ -99,6 +111,8 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
             date={startDate}
             setDate={setStartDate}
             placeholder="Début du congé"
+            fromMonth={new Date(2025, 3)} // Avril 2025
+            toMonth={new Date(2025, 3)} 
           />
         </div>
         <div className="space-y-2">
@@ -107,6 +121,8 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
             date={endDate}
             setDate={setEndDate}
             placeholder="Fin du congé"
+            fromMonth={new Date(2025, 3)} // Avril 2025
+            toMonth={new Date(2025, 3)}
           />
         </div>
       </div>

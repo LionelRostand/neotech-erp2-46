@@ -20,13 +20,22 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({
 
   const handleSubmit = async (data: any) => {
     try {
+      console.log('Données du formulaire:', data);
+      
+      if (!data.startDate || !data.endDate) {
+        toast.error("Veuillez sélectionner des dates valides");
+        return;
+      }
+      
       // Préparation des données pour l'API
       const leaveData = {
         employeeId: data.employeeId,
+        employeeName: data.employeeName,
         type: data.type,
         startDate: data.startDate.toISOString(),
         endDate: data.endDate.toISOString(),
         reason: data.reason || '',
+        notes: data.notes || '',
         days: Math.ceil(
           (data.endDate.getTime() - data.startDate.getTime()) / (1000 * 60 * 60 * 24)
         ) + 1 // +1 car inclusif
