@@ -1,6 +1,8 @@
+
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Department } from '../types';
-import { updateDocument, setDocument, deleteDocument } from '@/hooks/firestore/update-operations';
+import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
 
 export const useDepartmentService = () => {
   const createDepartment = async (department: Department): Promise<boolean> => {
