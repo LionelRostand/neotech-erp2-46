@@ -1,131 +1,126 @@
 
 import React, { useState } from 'react';
-import { Employee } from '@/types/employee';
-import { Plus, FileUp } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import EmployeesTable from './EmployeesTable';
-import CreateEmployeeDialog from './CreateEmployeeDialog';
-import ViewEmployeeDialog from './dialogs/EmployeeViewDialog';
-import DeleteConfirmDialog from './dialogs/DeleteConfirmDialog';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
-import EmployeeEditDialog from './dialogs/EmployeeEditDialog';
+import SubmoduleHeader from '../SubmoduleHeader';
+import EmployeesTable from './EmployeesTable';
+import EmployeeViewDialog from './dialogs/EmployeeViewDialog';
+import CreateEmployeeDialog from './CreateEmployeeDialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search, Download, Plus } from 'lucide-react';
+import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
-interface EmployeesProfilesProps {
-  employees: Employee[];
-  isLoading?: boolean;
-}
-
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], isLoading = false }) => {
-  const { createEmployee, deleteEmployee, updateEmployee } = useEmployeeActions();
-  const [searchQuery, setSearchQuery] = useState('');
+const EmployeesProfiles: React.FC<{ employees?: Employee[], isLoading?: boolean }> = ({
+  employees: propEmployees,
+  isLoading: propIsLoading
+}) => {
+  const { employees: hookEmployees, isLoading: hookIsLoading } = useEmployeeData();
+  const { createEmployee, updateEmployee, deleteEmployee, isDeleting } = useEmployeeActions();
+  
+  // Use either the props or the hook data
+  const employees = propEmployees || hookEmployees || [];
+  const isLoading = propIsLoading !== undefined ? propIsLoading : hookIsLoading;
+  
+  // State for search
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Dialog states
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [viewEmployee, setViewEmployee] = useState<Employee | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
-  // Filter employees based on search
-  const filteredEmployees = Array.isArray(employees) ? employees.filter(employee => {
-    if (!employee) return false;
+  // Filtered employees based on search
+  const filteredEmployees = React.useMemo(() => {
+    if (!searchTerm) return employees;
     
-    const fullName = `${employee.firstName || ''} ${employee.lastName || ''}`.toLowerCase();
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      fullName.includes(searchLower) ||
-      (employee.email || '').toLowerCase().includes(searchLower) ||
-      (employee.position || '').toLowerCase().includes(searchLower) ||
-      (employee.department || '').toLowerCase().includes(searchLower)
-    );
-  }) : [];
+    const term = searchTerm.toLowerCase();
+    return employees.filter(employee => {
+      return (
+        (employee?.firstName?.toLowerCase() || '').includes(term) ||
+        (employee?.lastName?.toLowerCase() || '').includes(term) ||
+        (employee?.email?.toLowerCase() || '').includes(term) ||
+        (employee?.position?.toLowerCase() || '').includes(term) ||
+        (employee?.phone?.toLowerCase() || '').includes(term)
+      );
+    });
+  }, [employees, searchTerm]);
   
-  // Handle creating a new employee
-  const handleCreateEmployee = async (data: Partial<Employee>) => {
-    try {
-      await createEmployee(data as Omit<Employee, 'id'>);
-      setCreateDialogOpen(false);
-      toast.success("Employé créé avec succès");
-    } catch (error) {
-      console.error("Error creating employee:", error);
-      toast.error("Erreur lors de la création de l'employé");
+  // Handler for creating a new employee
+  const handleCreateEmployee = async (employee: Partial<Employee>) => {
+    const result = await createEmployee(employee as Omit<Employee, 'id'>);
+    if (result) {
+      setIsCreateDialogOpen(false);
     }
   };
   
-  // Handle updating an employee
-  const handleUpdateEmployee = async (data: Partial<Employee>) => {
-    if (!data.id) return;
+  // Handler for updating an employee
+  const handleUpdateEmployee = async (employee: Partial<Employee>) => {
+    if (!employee.id) {
+      toast.error("ID d'employé manquant");
+      return;
+    }
     
-    try {
-      await updateEmployee(data);
-      setEditDialogOpen(false);
-      toast.success("Employé mis à jour avec succès");
-    } catch (error) {
-      console.error("Error updating employee:", error);
-      toast.error("Erreur lors de la mise à jour de l'employé");
+    const result = await updateEmployee(employee);
+    if (result) {
+      setViewEmployee(null);
     }
   };
   
-  // Handle view employee
-  const handleViewEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setViewDialogOpen(true);
-  };
-  
-  // Handle edit employee
-  const handleEditEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setEditDialogOpen(true);
-  };
-  
-  // Handle delete employee
-  const handleDeleteEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setDeleteDialogOpen(true);
-  };
-  
-  // Confirm employee deletion
-  const handleDeleteConfirm = async () => {
-    if (!selectedEmployee?.id) return;
+  // Handler for deleting an employee
+  const handleConfirmDelete = async () => {
+    if (!employeeToDelete?.id) return;
     
-    setIsDeleting(true);
-    try {
-      await deleteEmployee(selectedEmployee.id);
-      setDeleteDialogOpen(false);
-      setSelectedEmployee(null);
-      toast.success("Employé supprimé avec succès");
-    } catch (error) {
-      console.error("Error deleting employee:", error);
-      toast.error("Erreur lors de la suppression de l'employé");
-    } finally {
-      setIsDeleting(false);
+    const result = await deleteEmployee(employeeToDelete.id);
+    if (result) {
+      setEmployeeToDelete(null);
+      setDeleteConfirmOpen(false);
     }
+  };
+  
+  // Handler for exporting employee data
+  const handleExport = () => {
+    toast.info("Fonctionnalité d'exportation en cours de développement");
   };
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-2xl font-bold">Fiches Employés</h1>
+    <div className="container mx-auto py-4 space-y-6">
+      <SubmoduleHeader 
+        title="Fiches Employés" 
+        description="Gérez les fiches des employés de votre entreprise" 
+      />
+      
+      {/* Dashboard Cards */}
+      <EmployeesDashboardCards />
       
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <div className="w-full sm:w-auto">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Rechercher un employé..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
           />
         </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <FileUp className="mr-2 h-4 w-4" />
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button 
+            variant="outline" 
+            onClick={handleExport}
+            className="whitespace-nowrap"
+          >
+            <Download className="mr-2 h-4 w-4" />
             Exporter
           </Button>
-          <Button onClick={() => setCreateDialogOpen(true)}>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Nouveau Employé
           </Button>
@@ -133,50 +128,55 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
       </div>
       
       {/* Employees Table */}
-      <EmployeesTable
-        employees={filteredEmployees}
-        onView={handleViewEmployee}
-        onEdit={handleEditEmployee}
-        onDelete={handleDeleteEmployee}
+      <EmployeesTable 
+        employees={filteredEmployees} 
         isLoading={isLoading}
+        onView={(employee) => setViewEmployee(employee)}
+        onEdit={(employee) => setViewEmployee(employee)}
+        onDelete={(employee) => {
+          setEmployeeToDelete(employee);
+          setDeleteConfirmOpen(true);
+        }}
       />
       
-      {/* Dialogs */}
+      {/* Employee View Dialog */}
+      {viewEmployee && (
+        <EmployeeViewDialog
+          employee={viewEmployee}
+          open={!!viewEmployee}
+          onOpenChange={() => setViewEmployee(null)}
+          onUpdate={handleUpdateEmployee}
+        />
+      )}
+      
+      {/* Create Employee Dialog */}
       <CreateEmployeeDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
         onSubmit={handleCreateEmployee}
       />
       
-      {selectedEmployee && (
-        <>
-          <ViewEmployeeDialog
-            open={viewDialogOpen}
-            onOpenChange={setViewDialogOpen}
-            employee={selectedEmployee}
-            onEdit={() => {
-              setViewDialogOpen(false);
-              setEditDialogOpen(true);
-            }}
-          />
-          
-          <EmployeeEditDialog
-            employee={selectedEmployee}
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            onSubmit={handleUpdateEmployee}
-          />
-          
-          <DeleteConfirmDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            onConfirm={handleDeleteConfirm}
-            title="Supprimer l'employé"
-            description={`Êtes-vous sûr de vouloir supprimer l'employé ${selectedEmployee.firstName} ${selectedEmployee.lastName} ? Cette action est irréversible.`}
-            isLoading={isDeleting}
-          />
-        </>
-      )}
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet employé ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Suppression...' : 'Supprimer'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -34,7 +34,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
   
   const columns: Column<Employee>[] = [
     {
-      header: 'Employé',
+      header: 'EMPLOYÉ',
       accessorKey: 'name',
       cell: ({ row }) => {
         const employee = row?.original;
@@ -42,7 +42,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
         
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-10 w-10 border">
               {employee.photoURL || employee.photo ? (
                 <AvatarImage 
                   src={employee.photoURL || employee.photo} 
@@ -56,40 +56,48 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
             </Avatar>
             <div>
               <p className="font-medium">{employee.firstName || ''} {employee.lastName || ''}</p>
-              <p className="text-xs text-gray-500">{employee.email || ''}</p>
+              <p className="text-xs text-gray-500">{employee.phone || ''}</p>
             </div>
           </div>
         );
       }
     },
     {
-      header: 'Poste',
+      header: 'POSTE',
       accessorKey: 'position',
-      cell: ({ row }) => row.original?.position || '-'
+      cell: ({ row }) => <span className="text-sm">{row.original?.position || '-'}</span>
     },
     {
-      header: 'Département',
+      header: 'EMAIL',
+      accessorKey: 'email',
+      cell: ({ row }) => (
+        <span className="text-sm text-blue-600">{row.original?.email || row.original?.professionalEmail || '-'}</span>
+      )
+    },
+    {
+      header: 'DÉPARTEMENT',
       accessorKey: 'department',
       cell: ({ row }) => {
         const departmentId = row.original?.department || row.original?.departmentId;
-        return getDepartmentName(departmentId, safeDepartments);
+        return <span className="text-sm">{getDepartmentName(departmentId, safeDepartments)}</span>;
       }
     },
     {
-      header: 'Status',
+      header: 'STATUT',
       accessorKey: 'status',
       cell: ({ row }) => <EmployeeStatusBadge status={row.original?.status || 'active'} />
     },
     {
-      header: 'Actions',
+      header: 'ACTIONS',
       cell: ({ row }) => {
         if (!row?.original) return null;
         
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-end">
             <Button
               size="icon"
               variant="ghost"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               onClick={(e) => {
                 e.stopPropagation();
                 onView(row.original);
@@ -100,6 +108,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
             <Button
               size="icon"
               variant="ghost"
+              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(row.original);
@@ -110,7 +119,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
             <Button
               size="icon"
               variant="ghost"
-              className="text-red-600 hover:text-red-700 hover:bg-red-100"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(row.original);
