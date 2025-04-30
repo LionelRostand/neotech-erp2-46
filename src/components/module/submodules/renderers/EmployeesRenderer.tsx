@@ -27,7 +27,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     departments = [],
     companies = [],
     isLoading = true
-  } = useHrModuleData();
+  } = useHrModuleData() || { employees: [], departments: [], companies: [], isLoading: true };
   
   console.log(`Rendering employee submodule: ${submoduleId}`);
   console.log(`Loaded ${employees?.length || 0} employees from collection`);
@@ -82,7 +82,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     default:
       return (
         <div className="container mx-auto py-4">
-          <h2 className="text-2xl font-bold">{submodule.name}</h2>
+          <h2 className="text-2xl font-bold">{submodule?.name || "Module inconnu"}</h2>
           <div className="p-4 mt-4 border border-gray-200 rounded-md">
             <p>Ce module est en cours de développement.</p>
           </div>

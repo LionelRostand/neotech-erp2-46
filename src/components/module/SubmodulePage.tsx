@@ -51,16 +51,12 @@ const SubmoduleRenderer = ({ moduleId, submoduleId }: { moduleId: number; submod
   }
   
   // Find the matching submodule from the module
-  const submodule = module.submodules?.find((sm) => sm.id === submoduleId);
-  
-  if (!submodule) {
-    return <DefaultSubmoduleContent submodule={{ 
-      id: submoduleId, 
-      name: 'Unknown',
-      href: '',
-      icon: <span />
-    }} />;
-  }
+  const submodule = module.submodules?.find((sm) => sm.id === submoduleId) || {
+    id: submoduleId,
+    name: submoduleId.split('-').pop() || 'Unknown',
+    href: `/modules/${module.href.split('/').pop()}/${submoduleId.split('-').pop()}`,
+    icon: <span />
+  };
   
   return renderSubmoduleContent({ submoduleId, submodule });
 };

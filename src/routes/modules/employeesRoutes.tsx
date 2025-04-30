@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
@@ -24,6 +25,7 @@ export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
+    {/* Route for profiles is still kept to handle direct navigation */}
     <Route path="profiles" element={<EmployeesProfiles />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
