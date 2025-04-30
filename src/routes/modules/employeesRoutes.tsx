@@ -22,8 +22,8 @@ import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
-// Optimize data loading with memoization to prevent unnecessary rerenders
-const EmployeesProfilesWithProps = () => {
+// Separate wrapper component so it only re-renders when needed
+const EmployeesProfilesWrapper = () => {
   const { employees = [], isLoading = true } = useEmployeeData();
   
   // Make sure we have a valid array of employees and memoize it
@@ -38,7 +38,7 @@ export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    <Route path="profiles" element={<EmployeesProfilesWithProps />} />
+    <Route path="profiles" element={<EmployeesProfilesWrapper />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />

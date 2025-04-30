@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
   FormField,
@@ -9,7 +9,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/patched-select';
 import { Building, Building2, Briefcase } from 'lucide-react';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
@@ -17,6 +17,35 @@ import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 const CompanyDepartmentFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
   const { departments, isLoading } = useAvailableDepartments();
+  
+  // Memoize department items to prevent unnecessary re-renders
+  const departmentItems = useMemo(() => {
+    // Start with the "no department" option
+    const items = [
+      <SelectItem key="no_department" value="no_department">Aucun département</SelectItem>
+    ];
+    
+    // Add a loading state if departments are still loading
+    if (isLoading) {
+      items.push(<SelectItem key="loading" value="loading" disabled>Chargement...</SelectItem>);
+      return items;
+    }
+    
+    // Add department options if available
+    if (departments && departments.length > 0) {
+      departments.forEach(dept => {
+        if (dept && dept.id && dept.name) {
+          items.push(
+            <SelectItem key={dept.id} value={dept.id}>
+              {dept.name}
+            </SelectItem>
+          );
+        }
+      });
+    }
+    
+    return items;
+  }, [departments, isLoading]);
 
   return (
     <div className="space-y-4">
@@ -68,7 +97,8 @@ const CompanyDepartmentFields: React.FC = () => {
               </FormLabel>
               <Select 
                 onValueChange={field.onChange}
-                value={field.value}
+                value={field.value || "no_department"}
+                disabled={isLoading}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -76,16 +106,7 @@ const CompanyDepartmentFields: React.FC = () => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="no_department">Aucun département</SelectItem>
-                  {isLoading ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                  ) : (
-                    departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.name}>
-                        {dept.name}
-                      </SelectItem>
-                    ))
-                  )}
+                  {departmentItems}
                 </SelectContent>
               </Select>
               <FormMessage />

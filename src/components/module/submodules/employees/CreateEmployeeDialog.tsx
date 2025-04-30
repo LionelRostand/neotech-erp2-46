@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import EmployeeForm from './EmployeeForm';
-import { useEmployeeService } from '@/hooks/useEmployeeService';
 import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from './form/employeeFormSchema';
 import { formValuesToEmployee } from './utils/formAdapter';
@@ -34,6 +33,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (data: EmployeeFormValues) => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    
     setIsSubmitting(true);
     try {
       const employeeData = formValuesToEmployee(data);
