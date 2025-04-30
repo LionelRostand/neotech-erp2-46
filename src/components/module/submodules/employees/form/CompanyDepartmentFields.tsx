@@ -22,9 +22,9 @@ const CompanyDepartmentFields = () => {
   const { control } = useFormContext();
   const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
-  // Ensure companies is always an array
-  const safeCompanies = companies || [];
-
+  // Ensure companies is always a valid array
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+  
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Informations professionnelles</h3>
@@ -38,7 +38,7 @@ const CompanyDepartmentFields = () => {
               <FormLabel>Entreprise</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                value={field.value || ""}
+                value={field.value || "none"}
                 disabled={isLoadingCompanies}
               >
                 <FormControl>
@@ -47,8 +47,8 @@ const CompanyDepartmentFields = () => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {/* Default "No company" option */}
-                  <SelectItem value="">Aucune entreprise</SelectItem>
+                  {/* Default "No company" option with non-empty value */}
+                  <SelectItem value="none">Aucune entreprise</SelectItem>
                   
                   {/* Companies from the companies module */}
                   {safeCompanies.map((company) => (
