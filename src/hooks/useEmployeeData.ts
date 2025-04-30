@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';

@@ -4,6 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import AbsenceForm from '../absences/AbsenceForm';
 import { toast } from 'sonner';
 import { useLeaveData } from '@/hooks/useLeaveData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface CreateLeaveDialogProps {
   open: boolean;
@@ -16,8 +19,6 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({
   onOpenChange,
   onSuccess
 }) => {
-  const { createLeaveRequest } = useLeaveData();
-
   const handleSubmit = async (data: any) => {
     try {
       console.log('Données du formulaire:', data);
@@ -36,17 +37,34 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({
         endDate: data.endDate.toISOString(),
         reason: data.reason || '',
         notes: data.notes || '',
+        status: 'pending',
+        createdAt: new Date().toISOString(),
         days: Math.ceil(
           (data.endDate.getTime() - data.startDate.getTime()) / (1000 * 60 * 60 * 24)
         ) + 1 // +1 car inclusif
       };
 
-      // Créer la demande de congé
-      await createLeaveRequest(leaveData);
+      // Vérifier que COLLECTIONS.HR.LEAVES existe et est une chaîne non vide
+      const leavesCollection = COLLECTIONS.HR.LEAVES;
       
-      toast.success("Demande de congé créée avec succès");
-      onOpenChange(false);
-      if (onSuccess) onSuccess();
+      if (!leavesCollection) {
+        console.error("La collection HR.LEAVES n'est pas définie");
+        toast.error("Erreur de configuration: collection non définie");
+        return;
+      }
+      
+      // Créer la demande de congé directement avec Firebase
+      try {
+        const collectionRef = collection(db, leavesCollection);
+        await addDoc(collectionRef, leaveData);
+        
+        toast.success("Demande de congé créée avec succès");
+        onOpenChange(false);
+        if (onSuccess) onSuccess();
+      } catch (error) {
+        console.error("Error creating leave request:", error);
+        toast.error("Erreur lors de la création de la demande de congé");
+      }
     } catch (error) {
       console.error("Erreur lors de la création de la demande de congé:", error);
       toast.error("Erreur lors de la création de la demande de congé");

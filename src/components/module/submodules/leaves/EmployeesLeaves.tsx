@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLeaveData } from '@/hooks/useLeaveData';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -25,6 +25,11 @@ const EmployeesLeaves: React.FC = () => {
   const { leaves = [], stats = {}, isLoading, refetch } = useLeaveData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
+  // Handle successful leave creation
+  const handleLeaveCreated = () => {
+    refetch();
+  };
+
   if (isLoading) {
     return (
       <div className="p-8 flex justify-center">
@@ -33,10 +38,10 @@ const EmployeesLeaves: React.FC = () => {
     );
   }
 
-  // Calculer les stats pour le dashboard
-  const pendingLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave.status === 'En attente' || leave.status === 'pending') : [];
-  const approvedLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave.status === 'Approuvé' || leave.status === 'approved') : [];
-  const rejectedLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave.status === 'Refusé' || leave.status === 'rejected') : [];
+  // Safely filter leaves by status
+  const pendingLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave && (leave.status === 'En attente' || leave.status === 'pending')) : [];
+  const approvedLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave && (leave.status === 'Approuvé' || leave.status === 'approved')) : [];
+  const rejectedLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave && (leave.status === 'Refusé' || leave.status === 'rejected')) : [];
 
   return (
     <div className="container mx-auto p-6">
@@ -99,7 +104,7 @@ const EmployeesLeaves: React.FC = () => {
       <CreateLeaveDialog 
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
-        onSuccess={refetch}
+        onSuccess={handleLeaveCreated}
       />
     </div>
   );

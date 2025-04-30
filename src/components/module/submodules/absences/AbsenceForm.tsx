@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,24 +11,43 @@ interface AbsenceFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  defaultValues?: {
+    employeeId?: string;
+    type?: string;
+    startDate?: Date;
+    endDate?: Date;
+    reason?: string;
+    notes?: string;
+  };
 }
 
 const AbsenceForm: React.FC<AbsenceFormProps> = ({ 
   onSubmit, 
   onCancel,
-  isLoading = false
+  isLoading = false,
+  defaultValues = {}
 }) => {
   // États pour stocker les valeurs du formulaire
-  const [employeeId, setEmployeeId] = useState('');
+  const [employeeId, setEmployeeId] = useState(defaultValues.employeeId || '');
   const [employeeName, setEmployeeName] = useState('');
-  const [type, setType] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
-  const [reason, setReason] = useState('');
-  const [notes, setNotes] = useState('');
+  const [type, setType] = useState(defaultValues.type || '');
+  const [startDate, setStartDate] = useState<Date | undefined>(defaultValues.startDate || new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(defaultValues.endDate || new Date());
+  const [reason, setReason] = useState(defaultValues.reason || '');
+  const [notes, setNotes] = useState(defaultValues.notes || '');
   
   // Récupérer la liste des employés
   const { employees, isLoading: employeesLoading } = useEmployeeData();
+
+  // Mettre à jour le nom de l'employé lorsque l'ID change
+  useEffect(() => {
+    if (employeeId && employees && Array.isArray(employees)) {
+      const selectedEmployee = employees.find(emp => emp && emp.id === employeeId);
+      if (selectedEmployee) {
+        setEmployeeName(`${selectedEmployee.firstName || ''} ${selectedEmployee.lastName || ''}`);
+      }
+    }
+  }, [employeeId, employees]);
 
   // Gestionnaire de soumission du formulaire
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,16 +72,6 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
     onSubmit(formData);
   };
 
-  // Mettre à jour le nom de l'employé lorsque l'ID change
-  useEffect(() => {
-    if (employeeId && employees && Array.isArray(employees)) {
-      const selectedEmployee = employees.find(emp => emp && emp.id === employeeId);
-      if (selectedEmployee) {
-        setEmployeeName(`${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
-      }
-    }
-  }, [employeeId, employees]);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Sélection de l'employé */}
@@ -79,7 +87,7 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
             ) : (
               employees && Array.isArray(employees) ? employees.map(emp => emp && (
                 <SelectItem key={emp.id} value={emp.id}>
-                  {`${emp.firstName} ${emp.lastName}`}
+                  {`${emp.firstName || ''} ${emp.lastName || ''}`}
                 </SelectItem>
               )) : <SelectItem value="no-data" disabled>Aucun employé trouvé</SelectItem>
             )}

@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { db } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -83,24 +82,6 @@ export const useLeaveData = () => {
       : 0
   };
 
-  // Create a new leave request
-  const createLeaveRequest = async (leaveData: Partial<Leave>) => {
-    try {
-      const collectionRef = collection(db, COLLECTIONS.HR.LEAVES);
-      await addDoc(collectionRef, {
-        ...leaveData,
-        createdAt: new Date().toISOString(),
-        status: 'pending'
-      });
-      toast.success('Demande de congé créée avec succès');
-      refetch();
-    } catch (error) {
-      console.error('Error creating leave request:', error);
-      toast.error('Erreur lors de la création de la demande de congé');
-      throw error;
-    }
-  };
-
   // Refresh data
   const refetch = useCallback(() => {
     setRefreshKey(Date.now());
@@ -111,7 +92,6 @@ export const useLeaveData = () => {
     stats,
     isLoading,
     error,
-    refetch,
-    createLeaveRequest
+    refetch
   };
 };
