@@ -39,7 +39,8 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
           description: dept.description || '',
           managerName: dept.managerName || 'N/A',
           companyName: dept.companyName || 'N/A',
-          employeesCount: dept.employeesCount || (dept.employeeIds?.length || 0)
+          employeeIds: Array.isArray(dept.employeeIds) ? dept.employeeIds : [],
+          employeesCount: (Array.isArray(dept.employeeIds) ? dept.employeeIds.length : 0) || dept.employeesCount || 0
         };
         deptMap.set(dept.id, validDept as Department);
       }
@@ -91,7 +92,11 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                 <TableCell>{department.description}</TableCell>
                 <TableCell>{department.managerName || 'N/A'}</TableCell>
                 <TableCell>{department.companyName || 'N/A'}</TableCell>
-                <TableCell>{department.employeesCount || (department.employeeIds?.length || 0)}</TableCell>
+                <TableCell>
+                  {Array.isArray(department.employeeIds) 
+                    ? department.employeeIds.length 
+                    : (department.employeesCount || 0)}
+                </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>
                     <Edit className="h-4 w-4 mr-2" />

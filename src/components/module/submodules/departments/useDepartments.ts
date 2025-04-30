@@ -41,12 +41,12 @@ export const useDepartments = () => {
     setSelectedEmployees
   } = useDepartmentForm(departments);
 
-  // Department operations
+  // Department operations - Import the service functions
   const {
-    handleSaveDepartment,
-    handleUpdateDepartment,
+    handleSaveDepartment: saveDepartmentService,
+    handleUpdateDepartment: updateDepartmentService,
     handleDeleteDepartment,
-    handleSaveEmployeeAssignments
+    handleSaveEmployeeAssignments: saveEmployeeAssignmentsService
   } = useDepartmentOperations();
 
   // Effect to update departments when fetched data changes
@@ -77,35 +77,35 @@ export const useDepartments = () => {
     setIsManageEmployeesDialogOpen(true);
   }, [setIsManageEmployeesDialogOpen, setSelectedEmployees]);
 
-  // Save new department
+  // Save new department - wrapper function for service
   const handleSaveDepartment = useCallback(async () => {
-    const success = await handleSaveDepartment(formData, selectedEmployees);
+    const success = await saveDepartmentService(formData, selectedEmployees);
     if (success) {
       setIsAddDialogOpen(false);
       resetForm();
       refetch();
     }
-  }, [formData, selectedEmployees, handleSaveDepartment, setIsAddDialogOpen, resetForm, refetch]);
+  }, [formData, selectedEmployees, saveDepartmentService, setIsAddDialogOpen, resetForm, refetch]);
 
-  // Update department
+  // Update department - wrapper function for service
   const handleUpdateDepartment = useCallback(async () => {
     if (!currentDepartment) return;
-    const success = await handleUpdateDepartment(formData, selectedEmployees, currentDepartment);
+    const success = await updateDepartmentService(formData, selectedEmployees, currentDepartment);
     if (success) {
       setIsEditDialogOpen(false);
       refetch();
     }
-  }, [currentDepartment, formData, selectedEmployees, handleUpdateDepartment, setIsEditDialogOpen, refetch]);
+  }, [currentDepartment, formData, selectedEmployees, updateDepartmentService, setIsEditDialogOpen, refetch]);
 
-  // Save employee assignments
+  // Save employee assignments - wrapper function for service
   const handleSaveEmployeeAssignments = useCallback(async () => {
     if (!currentDepartment) return;
-    const success = await handleSaveEmployeeAssignments(currentDepartment, selectedEmployees);
+    const success = await saveEmployeeAssignmentsService(currentDepartment, selectedEmployees);
     if (success) {
       setIsManageEmployeesDialogOpen(false);
       refetch();
     }
-  }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, setIsManageEmployeesDialogOpen, refetch]);
+  }, [currentDepartment, selectedEmployees, saveEmployeeAssignmentsService, setIsManageEmployeesDialogOpen, refetch]);
 
   // Get department employees
   const getDepartmentEmployees = useCallback((departmentId: string) => {
@@ -113,6 +113,7 @@ export const useDepartments = () => {
     if (!department || !department.employeeIds) return [];
     
     return employees.filter(employee => 
+      department.employeeIds && Array.isArray(department.employeeIds) && 
       department.employeeIds.includes(employee.id)
     );
   }, [departments, employees]);

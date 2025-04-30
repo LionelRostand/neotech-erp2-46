@@ -21,24 +21,24 @@ export const prepareDepartmentFromForm = (
   companies: any[]
 ): Department => {
   // Find the selected manager from all employees
-  const selectedManager = formData.managerId && formData.managerId !== "none"
-    ? allEmployees.find(emp => emp.id === formData.managerId) 
+  const selectedManager = formData.managerId && formData.managerId !== "none" && allEmployees
+    ? allEmployees.find(emp => emp && emp.id === formData.managerId) 
     : null;
 
   const managerName = selectedManager 
-    ? `${selectedManager.firstName} ${selectedManager.lastName}` 
+    ? `${selectedManager.firstName || ''} ${selectedManager.lastName || ''}`.trim() 
     : null;
   
   // Find the selected company from all companies
-  const selectedCompany = formData.companyId && formData.companyId !== "none"
-    ? companies.find(comp => comp.id === formData.companyId)
+  const selectedCompany = formData.companyId && formData.companyId !== "none" && companies
+    ? companies.find(comp => comp && comp.id === formData.companyId)
     : null;
     
   const companyName = selectedCompany 
     ? selectedCompany.name
     : null;
   
-  // Create department object
+  // Create department object with safe checks for arrays
   return {
     id: formData.id,
     name: formData.name,
@@ -47,8 +47,8 @@ export const prepareDepartmentFromForm = (
     managerName: managerName,
     companyId: formData.companyId === "none" ? null : formData.companyId,
     companyName: companyName,
-    color: formData.color,
-    employeeIds: selectedEmployees,
-    employeesCount: selectedEmployees.length
+    color: formData.color || '#3b82f6',
+    employeeIds: Array.isArray(selectedEmployees) ? selectedEmployees : [],
+    employeesCount: Array.isArray(selectedEmployees) ? selectedEmployees.length : 0
   };
 };

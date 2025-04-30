@@ -42,7 +42,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       <div className="py-4">
         <EmployeesList 
           employees={employees || []}
-          selectedEmployees={selectedEmployees}
+          selectedEmployees={selectedEmployees || []}
           onEmployeeSelection={onEmployeeSelection}
           id="manage"
         />
