@@ -35,3 +35,49 @@ export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormV
     workAddress: employee.workAddress
   };
 };
+
+/**
+ * Convertit des données de formulaire en objet employee
+ */
+export const formValuesToEmployee = (formData: EmployeeFormValues): Partial<Employee> => {
+  const employee: Partial<Employee> = {
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    phone: formData.phone || '',
+    position: formData.position || '',
+    professionalEmail: formData.professionalEmail || '',
+    department: formData.department || '',
+    company: formData.company || '',
+    status: formData.status,
+    contract: formData.contract,
+    hireDate: formData.hireDate || new Date().toISOString().split('T')[0],
+    birthDate: formData.birthDate || '',
+    managerId: formData.managerId || '',
+    forceManager: formData.forceManager,
+    isManager: formData.isManager,
+    
+    // Adresse
+    streetNumber: formData.streetNumber,
+    streetName: formData.streetName,
+    city: formData.city,
+    zipCode: formData.zipCode,
+    region: formData.region,
+    country: formData.country,
+    
+    // Photo handling
+    photo: formData.photo,
+    photoURL: formData.photo, // Ensure photoURL is set
+    photoMeta: formData.photoMeta
+  };
+
+  // Add work address if provided
+  if (formData.workAddress) {
+    employee.workAddress = formData.workAddress;
+  }
+
+  // Add updatedAt timestamp
+  employee.updatedAt = new Date().toISOString();
+  
+  return employee;
+};
