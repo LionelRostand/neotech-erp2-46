@@ -4,7 +4,7 @@ import EmployeesDashboard from '../EmployeesDashboard';
 import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesBadges from '../employees/EmployeesBadges';
 import EmployeesProfiles from '../employees/EmployeesProfiles';
-import EmployeesHierarchy from '../employees/EmployeesHierarchy';
+import EmployeesHierarchy from '../employees/hierarchy/EmployeesHierarchy';
 import EmployeesLeaves from '../leaves/EmployeesLeaves';
 import SalarySlips from '../salaries/SalarySlips';
 import EmployeesTimesheet from '../EmployeesTimesheet';
