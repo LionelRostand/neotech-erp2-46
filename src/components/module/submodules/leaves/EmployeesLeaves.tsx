@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
-import { StatusBadge } from "@/components/module/submodules/StatusBadge";
+import StatusBadge from "@/components/module/submodules/StatusBadge";
 import { useLeaveData } from '@/hooks/useLeaveData';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CreateLeaveDialog from './CreateLeaveDialog';
@@ -69,7 +68,7 @@ const EmployeesLeaves: React.FC = () => {
         if (status === "En attente" || status === "pending") variant = "warning";
         if (status === "Refusé" || status === "rejected") variant = "destructive";
         
-        return <StatusBadge variant={variant}>{status}</StatusBadge>;
+        return <StatusBadge status={status} variant={variant}>{status}</StatusBadge>;
       }
     }
   ];
