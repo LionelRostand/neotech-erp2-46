@@ -4,12 +4,13 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DocumentFile } from '../../../documents/types/document-types';
 import { DocumentsList } from '../../../documents/components/DocumentsList';
+import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsLayoutProps {
-  documents: DocumentFile[];
+  documents: (DocumentFile | HrDocument)[];
   loading: boolean;
   view: 'grid' | 'list';
-  onSelect: (document: DocumentFile) => void;
+  onSelect: (document: DocumentFile | HrDocument) => void;
   onDelete: (documentId: string) => void;
   selectedDocumentId?: string;
 }

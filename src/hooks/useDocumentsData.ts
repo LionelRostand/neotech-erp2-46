@@ -20,13 +20,21 @@ export interface HrDocument {
   name?: string;     // Added to support alternative title
   createdAt?: string; // Added to support alternative date
   date?: string;      // Added to support alternative date
+  // Contract specific fields
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  position?: string;
+  salary?: number;
+  contractId?: string;
+  contractType?: string;
 }
 
 /**
  * Hook pour accéder aux documents RH directement depuis Firebase
  */
 export const useDocumentsData = () => {
-  const { hrDocuments, employees, isLoading, error } = useHrModuleData();
+  const { hrDocuments, employees, contracts, isLoading, error } = useHrModuleData();
   
   // Enrichir les documents avec les noms des employés si nécessaire
   const formattedDocuments = useMemo(() => {
@@ -118,8 +126,15 @@ export const useDocumentsData = () => {
         return acc;
       }, {} as Record<string, number>);
       
+      // Add contract type if not exists
+      if (contracts && contracts.length > 0 && !typeCount['Contrat']) {
+        typeCount['Contrat'] = contracts.length;
+      } else if (contracts && contracts.length > 0) {
+        typeCount['Contrat'] += contracts.length;
+      }
+      
       return {
-        total: formattedDocuments.length,
+        total: formattedDocuments.length + (contracts?.length || 0),
         byType: typeCount
       };
     } catch (error) {
@@ -129,7 +144,7 @@ export const useDocumentsData = () => {
         byType: {}
       };
     }
-  }, [formattedDocuments]);
+  }, [formattedDocuments, contracts]);
   
   return {
     documents: formattedDocuments,

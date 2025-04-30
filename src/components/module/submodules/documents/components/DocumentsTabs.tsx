@@ -5,9 +5,10 @@ import { DocumentsTable } from './DocumentsTable';
 import { Badge } from '@/components/ui/badge';
 import { HrDocument } from '@/hooks/useDocumentsData';
 import { Button } from '@/components/ui/button';
-import { XCircle, FileText, FileUser } from 'lucide-react';
+import { XCircle, FileText, FileUser, FileArchive } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useContractsData } from '@/hooks/useContractsData';
 
 interface DocumentsTabsProps {
   documents: HrDocument[];
@@ -26,6 +27,28 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
   selectedDate,
   onClearDateFilter
 }) => {
+  // Get contracts data
+  const { contracts, isLoading: contractsLoading } = useContractsData();
+
+  // Convert contracts to document format for display
+  const contractDocuments = contracts.map(contract => ({
+    id: `contract-${contract.id}`,
+    title: `Contrat - ${contract.type}`,
+    type: 'Contrat',
+    uploadDate: contract.startDate,
+    employeeId: contract.employeeId,
+    employeeName: contract.employeeName || '',
+    employeePhoto: contract.employeePhoto,
+    department: contract.department,
+    description: `${contract.type} - ${contract.position}`,
+    // Additional contract fields
+    status: contract.status,
+    startDate: contract.startDate,
+    endDate: contract.endDate,
+    position: contract.position,
+    salary: contract.salary
+  }));
+
   // Safe format function
   const safeFormatDate = (date: Date | null) => {
     if (!date) return '';
@@ -49,19 +72,23 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
     doc.description?.toLowerCase().includes('cv')
   );
   
-  const contractDocuments = documents.filter(doc => 
-    doc.type?.toLowerCase() === 'contrat' || 
-    doc.type?.toLowerCase() === 'contract' || 
-    doc.title?.toLowerCase().includes('contrat') || 
-    doc.description?.toLowerCase().includes('contrat')
-  );
+  // Use both contract documents from HR documents and from contracts data
+  const allContractDocuments = [
+    ...documents.filter(doc => 
+      doc.type?.toLowerCase() === 'contrat' || 
+      doc.type?.toLowerCase() === 'contract' || 
+      doc.title?.toLowerCase().includes('contrat') || 
+      doc.description?.toLowerCase().includes('contrat')
+    ),
+    ...contractDocuments
+  ];
 
   return (
     <Tabs defaultValue="all">
       <div className="flex justify-between items-center mb-4">
         <TabsList>
           <TabsTrigger value="all">
-            Tous <Badge variant="secondary" className="ml-2">{documents.length}</Badge>
+            Tous <Badge variant="secondary" className="ml-2">{documents.length + contractDocuments.length}</Badge>
           </TabsTrigger>
           
           <TabsTrigger value="cv">
@@ -71,11 +98,13 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
           
           <TabsTrigger value="contrats">
             <FileText className="h-4 w-4 mr-2" />
-            Contrats <Badge variant="secondary" className="ml-2">{contractDocuments.length}</Badge>
+            Contrats <Badge variant="secondary" className="ml-2">{allContractDocuments.length}</Badge>
           </TabsTrigger>
           
           {documentTypes.map(type => (
-            type.toLowerCase() !== 'cv' && type.toLowerCase() !== 'contrat' && (
+            type.toLowerCase() !== 'cv' && 
+            type.toLowerCase() !== 'contrat' && 
+            type.toLowerCase() !== 'contract' && (
               <TabsTrigger key={type} value={type}>
                 {type} <Badge variant="secondary" className="ml-2">{documentsByType[type]?.length || 0}</Badge>
               </TabsTrigger>
@@ -96,7 +125,10 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
       </div>
       
       <TabsContent value="all" className="mt-0">
-        <DocumentsTable documents={documents} isLoading={isLoading} />
+        <DocumentsTable 
+          documents={[...documents, ...contractDocuments]} 
+          isLoading={isLoading || contractsLoading} 
+        />
       </TabsContent>
       
       <TabsContent value="cv" className="mt-0">
@@ -104,11 +136,16 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="contrats" className="mt-0">
-        <DocumentsTable documents={contractDocuments} isLoading={isLoading} />
+        <DocumentsTable 
+          documents={allContractDocuments} 
+          isLoading={isLoading || contractsLoading} 
+        />
       </TabsContent>
       
       {documentTypes.map(type => (
-        type.toLowerCase() !== 'cv' && type.toLowerCase() !== 'contrat' && (
+        type.toLowerCase() !== 'cv' && 
+        type.toLowerCase() !== 'contrat' && 
+        type.toLowerCase() !== 'contract' && (
           <TabsContent key={type} value={type} className="mt-0">
             <DocumentsTable 
               documents={documentsByType[type] || []} 
