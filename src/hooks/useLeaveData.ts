@@ -27,31 +27,33 @@ export const useLeaveData = () => {
 
   // Format leaves data with employee names
   useEffect(() => {
-    if (!rawLeaveRequests || !Array.isArray(rawLeaveRequests)) {
+    // Ensure we have valid arrays to work with
+    const safeLeaveRequests = Array.isArray(rawLeaveRequests) ? rawLeaveRequests : [];
+    const safeEmployees = Array.isArray(employees) ? employees : [];
+    
+    if (safeLeaveRequests.length === 0) {
       console.log('useLeaveData: No leave requests data available');
       setLeaves([]);
       return;
     }
 
-    if (!employees || !Array.isArray(employees)) {
-      console.log('useLeaveData: No employees data available');
-      setLeaves(rawLeaveRequests.map(leave => ({ ...leave })) as Leave[]);
-      return;
-    }
-
     // Process and enrich leave data
-    const formattedLeaves = rawLeaveRequests
+    const formattedLeaves = safeLeaveRequests
       .filter(leave => leave !== null && leave !== undefined)
       .map(leave => {
-        const employee = employees.find(emp => emp && emp.id === leave.employeeId);
+        // Safety check for leave object
+        if (!leave) return null;
+        
+        const employee = safeEmployees.find(emp => emp && emp.id === leave.employeeId);
         
         // Format dates to be more readable
         const formatDate = (dateString: string) => {
           try {
+            if (!dateString) return '';
             return new Date(dateString).toLocaleDateString('fr-FR');
           } catch (e) {
             console.error('Invalid date format:', dateString);
-            return dateString;
+            return dateString || '';
           }
         };
 
@@ -63,12 +65,13 @@ export const useLeaveData = () => {
           startDate: formatDate(leave.startDate),
           endDate: formatDate(leave.endDate),
         };
-      });
+      })
+      .filter(Boolean); // Filter out any null values
 
     setLeaves(formattedLeaves as Leave[]);
   }, [rawLeaveRequests, employees, refreshKey]);
 
-  // Statistics about leaves
+  // Statistics about leaves with safe array handling
   const stats = {
     total: Array.isArray(leaves) ? leaves.length : 0,
     approved: Array.isArray(leaves) 
@@ -88,7 +91,7 @@ export const useLeaveData = () => {
   }, []);
 
   return {
-    leaves,
+    leaves: leaves || [],
     stats,
     isLoading,
     error,

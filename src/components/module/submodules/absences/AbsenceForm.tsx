@@ -1,175 +1,220 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/date-picker';
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AbsenceFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  isLoading?: boolean;
-  defaultValues?: {
-    employeeId?: string;
-    type?: string;
-    startDate?: Date;
-    endDate?: Date;
-    reason?: string;
-    notes?: string;
-  };
+  initialValues?: any;
 }
 
-const AbsenceForm: React.FC<AbsenceFormProps> = ({ 
-  onSubmit, 
+const AbsenceForm: React.FC<AbsenceFormProps> = ({
+  onSubmit,
   onCancel,
-  isLoading = false,
-  defaultValues = {}
+  initialValues = {}
 }) => {
-  // États pour stocker les valeurs du formulaire
-  const [employeeId, setEmployeeId] = useState(defaultValues.employeeId || '');
-  const [employeeName, setEmployeeName] = useState('');
-  const [type, setType] = useState(defaultValues.type || '');
-  const [startDate, setStartDate] = useState<Date | undefined>(defaultValues.startDate || new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(defaultValues.endDate || new Date());
-  const [reason, setReason] = useState(defaultValues.reason || '');
-  const [notes, setNotes] = useState(defaultValues.notes || '');
-  
-  // Récupérer la liste des employés
-  const { employees, isLoading: employeesLoading } = useEmployeeData();
+  const { employees = [], isLoading } = useEmployeeData();
+  const [formData, setFormData] = useState({
+    employeeId: initialValues.employeeId || "",
+    employeeName: initialValues.employeeName || "",
+    type: initialValues.type || "Congés payés",
+    startDate: initialValues.startDate ? new Date(initialValues.startDate) : undefined,
+    endDate: initialValues.endDate ? new Date(initialValues.endDate) : undefined,
+    reason: initialValues.reason || "",
+    notes: initialValues.notes || ""
+  });
 
-  // Mettre à jour le nom de l'employé lorsque l'ID change
+  // Update employee name when employee ID changes
   useEffect(() => {
-    if (employeeId && employees && Array.isArray(employees)) {
-      const selectedEmployee = employees.find(emp => emp && emp.id === employeeId);
-      if (selectedEmployee) {
-        setEmployeeName(`${selectedEmployee.firstName || ''} ${selectedEmployee.lastName || ''}`);
+    if (formData.employeeId && Array.isArray(employees)) {
+      const employee = employees.find(emp => emp?.id === formData.employeeId);
+      if (employee) {
+        setFormData(prev => ({
+          ...prev,
+          employeeName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
+        }));
       }
     }
-  }, [employeeId, employees]);
+  }, [formData.employeeId, employees]);
 
-  // Gestionnaire de soumission du formulaire
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation minimale
-    if (!employeeId || !type || !startDate || !endDate) {
+    // Validate fields
+    if (!formData.employeeId) {
+      alert("Veuillez sélectionner un employé");
       return;
     }
     
-    // Préparation des données à soumettre
-    const formData = {
-      employeeId,
-      employeeName,
-      type,
-      startDate,
-      endDate,
-      reason,
-      notes
-    };
+    if (!formData.startDate || !formData.endDate) {
+      alert("Veuillez sélectionner des dates de début et de fin");
+      return;
+    }
     
+    if (formData.endDate < formData.startDate) {
+      alert("La date de fin ne peut pas être antérieure à la date de début");
+      return;
+    }
+    
+    // Submit form data
     onSubmit(formData);
   };
 
+  // Ensure employees is an array
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Sélection de l'employé */}
-      <div className="space-y-2">
-        <Label htmlFor="employee">Employé</Label>
-        <Select value={employeeId} onValueChange={setEmployeeId}>
-          <SelectTrigger id="employee">
-            <SelectValue placeholder="Sélectionner un employé" />
-          </SelectTrigger>
-          <SelectContent>
-            {employeesLoading ? (
-              <SelectItem value="loading" disabled>Chargement...</SelectItem>
-            ) : (
-              employees && Array.isArray(employees) ? employees.map(emp => emp && (
-                <SelectItem key={emp.id} value={emp.id}>
-                  {`${emp.firstName || ''} ${emp.lastName || ''}`}
-                </SelectItem>
-              )) : <SelectItem value="no-data" disabled>Aucun employé trouvé</SelectItem>
-            )}
-          </SelectContent>
-        </Select>
-      </div>
+      <FormField
+        name="employeeId"
+        render={() => (
+          <FormItem>
+            <FormLabel>Employé</FormLabel>
+            <Select
+              value={formData.employeeId}
+              onValueChange={(value) => handleChange("employeeId", value)}
+              disabled={isLoading}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un employé" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {isLoading ? (
+                  <SelectItem value="loading" disabled>
+                    Chargement des employés...
+                  </SelectItem>
+                ) : safeEmployees.length > 0 ? (
+                  safeEmployees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {`${employee.firstName || ''} ${employee.lastName || ''}`.trim()}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    Aucun employé disponible
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </FormItem>
+        )}
+      />
 
-      {/* Type de congé */}
-      <div className="space-y-2">
-        <Label htmlFor="type">Type de congé</Label>
-        <Select value={type} onValueChange={setType}>
-          <SelectTrigger id="type">
-            <SelectValue placeholder="Sélectionner un type de congé" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="paid">Congés payés</SelectItem>
-            <SelectItem value="rtt">RTT</SelectItem>
-            <SelectItem value="rtte">RTTe</SelectItem>
-            <SelectItem value="other">Autre</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <FormField
+        name="type"
+        render={() => (
+          <FormItem>
+            <FormLabel>Type de congé</FormLabel>
+            <Select
+              value={formData.type}
+              onValueChange={(value) => handleChange("type", value)}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Type de congé" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="Congés payés">Congés payés</SelectItem>
+                <SelectItem value="RTT">RTT</SelectItem>
+                <SelectItem value="Congé sans solde">Congé sans solde</SelectItem>
+                <SelectItem value="Congé maternité">Congé maternité</SelectItem>
+                <SelectItem value="Congé paternité">Congé paternité</SelectItem>
+                <SelectItem value="Congé maladie">Congé maladie</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormItem>
+        )}
+      />
 
-      {/* Dates de début et fin avec DatePicker */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startDate">Date de début</Label>
-          <DatePicker
-            date={startDate}
-            setDate={setStartDate}
-            placeholder="Début du congé"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="endDate">Date de fin</Label>
-          <DatePicker
-            date={endDate}
-            setDate={setEndDate}
-            placeholder="Fin du congé"
-          />
-        </div>
-      </div>
+        <FormField
+          name="startDate"
+          render={() => (
+            <FormItem>
+              <FormLabel>Date de début</FormLabel>
+              <FormControl>
+                <DatePicker
+                  date={formData.startDate}
+                  setDate={(date) => handleChange("startDate", date)}
+                  placeholder="Sélectionner la date de début"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-      {/* Motif (optionnel) */}
-      <div className="space-y-2">
-        <Label htmlFor="reason">Motif (optionnel)</Label>
-        <Textarea 
-          id="reason" 
-          value={reason} 
-          onChange={(e) => setReason(e.target.value)} 
-          placeholder="Précisez le motif de votre demande de congé" 
-          className="resize-none h-24"
+        <FormField
+          name="endDate"
+          render={() => (
+            <FormItem>
+              <FormLabel>Date de fin</FormLabel>
+              <FormControl>
+                <DatePicker
+                  date={formData.endDate}
+                  setDate={(date) => handleChange("endDate", date)}
+                  placeholder="Sélectionner la date de fin"
+                  fromMonth={formData.startDate}
+                />
+              </FormControl>
+            </FormItem>
+          )}
         />
       </div>
 
-      {/* Notes internes (optionnel) */}
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes (optionnel)</Label>
-        <Textarea 
-          id="notes" 
-          value={notes} 
-          onChange={(e) => setNotes(e.target.value)} 
-          placeholder="Notes internes" 
-          className="resize-none h-16"
-        />
-      </div>
+      <FormField
+        name="reason"
+        render={() => (
+          <FormItem>
+            <FormLabel>Motif</FormLabel>
+            <FormControl>
+              <Textarea
+                value={formData.reason}
+                onChange={(e) => handleChange("reason", e.target.value)}
+                placeholder="Motif de l'absence"
+                className="min-h-[100px]"
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
 
-      {/* Boutons d'action */}
-      <div className="flex justify-end gap-3 pt-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel}
-          disabled={isLoading}
-        >
+      <FormField
+        name="notes"
+        render={() => (
+          <FormItem>
+            <FormLabel>Notes complémentaires</FormLabel>
+            <FormControl>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="Informations complémentaires"
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
           Annuler
         </Button>
-        <Button 
-          type="submit" 
-          disabled={isLoading}
-        >
-          Soumettre la demande
+        <Button type="submit">
+          Enregistrer
         </Button>
       </div>
     </form>

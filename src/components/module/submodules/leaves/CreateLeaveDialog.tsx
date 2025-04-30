@@ -3,7 +3,6 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AbsenceForm from '../absences/AbsenceForm';
 import { toast } from 'sonner';
-import { useLeaveData } from '@/hooks/useLeaveData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -44,27 +43,17 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({
         ) + 1 // +1 car inclusif
       };
 
-      // Vérifier que COLLECTIONS.HR.LEAVES existe et est une chaîne non vide
-      const leavesCollection = COLLECTIONS.HR.LEAVES;
-      
-      if (!leavesCollection) {
-        console.error("La collection HR.LEAVES n'est pas définie");
-        toast.error("Erreur de configuration: collection non définie");
-        return;
-      }
+      // Safety check for collection path
+      const leavesCollection = COLLECTIONS.HR.LEAVES || 'hr_leaves';
       
       // Créer la demande de congé directement avec Firebase
-      try {
-        const collectionRef = collection(db, leavesCollection);
-        await addDoc(collectionRef, leaveData);
-        
-        toast.success("Demande de congé créée avec succès");
-        onOpenChange(false);
-        if (onSuccess) onSuccess();
-      } catch (error) {
-        console.error("Error creating leave request:", error);
-        toast.error("Erreur lors de la création de la demande de congé");
-      }
+      const collectionRef = collection(db, leavesCollection);
+      await addDoc(collectionRef, leaveData);
+      
+      toast.success("Demande de congé créée avec succès");
+      onOpenChange(false);
+      if (onSuccess) onSuccess();
+      
     } catch (error) {
       console.error("Erreur lors de la création de la demande de congé:", error);
       toast.error("Erreur lors de la création de la demande de congé");

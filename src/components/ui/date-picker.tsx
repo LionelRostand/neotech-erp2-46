@@ -30,6 +30,18 @@ export function DatePicker({
   fromMonth,
   toMonth
 }: DatePickerProps) {
+  // Safely format the date, handling potential undefined or invalid dates
+  const getFormattedDate = () => {
+    try {
+      return date ? format(date, "dd/MM/yyyy", { locale: fr }) : null;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return null;
+    }
+  };
+  
+  const formattedDate = getFormattedDate();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -42,7 +54,7 @@ export function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>{placeholder}</span>}
+          {formattedDate ? formattedDate : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

@@ -9,12 +9,12 @@ import { Department } from '@/components/module/submodules/departments/types';
  * Avec optimisation pour réduire les requêtes Firebase
  */
 export const useEmployeeData = () => {
-  const { employees: rawEmployees, departments: hrDepartments, isLoading, error } = useHrModuleData();
+  const { employees: rawEmployees = [], departments: hrDepartments = [], isLoading = true, error } = useHrModuleData();
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
     // Make sure rawEmployees is a valid array
-    if (!rawEmployees || !Array.isArray(rawEmployees)) {
+    if (!Array.isArray(rawEmployees)) {
       console.log('useEmployeeData: rawEmployees is not a valid array');
       return [];
     }
@@ -22,18 +22,21 @@ export const useEmployeeData = () => {
     return rawEmployees
       .filter(employee => employee != null) // Filter out null/undefined employees
       .map(employee => {
+        if (!employee) return null; // Extra safety check
+        
         return {
           ...employee,
           // Garantir que chaque employé a une photo (même placeholder)
           photoURL: employee.photoURL || employee.photo || '',
         };
-      });
+      })
+      .filter(Boolean); // Filter out any nulls that might have resulted from the mapping
   }, [rawEmployees]);
   
   // Formater les départements pour les enrichir avec les données des managers
   const formattedDepartments = useMemo(() => {
     // Make sure hrDepartments is a valid array
-    if (!hrDepartments || !Array.isArray(hrDepartments)) {
+    if (!Array.isArray(hrDepartments)) {
       console.log('useEmployeeData: hrDepartments is not a valid array');
       return [];
     }
