@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { Employee } from '@/types/employee';
@@ -11,6 +12,7 @@ import CreateEmployeeDialog from './CreateEmployeeDialog';
 import EmployeeViewDialog from './dialogs/EmployeeViewDialog';
 import EmployeeEditDialog from './dialogs/EmployeeEditDialog';
 import EmployeeDeleteDialog from './EmployeeDeleteDialog';
+import EmployeesStats from './EmployeesStats';
 import { toast } from 'sonner';
 import { PlusCircle, Search, X } from 'lucide-react';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
