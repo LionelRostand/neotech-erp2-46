@@ -24,11 +24,14 @@ const ContainerStatusSelect: React.FC<ContainerStatusSelectProps> = ({ value, on
     { value: "Livré", label: "Livré" }
   ];
 
+  // Ensure value is never empty string
+  const safeValue = value || "En chargement";
+
   return (
     <div className="space-y-2">
       <Label htmlFor="status">Statut</Label>
       <Select 
-        value={value} 
+        value={safeValue}
         onValueChange={onChange}
       >
         <SelectTrigger>

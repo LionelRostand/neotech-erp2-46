@@ -40,7 +40,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
       <div className="space-y-2">
         <Label htmlFor="sector">Secteur d'activité</Label>
         <Select 
-          value={formData.sector} 
+          value={formData.sector || "default-sector"} 
           onValueChange={(value) => handleSelectChange('sector', value)}
         >
           <SelectTrigger>
@@ -60,7 +60,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
       <div className="space-y-2">
         <Label htmlFor="revenue">Chiffre d'affaires</Label>
         <Select 
-          value={formData.revenue} 
+          value={formData.revenue || "<1M"} 
           onValueChange={(value) => handleSelectChange('revenue', value)}
         >
           <SelectTrigger>
@@ -80,7 +80,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
       <div className="space-y-2">
         <Label htmlFor="status">Statut</Label>
         <Select 
-          value={formData.status}
+          value={formData.status || "prospect"}
           onValueChange={(value) => handleSelectChange('status', value)}
         >
           <SelectTrigger>

@@ -55,7 +55,7 @@ const AddAppointmentForm = ({ onSubmit, onCancel, patients, doctors }: AddAppoin
                 </FormControl>
                 <SelectContent>
                   {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
+                    <SelectItem key={patient.id} value={patient.id || `patient-${Math.random()}`}>
                       {patient.lastName} {patient.firstName}
                     </SelectItem>
                   ))}
@@ -80,7 +80,7 @@ const AddAppointmentForm = ({ onSubmit, onCancel, patients, doctors }: AddAppoin
                 </FormControl>
                 <SelectContent>
                   {doctors.map((doctor) => (
-                    <SelectItem key={doctor.id} value={doctor.id}>
+                    <SelectItem key={doctor.id} value={doctor.id || `doctor-${Math.random()}`}>
                       Dr. {doctor.lastName} {doctor.firstName}
                     </SelectItem>
                   ))}

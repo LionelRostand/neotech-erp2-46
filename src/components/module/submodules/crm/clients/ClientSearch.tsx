@@ -41,7 +41,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
       
       <div className="w-full md:w-64">
         <Label htmlFor="sector-filter" className="sr-only">Filtrer par secteur</Label>
-        <Select value={sectorFilter} onValueChange={onSectorFilterChange}>
+        <Select value={sectorFilter || "all"} onValueChange={onSectorFilterChange}>
           <SelectTrigger id="sector-filter" className="h-9">
             <SelectValue placeholder="Filtrer par secteur" />
           </SelectTrigger>
