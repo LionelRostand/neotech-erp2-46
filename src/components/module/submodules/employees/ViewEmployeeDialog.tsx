@@ -7,14 +7,110 @@ import {
 } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InformationsTab } from './tabs/InformationsTab';
-import { DocumentsTab } from './tabs/DocumentsTab';
-import { PresencesTab } from './tabs/PresencesTab';
-import { CongesTab } from './tabs/CongesTab';
-import { CompetencesTab } from './tabs/CompetencesTab';
-import { EvaluationsTab } from './tabs/EvaluationsTab';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { getStatusDisplay } from './utils/employeeUtils';
+
+// Import placeholder components for the tabs
+const InformationsTab = ({ employee }: { employee: Employee }) => (
+  <div>
+    <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><span className="font-medium">Nom:</span> {employee.lastName}</div>
+      <div><span className="font-medium">Prénom:</span> {employee.firstName}</div>
+      <div><span className="font-medium">Email:</span> {employee.email}</div>
+      <div><span className="font-medium">Téléphone:</span> {employee.phone || 'Non spécifié'}</div>
+      <div><span className="font-medium">Date de naissance:</span> {employee.birthDate || 'Non spécifiée'}</div>
+    </div>
+    
+    <h3 className="text-lg font-medium mt-6 mb-4">Informations professionnelles</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><span className="font-medium">Poste:</span> {employee.position || 'Non spécifié'}</div>
+      <div><span className="font-medium">Email professionnel:</span> {employee.professionalEmail || 'Non spécifié'}</div>
+      <div><span className="font-medium">Département:</span> {employee.departmentName || employee.department || 'Non spécifié'}</div>
+      <div><span className="font-medium">Date d'embauche:</span> {employee.hireDate || 'Non spécifiée'}</div>
+      <div><span className="font-medium">Type de contrat:</span> {employee.contract?.toUpperCase() || 'Non spécifié'}</div>
+    </div>
+  </div>
+);
+
+const DocumentsTab = ({ employee }: { employee: Employee }) => (
+  <div>
+    <h3 className="text-lg font-medium mb-4">Documents</h3>
+    {employee.documents && employee.documents.length > 0 ? (
+      <ul className="space-y-2">
+        {employee.documents.map((doc, index) => (
+          <li key={index} className="p-3 border rounded-md">
+            {doc.title} - {doc.type}
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-gray-500">Aucun document disponible</p>
+    )}
+  </div>
+);
+
+const PresencesTab = ({ employee }: { employee: Employee }) => (
+  <div>
+    <h3 className="text-lg font-medium mb-4">Registre des présences</h3>
+    <p className="text-gray-500">Aucune donnée de présence disponible</p>
+  </div>
+);
+
+const CongesTab = ({ employee }: { employee: Employee }) => (
+  <div>
+    <h3 className="text-lg font-medium mb-4">Congés</h3>
+    <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+        <div className="text-xl font-bold text-green-700">12 jours</div>
+        <div className="text-sm text-green-600">Congés payés disponibles</div>
+      </div>
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="text-xl font-bold text-blue-700">3 jours</div>
+        <div className="text-sm text-blue-600">RTT disponibles</div>
+      </div>
+    </div>
+    <h4 className="font-medium mb-2">Historique des congés</h4>
+    <p className="text-gray-500">Aucun congé pris cette année</p>
+  </div>
+);
+
+const CompetencesTab = ({ employee }: { employee: Employee }) => (
+  <div>
+    <h3 className="text-lg font-medium mb-4">Compétences</h3>
+    {employee.skills && employee.skills.length > 0 ? (
+      <div className="flex flex-wrap gap-2">
+        {employee.skills.map((skill, index) => (
+          <Badge key={index} variant="outline" className="bg-primary/10 text-primary">
+            {typeof skill === 'string' ? skill : skill.name}
+          </Badge>
+        ))}
+      </div>
+    ) : (
+      <p className="text-gray-500">Aucune compétence enregistrée</p>
+    )}
+  </div>
+);
+
+const EvaluationsTab = ({ employee }: { employee: Employee }) => (
+  <div>
+    <h3 className="text-lg font-medium mb-4">Évaluations</h3>
+    {employee.evaluations && employee.evaluations.length > 0 ? (
+      <ul className="space-y-4">
+        {employee.evaluations.map((eval, index) => (
+          <li key={index} className="p-4 border rounded-md">
+            <div className="font-medium">{eval.type} - {eval.date}</div>
+            <div>Score: {eval.score}/5</div>
+            <div className="text-sm text-gray-600 mt-2">{eval.comments}</div>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-gray-500">Aucune évaluation disponible</p>
+    )}
+  </div>
+);
 
 interface ViewEmployeeDialogProps {
   open: boolean;
@@ -28,43 +124,6 @@ const ViewEmployeeDialog: React.FC<ViewEmployeeDialogProps> = ({
   employee
 }) => {
   const [activeTab, setActiveTab] = useState("informations");
-  
-  // Formatter le statut pour affichage
-  const getStatusDisplay = (status: string) => {
-    switch(status) {
-      case 'active':
-      case 'Actif':
-        return 'Actif';
-      case 'inactive':
-      case 'Inactif':
-        return 'Inactif';
-      case 'onLeave':
-      case 'En congé':
-        return 'En congé';
-      case 'Suspendu':
-        return 'Suspendu';
-      default:
-        return status;
-    }
-  };
-  
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'active':
-      case 'Actif':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'inactive':
-      case 'Inactif':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'onLeave':
-      case 'En congé':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'Suspendu':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -87,10 +146,10 @@ const ViewEmployeeDialog: React.FC<ViewEmployeeDialogProps> = ({
           <div className="flex-1">
             <h2 className="text-2xl font-bold mb-1">{employee.firstName} {employee.lastName}</h2>
             <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-              <span>{employee.position}</span>
-              {employee.department && <span>• {employee.department}</span>}
+              <span>{employee.position || 'Poste non spécifié'}</span>
+              {employee.department && <span>• {employee.departmentName || employee.department}</span>}
               <div className="ml-auto">
-                <Badge variant="outline" className={`${getStatusColor(employee.status)}`}>
+                <Badge variant="outline" className={`${employee.status === 'active' || employee.status === 'Actif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                   {getStatusDisplay(employee.status)}
                 </Badge>
               </div>

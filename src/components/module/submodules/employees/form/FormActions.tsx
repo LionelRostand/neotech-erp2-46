@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import { Loader2 } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn } from "react-hook-form";
 import { EmployeeFormValues } from './employeeFormSchema';
 import {
   Select,
@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';

@@ -8,6 +8,7 @@ import { formValuesToEmployee, employeeToFormValues } from './utils/formAdapter'
 import PersonalInfoFields from './form/PersonalInfoFields';
 import CompanyDepartmentFields from './form/CompanyDepartmentFields';
 import FormActions from './form/FormActions';
+import ManagerCheckbox from './form/ManagerCheckbox';
 
 interface EmployeeFormProps {
   onSubmit: (employee: Partial<Employee>) => void;
@@ -42,6 +43,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
         <PersonalInfoFields />
         <CompanyDepartmentFields />
+        <ManagerCheckbox form={methods} />
         
         <FormActions 
           onCancel={onCancel}

@@ -65,7 +65,7 @@ const CompanyDepartmentFields = () => {
         <div>
           <Label htmlFor="contract">Type de contrat</Label>
           <Select 
-            defaultValue={watch('contract')}
+            defaultValue={watch('contract') || 'cdi'}
             onValueChange={(value) => setValue('contract', value)}
           >
             <SelectTrigger>
@@ -95,17 +95,26 @@ const CompanyDepartmentFields = () => {
         <div>
           <Label htmlFor="department">Département</Label>
           <Select 
-            value={watchDepartment}
-            onValueChange={(value) => setValue('department', value)}
+            value={watchDepartment || 'no-department'}
+            onValueChange={(value) => {
+              if (value === 'no-department') {
+                setValue('department', '');
+              } else {
+                setValue('department', value);
+              }
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un département" />
             </SelectTrigger>
             <SelectContent>
-              {departments.map((dept) => (
-                <SelectItem key={dept.id} value={dept.id}>
-                  {dept.name}
-                </SelectItem>
+              <SelectItem value="no-department">Aucun département</SelectItem>
+              {departments && departments.length > 0 && departments.map((dept) => (
+                dept && dept.id ? (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name || `Département ${dept.id.substring(0, 5)}`}
+                  </SelectItem>
+                ) : null
               ))}
             </SelectContent>
           </Select>
@@ -115,13 +124,20 @@ const CompanyDepartmentFields = () => {
         <div>
           <Label htmlFor="company">Entreprise</Label>
           <Select 
-            value={watchCompany}
-            onValueChange={(value) => setValue('company', value)}
+            value={watchCompany || 'no-company'}
+            onValueChange={(value) => {
+              if (value === 'no-company') {
+                setValue('company', '');
+              } else {
+                setValue('company', value);
+              }
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner une entreprise" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="no-company">Aucune entreprise</SelectItem>
               {companies.map((company) => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
@@ -135,18 +151,26 @@ const CompanyDepartmentFields = () => {
         <div className="md:col-span-2">
           <Label htmlFor="managerId">Responsable</Label>
           <Select 
-            value={watchManagerId}
-            onValueChange={(value) => setValue('managerId', value)}
+            value={watchManagerId || 'no-manager'}
+            onValueChange={(value) => {
+              if (value === 'no-manager') {
+                setValue('managerId', '');
+              } else {
+                setValue('managerId', value);
+              }
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un responsable" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Aucun responsable</SelectItem>
+              <SelectItem value="no-manager">Aucun responsable</SelectItem>
               {potentialManagers.map((manager) => (
-                <SelectItem key={manager.id} value={manager.id}>
-                  {manager.name}
-                </SelectItem>
+                manager && manager.id ? (
+                  <SelectItem key={manager.id} value={manager.id}>
+                    {manager.name}
+                  </SelectItem>
+                ) : null
               ))}
             </SelectContent>
           </Select>

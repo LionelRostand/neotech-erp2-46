@@ -1,48 +1,46 @@
 
 import { z } from 'zod';
 
-const photoMetaSchema = z.object({
-  fileName: z.string(),
-  fileType: z.string(),
-  fileSize: z.number(),
-  updatedAt: z.string(),
-  data: z.string().optional()
-}).required();
-
-const addressSchema = z.object({
-  street: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().optional()
-});
-
+// Définition du schéma de validation pour le formulaire employé
 export const employeeFormSchema = z.object({
-  firstName: z.string().min(1, { message: 'Le prénom est requis' }),
-  lastName: z.string().min(1, { message: 'Le nom est requis' }),
-  email: z.string().email({ message: 'Email personnel invalide' }),
-  professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
+  // Informations personnelles
+  firstName: z.string().min(1, { message: "Le prénom est requis" }),
+  lastName: z.string().min(1, { message: "Le nom est requis" }),
+  birthDate: z.string().optional(),
+  email: z.string().email({ message: "Email personnel invalide" }).min(1, { message: "L'email personnel est requis" }),
   phone: z.string().optional(),
-  // Adresse personnelle
+  
+  // Adresse
   streetNumber: z.string().optional(),
   streetName: z.string().optional(),
   city: z.string().optional(),
   zipCode: z.string().optional(),
   region: z.string().optional(),
   country: z.string().optional(),
-  // Adresse professionnelle
-  workAddress: addressSchema.optional(),
-  company: z.string().min(1, { message: 'L\'entreprise est requise' }),
-  department: z.string().min(1, { message: 'Le département est requis' }),
+  
+  // Informations professionnelles
   position: z.string().optional(),
-  contract: z.string(),
-  hireDate: z.string().optional(),
-  birthDate: z.string().optional(),
+  professionalEmail: z.string().email({ message: "Email professionnel invalide" }).optional(),
+  department: z.string().optional(),
+  company: z.string().optional(),
   managerId: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'onLeave', 'Actif', 'En congé', 'Suspendu', 'Inactif']),
-  photo: z.string().optional(),
-  photoMeta: photoMetaSchema.optional(),
-  forceManager: z.boolean().default(false),
+  
+  // Contrat et statut
+  contract: z.string().default('cdi'),
+  hireDate: z.string().optional(),
+  status: z.enum(['active', 'inactive', 'onLeave', 'Actif', 'En congé', 'Suspendu', 'Inactif']).default('active'),
+  
+  // Permissions et rôles
   isManager: z.boolean().default(false),
+  forceManager: z.boolean().default(false),
+  
+  // Photo
+  photo: z.string().optional(),
+  photoMeta: z.any().optional(),
+  
+  // Adresse professionnelle
+  workAddress: z.any().optional(),
 });
 
+// Type dérivé du schéma
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

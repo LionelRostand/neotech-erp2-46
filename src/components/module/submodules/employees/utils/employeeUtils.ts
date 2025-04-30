@@ -2,104 +2,89 @@
 import { Employee } from '@/types/employee';
 
 /**
- * Vérifie si un poste doit être considéré comme un poste de manager
+ * Vérifie si un employé est un manager basé sur son poste ou le flag isManager
  */
-export const isEmployeeManager = (position: string): boolean => {
-  const managerTitles = [
-    'manager',
-    'directeur',
-    'directrice',
-    'responsable',
+export const isEmployeeManager = (position?: string): boolean => {
+  if (!position) return false;
+  
+  const managerKeywords = [
+    'manager', 
+    'directeur', 
+    'directrice', 
+    'responsable', 
     'chef',
     'superviseur',
-    'gérant',
-    'leader',
-    'supérieur',
-    'coordinateur'
+    'lead',
+    'pdg',
+    'président',
+    'p.d.g'
   ];
   
-  const positionLower = position.toLowerCase();
-  return managerTitles.some(title => positionLower.includes(title));
+  const lowerPosition = position.toLowerCase();
+  
+  return managerKeywords.some(keyword => lowerPosition.includes(keyword));
 };
 
 /**
- * Obtenir le nom complet de l'employé
+ * Récupère le nom complet d'un employé
  */
-export const getEmployeeFullName = (employee: Employee | undefined | null): string => {
+export const getEmployeeFullName = (employee?: Employee): string => {
+  if (!employee) return 'Employé inconnu';
+  return `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employé sans nom';
+};
+
+/**
+ * Formatter le statut d'un employé pour l'affichage
+ */
+export const getStatusDisplay = (status?: string): string => {
+  if (!status) return 'Inconnu';
+  
+  switch(status.toLowerCase()) {
+    case 'active':
+    case 'actif':
+      return 'Actif';
+    case 'inactive':
+    case 'inactif':
+      return 'Inactif';
+    case 'onleave':
+    case 'en congé':
+      return 'En congé';
+    case 'suspended':
+    case 'suspendu':
+      return 'Suspendu';
+    default:
+      return status;
+  }
+};
+
+/**
+ * Formatter le type de contrat d'un employé pour l'affichage
+ */
+export const getContractTypeDisplay = (contractType?: string): string => {
+  if (!contractType) return 'Non spécifié';
+  
+  switch(contractType.toLowerCase()) {
+    case 'cdi':
+      return 'CDI';
+    case 'cdd':
+      return 'CDD';
+    case 'stage':
+      return 'Stage';
+    case 'alternance':
+      return 'Alternance';
+    case 'freelance':
+      return 'Freelance';
+    case 'autre':
+      return 'Autre';
+    default:
+      return contractType;
+  }
+};
+
+/**
+ * Récupère l'URL de la photo d'un employé
+ */
+export const getEmployeePhotoUrl = (employee?: Employee): string => {
   if (!employee) return '';
-  
-  const firstName = employee.firstName || '';
-  const lastName = employee.lastName || '';
-  
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  } else if (firstName) {
-    return firstName;
-  } else if (lastName) {
-    return lastName;
-  }
-  
-  return 'Employé sans nom';
-};
-
-/**
- * Formatage du numéro de téléphone
- */
-export const formatPhoneNumber = (phone: string | undefined): string => {
-  if (!phone) return '';
-  
-  // Supprimer tous les caractères non numériques
-  const numbers = phone.replace(/\D/g, '');
-  
-  // Format français : XX XX XX XX XX
-  if (numbers.length === 10) {
-    return numbers.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-  }
-  
-  // Si le numéro n'a pas 10 chiffres, on le renvoie tel quel
-  return phone;
-};
-
-/**
- * Formatter une date au format local
- */
-export const formatDate = (dateString: string | undefined): string => {
-  if (!dateString) return '';
-  
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return dateString;
-  }
-};
-
-/**
- * Calculer l'âge à partir d'une date de naissance
- */
-export const calculateAge = (birthDateString: string | undefined): number | null => {
-  if (!birthDateString) return null;
-  
-  try {
-    const birthDate = new Date(birthDateString);
-    const today = new Date();
-    
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    // Si le mois de naissance n'est pas encore arrivé ou si c'est le même mois mais le jour n'est pas encore arrivé
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  } catch (error) {
-    console.error("Error calculating age:", error);
-    return null;
-  }
+  return employee.photoURL || employee.photo || '';
 };
