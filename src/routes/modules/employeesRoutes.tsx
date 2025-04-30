@@ -5,7 +5,6 @@ import ModuleLayout from "@/components/module/ModuleLayout";
 import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
 import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
 import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeaves";
-import EmployeesProfiles from "@/components/module/submodules/employees/EmployeesProfiles";
 import EmployeesHierarchy from "@/components/module/submodules/employees/hierarchy/EmployeesHierarchy";
 import EmployeesRecruitment from "@/components/module/submodules/EmployeesRecruitment";
 import EmployeesBadges from "@/components/module/submodules/employees/EmployeesBadges";
@@ -25,8 +24,6 @@ export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    {/* Route for profiles is still kept to handle direct navigation */}
-    <Route path="profiles" element={<EmployeesProfiles />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />

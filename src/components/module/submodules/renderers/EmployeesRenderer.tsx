@@ -3,8 +3,7 @@ import React from 'react';
 import EmployeesDashboard from '../EmployeesDashboard';
 import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesBadges from '../employees/EmployeesBadges';
-import EmployeesProfiles from '../employees/EmployeesProfiles';
-import EmployeesHierarchy from '../employees/EmployeesHierarchy';
+import EmployeesHierarchy from '../employees/hierarchy/EmployeesHierarchy';
 import EmployeesLeaves from '../leaves/EmployeesLeaves';
 import SalarySlips from '../salaries/SalarySlips';
 import EmployeesTimesheet from '../EmployeesTimesheet';
@@ -20,6 +19,7 @@ import EmployeesSettings from '../settings/EmployeesSettings';
 import { SubModule } from '@/data/types/modules';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
+import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   const { 
@@ -41,9 +41,6 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
-    case 'employees-profiles':
-      // Still render the Profiles component if accessed directly
-      return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':
@@ -79,6 +76,9 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
       return <EmployeesAlerts />;
     case 'employees-settings':
       return <EmployeesSettings />;
+    case 'employees-profiles':
+      // Si quelqu'un tente d'accéder à la page profiles, redirigez vers le module par défaut
+      return <DefaultSubmoduleContent submodule={submodule} />;
     default:
       return (
         <div className="container mx-auto py-4">
