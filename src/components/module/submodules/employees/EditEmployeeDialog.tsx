@@ -35,15 +35,15 @@ const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
   });
 
   const handleSubmit = (data: EmployeeFormValues) => {
-    const employeeData = formValuesToEmployee(data, employee);
-    onSubmit(employeeData);
+    const updatedEmployee = formValuesToEmployee(data, employee);
+    onSubmit(updatedEmployee);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Modifier Employé</DialogTitle>
+          <DialogTitle>Modifier l'employé</DialogTitle>
         </DialogHeader>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">

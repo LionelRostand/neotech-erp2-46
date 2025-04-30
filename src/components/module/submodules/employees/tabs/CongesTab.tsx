@@ -1,129 +1,132 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
+import { CalendarDays, Clock, Calendar } from 'lucide-react';
 
 interface CongesTabProps {
   employee: Employee;
 }
 
 export const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
-  // Données fictives pour l'exemple
-  const conges = {
-    annuel: { total: 25, pris: 12, restant: 13 },
-    rtt: { total: 11, pris: 5, restant: 6 },
-    maladie: { total: 'Illimité', pris: 3, restant: '-' }
+  const absences = employee.absences || [];
+  
+  // Calcul du solde de congés (simulé pour l'instant)
+  const congesSolde = {
+    payes: 25,
+    rtt: 12,
+    maladie: 3,
+    pris: absences.length
   };
-
-  // Absences fictives
-  const absences = employee.absences || [
-    {
-      id: '1',
-      type: 'Congés payés',
-      startDate: '2023-07-10',
-      endDate: '2023-07-14',
-      status: 'approved',
-      submittedAt: '2023-06-15'
-    },
-    {
-      id: '2',
-      type: 'RTT',
-      startDate: '2023-09-22',
-      endDate: '2023-09-22',
-      status: 'approved',
-      submittedAt: '2023-08-30'
-    },
-    {
-      id: '3',
-      type: 'Maladie',
-      startDate: '2023-11-02',
-      endDate: '2023-11-03',
-      status: 'approved',
-      submittedAt: '2023-11-02'
+  
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'approved':
+        return 'text-green-600 bg-green-100';
+      case 'pending':
+        return 'text-amber-600 bg-amber-100';
+      case 'rejected':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
-  ];
-
+  };
+  
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'approved':
+        return 'Approuvé';
+      case 'pending':
+        return 'En attente';
+      case 'rejected':
+        return 'Refusé';
+      default:
+        return status;
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Solde de congés</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-sm text-blue-600 mb-1">Congés annuels</p>
-            <div className="flex items-end">
-              <p className="text-2xl font-bold">{conges.annuel.restant}</p>
-              <p className="text-sm text-gray-500 ml-2">/ {conges.annuel.total} jours</p>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">{conges.annuel.pris} jours pris</p>
+      {/* Cartes de solde de congés */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-blue-700">Congés payés</h4>
+            <CalendarDays className="w-5 h-5 text-blue-500" />
           </div>
-          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
-            <p className="text-sm text-purple-600 mb-1">RTT</p>
-            <div className="flex items-end">
-              <p className="text-2xl font-bold">{conges.rtt.restant}</p>
-              <p className="text-sm text-gray-500 ml-2">/ {conges.rtt.total} jours</p>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">{conges.rtt.pris} jours pris</p>
+          <p className="text-2xl font-bold mt-2">{congesSolde.payes} jours</p>
+        </div>
+        
+        <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-green-700">RTT</h4>
+            <Clock className="w-5 h-5 text-green-500" />
           </div>
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
-            <p className="text-sm text-amber-600 mb-1">Maladie</p>
-            <div className="flex items-end">
-              <p className="text-2xl font-bold">-</p>
-              <p className="text-sm text-gray-500 ml-2">/ {conges.maladie.total}</p>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">{conges.maladie.pris} jours pris</p>
+          <p className="text-2xl font-bold mt-2">{congesSolde.rtt} jours</p>
+        </div>
+        
+        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-purple-700">Maladie</h4>
+            <Calendar className="w-5 h-5 text-purple-500" />
           </div>
+          <p className="text-2xl font-bold mt-2">{congesSolde.maladie} jours</p>
+        </div>
+        
+        <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-amber-700">Pris</h4>
+            <Calendar className="w-5 h-5 text-amber-500" />
+          </div>
+          <p className="text-2xl font-bold mt-2">{congesSolde.pris} jours</p>
         </div>
       </div>
       
+      {/* Historique des absences */}
       <div>
-        <h3 className="text-lg font-semibold mb-3">Historique des absences</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px] border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-2 text-left">Type</th>
-                <th className="px-4 py-2 text-left">Du</th>
-                <th className="px-4 py-2 text-left">Au</th>
-                <th className="px-4 py-2 text-left">Durée</th>
-                <th className="px-4 py-2 text-left">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {absences.map((absence, index) => {
-                const start = new Date(absence.startDate);
-                const end = new Date(absence.endDate);
-                
-                // Calculer la durée en jours
-                const diffTime = Math.abs(end.getTime() - start.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                
-                return (
-                  <tr key={absence.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-4 py-2 border-t">{absence.type}</td>
-                    <td className="px-4 py-2 border-t">
-                      {start.toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-4 py-2 border-t">
-                      {end.toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-4 py-2 border-t">{diffDays} jour(s)</td>
-                    <td className="px-4 py-2 border-t">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        absence.status === 'approved' 
-                          ? 'bg-green-100 text-green-800'
-                          : absence.status === 'pending'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {absence.status === 'approved' ? 'Approuvé' : 
-                         absence.status === 'pending' ? 'En attente' : 'Refusé'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <h3 className="font-medium mb-3">Historique des congés</h3>
+        
+        {absences.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>Aucun congé enregistré pour cet employé</p>
+          </div>
+        ) : (
+          <div className="border rounded-lg overflow-hidden">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Période</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durée</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {absences.map((absence, index) => {
+                  const startDate = new Date(absence.startDate);
+                  const endDate = new Date(absence.endDate);
+                  const durationInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  
+                  return (
+                    <tr key={absence.id || index}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{absence.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {startDate.toLocaleDateString('fr-FR')} au {endDate.toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {durationInDays} jour{durationInDays > 1 ? 's' : ''}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(absence.status)}`}>
+                          {getStatusLabel(absence.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

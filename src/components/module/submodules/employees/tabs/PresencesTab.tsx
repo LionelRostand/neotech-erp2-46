@@ -1,58 +1,89 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
+import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 interface PresencesTabProps {
   employee: Employee;
 }
 
 export const PresencesTab: React.FC<PresencesTabProps> = ({ employee }) => {
+  // Cette partie serait idéalement récupérée depuis une API ou Firestore
+  // Pour l'instant, on affiche un message indiquant que la fonctionnalité sera disponible
+  
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium mb-2">Registre des présences</h4>
-        <p className="text-gray-500">Les données de présence ne sont pas encore disponibles pour cet employé.</p>
+      <div className="flex justify-between items-center">
+        <h3 className="font-medium">Registre des présences</h3>
+        <div className="flex space-x-2">
+          <button className="text-sm px-3 py-1 bg-blue-50 text-blue-600 rounded-md">
+            Ce mois
+          </button>
+          <button className="text-sm px-3 py-1 bg-gray-100 text-gray-600 rounded-md">
+            Mois précédent
+          </button>
+        </div>
       </div>
       
-      {/* Données exemple */}
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px] border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2 text-left">Date</th>
-              <th className="px-4 py-2 text-left">Arrivée</th>
-              <th className="px-4 py-2 text-left">Départ</th>
-              <th className="px-4 py-2 text-left">Total</th>
-              <th className="px-4 py-2 text-left">Statut</th>
+      <div className="border rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Arrivée
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Départ
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {[
-              { date: '2023-01-10', arrival: '08:30', departure: '17:30', total: '9h', status: 'Présent' },
-              { date: '2023-01-11', arrival: '08:45', departure: '17:45', total: '9h', status: 'Présent' },
-              { date: '2023-01-12', arrival: '08:15', departure: '17:15', total: '9h', status: 'Présent' },
-              { date: '2023-01-13', arrival: '', departure: '', total: '0h', status: 'Absent' },
-            ].map((day, index) => (
-              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-4 py-2 border-t">
-                  {new Date(day.date).toLocaleDateString('fr-FR')}
-                </td>
-                <td className="px-4 py-2 border-t">{day.arrival || '-'}</td>
-                <td className="px-4 py-2 border-t">{day.departure || '-'}</td>
-                <td className="px-4 py-2 border-t">{day.total}</td>
-                <td className="px-4 py-2 border-t">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    day.status === 'Présent' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {day.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
+          <tbody className="bg-white divide-y divide-gray-200">
+            {/* Données simulées - dans un vrai scénario, cela proviendrait de Firebase */}
+            {[...Array(5)].map((_, index) => {
+              const date = new Date();
+              date.setDate(date.getDate() - index);
+              
+              return (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {date.toLocaleDateString('fr-FR')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {index % 4 === 0 ? '—' : '08:30'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {index % 4 === 0 ? '—' : '17:30'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {index % 4 === 0 ? (
+                        <>
+                          <XCircle className="w-4 h-4 text-red-500 mr-2" />
+                          <span className="text-sm text-red-500">Absent</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm text-green-500">Présent</span>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
+      </div>
+
+      <div className="text-center text-sm text-gray-500 py-2">
+        <p>Consultez le module Présences pour plus de détails</p>
       </div>
     </div>
   );

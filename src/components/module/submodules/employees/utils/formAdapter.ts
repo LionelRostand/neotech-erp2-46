@@ -80,11 +80,11 @@ export const formValuesToEmployee = (formData: EmployeeFormValues, existingEmplo
     employee.id = existingEmployee.id;
   }
 
-  // Add createdAt if it's a new employee
-  if (!existingEmployee?.createdAt) {
-    employee.createdAt = new Date().toISOString();
-  } else {
+  // Keep existing timestamps if available
+  if (existingEmployee?.createdAt) {
     employee.createdAt = existingEmployee.createdAt;
+  } else {
+    employee.createdAt = new Date().toISOString();
   }
 
   // Add updatedAt timestamp

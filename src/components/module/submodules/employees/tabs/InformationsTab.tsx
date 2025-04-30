@@ -1,126 +1,154 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  Briefcase, 
+  Building, 
+  Calendar, 
+  MapPin,
+  GraduationCap,
+  Users
+} from 'lucide-react';
 
 interface InformationsTabProps {
   employee: Employee;
 }
 
 export const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
-  const { departments } = useEmployeeData();
-  
-  const getDepartmentName = (id: string) => {
-    const department = departments?.find(d => d.id === id);
-    return department ? department.name : id;
-  };
-  
-  const renderAddressSection = () => {
-    const hasAddress = employee.streetNumber || employee.streetName || employee.city || 
-                     employee.zipCode || employee.region || employee.country;
+  // Formatter la date d'embauche
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Non spécifié';
     
-    if (!hasAddress) return <p className="text-gray-500 italic">Aucune adresse enregistrée</p>;
-    
-    return (
-      <div className="space-y-1">
-        {(employee.streetNumber || employee.streetName) && (
-          <p>{employee.streetNumber} {employee.streetName}</p>
-        )}
-        {(employee.zipCode || employee.city) && (
-          <p>{employee.zipCode} {employee.city}</p>
-        )}
-        {employee.region && <p>{employee.region}</p>}
-        {employee.country && <p>{employee.country}</p>}
-      </div>
-    );
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR');
+    } catch (error) {
+      return 'Format invalide';
+    }
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      {/* Informations personnelles */}
+    <div className="space-y-6">
+      {/* Informations professionnelles */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <div>
-              <p className="text-sm text-gray-500">Prénom</p>
-              <p>{employee.firstName || '-'}</p>
+        <h3 className="text-lg font-medium mb-4">Informations professionnelles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Briefcase className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Poste</p>
+                <p className="font-medium">{employee.position || 'Non spécifié'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Nom</p>
-              <p>{employee.lastName || '-'}</p>
+            
+            <div className="flex items-start gap-3">
+              <Mail className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Email professionnel</p>
+                <p className="font-medium">{employee.professionalEmail || employee.email || 'Non spécifié'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Email</p>
-              <p className="break-all">{employee.email || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Téléphone</p>
-              <p>{employee.phone || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Date de naissance</p>
-              <p>
-                {employee.birthDate 
-                  ? new Date(employee.birthDate).toLocaleDateString('fr-FR')
-                  : '-'}
-              </p>
+            
+            <div className="flex items-start gap-3">
+              <GraduationCap className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Type de contrat</p>
+                <p className="font-medium">{employee.contract || 'Non spécifié'}</p>
+              </div>
             </div>
           </div>
           
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Adresse</p>
-            {renderAddressSection()}
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Building className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Département</p>
+                <p className="font-medium">{employee.department || 'Non spécifié'}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Date d'embauche</p>
+                <p className="font-medium">{formatDate(employee.hireDate)}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Manager</p>
+                <p className="font-medium">{employee.manager || 'Non spécifié'}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
-      {/* Informations professionnelles */}
+      {/* Informations personnelles */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <div>
-              <p className="text-sm text-gray-500">Poste</p>
-              <p>{employee.position || '-'}</p>
+        <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <User className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Nom complet</p>
+                <p className="font-medium">{employee.firstName} {employee.lastName}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Email professionnel</p>
-              <p className="break-all">{employee.professionalEmail || '-'}</p>
+            
+            <div className="flex items-start gap-3">
+              <Mail className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Email personnel</p>
+                <p className="font-medium">{employee.email || 'Non spécifié'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Département</p>
-              <p>{employee.department ? getDepartmentName(employee.department) : '-'}</p>
+            
+            <div className="flex items-start gap-3">
+              <Phone className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Téléphone</p>
+                <p className="font-medium">{employee.phone || 'Non spécifié'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Entreprise</p>
-              <p>
-                {employee.company 
-                  ? (typeof employee.company === 'string' 
-                      ? employee.company 
-                      : employee.company.name)
-                  : '-'}
-              </p>
+            
+            <div className="flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Date de naissance</p>
+                <p className="font-medium">{formatDate(employee.birthDate)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Date d'embauche</p>
-              <p>
-                {employee.hireDate 
-                  ? new Date(employee.hireDate).toLocaleDateString('fr-FR')
-                  : '-'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Type de contrat</p>
-              <p>{employee.contract || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Statut</p>
-              <p>{employee.status || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Manager</p>
-              <p>{employee.isManager ? 'Oui' : 'Non'}</p>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-500">Adresse</p>
+                <div>
+                  {typeof employee.address === 'object' ? (
+                    <p className="font-medium">
+                      {employee.address?.street || employee.streetNumber + ' ' + employee.streetName || 'Adresse non spécifiée'}
+                    </p>
+                  ) : (
+                    <p className="font-medium">{employee.address || 'Adresse non spécifiée'}</p>
+                  )}
+                  <p className="font-medium">
+                    {employee.zipCode || employee.postalCode} {employee.city}
+                  </p>
+                  <p className="font-medium">
+                    {employee.region && `${employee.region}, `}{employee.country || 'Pays non spécifié'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
