@@ -13,6 +13,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { Contract } from '@/hooks/useContractsData';
 import GeneratePdfButton from './GeneratePdfButton';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 interface ViewContractDialogProps {
   contract: Contract | null;
@@ -22,6 +23,17 @@ interface ViewContractDialogProps {
 
 const ViewContractDialog: React.FC<ViewContractDialogProps> = ({ contract, open, onOpenChange }) => {
   if (!contract) return null;
+
+  // Helper function to ensure we're always working with strings
+  const ensureString = (value: any): string => {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -33,48 +45,45 @@ const ViewContractDialog: React.FC<ViewContractDialogProps> = ({ contract, open,
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={contract.employeePhoto} alt={contract.employeeName} />
+              <AvatarImage src={contract.employeePhoto} alt={ensureString(contract.employeeName)} />
               <AvatarFallback className="bg-primary/10 text-primary">
                 <User size={24} />
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-xl font-semibold">{contract.employeeName}</h3>
-              <p className="text-muted-foreground">{contract.position}</p>
+              <h3 className="text-xl font-semibold">{ensureString(contract.employeeName)}</h3>
+              <p className="text-muted-foreground">{ensureString(contract.position)}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Type de contrat</p>
-              <p className="text-base">{contract.type}</p>
+              <p className="text-base">{ensureString(contract.type)}</p>
             </div>
             
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Statut</p>
               <p className="text-base">
-                <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium
-                  ${contract.status === 'Actif' ? 'bg-green-100 text-green-800' : 
-                  contract.status === 'À venir' ? 'bg-blue-100 text-blue-800' : 
-                  'bg-red-100 text-red-800'}`}>
-                  {contract.status}
-                </span>
+                <StatusBadge status={ensureString(contract.status)}>
+                  {ensureString(contract.status)}
+                </StatusBadge>
               </p>
             </div>
             
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Date de début</p>
-              <p className="text-base">{contract.startDate}</p>
+              <p className="text-base">{ensureString(contract.startDate)}</p>
             </div>
             
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Date de fin</p>
-              <p className="text-base">{contract.endDate || 'Non définie'}</p>
+              <p className="text-base">{contract.endDate ? ensureString(contract.endDate) : 'Non définie'}</p>
             </div>
             
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Département</p>
-              <p className="text-base">{contract.department}</p>
+              <p className="text-base">{ensureString(contract.department)}</p>
             </div>
             
             {contract.salary && (

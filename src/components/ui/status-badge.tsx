@@ -26,17 +26,25 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
     Inactif: "bg-gray-100 text-gray-800 border-gray-200",
   };
 
-  // Ensure content is a valid React child (string, number, or React element)
-  let content = children || status || '';
-  
-  // Convert any object to string to prevent "Objects are not valid as React child" error
-  const displayContent = typeof content === 'object' ? 
-    (content === null ? '' : JSON.stringify(content)) : 
-    String(content);
+  // Convert any object or complex value to string representation
+  const ensureStringContent = (value: any): string => {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    
+    return String(value);
+  };
 
-  // Ensure status is a string for class lookup
+  // Ensure content is a string
+  const displayContent = ensureStringContent(children || status);
+  
+  // Ensure status key is a string for class lookup
   const statusKey = typeof status === 'object' ? 
-    (status === null ? '' : String(Object.keys(status)[0] || '')) :
+    (status === null ? '' : ensureStringContent(status)) : 
     String(status || '');
 
   return (
