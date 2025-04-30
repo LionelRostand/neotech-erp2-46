@@ -10,6 +10,13 @@ export const useCompaniesQuery = () => {
     queryFn: async () => {
       try {
         console.log('Fetching companies data...');
+        
+        // S'assurer que le chemin de collection est valide
+        if (!COLLECTIONS.COMPANIES) {
+          console.error('Invalid companies collection path');
+          return [];
+        }
+        
         const companies = await fetchCollectionData<Company>(COLLECTIONS.COMPANIES);
         // Ensure all companies have required fields to avoid undefined errors
         return companies.map(company => ({

@@ -1,4 +1,3 @@
-
 /**
  * Constantes pour les chemins des collections Firestore
  */
@@ -78,7 +77,8 @@ export const COLLECTIONS = {
     TEMPLATES: 'documents_templates',
     SIGNATURES: 'documents_signatures'
   },
-  USERS: 'users'
+  USERS: 'users',
+  COMPANIES: 'companies'  // Ajout de la collection companies
 };
 
 // Add document collections for the document module
