@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
@@ -22,11 +22,15 @@ import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
-// Helper component to pass props to EmployeesProfiles
+// Optimize data loading with memoization to prevent unnecessary rerenders
 const EmployeesProfilesWithProps = () => {
   const { employees = [], isLoading = true } = useEmployeeData();
-  // Make sure we have a valid array of employees before rendering the component
-  const safeEmployees = Array.isArray(employees) ? employees : [];
+  
+  // Make sure we have a valid array of employees and memoize it
+  const safeEmployees = useMemo(() => {
+    return Array.isArray(employees) ? employees : [];
+  }, [employees]);
+  
   return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
 };
 

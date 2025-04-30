@@ -1,11 +1,12 @@
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';
 
 /**
  * Hook centralisé pour accéder aux données des employés et départements
+ * Avec optimisation pour réduire les requêtes Firebase
  */
 export const useEmployeeData = () => {
   const { employees: rawEmployees, departments: hrDepartments, isLoading, error } = useHrModuleData();
@@ -68,8 +69,7 @@ export const useEmployeeData = () => {
     employees: formattedEmployees as Employee[],
     departments: formattedDepartments as Department[],
     isLoading,
-    error,
-    // Expose a refetch function if needed in the future
-    refetchData: () => console.log('Refetching employee data...')
+    error
+    // Removed refetch function to prevent unnecessary polling
   };
 };

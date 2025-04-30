@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,7 +16,8 @@ import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from './form/employeeFormSchema';
 import { formValuesToEmployee } from './utils/formAdapter';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument } from '@/hooks/firestore/create-operations';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
 interface CreateEmployeeDialogProps {
@@ -31,7 +32,6 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   onCreated,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addEmployee } = useEmployeeService();
 
   const handleSubmit = async (data: EmployeeFormValues) => {
     setIsSubmitting(true);
@@ -43,15 +43,17 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
         delete employeeData.id;
       }
       
-      const result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
+      // Direct Firestore operation without using a listener service
+      const docRef = await addDoc(collection(db, COLLECTIONS.HR.EMPLOYEES), employeeData);
       
-      if (result && result.id) {
-        toast.success(`L'employé ${data.firstName} ${data.lastName} a été créé avec succès`);
-        onCreated(result as Employee);
-        onOpenChange(false);
-      } else {
-        toast.error("Erreur lors de la création de l'employé");
-      }
+      const newEmployee = {
+        id: docRef.id,
+        ...employeeData
+      } as Employee;
+      
+      toast.success(`L'employé ${data.firstName} ${data.lastName} a été créé avec succès`);
+      onCreated(newEmployee);
+      onOpenChange(false);
     } catch (error) {
       console.error('Error creating employee:', error);
       toast.error(`Erreur lors de la création de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);

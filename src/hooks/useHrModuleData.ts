@@ -1,181 +1,73 @@
 
-import { useEffect, useState } from 'react';
-import { useHrData } from './modules/useHrData';
-import { Company } from '@/components/module/submodules/companies/types';
-import { Employee } from '@/types/employee';
+import { useState, useEffect } from 'react';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, onSnapshot } from 'firebase/firestore';
 
 /**
- * Hook to fetch and process HR module data
+ * Hook to fetch HR module data (employees and departments) with optimized Firebase requests
  */
 export const useHrModuleData = () => {
-  const { 
-    employees: rawEmployees, 
-    payslips, 
-    contracts, 
-    departments, 
-    leaveRequests, 
-    attendance,
-    absenceRequests,
-    hrDocuments,
-    timeSheets,
-    evaluations,
-    trainings,
-    hrReports,
-    hrAlerts,
-    isLoading, 
-    error 
-  } = useHrData();
+  const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastFetched, setLastFetched] = useState(null);
   
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
+  // Cache timeout in milliseconds (5 minutes)
+  const CACHE_TIMEOUT = 5 * 60 * 1000;
 
-  // Process employees data
   useEffect(() => {
-    if (rawEmployees && Array.isArray(rawEmployees)) {
-      const processedEmployees = rawEmployees.map(emp => ({
-        id: emp.id || `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        firstName: emp.firstName || '',
-        lastName: emp.lastName || '',
-        email: emp.email || '',
-        phone: emp.phone || '',
-        position: emp.position || emp.role || 'Employé',
-        department: emp.department || 'Non spécifié',
-        departmentId: emp.departmentId || emp.department || '',
-        photo: emp.photoURL || emp.photo || '',
-        photoURL: emp.photoURL || emp.photo || '',
-        hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
-        startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
-        status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
-        address: emp.address || {},
-        contract: emp.contract || '',
-        socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
-        birthDate: emp.birthDate || '',
-        documents: emp.documents || [],
-        company: emp.company || '',
-        role: emp.role || emp.position || '',
-        title: emp.title || emp.position || '',
-        manager: emp.manager || '',
-        managerId: emp.managerId || '',
-        professionalEmail: emp.professionalEmail || emp.email || '',
-        skills: emp.skills || [],
-        education: emp.education || [],
-        workSchedule: emp.workSchedule || {
-          monday: '09:00 - 18:00',
-          tuesday: '09:00 - 18:00',
-          wednesday: '09:00 - 18:00',
-          thursday: '09:00 - 18:00',
-          friday: '09:00 - 17:00',
-        },
-        payslips: emp.payslips || [],
-        streetNumber: emp.streetNumber || '',
-        streetName: emp.streetName || '',
-        city: emp.city || '',
-        zipCode: emp.zipCode || '',
-        region: emp.region || '',
-        country: emp.country || '',
-        isManager: emp.isManager || false,
-        forceManager: emp.forceManager || false,
-      })) as Employee[];
+    // Only fetch if data hasn't been fetched yet or cache has expired
+    if (!lastFetched || (Date.now() - lastFetched > CACHE_TIMEOUT)) {
+      setIsLoading(true);
       
-      setEmployees(processedEmployees);
-    } else {
-      // Set empty array if no valid employees data
-      setEmployees([]);
-    }
-  }, [rawEmployees]);
-
-  // Extract companies from employees if available
-  useEffect(() => {
-    if (employees && Array.isArray(employees) && employees.length > 0) {
-      // Create a map to ensure unique companies
-      const companiesMap = new Map<string, Company>();
-      
-      employees.forEach(emp => {
-        if (emp.company) {
-          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
+      const fetchData = async () => {
+        try {
+          // Use getDocs (one-time fetch) instead of onSnapshot (real-time listener)
+          const employeesQuery = query(collection(db, COLLECTIONS.HR.EMPLOYEES));
+          const departmentsQuery = query(collection(db, COLLECTIONS.HR.DEPARTMENTS));
           
-          if (!companiesMap.has(companyId)) {
-            if (typeof emp.company === 'string') {
-              // Only has the id, create a basic company object
-              companiesMap.set(companyId, {
-                id: companyId,
-                name: 'Entreprise',
-                address: {
-                  street: '',
-                  city: '',
-                  postalCode: '',
-                  country: ''
-                },
-                siret: '',
-                logo: '',
-                logoUrl: '',
-                phone: '',
-                email: '',
-                website: '',
-                industry: '',
-                size: '',
-                status: 'active',
-                employeesCount: 0,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              });
-            } else {
-              // Has the full company object
-              const company = emp.company as any;
-              
-              // Add missing properties if needed
-              if (!company.address) {
-                company.address = {
-                  street: '',
-                  city: '',
-                  postalCode: '',
-                  country: ''
-                };
-              }
-              
-              companiesMap.set(companyId, {
-                ...company,
-                logo: company.logo || '',
-                logoUrl: company.logoUrl || '',
-                phone: company.phone || '',
-                email: company.email || '',
-                website: company.website || '',
-                industry: company.industry || '',
-                size: company.size || '',
-                status: company.status || 'active',
-                employeesCount: company.employeesCount || 0,
-                createdAt: company.createdAt || new Date().toISOString(),
-                updatedAt: company.updatedAt || new Date().toISOString()
-              });
-            }
-          }
+          const [employeesSnapshot, departmentsSnapshot] = await Promise.all([
+            getDocs(employeesQuery),
+            getDocs(departmentsQuery)
+          ]);
+          
+          const employeesData = employeesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          const departmentsData = departmentsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          setEmployees(employeesData);
+          setDepartments(departmentsData);
+          setLastFetched(Date.now());
+        } catch (err) {
+          console.error("Error fetching HR module data:", err);
+          setError(err);
+        } finally {
+          setIsLoading(false);
         }
-      });
+      };
       
-      // Convert map to array
-      setCompanies(Array.from(companiesMap.values()));
-    } else {
-      // Set empty array if no valid employees data
-      setCompanies([]);
+      fetchData();
     }
-  }, [employees]);
-
+  }, [lastFetched]);
+  
+  // Add a manual refresh function
+  const refreshData = () => {
+    setLastFetched(null); // This will trigger a re-fetch
+  };
+  
   return {
-    employees: employees || [],
-    payslips: payslips || [],
-    contracts: contracts || [],
-    departments: departments || [],
-    companies: companies || [],
-    leaveRequests: leaveRequests || [],
-    attendance: attendance || [],
-    absenceRequests: absenceRequests || [],
-    hrDocuments: hrDocuments || [],
-    timeSheets: timeSheets || [],
-    evaluations: evaluations || [],
-    trainings: trainings || [],
-    hrReports: hrReports || [],
-    hrAlerts: hrAlerts || [],
+    employees,
+    departments,
     isLoading,
-    error
+    error,
+    refreshData
   };
 };
