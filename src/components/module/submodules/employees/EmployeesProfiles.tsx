@@ -1,19 +1,19 @@
-
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Eye, Plus } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { Employee } from '@/types/employee';
-import { collection, getDocs } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { DataTable } from '@/components/DataTable';
+import DataTable from '@/components/DataTable';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
 import EmployeeViewDialog from './dialogs/EmployeeViewDialog';
 import EmployeeEditDialog from './dialogs/EmployeeEditDialog';
 import EmployeeDeleteDialog from './EmployeeDeleteDialog';
-import EmployeeFilter from './EmployeeFilter';
-import EmployeesStats from './EmployeesStats';
+import { toast } from 'sonner';
+import { PlusCircle, Search, X } from 'lucide-react';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 
 const EmployeesProfiles: React.FC = () => {
   // State pour les données des employés
@@ -204,7 +204,7 @@ const EmployeesProfiles: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Employés</h1>
         <Button onClick={onCreateOpen} className="flex items-center gap-1">
-          <Plus className="h-4 w-4" /> Ajouter un employé
+          <PlusCircle className="h-4 w-4" /> Ajouter un employé
         </Button>
       </div>
       
