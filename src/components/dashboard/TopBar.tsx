@@ -12,9 +12,10 @@ const TopBar = () => {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  // Safe access to COLLECTIONS.MESSAGES with fallback
-  const messagesCollection = COLLECTIONS.MESSAGES || {};
-  const inboxPath = messagesCollection.INBOX ? `/modules/messages/inbox` : '#';
+  // Safe access to COLLECTIONS.MESSAGES
+  const messagesCollection = COLLECTIONS?.MESSAGES || {};
+  // Safe access to messagesCollection.INBOX with fallback
+  const inboxPath = messagesCollection?.INBOX ? `/modules/messages/inbox` : '#';
 
   const handleProfileClick = () => {
     navigate('/settings/profile');
