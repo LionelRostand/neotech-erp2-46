@@ -1,4 +1,3 @@
-
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Employee, EmployeePhotoMeta } from '@/types/employee';
 import { createPhotoMeta } from './photoUtils';
@@ -38,6 +37,16 @@ export const formValuesToEmployee = (
     updatedAt: new Date().toISOString(),
   };
 
+  // Handle workAddress if provided
+  if (formValues.workAddress) {
+    employeeData.workAddress = {
+      street: formValues.workAddress.street,
+      city: formValues.workAddress.city,
+      postalCode: formValues.workAddress.postalCode,
+      country: formValues.workAddress.country
+    };
+  }
+
   // Keep existing ID if it exists (for updates)
   if (existingEmployee?.id) {
     employeeData.id = existingEmployee.id;
@@ -60,12 +69,9 @@ export const formValuesToEmployee = (
       fileName: formValues.photoMeta.fileName || `photo_${Date.now()}.jpg`,
       fileType: formValues.photoMeta.fileType || 'image/jpeg',
       fileSize: formValues.photoMeta.fileSize || 0,
-      updatedAt: formValues.photoMeta.updatedAt || new Date().toISOString()
+      updatedAt: formValues.photoMeta.updatedAt || new Date().toISOString(),
+      data: formValues.photoMeta.data
     };
-    
-    if (formValues.photoMeta.data) {
-      photoMeta.data = formValues.photoMeta.data;
-    }
     
     employeeData.photoMeta = photoMeta;
   } else if (formValues.photo && !employeeData.photoMeta) {
@@ -103,6 +109,14 @@ export const employeeToFormValues = (
     };
   }
 
+  // Get work address if it exists
+  const workAddress = employee.workAddress && typeof employee.workAddress === 'object' ? {
+    street: employee.workAddress.street || '',
+    city: employee.workAddress.city || '',
+    postalCode: employee.workAddress.postalCode || '',
+    country: employee.workAddress.country || ''
+  } : undefined;
+
   return {
     firstName: employee.firstName || '',
     lastName: employee.lastName || '',
@@ -125,6 +139,7 @@ export const employeeToFormValues = (
     streetName: employee.streetName || '',
     city: employee.city || '',
     zipCode: employee.zipCode || '',
-    region: employee.region || ''
+    region: employee.region || '',
+    workAddress: workAddress
   };
 };

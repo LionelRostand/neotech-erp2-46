@@ -15,11 +15,20 @@ export const employeeFormSchema = z.object({
   email: z.string().email({ message: 'Email personnel invalide' }),
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   phone: z.string().optional(),
+  // Adresse personnelle
   streetNumber: z.string().optional(),
   streetName: z.string().optional(),
   city: z.string().optional(),
   zipCode: z.string().optional(),
   region: z.string().optional(),
+  country: z.string().optional(),
+  // Adresse professionnelle
+  workAddress: z.object({
+    street: z.string(),
+    city: z.string(),
+    postalCode: z.string(),
+    country: z.string()
+  }).optional(),
   company: z.string().min(1, { message: 'L\'entreprise est requise' }),
   department: z.string().min(1, { message: 'Le département est requis' }),
   position: z.string().optional(),
