@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Department } from '../types';
 import { useDepartmentService } from '../services/departmentService';

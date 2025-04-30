@@ -1,34 +1,47 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { Department, DepartmentFormData } from './types';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useState, useEffect, useCallback } from 'react';
+import { Department } from './types';
+import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
-import { toast } from 'sonner';
-import { useHrData } from '@/hooks/modules/useHrData';
-import { v4 as uuidv4 } from 'uuid';
+import { useDepartmentDialogs } from './hooks/useDepartmentDialogs';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 
 export const useDepartments = () => {
-  const { employees } = useEmployeeData();
-  const { departments: fetchedDepartments, isLoading, refetchDepartments } = useHrData();
-  
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState<boolean>(isLoading);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isManageEmployeesDialogOpen, setIsManageEmployeesDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<DepartmentFormData>({
-    id: `dept-${uuidv4().substring(0, 8)}`,
-    name: '',
-    description: '',
-    managerId: '',
-    companyId: '',
-    color: '#3B82F6',
-    employeeIds: []
-  });
+  const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
+  const { departments: fetchedDepartments, isLoading: isLoadingDepartments, refetch } = useFirebaseDepartments();
+
+  const [departments, setDepartments] = useState<Department[]>(fetchedDepartments || []);
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('general');
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-  
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // State for dialogs
+  const {
+    isAddDialogOpen,
+    isEditDialogOpen,
+    isManageEmployeesDialogOpen,
+    setIsAddDialogOpen,
+    setIsEditDialogOpen,
+    setIsManageEmployeesDialogOpen,
+  } = useDepartmentDialogs();
+
+  // Form state
+  const {
+    formData,
+    activeTab,
+    selectedEmployees,
+    resetForm,
+    initFormWithDepartment,
+    setActiveTab,
+    handleInputChange,
+    handleManagerChange,
+    handleCompanyChange,
+    handleColorChange,
+    handleEmployeeSelection,
+    setSelectedEmployees
+  } = useDepartmentForm(departments);
+
+  // Department operations
   const {
     handleSaveDepartment,
     handleUpdateDepartment,
@@ -36,139 +49,72 @@ export const useDepartments = () => {
     handleSaveEmployeeAssignments
   } = useDepartmentOperations();
 
-  // Synchroniser les départements récupérés
+  // Effect to update departments when fetched data changes
   useEffect(() => {
     if (fetchedDepartments) {
-      console.log("Synchronizing departments:", fetchedDepartments.length);
-      
-      // On s'assure qu'il n'y a pas de doublons lors de la synchronisation
-      const uniqueDepartments = new Map<string, Department>();
-      fetchedDepartments.forEach(dept => {
-        if (dept && dept.id) {
-          uniqueDepartments.set(dept.id, dept);
-        }
-      });
-      
-      const uniqueData = Array.from(uniqueDepartments.values());
-      setDepartments(uniqueData);
+      setDepartments(fetchedDepartments);
     }
-    setLoading(isLoading);
-  }, [fetchedDepartments, isLoading]);
+    setLoading(isLoadingDepartments || isLoadingEmployees);
+  }, [fetchedDepartments, isLoadingDepartments, isLoadingEmployees]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleManagerChange = (value: string) => {
-    setFormData(prev => ({ ...prev, managerId: value }));
-  };
-
-  const handleCompanyChange = (value: string) => {
-    setFormData(prev => ({ ...prev, companyId: value }));
-  };
-
-  const handleColorChange = (color: string) => {
-    setFormData(prev => ({ ...prev, color }));
-  };
-
-  const handleAddDepartment = () => {
-    // Reset form data with a new ID and empty values
-    setFormData({
-      id: `dept-${uuidv4().substring(0, 8)}`,
-      name: '',
-      description: '',
-      managerId: '',
-      companyId: '',
-      color: '#3B82F6',
-      employeeIds: []
-    });
-    setSelectedEmployees([]);
+  // Handle add department dialog
+  const handleAddDepartment = useCallback(() => {
+    resetForm();
     setIsAddDialogOpen(true);
-  };
+  }, [resetForm, setIsAddDialogOpen]);
 
-  const handleEditDepartment = (department: Department) => {
+  // Handle edit department dialog
+  const handleEditDepartment = useCallback((department: Department) => {
     setCurrentDepartment(department);
-    setFormData({
-      id: department.id,
-      name: department.name,
-      description: department.description,
-      managerId: department.managerId || '',
-      companyId: department.companyId || '',
-      color: department.color || '#3B82F6',
-      employeeIds: department.employeeIds || []
-    });
-    setSelectedEmployees(department.employeeIds || []);
+    initFormWithDepartment(department);
     setIsEditDialogOpen(true);
-  };
+  }, [initFormWithDepartment, setIsEditDialogOpen]);
 
-  const handleManageEmployees = (department: Department) => {
+  // Handle manage employees dialog
+  const handleManageEmployees = useCallback((department: Department) => {
     setCurrentDepartment(department);
     setSelectedEmployees(department.employeeIds || []);
     setIsManageEmployeesDialogOpen(true);
-  };
+  }, [setIsManageEmployeesDialogOpen, setSelectedEmployees]);
 
-  const handleEmployeeSelection = (employeeId: string, isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedEmployees(prev => [...prev, employeeId]);
-    } else {
-      setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
-    }
-  };
-
-  const handleSaveDepartmentWrapper = async () => {
-    if (!formData.name || !formData.description) {
-      toast.error("Les champs nom et description sont obligatoires");
-      return;
-    }
-    
+  // Save new department
+  const handleSaveDepartment = useCallback(async () => {
     const success = await handleSaveDepartment(formData, selectedEmployees);
     if (success) {
       setIsAddDialogOpen(false);
-      // Refetch departments to get the updated list with the new department
-      await refetchDepartments();
+      resetForm();
+      refetch();
     }
-  };
+  }, [formData, selectedEmployees, handleSaveDepartment, setIsAddDialogOpen, resetForm, refetch]);
 
-  const handleUpdateDepartmentWrapper = async () => {
-    if (!formData.name || !formData.description) {
-      toast.error("Les champs nom et description sont obligatoires");
-      return;
-    }
-    
+  // Update department
+  const handleUpdateDepartment = useCallback(async () => {
+    if (!currentDepartment) return;
     const success = await handleUpdateDepartment(formData, selectedEmployees, currentDepartment);
     if (success) {
       setIsEditDialogOpen(false);
-      // Refetch departments to get the updated list
-      await refetchDepartments();
+      refetch();
     }
-  };
+  }, [currentDepartment, formData, selectedEmployees, handleUpdateDepartment, setIsEditDialogOpen, refetch]);
 
-  const handleDeleteDepartmentWrapper = async (id: string, name: string) => {
-    const success = await handleDeleteDepartment(id, name);
-    if (success) {
-      // Refetch departments to get the updated list without the deleted department
-      await refetchDepartments();
-    }
-  };
-
-  const handleSaveEmployeeAssignmentsWrapper = async () => {
+  // Save employee assignments
+  const handleSaveEmployeeAssignments = useCallback(async () => {
+    if (!currentDepartment) return;
     const success = await handleSaveEmployeeAssignments(currentDepartment, selectedEmployees);
     if (success) {
       setIsManageEmployeesDialogOpen(false);
-      // Refetch departments to get the updated list with new employee assignments
-      await refetchDepartments();
+      refetch();
     }
-  };
+  }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, setIsManageEmployeesDialogOpen, refetch]);
 
+  // Get department employees
   const getDepartmentEmployees = useCallback((departmentId: string) => {
-    return employees.filter(emp => {
-      const department = departments.find(dept => dept.id === departmentId);
-      if (department && department.employeeIds) {
-        return department.employeeIds.includes(emp.id);
-      }
-      return false;
-    });
+    const department = departments.find(dept => dept.id === departmentId);
+    if (!department || !department.employeeIds) return [];
+    
+    return employees.filter(employee => 
+      department.employeeIds.includes(employee.id)
+    );
   }, [departments, employees]);
 
   return {
@@ -193,10 +139,10 @@ export const useDepartments = () => {
     handleEditDepartment,
     handleManageEmployees,
     handleEmployeeSelection,
-    handleSaveDepartment: handleSaveDepartmentWrapper,
-    handleUpdateDepartment: handleUpdateDepartmentWrapper,
-    handleDeleteDepartment: handleDeleteDepartmentWrapper,
-    handleSaveEmployeeAssignments: handleSaveEmployeeAssignmentsWrapper,
+    handleSaveDepartment,
+    handleUpdateDepartment,
+    handleDeleteDepartment,
+    handleSaveEmployeeAssignments,
     getDepartmentEmployees
   };
 };
