@@ -3,6 +3,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { where, QueryConstraint } from 'firebase/firestore';
 import { Department } from '@/components/module/submodules/departments/types';
 import { fetchCollectionData } from './fetchCollectionData';
+import { deduplicateDepartments } from '@/components/module/submodules/departments/utils/departmentUtils';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 /**
@@ -53,15 +54,8 @@ export const useFirebaseDepartments = (companyId?: string) => {
       console.log("Fetching departments from Firebase collection:", COLLECTIONS.HR.DEPARTMENTS);
       const fetchedDepartments = await fetchCollectionData<Department>(COLLECTIONS.HR.DEPARTMENTS, queryConstraints);
       
-      // Dédupliquer les départements par ID
-      const uniqueDepartments = new Map<string, Department>();
-      fetchedDepartments.forEach(dept => {
-        if (dept && dept.id && !uniqueDepartments.has(dept.id)) {
-          uniqueDepartments.set(dept.id, dept);
-        }
-      });
-      
-      const uniqueData = Array.from(uniqueDepartments.values());
+      // Deduplicate departments
+      const uniqueData = deduplicateDepartments(fetchedDepartments);
       console.log(`Après déduplication: ${uniqueData.length} départements (avant: ${fetchedDepartments.length})`);
       
       // Update state and cache

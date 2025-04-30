@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useEmployeeData } from './useEmployeeData';
+import { deduplicateDepartments } from '@/components/module/submodules/departments/utils/departmentUtils';
 
 export const useAvailableDepartments = () => {
   // Use the centralized employee data hook to avoid duplicate requests
@@ -12,7 +13,11 @@ export const useAvailableDepartments = () => {
       return [];
     }
     
-    return departments.map(dept => ({
+    // First deduplicate the departments
+    const uniqueDepartments = deduplicateDepartments(departments);
+    
+    // Then format them
+    return uniqueDepartments.map(dept => ({
       id: dept.id || '',
       name: dept.name || '',
       description: dept.description || '',

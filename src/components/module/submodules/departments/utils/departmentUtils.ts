@@ -20,9 +20,13 @@ export const prepareDepartmentFromForm = (
   allEmployees: any[], 
   companies: any[]
 ): Department => {
+  // Ensure we have arrays to work with
+  const safeAllEmployees = Array.isArray(allEmployees) ? allEmployees : [];
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+  
   // Find the selected manager from all employees
-  const selectedManager = formData.managerId && formData.managerId !== "none" && Array.isArray(allEmployees)
-    ? allEmployees.find(emp => emp && emp.id === formData.managerId) 
+  const selectedManager = formData.managerId && formData.managerId !== "none" 
+    ? safeAllEmployees.find(emp => emp && emp.id === formData.managerId) 
     : null;
 
   const managerName = selectedManager 
@@ -30,8 +34,8 @@ export const prepareDepartmentFromForm = (
     : null;
   
   // Find the selected company from all companies
-  const selectedCompany = formData.companyId && formData.companyId !== "none" && Array.isArray(companies)
-    ? companies.find(comp => comp && comp.id === formData.companyId)
+  const selectedCompany = formData.companyId && formData.companyId !== "none" 
+    ? safeCompanies.find(comp => comp && comp.id === formData.companyId)
     : null;
     
   const companyName = selectedCompany 
@@ -56,4 +60,20 @@ export const prepareDepartmentFromForm = (
     createdAt: formData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
+};
+
+// New function to deduplicate departments
+export const deduplicateDepartments = (departments: Department[]): Department[] => {
+  if (!Array.isArray(departments) || departments.length === 0) return [];
+  
+  // Use a Map to deduplicate by ID
+  const uniqueDepartments = new Map<string, Department>();
+  
+  departments.forEach(dept => {
+    if (dept && dept.id && !uniqueDepartments.has(dept.id)) {
+      uniqueDepartments.set(dept.id, dept);
+    }
+  });
+  
+  return Array.from(uniqueDepartments.values());
 };

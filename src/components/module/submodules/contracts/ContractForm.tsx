@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,6 +51,23 @@ const ContractForm: React.FC<ContractFormProps> = ({
     onFormDataChange(updatedData);
   };
 
+  // Memoize departments to filter out duplicates
+  const uniqueDepartments = useMemo(() => {
+    if (!departments || !Array.isArray(departments)) return [];
+
+    // Create a map to store unique departments by ID
+    const uniqueDeptMap = new Map();
+    
+    departments.forEach(dept => {
+      if (dept && dept.id && !uniqueDeptMap.has(dept.id)) {
+        uniqueDeptMap.set(dept.id, dept);
+      }
+    });
+    
+    // Convert the map back to an array
+    return Array.from(uniqueDeptMap.values());
+  }, [departments]);
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -64,10 +81,12 @@ const ContractForm: React.FC<ContractFormProps> = ({
             <SelectValue placeholder="Sélectionner un employé" />
           </SelectTrigger>
           <SelectContent>
-            {employees.map((employee) => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.firstName} {employee.lastName}
-              </SelectItem>
+            {Array.isArray(employees) && employees.map((employee) => (
+              employee && employee.id ? (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.firstName} {employee.lastName}
+                </SelectItem>
+              ) : null
             ))}
           </SelectContent>
         </Select>
@@ -83,7 +102,7 @@ const ContractForm: React.FC<ContractFormProps> = ({
             <SelectValue placeholder="Sélectionner un département" />
           </SelectTrigger>
           <SelectContent>
-            {departments.map((dept) => (
+            {uniqueDepartments.map((dept) => (
               <SelectItem key={dept.id} value={dept.id}>
                 {dept.name}
               </SelectItem>
