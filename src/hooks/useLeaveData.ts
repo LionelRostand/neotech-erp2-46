@@ -1,100 +1,123 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
 
-interface Leave {
+// Define the Leave type to be exported
+export interface Leave {
   id: string;
-  employeeId: string;
   employeeName: string;
+  employeeId: string;
+  department: string;
   type: string;
   startDate: string;
   endDate: string;
-  status: string;
   days: number;
-  reason?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt?: string;
+  status: string;
+  reason: string;
+  requestDate: string;
+  approvedBy: string;
+  employeePhoto: string;
 }
 
 export const useLeaveData = () => {
-  const { leaveRequests: rawLeaveRequests = [], employees = [], isLoading, error } = useHrModuleData();
+  const { leaveRequests, employees, isLoading } = useHrModuleData();
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [error, setError] = useState<Error | null>(null);
   const [refreshKey, setRefreshKey] = useState(Date.now());
-
-  // Format leaves data with employee names
+  
+  // Calculate stats based on leave requests
+  const stats = {
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    total: 0,
+  };
+  
+  // Format leave requests to a more user-friendly format
   useEffect(() => {
-    // Ensure we have valid arrays to work with
-    const safeLeaveRequests = Array.isArray(rawLeaveRequests) ? rawLeaveRequests : [];
-    const safeEmployees = Array.isArray(employees) ? employees : [];
+    if (!leaveRequests || !employees) return;
     
-    if (safeLeaveRequests.length === 0) {
-      console.log('useLeaveData: No leave requests data available');
-      setLeaves([]);
-      return;
-    }
-
-    // Process and enrich leave data
-    const formattedLeaves = safeLeaveRequests
-      .filter(leave => leave !== null && leave !== undefined)
-      .map(leave => {
-        // Safety check for leave object
-        if (!leave) return null;
-        
+    try {
+      const safeLeaveRequests = Array.isArray(leaveRequests) ? leaveRequests : [];
+      const safeEmployees = Array.isArray(employees) ? employees : [];
+      
+      // Update stats
+      stats.total = safeLeaveRequests.length;
+      stats.pending = safeLeaveRequests.filter(req => 
+        req.status === 'pending' || req.status === 'En attente').length;
+      stats.approved = safeLeaveRequests.filter(req => 
+        req.status === 'approved' || req.status === 'Approuvé').length;
+      stats.rejected = safeLeaveRequests.filter(req => 
+        req.status === 'rejected' || req.status === 'Refusé').length;
+      
+      const formattedLeaves = safeLeaveRequests.map(leave => {
+        // Find employee info
         const employee = safeEmployees.find(emp => emp && emp.id === leave.employeeId);
         
-        // Format dates to be more readable
-        const formatDate = (dateString: string) => {
+        // Format the date from ISO or timestamp to DD/MM/YYYY
+        const formatDate = (dateString: string | number) => {
           try {
-            if (!dateString) return '';
-            return new Date(dateString).toLocaleDateString('fr-FR');
+            const date = typeof dateString === 'number' 
+              ? new Date(dateString) 
+              : new Date(dateString);
+            
+            return date.toLocaleDateString('fr-FR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
           } catch (e) {
-            console.error('Invalid date format:', dateString);
-            return dateString || '';
+            console.error('Error formatting date', e);
+            return 'Date invalide';
           }
         };
-
+        
+        const startDate = leave.startDate ? formatDate(leave.startDate) : '';
+        const endDate = leave.endDate ? formatDate(leave.endDate) : '';
+        
+        // Calculate days if not provided
+        let days = leave.durationDays || leave.days || 0;
+        if (days === 0 && startDate && endDate) {
+          try {
+            // Simple calculation if dates are available
+            const start = new Date(leave.startDate);
+            const end = new Date(leave.endDate);
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          } catch (e) {
+            console.error('Error calculating days', e);
+            days = 1; // Default to 1 day if calculation fails
+          }
+        }
+        
         return {
-          ...leave,
-          employeeName: employee 
-            ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
-            : 'Employé inconnu',
-          startDate: formatDate(leave.startDate),
-          endDate: formatDate(leave.endDate),
+          id: leave.id,
+          employeeId: leave.employeeId,
+          employeeName: employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() : 'Employé inconnu',
+          department: employee?.department || 'Non spécifié',
+          type: leave.type || 'Congés payés',
+          startDate,
+          endDate,
+          days,
+          status: leave.status || 'En attente',
+          reason: leave.reason || leave.comment || '',
+          requestDate: leave.requestDate ? formatDate(leave.requestDate) : '',
+          approvedBy: leave.approvedBy || '',
+          employeePhoto: employee?.photoURL || employee?.photo || '',
         };
-      })
-      .filter(Boolean); // Filter out any null values
-
-    setLeaves(formattedLeaves as Leave[]);
-  }, [rawLeaveRequests, employees, refreshKey]);
-
-  // Statistics about leaves with safe array handling
-  const stats = {
-    total: Array.isArray(leaves) ? leaves.length : 0,
-    approved: Array.isArray(leaves) 
-      ? leaves.filter(leave => leave.status === 'Approuvé' || leave.status === 'approved').length
-      : 0,
-    pending: Array.isArray(leaves)
-      ? leaves.filter(leave => leave.status === 'En attente' || leave.status === 'pending').length
-      : 0,
-    rejected: Array.isArray(leaves)
-      ? leaves.filter(leave => leave.status === 'Refusé' || leave.status === 'rejected').length
-      : 0
-  };
-
+      });
+      
+      setLeaves(formattedLeaves);
+    } catch (err) {
+      console.error('Error processing leave data', err);
+      setError(err instanceof Error ? err : new Error('Erreur de traitement des données de congés'));
+    }
+  }, [leaveRequests, employees, refreshKey]);
+  
   // Refresh data
   const refetch = useCallback(() => {
     setRefreshKey(Date.now());
   }, []);
-
-  return {
-    leaves: leaves || [],
-    stats,
-    isLoading,
-    error,
-    refetch
-  };
+  
+  return { leaves, stats, isLoading, error, refetch };
 };

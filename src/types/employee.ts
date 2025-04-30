@@ -52,6 +52,21 @@ export interface Evaluation {
   comments?: string;
 }
 
+export interface LeaveRequest {
+  id: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: 'approved' | 'pending' | 'rejected' | string;
+  reason?: string;
+  submittedAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  employeeId: string;
+  days?: number;
+  comment?: string;
+}
+
 export interface Absence {
   id: string;
   type: string;
@@ -102,6 +117,17 @@ export interface Employee {
   documents?: Document[];
   evaluations?: Evaluation[];
   absences?: Absence[];
+  leaveRequests?: LeaveRequest[];
+  conges?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  rtt?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
   contract?: string;
   departmentId?: string;
   professionalEmail?: string;
