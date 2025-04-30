@@ -25,14 +25,20 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
   onDelete,
   isLoading = false
 }) => {
-  const { departments } = useEmployeeData();
+  const { departments = [] } = useEmployeeData();
+  
+  // Ensure we have valid data to work with
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const safeDepartments = Array.isArray(departments) ? departments : [];
   
   const columns: Column<Employee>[] = [
     {
       header: 'Employé',
       accessorKey: 'name',
       cell: ({ row }) => {
-        const employee = row.original;
+        const employee = row?.original;
+        if (!employee) return null;
+        
         return (
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
@@ -58,65 +64,69 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
     {
       header: 'Poste',
       accessorKey: 'position',
-      cell: ({ row }) => row.original.position || '-'
+      cell: ({ row }) => row.original?.position || '-'
     },
     {
       header: 'Département',
       accessorKey: 'department',
       cell: ({ row }) => {
-        const departmentId = row.original.department || row.original.departmentId;
-        return getDepartmentName(departmentId, departments);
+        const departmentId = row.original?.department || row.original?.departmentId;
+        return getDepartmentName(departmentId, safeDepartments);
       }
     },
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: ({ row }) => <EmployeeStatusBadge status={row.original.status || 'active'} />
+      cell: ({ row }) => <EmployeeStatusBadge status={row.original?.status || 'active'} />
     },
     {
       header: 'Actions',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              onView(row.original);
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(row.original);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="text-red-600 hover:text-red-700 hover:bg-red-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(row.original);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )
+      cell: ({ row }) => {
+        if (!row?.original) return null;
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row.original);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row.original);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-red-600 hover:text-red-700 hover:bg-red-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row.original);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
     }
   ];
 
   return (
     <DataTable
       columns={columns}
-      data={employees}
+      data={safeEmployees}
       isLoading={isLoading}
       onRowClick={onView}
       emptyMessage="Aucun employé trouvé"

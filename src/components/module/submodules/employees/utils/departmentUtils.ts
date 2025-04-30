@@ -12,7 +12,7 @@ export const getDepartmentName = (
     return 'Département non spécifié';
   }
 
-  const department = departments.find(dept => dept.id === departmentId);
+  const department = departments.find(dept => dept?.id === departmentId);
   return department?.name || 'Département inconnu';
 };
 
@@ -27,7 +27,7 @@ export const getDepartmentColor = (
     return '#3b82f6'; // Couleur par défaut (bleu)
   }
   
-  const department = departments.find(dept => dept.id === departmentId);
+  const department = departments.find(dept => dept?.id === departmentId);
   return department?.color || '#3b82f6';
 };
 
@@ -42,7 +42,7 @@ export const getDepartmentManager = (
     return { id: undefined, name: undefined };
   }
   
-  const department = departments.find(dept => dept.id === departmentId);
+  const department = departments.find(dept => dept?.id === departmentId);
   if (!department) {
     return { id: undefined, name: undefined };
   }

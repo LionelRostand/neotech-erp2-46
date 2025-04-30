@@ -14,7 +14,7 @@ export const useEmployeeData = () => {
     departments: hrDepartments = [], 
     isLoading = true, 
     error = null 
-  } = useHrModuleData();
+  } = useHrModuleData() || { employees: [], departments: [], isLoading: true, error: null };
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
@@ -42,7 +42,7 @@ export const useEmployeeData = () => {
           email: employee.email || '',
           professionalEmail: employee.professionalEmail || employee.email || '',
           status: employee.status || 'active',
-          department: employee.department || '',
+          department: employee.department || employee.departmentId || '',
           position: employee.position || '',
           id: employee.id || `emp-${Date.now()}`
         };
@@ -60,14 +60,16 @@ export const useEmployeeData = () => {
     // Handle case where employees data is not available yet
     if (!formattedEmployees || !Array.isArray(formattedEmployees)) {
       console.log("Using departments without employee data");
-      return hrDepartments.map(dept => {
-        if (!dept) return null;
-        return {
-          ...dept,
-          name: dept.name || `Department ${dept.id?.substring(0, 5) || ''}`,
-          description: dept.description || '',
-          color: dept.color || '#3b82f6'
-        };
+      return hrDepartments
+        .filter(dept => dept !== null && dept !== undefined)
+        .map(dept => {
+          if (!dept) return null;
+          return {
+            ...dept,
+            name: dept.name || `Department ${dept.id?.substring(0, 5) || ''}`,
+            description: dept.description || '',
+            color: dept.color || '#3b82f6'
+          };
       }).filter(Boolean) as Department[];
     }
     
