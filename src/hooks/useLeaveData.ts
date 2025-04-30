@@ -35,7 +35,10 @@ export const useLeaveData = () => {
   
   // Format leave requests to a more user-friendly format
   useEffect(() => {
-    if (!leaveRequests || !employees) return;
+    if (!leaveRequests || !employees) {
+      setLeaves([]);
+      return;
+    }
     
     try {
       const safeLeaveRequests = Array.isArray(leaveRequests) ? leaveRequests : [];
@@ -44,19 +47,23 @@ export const useLeaveData = () => {
       // Update stats
       stats.total = safeLeaveRequests.length;
       stats.pending = safeLeaveRequests.filter(req => 
-        req.status === 'pending' || req.status === 'En attente').length;
+        req && (req.status === 'pending' || req.status === 'En attente')).length;
       stats.approved = safeLeaveRequests.filter(req => 
-        req.status === 'approved' || req.status === 'Approuvé').length;
+        req && (req.status === 'approved' || req.status === 'Approuvé')).length;
       stats.rejected = safeLeaveRequests.filter(req => 
-        req.status === 'rejected' || req.status === 'Refusé').length;
+        req && (req.status === 'rejected' || req.status === 'Refusé')).length;
       
       const formattedLeaves = safeLeaveRequests.map(leave => {
+        if (!leave) return null;
+        
         // Find employee info
         const employee = safeEmployees.find(emp => emp && emp.id === leave.employeeId);
         
         // Format the date from ISO or timestamp to DD/MM/YYYY
         const formatDate = (dateString: string | number) => {
           try {
+            if (!dateString) return '';
+            
             const date = typeof dateString === 'number' 
               ? new Date(dateString) 
               : new Date(dateString);
@@ -91,8 +98,8 @@ export const useLeaveData = () => {
         }
         
         return {
-          id: leave.id,
-          employeeId: leave.employeeId,
+          id: leave.id || '',
+          employeeId: leave.employeeId || '',
           employeeName: employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() : 'Employé inconnu',
           department: employee?.department || 'Non spécifié',
           type: leave.type || 'Congés payés',
@@ -105,7 +112,7 @@ export const useLeaveData = () => {
           approvedBy: leave.approvedBy || '',
           employeePhoto: employee?.photoURL || employee?.photo || '',
         };
-      });
+      }).filter(Boolean) as Leave[];
       
       setLeaves(formattedLeaves);
     } catch (err) {

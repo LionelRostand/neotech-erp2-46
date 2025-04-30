@@ -11,7 +11,9 @@ interface CongesTabProps {
 const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
   // Fetch all leaves and filter by employee
   const { leaves = [] } = useLeaveData();
-  const employeeLeaves = leaves.filter(leave => leave.employeeId === employee.id);
+  const employeeLeaves = Array.isArray(leaves) 
+    ? leaves.filter(leave => leave && leave.employeeId === employee.id)
+    : [];
 
   // Ensure conges is an object with the expected properties
   const conges = employee.conges || {
@@ -25,12 +27,6 @@ const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
     acquired: 10,
     taken: 0,
     balance: 10
-  };
-
-  // Helper to ensure values are strings
-  const ensureString = (value: any) => {
-    if (value === undefined || value === null) return '-';
-    return typeof value === 'object' ? JSON.stringify(value) : String(value);
   };
 
   return (
@@ -76,7 +72,7 @@ const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
       <div className="space-y-4">
         <h3 className="font-medium text-lg">Demandes de congé</h3>
         
-        {employeeLeaves.length > 0 ? (
+        {employeeLeaves && employeeLeaves.length > 0 ? (
           <div className="border rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
