@@ -1,181 +1,140 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Calendar,
-  Filter,
-  Plus,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { useLeaveData } from '@/hooks/useLeaveData';
-import { CreateLeaveRequestDialog } from './CreateLeaveRequestDialog';
-import LeaveRequestsList from './LeaveRequestsList';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import CreateLeaveDialog from './CreateLeaveDialog';
 
 const EmployeesLeaves: React.FC = () => {
   const { leaves, stats, isLoading, refetch } = useLeaveData();
-  const { employees } = useHrModuleData(); // Nous utilisons uniquement les employees ici
-  const { userData } = useAuth(); // Utiliser useAuth pour accéder aux informations utilisateur
-  
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  
-  // Rafraîchir les données au chargement du composant
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
 
-  const handleOpenCreateDialog = () => {
-    setIsCreateDialogOpen(true);
-  };
+  if (isLoading) {
+    return (
+      <div className="p-8 flex justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-  const handleCloseCreateDialog = () => {
-    setIsCreateDialogOpen(false);
-  };
-
-  const handleCreateLeaveRequest = async (data: any) => {
-    console.log('Nouvelle demande créée:', data);
-    await refetch();
-  };
-
-  const handleApproveLeave = async (id: string) => {
-    try {
-      const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, id);
-      const approverName = userData?.firstName ? 
-        `${userData?.firstName} ${userData?.lastName}` : 
-        'Administrateur';
-        
-      await updateDoc(leaveRef, {
-        status: 'Approuvé', // Use standardized status value
-        approvedBy: approverName,
-        approvedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      
-      toast.success('Demande de congé approuvée');
-      refetch(); // Refresh data after update
-    } catch (error) {
-      console.error('Erreur lors de l\'approbation de la demande:', error);
-      toast.error('Une erreur est survenue lors de l\'approbation');
-    }
-  };
-
-  const handleRejectLeave = async (id: string) => {
-    try {
-      const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, id);
-      const approverName = userData?.firstName ? 
-        `${userData?.firstName} ${userData?.lastName}` : 
-        'Administrateur';
-        
-      await updateDoc(leaveRef, {
-        status: 'Refusé', // Use standardized status value
-        approvedBy: approverName,
-        updatedAt: new Date().toISOString()
-      });
-      
-      toast.success('Demande de congé refusée');
-      refetch(); // Refresh data after update
-    } catch (error) {
-      console.error('Erreur lors du refus de la demande:', error);
-      toast.error('Une erreur est survenue lors du refus');
-    }
-  };
+  // Calculer les stats pour le dashboard
+  const pendingLeaves = leaves.filter(leave => leave.status === 'En attente' || leave.status === 'pending');
+  const approvedLeaves = leaves.filter(leave => leave.status === 'Approuvé' || leave.status === 'approved');
+  const rejectedLeaves = leaves.filter(leave => leave.status === 'Refusé' || leave.status === 'rejected');
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Congés</h2>
-          <p className="text-gray-500">Gestion des demandes de congés</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filtres
-          </Button>
-          <Button size="sm" onClick={handleOpenCreateDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle demande
-          </Button>
-        </div>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Gestion des congés</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Nouvelle demande
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-blue-900">En attente</h3>
-              <p className="text-2xl font-bold text-blue-700">
-                {stats.pending}
-              </p>
-            </div>
-            <div className="h-8 w-8 bg-blue-200 rounded-full flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-blue-700" />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Demandes en attente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingLeaves.length}</div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-green-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-900">Approuvés</h3>
-              <p className="text-2xl font-bold text-green-700">
-                {stats.approved}
-              </p>
-            </div>
-            <div className="h-8 w-8 bg-green-200 rounded-full flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-green-700" />
-            </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Demandes approuvées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{approvedLeaves.length}</div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-red-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-red-900">Refusés</h3>
-              <p className="text-2xl font-bold text-red-700">
-                {stats.rejected}
-              </p>
-            </div>
-            <div className="h-8 w-8 bg-red-200 rounded-full flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-red-700" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gray-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900">Total</h3>
-              <p className="text-2xl font-bold text-gray-700">
-                {stats.total}
-              </p>
-            </div>
-            <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-gray-700" />
-            </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Demandes refusées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{rejectedLeaves.length}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <LeaveRequestsList 
-            onApprove={handleApproveLeave}
-            onReject={handleRejectLeave}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="all">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">Toutes les demandes</TabsTrigger>
+          <TabsTrigger value="pending">En attente</TabsTrigger>
+          <TabsTrigger value="approved">Approuvées</TabsTrigger>
+          <TabsTrigger value="rejected">Refusées</TabsTrigger>
+        </TabsList>
 
-      <CreateLeaveRequestDialog
-        isOpen={isCreateDialogOpen}
-        onClose={handleCloseCreateDialog}
-        onSubmit={handleCreateLeaveRequest}
+        <TabsContent value="all">
+          <LeavesTable leaves={leaves} />
+        </TabsContent>
+        <TabsContent value="pending">
+          <LeavesTable leaves={pendingLeaves} />
+        </TabsContent>
+        <TabsContent value="approved">
+          <LeavesTable leaves={approvedLeaves} />
+        </TabsContent>
+        <TabsContent value="rejected">
+          <LeavesTable leaves={rejectedLeaves} />
+        </TabsContent>
+      </Tabs>
+
+      <CreateLeaveDialog 
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={refetch}
       />
+    </div>
+  );
+};
+
+interface LeavesTableProps {
+  leaves: any[];
+}
+
+const LeavesTable: React.FC<LeavesTableProps> = ({ leaves }) => {
+  if (leaves.length === 0) {
+    return (
+      <div className="text-center py-8 bg-gray-50 rounded-md">
+        <p className="text-gray-500">Aucune demande de congé pour cette catégorie.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="px-4 py-2 text-left text-sm">Employé</th>
+            <th className="px-4 py-2 text-left text-sm">Type</th>
+            <th className="px-4 py-2 text-left text-sm">Début</th>
+            <th className="px-4 py-2 text-left text-sm">Fin</th>
+            <th className="px-4 py-2 text-left text-sm">Jours</th>
+            <th className="px-4 py-2 text-left text-sm">Raison</th>
+            <th className="px-4 py-2 text-left text-sm">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leaves.map((leave) => (
+            <tr key={leave.id} className="border-t hover:bg-gray-50">
+              <td className="px-4 py-2">{leave.employeeName}</td>
+              <td className="px-4 py-2">{leave.type}</td>
+              <td className="px-4 py-2">{leave.startDate}</td>
+              <td className="px-4 py-2">{leave.endDate}</td>
+              <td className="px-4 py-2">{leave.days}</td>
+              <td className="px-4 py-2">{leave.reason || '-'}</td>
+              <td className="px-4 py-2">
+                <StatusBadge status={leave.status}>{leave.status}</StatusBadge>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
