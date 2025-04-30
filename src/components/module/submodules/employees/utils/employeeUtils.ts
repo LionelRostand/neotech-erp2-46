@@ -88,3 +88,65 @@ export const getEmployeePhotoUrl = (employee?: Employee): string => {
   if (!employee) return '';
   return employee.photoURL || employee.photo || '';
 };
+
+/**
+ * Format a phone number for display
+ */
+export const formatPhoneNumber = (phone?: string): string => {
+  if (!phone) return '';
+  
+  // Remove non-digit characters
+  const digits = phone.replace(/\D/g, '');
+  
+  // Format based on length
+  if (digits.length === 10) {
+    return `${digits.slice(0, 2)} ${digits.slice(2, 4)} ${digits.slice(4, 6)} ${digits.slice(6, 8)} ${digits.slice(8)}`;
+  }
+  
+  // Return as is if not matching expected format
+  return phone;
+};
+
+/**
+ * Format a date string for display
+ */
+export const formatDate = (dateString?: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString;
+  }
+};
+
+/**
+ * Calculate age from birthdate
+ */
+export const calculateAge = (birthDate?: string): number | null => {
+  if (!birthDate) return null;
+  
+  try {
+    const dob = new Date(birthDate);
+    const today = new Date();
+    
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    
+    // Adjust age if birthday hasn't occurred yet this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    
+    return age;
+  } catch (error) {
+    console.error("Error calculating age:", error);
+    return null;
+  }
+};
