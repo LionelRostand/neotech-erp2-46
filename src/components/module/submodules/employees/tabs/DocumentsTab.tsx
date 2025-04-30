@@ -109,6 +109,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {documents.map((document, index) => {
+            // S'assurer que document.title/name et document.type sont des chaînes de caractères
             const title = ensureString(document.name || document.title);
             const type = ensureString(document.type);
             const date = ensureString(document.date);
