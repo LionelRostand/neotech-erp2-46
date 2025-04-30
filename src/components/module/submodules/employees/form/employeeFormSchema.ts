@@ -29,8 +29,8 @@ export const employeeFormSchema = z.object({
     postalCode: z.string(),
     country: z.string()
   }).optional(),
-  company: z.string().min(1, { message: 'L\'entreprise est requise' }),
-  department: z.string().min(1, { message: 'Le département est requis' }),
+  company: z.string().min(1, { message: 'L\'entreprise est requise' }).or(z.literal('')),
+  department: z.string().min(1, { message: 'Le département est requis' }).or(z.literal('no_department')),
   position: z.string().optional(),
   contract: z.string(),
   hireDate: z.string().optional(),

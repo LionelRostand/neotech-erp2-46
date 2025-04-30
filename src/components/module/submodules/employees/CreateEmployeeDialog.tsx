@@ -60,6 +60,16 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
       if (!employeeData.absences || !Array.isArray(employeeData.absences)) {
         employeeData.absences = [];
       }
+
+      // Ensure company field is properly set
+      if (employeeData.company === 'no_company') {
+        employeeData.company = '';
+      }
+
+      // Ensure department field is properly set
+      if (employeeData.department === 'no_department') {
+        employeeData.department = '';
+      }
       
       // Direct Firestore operation without using a listener service
       const docRef = await addDoc(collection(db, COLLECTIONS.HR.EMPLOYEES), employeeData);

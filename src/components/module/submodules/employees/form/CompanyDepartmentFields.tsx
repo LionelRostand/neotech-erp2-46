@@ -13,10 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Building, Building2, Briefcase } from 'lucide-react';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useCompaniesForSelect } from '../hooks/useCompaniesForSelect';
 
 const CompanyDepartmentFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
-  const { departments, isLoading } = useAvailableDepartments();
+  const { departments, isLoading: departmentsLoading } = useAvailableDepartments();
+  const { companies, isLoading: companiesLoading } = useCompaniesForSelect();
   
   // Memoize department items to prevent unnecessary re-renders
   const departmentItems = useMemo(() => {
@@ -26,7 +28,7 @@ const CompanyDepartmentFields: React.FC = () => {
     ];
     
     // Add a loading state if departments are still loading
-    if (isLoading) {
+    if (departmentsLoading) {
       items.push(<SelectItem key="loading" value="loading" disabled>Chargement...</SelectItem>);
       return items;
     }
@@ -45,7 +47,36 @@ const CompanyDepartmentFields: React.FC = () => {
     }
     
     return items;
-  }, [departments, isLoading]);
+  }, [departments, departmentsLoading]);
+
+  // Memoize company items to prevent unnecessary re-renders
+  const companyItems = useMemo(() => {
+    // Start with the "no company" option
+    const items = [
+      <SelectItem key="no_company" value="">Sélectionner une entreprise</SelectItem>
+    ];
+    
+    // Add a loading state if companies are still loading
+    if (companiesLoading) {
+      items.push(<SelectItem key="loading" value="loading" disabled>Chargement...</SelectItem>);
+      return items;
+    }
+    
+    // Add company options if available
+    if (companies && companies.length > 0) {
+      companies.forEach(company => {
+        if (company && company.id && company.name) {
+          items.push(
+            <SelectItem key={company.id} value={company.id}>
+              {company.name}
+            </SelectItem>
+          );
+        }
+      });
+    }
+    
+    return items;
+  }, [companies, companiesLoading]);
 
   return (
     <div className="space-y-4">
@@ -59,9 +90,20 @@ const CompanyDepartmentFields: React.FC = () => {
                 <Building className="h-4 w-4" />
                 Entreprise
               </FormLabel>
-              <FormControl>
-                <Input placeholder="Nom de l'entreprise" {...field} />
-              </FormControl>
+              <Select 
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={companiesLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une entreprise" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {companyItems}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -98,7 +140,7 @@ const CompanyDepartmentFields: React.FC = () => {
               <Select 
                 onValueChange={field.onChange}
                 value={field.value || "no_department"}
-                disabled={isLoading}
+                disabled={departmentsLoading}
               >
                 <FormControl>
                   <SelectTrigger>
