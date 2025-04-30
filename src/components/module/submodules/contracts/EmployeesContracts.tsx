@@ -2,15 +2,12 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
-import { useCollectionData } from '@/hooks/useCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { formatDate } from '@/lib/formatters';
 import { useContractsData } from '@/hooks/useContractsData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
 const EmployeesContracts = () => {
-  const { contracts, isLoading, error } = useContractsData();
+  const { contracts = [], isLoading, error } = useContractsData();
 
   // Définir les colonnes pour le tableau des contrats
   const columns = useMemo(() => [
@@ -22,25 +19,28 @@ const EmployeesContracts = () => {
           {row.original.employeePhoto && (
             <img 
               src={row.original.employeePhoto} 
-              alt={row.original.employeeName} 
+              alt={row.original.employeeName || 'Employé'} 
               className="w-8 h-8 rounded-full object-cover"
             />
           )}
-          <span>{row.original.employeeName}</span>
+          <span>{row.original.employeeName || 'Employé inconnu'}</span>
         </div>
       )
     },
     {
       header: 'Type',
       accessorKey: 'type',
+      cell: ({ row }) => row.original.type || 'Non spécifié'
     },
     {
       header: 'Poste',
       accessorKey: 'position',
+      cell: ({ row }) => row.original.position || 'Non spécifié'
     },
     {
       header: 'Date de début',
       accessorKey: 'startDate',
+      cell: ({ row }) => row.original.startDate || 'Non spécifiée'
     },
     {
       header: 'Date de fin',
@@ -68,7 +68,7 @@ const EmployeesContracts = () => {
             variant={variant === "success" ? "default" : variant} 
             className={variant === "success" ? "bg-green-500 hover:bg-green-600" : ""}
           >
-            {status}
+            {status || 'Inconnu'}
           </Badge>
         );
       }
@@ -96,7 +96,7 @@ const EmployeesContracts = () => {
       <CardContent>
         <DataTable
           columns={columns}
-          data={contracts}
+          data={contracts || []}
           isLoading={isLoading}
           emptyMessage="Aucun contrat disponible"
         />

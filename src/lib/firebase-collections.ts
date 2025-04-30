@@ -55,5 +55,40 @@ export const COLLECTIONS = {
     INVENTORY: 'garage_inventory',
     INVOICES: 'garage_invoices',
     SETTINGS: 'garage_settings'
-  }
+  },
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    OUTBOX: 'messages_outbox', 
+    DRAFTS: 'messages_drafts',
+    TEMPLATES: 'messages_templates',
+    CONTACTS: 'messages_contacts',
+    SETTINGS: 'messages_settings',
+    ARCHIVE: 'messages_archive',
+    SCHEDULED: 'messages_scheduled'
+  },
+  DOCUMENTS: {
+    FILES: 'documents_files',
+    FOLDERS: 'documents_folders',
+    SHARES: 'documents_shares',
+    PERMISSIONS: 'documents_permissions',
+    SETTINGS: 'documents_settings',
+    CATEGORIES: 'documents_categories',
+    TAGS: 'documents_tags',
+    TEMPLATES: 'documents_templates',
+    SIGNATURES: 'documents_signatures'
+  },
+  USERS: 'users'
+};
+
+// Add document collections for the document module
+export const DOCUMENT_COLLECTIONS = {
+  FILES: COLLECTIONS.DOCUMENTS.FILES,
+  FOLDERS: COLLECTIONS.DOCUMENTS.FOLDERS,
+  SHARES: COLLECTIONS.DOCUMENTS.SHARES,
+  PERMISSIONS: COLLECTIONS.DOCUMENTS.PERMISSIONS,
+  SETTINGS: COLLECTIONS.DOCUMENTS.SETTINGS,
+  CATEGORIES: COLLECTIONS.DOCUMENTS.CATEGORIES,
+  TAGS: COLLECTIONS.DOCUMENTS.TAGS,
+  TEMPLATES: COLLECTIONS.DOCUMENTS.TEMPLATES,
+  SIGNATURES: COLLECTIONS.DOCUMENTS.SIGNATURES
 };
