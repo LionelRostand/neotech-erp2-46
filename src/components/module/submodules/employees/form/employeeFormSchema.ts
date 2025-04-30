@@ -29,7 +29,7 @@ export const employeeFormSchema = z.object({
     postalCode: z.string(),
     country: z.string()
   }).optional(),
-  company: z.string().min(1, { message: 'L\'entreprise est requise' }).or(z.literal('')),
+  company: z.string().min(1, { message: 'L\'entreprise est requise' }).or(z.literal('no_company')),
   department: z.string().min(1, { message: 'Le département est requis' }).or(z.literal('no_department')),
   position: z.string().optional(),
   contract: z.string(),
@@ -58,8 +58,8 @@ export const getDefaultEmployeeFormValues = (): EmployeeFormValues => ({
   zipCode: '',
   region: '',
   country: '',
-  company: '',
-  department: '',
+  company: 'no_company',
+  department: 'no_department',
   position: '',
   contract: 'CDI', // Default contract type
   hireDate: new Date().toISOString().split('T')[0], // Current date as default

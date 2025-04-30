@@ -29,7 +29,7 @@ const CompanyDepartmentFields: React.FC = () => {
     
     // Add a loading state if departments are still loading
     if (departmentsLoading) {
-      items.push(<SelectItem key="loading" value="loading" disabled>Chargement...</SelectItem>);
+      items.push(<SelectItem key="loading" value="loading_departments" disabled>Chargement...</SelectItem>);
       return items;
     }
     
@@ -53,12 +53,12 @@ const CompanyDepartmentFields: React.FC = () => {
   const companyItems = useMemo(() => {
     // Start with the "no company" option
     const items = [
-      <SelectItem key="no_company" value="">Sélectionner une entreprise</SelectItem>
+      <SelectItem key="no_company" value="no_company">Sélectionner une entreprise</SelectItem>
     ];
     
     // Add a loading state if companies are still loading
     if (companiesLoading) {
-      items.push(<SelectItem key="loading" value="loading" disabled>Chargement...</SelectItem>);
+      items.push(<SelectItem key="loading" value="loading_companies" disabled>Chargement...</SelectItem>);
       return items;
     }
     
@@ -92,7 +92,7 @@ const CompanyDepartmentFields: React.FC = () => {
               </FormLabel>
               <Select 
                 onValueChange={field.onChange}
-                value={field.value}
+                value={field.value || "no_company"}
                 disabled={companiesLoading}
               >
                 <FormControl>
