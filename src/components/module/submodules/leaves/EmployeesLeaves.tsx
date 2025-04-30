@@ -100,7 +100,7 @@ const EmployeesLeaves: React.FC = () => {
             <CardTitle className="text-sm font-medium text-gray-500">Total des demandes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total || 0}</div>
+            <div className="text-2xl font-bold">{stats?.total || 0}</div>
           </CardContent>
         </Card>
         
@@ -109,7 +109,7 @@ const EmployeesLeaves: React.FC = () => {
             <CardTitle className="text-sm font-medium text-gray-500">En attente</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-500">{stats.pending || 0}</div>
+            <div className="text-2xl font-bold text-amber-500">{stats?.pending || 0}</div>
           </CardContent>
         </Card>
         
@@ -118,7 +118,7 @@ const EmployeesLeaves: React.FC = () => {
             <CardTitle className="text-sm font-medium text-gray-500">Approuvés</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">{stats.approved || 0}</div>
+            <div className="text-2xl font-bold text-green-500">{stats?.approved || 0}</div>
           </CardContent>
         </Card>
         
@@ -127,7 +127,7 @@ const EmployeesLeaves: React.FC = () => {
             <CardTitle className="text-sm font-medium text-gray-500">Refusés</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">{stats.rejected || 0}</div>
+            <div className="text-2xl font-bold text-red-500">{stats?.rejected || 0}</div>
           </CardContent>
         </Card>
       </div>

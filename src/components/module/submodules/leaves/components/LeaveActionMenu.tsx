@@ -18,19 +18,38 @@ interface LeaveActionMenuProps {
 }
 
 export const LeaveActionMenu = ({ leave, onStatusChange }: LeaveActionMenuProps) => {
+  if (!leave || !leave.id) {
+    console.log("Warning: LeaveActionMenu received invalid leave data", leave);
+    return null;
+  }
+
   const isStatusChangeable = leave.status === 'pending' || leave.status === 'En attente';
   
   const handleApprove = async () => {
-    const success = await onStatusChange(leave.id, 'Approuvé');
-    if (success) {
-      toast.success(`Congés de ${leave.employeeName} approuvés`);
+    if (!leave.id) return;
+    
+    try {
+      const success = await onStatusChange(leave.id, 'Approuvé');
+      if (success) {
+        toast.success(`Congés de ${leave.employeeName || 'l\'employé'} approuvés`);
+      }
+    } catch (error) {
+      console.error("Error approving leave:", error);
+      toast.error("Erreur lors de l'approbation des congés");
     }
   };
   
   const handleReject = async () => {
-    const success = await onStatusChange(leave.id, 'Refusé');
-    if (success) {
-      toast.success(`Congés de ${leave.employeeName} refusés`);
+    if (!leave.id) return;
+    
+    try {
+      const success = await onStatusChange(leave.id, 'Refusé');
+      if (success) {
+        toast.success(`Congés de ${leave.employeeName || 'l\'employé'} refusés`);
+      }
+    } catch (error) {
+      console.error("Error rejecting leave:", error);
+      toast.error("Erreur lors du refus des congés");
     }
   };
 
