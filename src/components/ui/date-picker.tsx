@@ -52,8 +52,6 @@ export function DatePicker({
           onSelect={setDate}
           initialFocus
           locale={fr}
-          fromMonth={fromMonth}
-          toMonth={toMonth}
           className={cn("p-3 pointer-events-auto")}
         />
       </PopoverContent>

@@ -111,8 +111,6 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
             date={startDate}
             setDate={setStartDate}
             placeholder="Début du congé"
-            fromMonth={new Date(2025, 3)} // Avril 2025
-            toMonth={new Date(2025, 3)} 
           />
         </div>
         <div className="space-y-2">
@@ -121,8 +119,6 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
             date={endDate}
             setDate={setEndDate}
             placeholder="Fin du congé"
-            fromMonth={new Date(2025, 3)} // Avril 2025
-            toMonth={new Date(2025, 3)}
           />
         </div>
       </div>
