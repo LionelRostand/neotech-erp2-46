@@ -2,7 +2,7 @@
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
+import { employeeFormSchema, EmployeeFormValues, getDefaultEmployeeFormValues } from './form/employeeFormSchema';
 import PersonalInfoFields from './form/PersonalInfoFields';
 import CompanyDepartmentFields from './form/CompanyDepartmentFields';
 import FormActions from './form/FormActions';
@@ -26,30 +26,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 }) => {
   const formDefaultValues = defaultValues ? 
     employeeToFormValues(defaultValues) : 
-    {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      company: '',
-      department: '',
-      position: '',
-      contract: 'cdi',
-      hireDate: new Date().toISOString().split('T')[0],
-      birthDate: '',
-      status: 'active' as const,
-      photo: '',
-      photoMeta: undefined,
-      forceManager: false,
-      isManager: false,
-      managerId: '',
-      professionalEmail: '',
-      streetNumber: '',
-      streetName: '',
-      city: '',
-      zipCode: '',
-      region: ''
-    };
+    getDefaultEmployeeFormValues();
 
   const methods = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),

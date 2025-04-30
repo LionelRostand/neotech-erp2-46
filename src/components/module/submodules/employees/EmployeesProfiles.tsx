@@ -13,6 +13,7 @@ import EmployeesStats from './EmployeesStats';
 import EmployeeViewDialog from './EmployeeViewDialog';
 import { toast } from 'sonner';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import CreateEmployeeDialog from './CreateEmployeeDialog';
 
 const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }> = ({ 
   employees = [], 
@@ -21,6 +22,7 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
   const { updateEmployee, deleteEmployee } = useEmployeeActions();
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -61,6 +63,15 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
         toast.error('Erreur lors de la suppression de l\'employé');
       }
     }
+  };
+
+  const handleAddEmployee = () => {
+    setCreateDialogOpen(true);
+  };
+
+  const handleEmployeeCreated = (employee: Employee) => {
+    toast.success(`L'employé ${employee.firstName} ${employee.lastName} a été créé avec succès`);
+    // No need to refresh the data here as it's managed by useEmployeeData hook
   };
 
   const columns: Column<Employee>[] = [
@@ -137,7 +148,7 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
       <div className="mb-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Employés</h1>
-          <Button>
+          <Button onClick={handleAddEmployee}>
             <UserPlus className="mr-2 h-4 w-4" />
             Ajouter un employé
           </Button>
@@ -162,6 +173,12 @@ const EmployeesProfiles: React.FC<{ employees: Employee[], isLoading?: boolean }
         open={viewDialogOpen}
         onOpenChange={setViewDialogOpen}
         onUpdate={handleUpdateEmployee}
+      />
+
+      <CreateEmployeeDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreated={handleEmployeeCreated}
       />
     </div>
   );
