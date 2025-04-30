@@ -7,6 +7,7 @@ import DepartmentTable from './DepartmentTable';
 import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
+import DashboardCards from './DashboardCards';
 import { useDepartments } from './useDepartments';
 
 const EmployeesDepartments: React.FC = () => {
@@ -42,6 +43,9 @@ const EmployeesDepartments: React.FC = () => {
   return (
     <div className="space-y-6">
       <DepartmentHeader onAddDepartment={handleAddDepartment} />
+      
+      {/* Dashboard Cards */}
+      <DashboardCards departments={departments} loading={loading} />
 
       <Card>
         <CardContent className="p-6">
