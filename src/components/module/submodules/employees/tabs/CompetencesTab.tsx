@@ -1,12 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Employee, Skill } from '@/types/employee';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import AddSkillDialog from './AddSkillDialog';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import { toast } from 'sonner';
 
 interface CompetencesTabProps {
   employee: Employee;
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
+  const [isAddSkillDialogOpen, setIsAddSkillDialogOpen] = useState(false);
+  const { updateEmployee, isLoading } = useEmployeeActions();
+
   // Helper to ensure values are strings
   const ensureString = (value: any) => {
     if (value === undefined || value === null) return '-';
@@ -26,9 +34,31 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
     expert: 'bg-purple-100 text-purple-800'
   };
 
+  const handleAddSkill = async (newSkill: Skill) => {
+    try {
+      const updatedSkills = [...skills, newSkill];
+      await updateEmployee({
+        id: employee.id,
+        skills: updatedSkills
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la compétence:', error);
+      toast.error("Erreur lors de l'ajout de la compétence");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h3 className="font-medium text-lg">Compétences</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="font-medium text-lg">Compétences</h3>
+        <Button 
+          size="sm" 
+          onClick={() => setIsAddSkillDialogOpen(true)}
+          disabled={isLoading}
+        >
+          <Plus className="h-4 w-4 mr-1" /> Ajouter une compétence
+        </Button>
+      </div>
       
       {skills.length > 0 ? (
         <div className="space-y-4">
@@ -68,6 +98,12 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
           </p>
         </div>
       )}
+
+      <AddSkillDialog
+        open={isAddSkillDialogOpen}
+        onOpenChange={setIsAddSkillDialogOpen}
+        onAddSkill={handleAddSkill}
+      />
     </div>
   );
 };
