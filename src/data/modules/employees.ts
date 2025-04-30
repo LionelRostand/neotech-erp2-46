@@ -16,7 +16,8 @@ import {
   Bell,
   SunMedium,
   FileSignature,
-  ListTree
+  ListTree,
+  UserPlus
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -29,6 +30,9 @@ export const employeesModule: AppModule = {
   category: 'business', 
   submodules: [
     { id: "employees-dashboard", name: "Tableau de bord", href: "/modules/employees/dashboard", icon: createIcon(LayoutDashboard) },
+    
+    // Employés submenu
+    { id: "employees-profiles", name: "Employés", href: "/modules/employees/profiles", icon: createIcon(Users) },
     
     // Badges et accès
     { id: "employees-badges", name: "Badges et accès", href: "/modules/employees/badges", icon: createIcon(Users) },
