@@ -15,7 +15,7 @@ export const useEmployeeActions = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { fetchAllHrData } = useHrModuleData();
+  const { fetchAllHrData } = useHrModuleData() || { fetchAllHrData: () => Promise.resolve() };
   
   const createEmployee = async (employeeData: Omit<Employee, 'id'>) => {
     try {

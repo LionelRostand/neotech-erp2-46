@@ -1,12 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { DataTable } from '@/components/ui/data-table';
 import EmployeesDashboardCards from './employees/dashboard/EmployeesDashboardCards';
 import EmployeesProfiles from './employees/EmployeesProfiles';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
 import CreateEmployeeDialog from './employees/CreateEmployeeDialog';
 import { toast } from 'sonner';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
@@ -47,7 +45,7 @@ const EmployeesDashboard = () => {
       </div>
       
       {/* Liste des employés */}
-      <EmployeesProfiles employees={employees} isLoading={isLoading} />
+      <EmployeesProfiles employees={employees || []} isLoading={isLoading} />
       
       {/* Dialog de création d'employé */}
       <CreateEmployeeDialog

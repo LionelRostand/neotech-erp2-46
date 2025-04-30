@@ -6,7 +6,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
-const EMPLOYEES_COLLECTION = COLLECTIONS.HR.EMPLOYEES || 'employees';
+const EMPLOYEES_COLLECTION = COLLECTIONS.HR.EMPLOYEES || 'hr_employees';
 
 export const createEmployee = async (data: Partial<Employee>): Promise<Employee> => {
   try {
@@ -58,52 +58,6 @@ export const updateEmployee = async (id: string, data: Partial<Employee>): Promi
     console.log('Employee updated:', id);
   } catch (error) {
     console.error('Error updating employee:', error);
-    throw error;
-  }
-};
-
-export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Promise<Employee | null> => {
-  try {
-    // First get the current document
-    const docRef = doc(db, EMPLOYEES_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      throw new Error(`Employee with ID ${id} not found`);
-    }
-    
-    const currentData = docSnap.data() as Employee;
-    
-    // Merge the data, being careful with nested objects
-    const updateData = {
-      ...data,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Handle address properly
-    if (data.address && typeof data.address === 'object') {
-      updateData.address = {
-        ...(typeof currentData.address === 'object' ? currentData.address : {}),
-        ...data.address
-      };
-    }
-    
-    // Handle work address properly
-    if (data.workAddress && typeof data.workAddress === 'object') {
-      updateData.workAddress = {
-        ...(typeof currentData.workAddress === 'object' ? currentData.workAddress : {}),
-        ...data.workAddress
-      };
-    }
-    
-    await updateDoc(docRef, updateData);
-    console.log('Employee updated with merged data:', id);
-    
-    // Get the updated document
-    const updatedSnap = await getDoc(docRef);
-    return updatedSnap.exists() ? { id: updatedSnap.id, ...updatedSnap.data() } as Employee : null;
-  } catch (error) {
-    console.error('Error updating employee document:', error);
     throw error;
   }
 };

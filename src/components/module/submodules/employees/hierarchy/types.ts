@@ -1,27 +1,12 @@
 
-export interface HierarchyNode {
+export interface OrgChartNode {
   id: string;
   name: string;
-  title: string;
-  manager?: string;
-  color?: string;
-  imageUrl?: string;
-  children: HierarchyNode[];
-}
-
-export interface ChartNode {
-  id: string;
-  name: string;
-  position: string;
+  title?: string;
+  photo?: string;
   department?: string;
-  departmentColor?: string;
-  imageUrl?: string;
-  children: ChartNode[];
-}
-
-export interface HierarchyVisualizationProps {
-  viewMode: 'orgChart' | 'treeView';
-  searchQuery: string;
-  data: HierarchyNode | ChartNode | null;
-  onRefresh?: () => void;
+  email?: string;
+  phone?: string;
+  children: OrgChartNode[];
+  isCollapsed?: boolean;
 }

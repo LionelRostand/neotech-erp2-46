@@ -25,6 +25,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
   onDelete,
   isLoading = false
 }) => {
+  // Récupérer les départements
   const { departments = [] } = useEmployeeData();
   
   // Ensure we have valid data to work with
@@ -49,13 +50,13 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
                 />
               ) : (
                 <AvatarFallback>
-                  {employee.firstName?.[0]}{employee.lastName?.[0]}
+                  {(employee.firstName?.[0] || '')}{(employee.lastName?.[0] || '')}
                 </AvatarFallback>
               )}
             </Avatar>
             <div>
-              <p className="font-medium">{employee.firstName} {employee.lastName}</p>
-              <p className="text-xs text-gray-500">{employee.email}</p>
+              <p className="font-medium">{employee.firstName || ''} {employee.lastName || ''}</p>
+              <p className="text-xs text-gray-500">{employee.email || ''}</p>
             </div>
           </div>
         );

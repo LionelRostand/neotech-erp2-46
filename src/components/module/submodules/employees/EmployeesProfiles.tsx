@@ -18,7 +18,7 @@ interface EmployeesProfilesProps {
 }
 
 const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], isLoading = false }) => {
-  const { createEmployee, deleteEmployee } = useEmployeeActions();
+  const { createEmployee, deleteEmployee, updateEmployee } = useEmployeeActions();
   const [searchQuery, setSearchQuery] = useState('');
   
   // Dialog states
@@ -30,16 +30,18 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
   const [isDeleting, setIsDeleting] = useState(false);
   
   // Filter employees based on search
-  const filteredEmployees = employees.filter(employee => {
-    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+  const filteredEmployees = Array.isArray(employees) ? employees.filter(employee => {
+    if (!employee) return false;
+    
+    const fullName = `${employee.firstName || ''} ${employee.lastName || ''}`.toLowerCase();
     const searchLower = searchQuery.toLowerCase();
     return (
       fullName.includes(searchLower) ||
-      employee.email?.toLowerCase().includes(searchLower) ||
-      employee.position?.toLowerCase().includes(searchLower) ||
-      employee.department?.toLowerCase().includes(searchLower)
+      (employee.email || '').toLowerCase().includes(searchLower) ||
+      (employee.position || '').toLowerCase().includes(searchLower) ||
+      (employee.department || '').toLowerCase().includes(searchLower)
     );
-  });
+  }) : [];
   
   // Handle creating a new employee
   const handleCreateEmployee = async (data: Partial<Employee>) => {
@@ -50,6 +52,20 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
     } catch (error) {
       console.error("Error creating employee:", error);
       toast.error("Erreur lors de la création de l'employé");
+    }
+  };
+  
+  // Handle updating an employee
+  const handleUpdateEmployee = async (data: Partial<Employee>) => {
+    if (!data.id) return;
+    
+    try {
+      await updateEmployee(data);
+      setEditDialogOpen(false);
+      toast.success("Employé mis à jour avec succès");
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      toast.error("Erreur lors de la mise à jour de l'employé");
     }
   };
   
@@ -91,7 +107,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
   
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-2xl font-bold">Liste des Employés</h1>
+      <h1 className="text-2xl font-bold">Fiches Employés</h1>
       
       {/* Actions Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -148,6 +164,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
             employee={selectedEmployee}
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
+            onSubmit={handleUpdateEmployee}
           />
           
           <DeleteConfirmDialog

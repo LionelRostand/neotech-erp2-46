@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
 import EmployeeForm from './EmployeeForm';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -20,6 +21,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   onOpenChange,
   onSubmit
 }) => {
+  const { isCreating } = useEmployeeActions();
+
   const handleSubmit = (employee: Partial<Employee>) => {
     onSubmit(employee);
   };
@@ -38,6 +41,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
         <EmployeeForm 
           onSubmit={handleSubmit}
           onCancel={handleCancel}
+          isSubmitting={isCreating}
         />
       </DialogContent>
     </Dialog>
