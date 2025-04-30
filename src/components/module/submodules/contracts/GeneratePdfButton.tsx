@@ -17,11 +17,32 @@ const GeneratePdfButton: React.FC<GeneratePdfButtonProps> = ({ contract, onSucce
   // On récupère les données de l'employé directement depuis le hook central
   const { employees } = useHrModuleData();
 
+  // Helper function to safely stringify any object
+  const ensureString = (value: any): string => {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
   const handleGeneratePdf = async () => {
     if (!contract) return;
     
     setIsGenerating(true);
     try {
+      // Ensure we have a valid contract object with string values where needed
+      const safeContract = {
+        ...contract,
+        employeeName: ensureString(contract.employeeName),
+        position: ensureString(contract.position),
+        type: ensureString(contract.type),
+        status: ensureString(contract.status),
+        department: ensureString(contract.department)
+      };
+      
       // Trouver l'employé correspondant au contrat
       const employee = employees?.find(emp => emp.id === contract.employeeId);
       
@@ -31,7 +52,7 @@ const GeneratePdfButton: React.FC<GeneratePdfButtonProps> = ({ contract, onSucce
         return;
       }
       
-      const success = await generateContractPdf(contract, employee);
+      const success = await generateContractPdf(safeContract, employee);
       
       if (success) {
         toast.success("Le PDF du contrat a été généré avec succès");
