@@ -49,4 +49,5 @@ export const StatusBadge = ({ status, children, className, variant }: StatusBadg
   );
 };
 
+// Also provide a default export for backward compatibility
 export default StatusBadge;
