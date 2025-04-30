@@ -12,20 +12,23 @@ import { Employee } from '@/types/employee';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { getDepartmentName } from '../utils/departmentUtils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import EmployeeStatusBadge from '../EmployeeStatusBadge';
 
-// Import des onglets
+// Import tabs
 import InformationsTab from '../tabs/InformationsTab';
 import DocumentsTab from '../tabs/DocumentsTab';
 import CompetencesTab from '../tabs/CompetencesTab';
 import HorairesTab from '../tabs/HorairesTab';
 import CongesTab from '../tabs/CongesTab';
 import EvaluationsTab from '../tabs/EvaluationsTab';
+import PresencesTab from '../tabs/PresencesTab';
 
 interface EmployeeViewDialogProps {
   employee: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: () => void;
+  onEdit?: () => void;
 }
 
 const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
@@ -54,35 +57,59 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
     employee.department || employee.departmentId, 
     departments
   );
+  
+  // Get company name
+  const companyName = typeof employee.company === 'object' && employee.company?.name 
+    ? employee.company.name 
+    : typeof employee.company === 'string' ? employee.company : "Entreprise non spécifiée";
 
   // Prepare employee with all needed data for tabs
   const enhancedEmployee = {
     ...employee,
     departmentName: departmentDisplay,
     managerName: managerDisplay,
+    companyName: companyName
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl flex items-center gap-2">
-            <span className="font-bold">
-              {employee.firstName} {employee.lastName}
-            </span>
-          </DialogTitle>
-          <DialogDescription>
-            {employee.position || "Poste non spécifié"} - {departmentDisplay}
-          </DialogDescription>
+        <DialogHeader className="flex flex-row items-start mb-4">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 border">
+              {employee.photoURL || employee.photo ? (
+                <AvatarImage 
+                  src={employee.photoURL || employee.photo} 
+                  alt={`${employee.firstName} ${employee.lastName}`} 
+                />
+              ) : (
+                <AvatarFallback>
+                  {employee.firstName?.[0]}{employee.lastName?.[0]}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            
+            <div>
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                {employee.firstName} {employee.lastName}
+              </DialogTitle>
+              <DialogDescription className="mt-1">
+                {employee.position || "Poste non spécifié"} • {companyName}
+              </DialogDescription>
+              <div className="mt-2">
+                <EmployeeStatusBadge status={employee.status || 'active'} />
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
         <Tabs defaultValue="informations" className="mt-4">
-          <TabsList className="grid grid-cols-6 mb-4">
+          <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
             <TabsTrigger value="informations">Informations</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="compétences">Compétences</TabsTrigger>
-            <TabsTrigger value="horaires">Horaires</TabsTrigger>
-            <TabsTrigger value="congés">Congés</TabsTrigger>
+            <TabsTrigger value="presences">Présences</TabsTrigger>
+            <TabsTrigger value="conges">Congés</TabsTrigger>
+            <TabsTrigger value="competences">Compétences</TabsTrigger>
             <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
           </TabsList>
           
@@ -94,16 +121,16 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
             <DocumentsTab employee={enhancedEmployee} />
           </TabsContent>
           
-          <TabsContent value="compétences">
-            <CompetencesTab employee={enhancedEmployee} />
+          <TabsContent value="presences">
+            <PresencesTab employee={enhancedEmployee} />
           </TabsContent>
           
-          <TabsContent value="horaires">
-            <HorairesTab employee={enhancedEmployee} />
-          </TabsContent>
-          
-          <TabsContent value="congés">
+          <TabsContent value="conges">
             <CongesTab employee={enhancedEmployee} />
+          </TabsContent>
+          
+          <TabsContent value="competences">
+            <CompetencesTab employee={enhancedEmployee} />
           </TabsContent>
           
           <TabsContent value="evaluations">
@@ -111,11 +138,13 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end mt-4">
-          <Button onClick={onEdit}>
-            Modifier
-          </Button>
-        </div>
+        {onEdit && (
+          <div className="flex justify-end mt-4">
+            <Button onClick={onEdit}>
+              Modifier
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

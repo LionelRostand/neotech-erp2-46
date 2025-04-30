@@ -1,35 +1,41 @@
 
 import React, { useState } from 'react';
-import { Employee } from '@/types/employee';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { Button } from '@/components/ui/button';
 import { Plus, FileUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import StatCard from '@/components/StatCard';
+import { Users, Building2, UserCheck } from 'lucide-react';
 import EmployeesTable from './EmployeesTable';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
 import ViewEmployeeDialog from './ViewEmployeeDialog';
+import EditEmployeeDialog from './dialogs/EmployeeEditDialog';
 import DeleteConfirmDialog from './dialogs/DeleteConfirmDialog';
+import { Employee } from '@/types/employee';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { toast } from 'sonner';
-import EmployeeEditDialog from './dialogs/EmployeeEditDialog';
 
-interface EmployeesProfilesProps {
-  employees: Employee[];
-  isLoading?: boolean;
-}
-
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], isLoading = false }) => {
+const EmployeesDashboard = () => {
+  const { employees = [], departments = [], isLoading } = useEmployeeData();
   const { createEmployee, deleteEmployee } = useEmployeeActions();
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Dialog states
+  // Dialog control states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading2, setIsLoading2] = useState(false);
   
-  // Filter employees based on search
+  // Calculate statistics
+  const totalEmployees = employees.length;
+  const activeDepartments = departments.length;
+  const activeEmployees = employees.filter(emp => 
+    emp.status === 'active' || emp.status === 'Actif'
+  ).length;
+  
+  // Filter employees based on search query
   const filteredEmployees = employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
     const searchLower = searchQuery.toLowerCase();
@@ -41,7 +47,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
     );
   });
   
-  // Handle creating a new employee
+  // Handle employee creation
   const handleCreateEmployee = async (data: Partial<Employee>) => {
     try {
       await createEmployee(data as Omit<Employee, 'id'>);
@@ -53,29 +59,11 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
     }
   };
   
-  // Handle view employee
-  const handleViewEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setViewDialogOpen(true);
-  };
-  
-  // Handle edit employee
-  const handleEditEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setEditDialogOpen(true);
-  };
-  
-  // Handle delete employee
-  const handleDeleteEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setDeleteDialogOpen(true);
-  };
-  
-  // Confirm employee deletion
+  // Handle employee deletion
   const handleDeleteConfirm = async () => {
     if (!selectedEmployee?.id) return;
     
-    setIsDeleting(true);
+    setIsLoading2(true);
     try {
       await deleteEmployee(selectedEmployee.id);
       setDeleteDialogOpen(false);
@@ -85,13 +73,58 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
       console.error("Error deleting employee:", error);
       toast.error("Erreur lors de la suppression de l'employé");
     } finally {
-      setIsDeleting(false);
+      setIsLoading2(false);
     }
+  };
+  
+  // View employee details
+  const handleViewEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setViewDialogOpen(true);
+  };
+  
+  // Edit employee
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setEditDialogOpen(true);
+  };
+  
+  // Delete employee
+  const handleDeleteEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setDeleteDialogOpen(true);
   };
   
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-2xl font-bold">Liste des Employés</h1>
+      <h1 className="text-2xl font-bold mb-6">Gestion des Employés</h1>
+      
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <StatCard
+          title="Employés totaux"
+          value={totalEmployees.toString()}
+          icon={<Users className="h-6 w-6 text-blue-600" />}
+          description="Effectif total de l'entreprise"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
+        />
+        
+        <StatCard
+          title="Départements actifs"
+          value={activeDepartments.toString()}
+          icon={<Building2 className="h-6 w-6 text-purple-600" />}
+          description="Départements avec employés"
+          className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
+        />
+        
+        <StatCard
+          title="Employés actifs"
+          value={activeEmployees.toString()}
+          icon={<UserCheck className="h-6 w-6 text-green-600" />}
+          description="Employés en activité"
+          className="bg-gradient-to-br from-green-50 to-green-100 border-green-200"
+        />
+      </div>
       
       {/* Actions Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -117,13 +150,16 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
       </div>
       
       {/* Employees Table */}
-      <EmployeesTable
-        employees={filteredEmployees}
-        onView={handleViewEmployee}
-        onEdit={handleEditEmployee}
-        onDelete={handleDeleteEmployee}
-        isLoading={isLoading}
-      />
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <h2 className="text-lg font-semibold p-4 border-b">Liste des employés</h2>
+        <EmployeesTable
+          employees={filteredEmployees}
+          onView={handleViewEmployee}
+          onEdit={handleEditEmployee}
+          onDelete={handleDeleteEmployee}
+          isLoading={isLoading}
+        />
+      </div>
       
       {/* Dialogs */}
       <CreateEmployeeDialog
@@ -152,7 +188,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
             onConfirm={handleDeleteConfirm}
             title="Supprimer l'employé"
             description={`Êtes-vous sûr de vouloir supprimer l'employé ${selectedEmployee.firstName} ${selectedEmployee.lastName} ? Cette action est irréversible.`}
-            isLoading={isDeleting}
+            isLoading={isLoading2}
           />
         </>
       )}
@@ -160,4 +196,4 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
   );
 };
 
-export default EmployeesProfiles;
+export default EmployeesDashboard;

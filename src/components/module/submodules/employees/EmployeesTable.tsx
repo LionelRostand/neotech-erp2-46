@@ -45,22 +45,22 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Employé
+              EMPLOYÉ
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Poste
+              POSTE
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Email
+              EMAIL
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Département
+              DÉPARTEMENT
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Statut
+              STATUT
             </th>
             <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
+              ACTIONS
             </th>
           </tr>
         </thead>
@@ -75,9 +75,10 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
                         <AvatarImage 
                           src={employee.photoURL || employee.photo} 
                           alt={`${employee.firstName} ${employee.lastName}`} 
+                          className="object-cover"
                         />
                       ) : (
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
                           {employee.firstName?.[0]}{employee.lastName?.[0]}
                         </AvatarFallback>
                       )}
@@ -96,16 +97,16 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {employee.position}
+                {employee.position || '-'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {employee.professionalEmail || employee.email}
+                {employee.professionalEmail || employee.email || '-'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {employee.department}
+                {employee.department || '-'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <EmployeeStatusBadge status={employee.status} />
+                <EmployeeStatusBadge status={employee.status || 'active'} />
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end gap-2">
