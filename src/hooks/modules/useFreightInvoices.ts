@@ -33,6 +33,14 @@ export const useFreightInvoices = () => {
       const collectionPath = COLLECTIONS.FREIGHT.BILLING;
       console.log(`Fetching freight invoices from collection: ${collectionPath}`);
       
+      // Vérifier que la collection existe
+      if (!collectionPath) {
+        console.error("Collection path is undefined");
+        toast.error("Erreur: Chemin de collection non défini");
+        setIsLoading(false);
+        return;
+      }
+      
       const invoicesRef = collection(db, collectionPath);
       const q = query(invoicesRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
@@ -59,6 +67,10 @@ export const useFreightInvoices = () => {
 
   const updateInvoice = useCallback(async (id: string, data: Partial<FreightInvoice>) => {
     try {
+      if (!COLLECTIONS.FREIGHT.BILLING) {
+        throw new Error("Collection path is undefined");
+      }
+      
       const invoiceRef = doc(db, COLLECTIONS.FREIGHT.BILLING, id);
       await updateDoc(invoiceRef, {
         ...data,

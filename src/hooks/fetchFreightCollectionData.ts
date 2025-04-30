@@ -22,7 +22,7 @@ export const fetchFreightCollection = async <T>(
     
     // Create collection reference and query
     const collectionRef = collection(db, collectionPath);
-    const q = query(collectionRef, ...constraints);
+    const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
     
     // Map documents to objects with id

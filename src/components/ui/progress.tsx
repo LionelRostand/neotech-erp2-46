@@ -8,8 +8,10 @@ const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, ...props }, ref) => {
-  // Ensure value is a valid number
-  const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+  // Ensure value is a valid number between 0 and 100
+  const safeValue = typeof value === 'number' && !isNaN(value) 
+    ? Math.max(0, Math.min(100, value)) 
+    : 0;
 
   return (
     <ProgressPrimitive.Root
@@ -22,7 +24,7 @@ const Progress = React.forwardRef<
     >
       <ProgressPrimitive.Indicator
         className="h-full w-full flex-1 bg-primary transition-all"
-        style={{ transform: `translateX(-${100 - (safeValue || 0)}%)` }}
+        style={{ transform: `translateX(-${100 - safeValue}%)` }}
       />
     </ProgressPrimitive.Root>
   )
