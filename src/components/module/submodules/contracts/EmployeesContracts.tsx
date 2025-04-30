@@ -2,8 +2,6 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
-import { useCollectionData } from '@/hooks/useCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { formatDate } from '@/lib/formatters';
 import { useContractsData } from '@/hooks/useContractsData';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -96,7 +94,7 @@ const EmployeesContracts = () => {
       <CardContent>
         <DataTable
           columns={columns}
-          data={contracts}
+          data={contracts || []}
           isLoading={isLoading}
           emptyMessage="Aucun contrat disponible"
         />

@@ -35,6 +35,16 @@ export const COLLECTIONS = {
     EXPENSES: 'accounting_expenses',
     SETTINGS: 'accounting_settings'
   },
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    OUTBOX: 'messages_outbox',
+    DRAFTS: 'messages_drafts',
+    TEMPLATES: 'messages_templates',
+    CONTACTS: 'messages_contacts',
+    SETTINGS: 'messages_settings',
+    ARCHIVE: 'messages_archive',
+    SCHEDULED: 'messages_scheduled'
+  },
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',
     CARRIERS: 'freight_carriers',
@@ -55,5 +65,6 @@ export const COLLECTIONS = {
     INVENTORY: 'garage_inventory',
     INVOICES: 'garage_invoices',
     SETTINGS: 'garage_settings'
-  }
+  },
+  USERS: 'users'
 };
