@@ -1,6 +1,6 @@
 
 import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { DOCUMENT_COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { DocumentFile, DocumentPermission } from '../types/document-types';
 
@@ -8,7 +8,7 @@ export const usePermissionService = () => {
   const {
     getById: getDocumentById,
     update: updateDocument,
-  } = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
+  } = useFirestore(DOCUMENT_COLLECTIONS.DOCUMENTS);
 
   const updateDocumentPermissions = async (documentId: string, permissions: DocumentPermission[]): Promise<boolean> => {
     try {

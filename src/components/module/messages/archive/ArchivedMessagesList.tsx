@@ -59,8 +59,11 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
       {safeMessages.map(message => {
         if (!message) return null;
         
-        // Get display name for the contact
-        const contactName = message.senderName || message.sender?.name || 'Contact inconnu';
+        // Get sender name safely
+        const senderName = typeof message.sender === 'object' && message.sender ? 
+                          message.sender.name || 'Contact inconnu' : 
+                          'Contact inconnu';
+                          
         const isRestoring = message.id && restoringMessageId === message.id;
         
         return (

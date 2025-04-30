@@ -12,10 +12,8 @@ const TopBar = () => {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  // Safe access to COLLECTIONS.MESSAGES
-  const messagesCollection = COLLECTIONS?.MESSAGES || {};
-  // Safe access to messagesCollection.INBOX with fallback
-  const inboxPath = messagesCollection?.INBOX ? `/modules/messages/inbox` : '#';
+  // Safe path for messages inbox
+  const inboxPath = `/modules/messages/inbox`;
 
   const handleProfileClick = () => {
     navigate('/settings/profile');

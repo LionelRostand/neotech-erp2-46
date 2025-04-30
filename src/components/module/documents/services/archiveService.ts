@@ -1,5 +1,6 @@
+
 import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { DOCUMENT_COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { DocumentFile } from '../types/document-types';
 
@@ -7,7 +8,7 @@ export const useArchiveService = () => {
   const {
     getById: getDocumentById,
     update: updateDocument,
-  } = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
+  } = useFirestore(DOCUMENT_COLLECTIONS.DOCUMENTS);
 
   const archiveDocument = async (documentId: string): Promise<boolean> => {
     try {

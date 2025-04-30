@@ -58,7 +58,7 @@ export const COLLECTIONS = {
   },
   MESSAGES: {
     INBOX: 'messages_inbox',
-    OUTBOX: 'messages_outbox', 
+    OUTBOX: 'messages_outbox',
     DRAFTS: 'messages_drafts',
     TEMPLATES: 'messages_templates',
     CONTACTS: 'messages_contacts',
@@ -82,6 +82,7 @@ export const COLLECTIONS = {
 
 // Add document collections for the document module
 export const DOCUMENT_COLLECTIONS = {
+  DOCUMENTS: COLLECTIONS.DOCUMENTS.FILES,
   FILES: COLLECTIONS.DOCUMENTS.FILES,
   FOLDERS: COLLECTIONS.DOCUMENTS.FOLDERS,
   SHARES: COLLECTIONS.DOCUMENTS.SHARES,
@@ -91,4 +92,12 @@ export const DOCUMENT_COLLECTIONS = {
   TAGS: COLLECTIONS.DOCUMENTS.TAGS,
   TEMPLATES: COLLECTIONS.DOCUMENTS.TEMPLATES,
   SIGNATURES: COLLECTIONS.DOCUMENTS.SIGNATURES
+};
+
+// Application metadata
+export const APP_METADATA = {
+  appName: "NEOTECH-ERP",
+  version: "1.0.0",
+  environment: "development",
+  timestamp: "2025-04-30T06:45:59.496Z"
 };

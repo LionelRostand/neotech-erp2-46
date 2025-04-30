@@ -20,13 +20,17 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
   // Ensure message has all required properties with defaults
   const safeMessage = {
     id: message?.id || 'unknown',
-    sender: message?.sender || { name: 'Contact inconnu', email: '' },
-    senderName: message?.senderName || message?.sender?.name || 'Contact inconnu',
-    createdAt: message?.createdAt || new Date(),
+    sender: message?.sender || { email: '', name: 'Contact inconnu' },
     subject: message?.subject || 'Sans objet',
     content: message?.content || 'Aucun contenu',
+    createdAt: message?.createdAt || new Date(),
     ...message
   };
+
+  // Get sender name safely
+  const senderName = typeof safeMessage.sender === 'object' && safeMessage.sender ? 
+                     safeMessage.sender.name || 'Contact inconnu' : 
+                     'Contact inconnu';
 
   const getDate = () => {
     try {
@@ -51,7 +55,7 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{safeMessage.senderName}</span>
+              <span className="font-semibold">{senderName}</span>
               <span className="text-xs text-muted-foreground">
                 {getDate()}
               </span>

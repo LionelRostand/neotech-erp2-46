@@ -1,5 +1,6 @@
+
 import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { DOCUMENT_COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { DocumentFile, DocumentVersion } from '../types/document-types';
 
@@ -8,7 +9,7 @@ export const useFileService = () => {
     getById: getDocumentById,
     add: addDocument,
     update: updateDocument,
-  } = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
+  } = useFirestore(DOCUMENT_COLLECTIONS.DOCUMENTS);
 
   const uploadDocument = async (file: File, metadata: Partial<DocumentFile>): Promise<DocumentFile | null> => {
     try {

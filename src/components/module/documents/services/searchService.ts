@@ -1,12 +1,13 @@
+
 import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { DOCUMENT_COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { DocumentFile, SearchParams } from '../types/document-types';
 
 export const useSearchService = () => {
   const {
     getAll: getAllDocuments,
-  } = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
+  } = useFirestore(DOCUMENT_COLLECTIONS.DOCUMENTS);
 
   const getAllUserDocuments = async (userId: string, status: 'active' | 'archived' | 'all' = 'active'): Promise<DocumentFile[]> => {
     try {
