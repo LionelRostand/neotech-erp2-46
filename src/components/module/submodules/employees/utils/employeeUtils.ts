@@ -2,56 +2,104 @@
 import { Employee } from '@/types/employee';
 
 /**
- * Vérifie si l'employé est un manager en fonction de son poste
+ * Vérifie si un poste doit être considéré comme un poste de manager
  */
-export const isEmployeeManager = (position?: string): boolean => {
-  if (!position) return false;
-  
-  const managerKeywords = [
-    'manager', 'directeur', 'directrice', 'chef', 'responsable', 'superviseur', 
-    'leader', 'gérant', 'coordinateur'
+export const isEmployeeManager = (position: string): boolean => {
+  const managerTitles = [
+    'manager',
+    'directeur',
+    'directrice',
+    'responsable',
+    'chef',
+    'superviseur',
+    'gérant',
+    'leader',
+    'supérieur',
+    'coordinateur'
   ];
   
   const positionLower = position.toLowerCase();
-  return managerKeywords.some(keyword => positionLower.includes(keyword));
+  return managerTitles.some(title => positionLower.includes(title));
 };
 
 /**
- * Obtient le nom complet d'un employé
+ * Obtenir le nom complet de l'employé
  */
-export const getEmployeeFullName = (employee: Employee | null | undefined): string => {
+export const getEmployeeFullName = (employee: Employee | undefined | null): string => {
   if (!employee) return '';
-  return `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employé sans nom';
+  
+  const firstName = employee.firstName || '';
+  const lastName = employee.lastName || '';
+  
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  } else if (firstName) {
+    return firstName;
+  } else if (lastName) {
+    return lastName;
+  }
+  
+  return 'Employé sans nom';
 };
 
 /**
- * Filtre les employés par terme de recherche
+ * Formatage du numéro de téléphone
  */
-export const filterEmployeesBySearchTerm = (employees: Employee[], searchTerm: string): Employee[] => {
-  if (!searchTerm) return employees;
+export const formatPhoneNumber = (phone: string | undefined): string => {
+  if (!phone) return '';
   
-  const searchLower = searchTerm.toLowerCase();
+  // Supprimer tous les caractères non numériques
+  const numbers = phone.replace(/\D/g, '');
   
-  return employees.filter(employee => {
-    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-    return (
-      fullName.includes(searchLower) ||
-      (employee.email && employee.email.toLowerCase().includes(searchLower)) ||
-      (employee.position && employee.position.toLowerCase().includes(searchLower)) ||
-      (employee.department && employee.department.toLowerCase().includes(searchLower))
-    );
-  });
+  // Format français : XX XX XX XX XX
+  if (numbers.length === 10) {
+    return numbers.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+  }
+  
+  // Si le numéro n'a pas 10 chiffres, on le renvoie tel quel
+  return phone;
 };
 
 /**
- * Trie les employés par un champ spécifique
+ * Formatter une date au format local
  */
-export const sortEmployees = (employees: Employee[], sortField: keyof Employee, sortDirection: 'asc' | 'desc'): Employee[] => {
-  return [...employees].sort((a, b) => {
-    const valueA = a[sortField] || '';
-    const valueB = b[sortField] || '';
+export const formatDate = (dateString: string | undefined): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString;
+  }
+};
+
+/**
+ * Calculer l'âge à partir d'une date de naissance
+ */
+export const calculateAge = (birthDateString: string | undefined): number | null => {
+  if (!birthDateString) return null;
+  
+  try {
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
     
-    const comparison = String(valueA).localeCompare(String(valueB));
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // Si le mois de naissance n'est pas encore arrivé ou si c'est le même mois mais le jour n'est pas encore arrivé
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  } catch (error) {
+    console.error("Error calculating age:", error);
+    return null;
+  }
 };

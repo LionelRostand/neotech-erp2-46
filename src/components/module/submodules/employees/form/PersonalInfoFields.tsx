@@ -1,85 +1,21 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
+import { EmployeeFormValues } from './employeeFormSchema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { EmployeeFormValues } from './employeeFormSchema';
-import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
 
 const PersonalInfoFields = () => {
-  const { register, formState: { errors }, setValue, watch } = useFormContext<EmployeeFormValues>();
-  const photoPreview = watch('photo');
-  
-  // Gérer le téléversement d'image
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Limiter la taille du fichier à 2MB
-    if (file.size > 2 * 1024 * 1024) {
-      alert('La taille du fichier doit être inférieure à 2MB');
-      return;
-    }
-    
-    // Vérifier le type de fichier
-    if (!file.type.startsWith('image/')) {
-      alert('Seules les images sont acceptées');
-      return;
-    }
-    
-    // Lire le fichier et stocker en base64
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setValue('photo', event.target.result as string);
-        
-        // Enregistrer les métadonnées du fichier
-        setValue('photoMeta', {
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          updatedAt: new Date().toISOString(),
-          data: event.target.result as string,
-        });
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+  const { register, formState: { errors } } = useFormContext<EmployeeFormValues>();
   
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Informations personnelles</h3>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Photo de l'employé */}
-        <div className="sm:col-span-2 flex flex-col items-center space-y-3">
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border flex items-center justify-center relative">
-            {photoPreview ? (
-              <img src={photoPreview} alt="Photo de profil" className="w-full h-full object-cover" />
-            ) : (
-              <div className="text-gray-400 text-2xl font-light">Photo</div>
-            )}
-          </div>
-          
-          <div>
-            <Button type="button" variant="outline" onClick={() => document.getElementById('photo-upload')?.click()}>
-              <Upload className="w-4 h-4 mr-2" />
-              Téléverser une photo
-            </Button>
-            <input 
-              id="photo-upload" 
-              type="file" 
-              accept="image/*" 
-              className="hidden"
-              onChange={handlePhotoUpload}
-            />
-          </div>
-        </div>
-        
-        {/* Nom et prénom */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nom */}
         <div>
-          <Label htmlFor="lastName">Nom</Label>
+          <Label htmlFor="lastName">Nom *</Label>
           <Input 
             id="lastName" 
             placeholder="Nom" 
@@ -91,8 +27,9 @@ const PersonalInfoFields = () => {
           )}
         </div>
         
+        {/* Prénom */}
         <div>
-          <Label htmlFor="firstName">Prénom</Label>
+          <Label htmlFor="firstName">Prénom *</Label>
           <Input 
             id="firstName" 
             placeholder="Prénom" 
@@ -104,9 +41,9 @@ const PersonalInfoFields = () => {
           )}
         </div>
         
-        {/* Email et téléphone */}
+        {/* Email personnel */}
         <div>
-          <Label htmlFor="email">Email personnel</Label>
+          <Label htmlFor="email">Email personnel *</Label>
           <Input 
             id="email" 
             type="email" 
@@ -119,26 +56,52 @@ const PersonalInfoFields = () => {
           )}
         </div>
         
+        {/* Téléphone */}
         <div>
           <Label htmlFor="phone">Téléphone</Label>
           <Input 
             id="phone" 
-            placeholder="Téléphone" 
+            type="tel" 
+            placeholder="+33 XX XX XX XX XX" 
             {...register('phone')} 
           />
         </div>
         
-        {/* Adresse */}
-        <div className="sm:col-span-2">
-          <Label htmlFor="streetName">Adresse</Label>
+        {/* Date de naissance */}
+        <div>
+          <Label htmlFor="birthDate">Date de naissance</Label>
           <Input 
-            id="streetName" 
-            placeholder="Adresse" 
-            {...register('streetName')} 
+            id="birthDate" 
+            type="date" 
+            {...register('birthDate')} 
           />
         </div>
+      </div>
+
+      <h4 className="text-md font-medium mt-4">Adresse</h4>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Numéro et nom de rue */}
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-1">
+            <Label htmlFor="streetNumber">Numéro</Label>
+            <Input 
+              id="streetNumber"
+              placeholder="123" 
+              {...register('streetNumber')}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label htmlFor="streetName">Rue</Label>
+            <Input 
+              id="streetName"
+              placeholder="Nom de rue" 
+              {...register('streetName')}
+            />
+          </div>
+        </div>
         
-        {/* Ville et code postal */}
+        {/* Ville */}
         <div>
           <Label htmlFor="city">Ville</Label>
           <Input 
@@ -148,16 +111,17 @@ const PersonalInfoFields = () => {
           />
         </div>
         
+        {/* Code postal */}
         <div>
           <Label htmlFor="zipCode">Code postal</Label>
           <Input 
             id="zipCode" 
-            placeholder="Code postal" 
+            placeholder="75000" 
             {...register('zipCode')} 
           />
         </div>
         
-        {/* Région et pays */}
+        {/* Région */}
         <div>
           <Label htmlFor="region">Région</Label>
           <Input 
@@ -167,14 +131,28 @@ const PersonalInfoFields = () => {
           />
         </div>
         
+        {/* Pays */}
         <div>
           <Label htmlFor="country">Pays</Label>
           <Input 
             id="country" 
             placeholder="Pays" 
             {...register('country')} 
+            defaultValue="France"
           />
         </div>
+      </div>
+
+      {/* Photo de l'employé */}
+      <div className="mt-4">
+        <Label htmlFor="photo">Photo</Label>
+        <Input 
+          id="photo" 
+          type="file" 
+          accept="image/*" 
+          className="cursor-pointer"
+          {...register('photo')}
+        />
       </div>
     </div>
   );

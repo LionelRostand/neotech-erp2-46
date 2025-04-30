@@ -104,11 +104,12 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="informations" className="mt-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
+          <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4">
             <TabsTrigger value="informations">Informations</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="presences">Présences</TabsTrigger>
             <TabsTrigger value="conges">Congés</TabsTrigger>
+            <TabsTrigger value="horaires">Horaires</TabsTrigger>
             <TabsTrigger value="competences">Compétences</TabsTrigger>
             <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
           </TabsList>
@@ -127,6 +128,10 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
           
           <TabsContent value="conges">
             <CongesTab employee={enhancedEmployee} />
+          </TabsContent>
+          
+          <TabsContent value="horaires">
+            <HorairesTab employee={enhancedEmployee} />
           </TabsContent>
           
           <TabsContent value="competences">

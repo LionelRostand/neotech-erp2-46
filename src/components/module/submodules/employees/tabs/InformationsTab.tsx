@@ -1,119 +1,162 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Mail, Phone, MapPin, Building2, Calendar, User, Briefcase } from 'lucide-react';
+import { 
+  Briefcase, 
+  Building, 
+  Calendar, 
+  Mail, 
+  MapPin, 
+  Phone, 
+  User
+} from 'lucide-react';
+import { formatPhoneNumber, formatDate, calculateAge } from '../utils/employeeUtils';
 
 interface InformationsTabProps {
-  employee: Employee & { 
+  employee: Employee & {
     departmentName?: string;
     managerName?: string;
     companyName?: string;
   };
 }
 
-const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | React.ReactNode }) => (
-  <div className="flex items-start space-x-3 px-4 py-3 border-b last:border-0">
-    <div className="text-gray-500">
-      {icon}
-    </div>
-    <div>
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <div className="text-base">{value || '—'}</div>
-    </div>
-  </div>
-);
-
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return '—';
-  
-  try {
-    const date = new Date(dateString);
-    return format(date, 'P', { locale: fr });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString;
-  }
-};
-
 const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
+  // Calculer l'âge si date de naissance disponible
+  const age = employee.birthDate ? calculateAge(employee.birthDate) : null;
+  
+  // Formatage de l'adresse complète
+  const formatAddress = () => {
+    // Si l'adresse est un objet complet
+    if (typeof employee.address === 'object' && employee.address) {
+      const { street, city, postalCode, country } = employee.address;
+      return [street, city, postalCode, country].filter(Boolean).join(', ');
+    }
+    
+    // Si les champs d'adresse sont séparés
+    const addressParts = [
+      employee.streetNumber && employee.streetName 
+        ? `${employee.streetNumber} ${employee.streetName}`
+        : (employee.streetName || ''),
+      employee.city,
+      employee.zipCode || employee.postalCode,
+      employee.region,
+      employee.country
+    ];
+    
+    return addressParts.filter(Boolean).join(', ');
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Informations professionnelles</h3>
-        <div className="border rounded-md">
-          <InfoItem 
-            icon={<Briefcase className="h-5 w-5" />} 
-            label="Poste" 
-            value={employee.position || '—'} 
-          />
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Nom complet</p>
+              <p>{employee.firstName} {employee.lastName}</p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<Building2 className="h-5 w-5" />} 
-            label="Département" 
-            value={employee.departmentName || employee.department || '—'} 
-          />
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Email personnel</p>
+              <p>{employee.email || 'Non spécifié'}</p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<Mail className="h-5 w-5" />} 
-            label="Email professionnel" 
-            value={employee.professionalEmail || employee.email || '—'} 
-          />
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Téléphone</p>
+              <p>{formatPhoneNumber(employee.phone) || 'Non spécifié'}</p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<User className="h-5 w-5" />} 
-            label="Responsable" 
-            value={employee.managerName || '—'} 
-          />
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Date de naissance</p>
+              <p>
+                {employee.birthDate 
+                  ? `${formatDate(employee.birthDate)}${age ? ` (${age} ans)` : ''}`
+                  : 'Non spécifiée'}
+              </p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<Building2 className="h-5 w-5" />} 
-            label="Entreprise" 
-            value={employee.companyName || '—'} 
-          />
-          
-          <InfoItem 
-            icon={<Calendar className="h-5 w-5" />} 
-            label="Date d'embauche" 
-            value={formatDate(employee.hireDate)} 
-          />
+          <div className="flex items-center gap-2 md:col-span-2">
+            <MapPin className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Adresse</p>
+              <p>{formatAddress() || 'Non spécifiée'}</p>
+            </div>
+          </div>
         </div>
       </div>
       
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Informations personnelles</h3>
-        <div className="border rounded-md">
-          <InfoItem 
-            icon={<Mail className="h-5 w-5" />} 
-            label="Email personnel" 
-            value={employee.email || '—'} 
-          />
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium mb-4">Informations professionnelles</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+          <div className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Poste</p>
+              <p>{employee.position || 'Non spécifié'}</p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<Phone className="h-5 w-5" />} 
-            label="Téléphone" 
-            value={employee.phone || '—'} 
-          />
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Email professionnel</p>
+              <p>{employee.professionalEmail || employee.email || 'Non spécifié'}</p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<MapPin className="h-5 w-5" />} 
-            label="Adresse" 
-            value={
-              <>
-                <div>{employee.streetNumber || ''} {employee.streetName || ''}</div>
-                <div>{employee.zipCode || ''} {employee.city || ''}</div>
-                <div>{employee.region || ''}</div>
-                <div>{employee.country || ''}</div>
-              </>
-            } 
-          />
+          <div className="flex items-center gap-2">
+            <Building className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Département</p>
+              <p>{employee.departmentName || 'Non spécifié'}</p>
+            </div>
+          </div>
           
-          <InfoItem 
-            icon={<Calendar className="h-5 w-5" />} 
-            label="Date de naissance" 
-            value={formatDate(employee.birthDate)} 
-          />
+          <div className="flex items-center gap-2">
+            <Building className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Entreprise</p>
+              <p>{employee.companyName || 'Non spécifiée'}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Responsable</p>
+              <p>{employee.managerName || 'Aucun responsable'}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Date d'embauche</p>
+              <p>{employee.hireDate ? formatDate(employee.hireDate) : 'Non spécifiée'}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4 text-gray-500" />
+            <div>
+              <p className="text-sm text-gray-500">Type de contrat</p>
+              <p>{employee.contract ? employee.contract.toUpperCase() : 'Non spécifié'}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

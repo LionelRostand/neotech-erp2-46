@@ -9,6 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from 'lucide-react';
 
 interface DeleteConfirmDialogProps {
   open: boolean;
@@ -27,16 +28,21 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   description,
   isLoading = false
 }) => {
+  const handleConfirm = () => {
+    onConfirm();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="text-destructive">{title}</DialogTitle>
           <DialogDescription>
             {description}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:justify-start">
+        
+        <DialogFooter className="mt-4">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -46,10 +52,17 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           </Button>
           <Button
             variant="destructive"
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? "Suppression..." : "Supprimer"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Suppression...
+              </>
+            ) : (
+              'Supprimer'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

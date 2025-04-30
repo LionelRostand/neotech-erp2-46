@@ -16,7 +16,6 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { isEmployeeManager } from '@/components/module/submodules/employees/utils/employeeUtils';
-import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 
 interface FormActionsProps {
   onCancel: () => void;

@@ -2,44 +2,53 @@
 import { Department } from '@/components/module/submodules/departments/types';
 
 /**
- * Get department name from id
- * @param departmentId Department ID
- * @param departments List of departments
- * @returns Department name or unknown department
+ * Récupère le nom du département à partir de son ID
  */
-export const getDepartmentName = (departmentId?: string, departments: Department[] = []): string => {
-  if (!departmentId) return 'Département non spécifié';
-  
-  // Check if departments exists and is an array
-  if (!Array.isArray(departments)) {
-    console.warn('Invalid departments format');
-    return departmentId;
+export const getDepartmentName = (
+  departmentId: string | undefined, 
+  departments: Department[] | undefined
+): string => {
+  if (!departmentId || !departments || !Array.isArray(departments)) {
+    return 'Département non spécifié';
   }
-  
-  // Find department by id
-  const department = departments.find(
-    dept => dept.id === departmentId
-  );
-  
-  // Return department name if found, otherwise return the ID
-  return department ? department.name : departmentId;
+
+  const department = departments.find(dept => dept.id === departmentId);
+  return department?.name || 'Département inconnu';
 };
 
 /**
- * Get department by id
- * @param departmentId Department ID
- * @param departments List of departments
- * @returns Department object or undefined
+ * Récupère la couleur du département à partir de son ID
  */
-export const getDepartment = (departmentId?: string, departments: Department[] = []): Department | undefined => {
-  if (!departmentId) return undefined;
-  
-  // Check if departments exists and is an array
-  if (!Array.isArray(departments)) {
-    console.warn('Invalid departments format');
-    return undefined;
+export const getDepartmentColor = (
+  departmentId: string | undefined,
+  departments: Department[] | undefined
+): string => {
+  if (!departmentId || !departments || !Array.isArray(departments)) {
+    return '#3b82f6'; // Couleur par défaut (bleu)
   }
   
-  // Find department by id
-  return departments.find(dept => dept.id === departmentId);
+  const department = departments.find(dept => dept.id === departmentId);
+  return department?.color || '#3b82f6';
+};
+
+/**
+ * Récupère le manager du département à partir de son ID
+ */
+export const getDepartmentManager = (
+  departmentId: string | undefined,
+  departments: Department[] | undefined
+): { id?: string; name?: string } => {
+  if (!departmentId || !departments || !Array.isArray(departments)) {
+    return { id: undefined, name: undefined };
+  }
+  
+  const department = departments.find(dept => dept.id === departmentId);
+  if (!department) {
+    return { id: undefined, name: undefined };
+  }
+  
+  return {
+    id: department.managerId,
+    name: department.managerName
+  };
 };
