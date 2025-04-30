@@ -6,14 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
-import { formValuesToEmployee } from './utils/formAdapter';
 import { Employee } from '@/types/employee';
-import PersonalInfoFields from './form/PersonalInfoFields';
-import CompanyDepartmentFields from './form/CompanyDepartmentFields';
-import { Button } from '@/components/ui/button';
+import EmployeeForm from './EmployeeForm';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -26,37 +20,12 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   onOpenChange,
   onSubmit
 }) => {
-  const methods = useForm<EmployeeFormValues>({
-    resolver: zodResolver(employeeFormSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      position: '',
-      professionalEmail: '',
-      department: '',
-      company: '',
-      status: 'active',
-      contract: 'cdi',
-      hireDate: new Date().toISOString().split('T')[0],
-      forceManager: false,
-      isManager: false,
-      // Ajout des champs d'adresse
-      streetNumber: '',
-      streetName: '',
-      city: '',
-      zipCode: '',
-      region: '',
-      country: ''
-    },
-    mode: 'onChange'
-  });
+  const handleSubmit = (employee: Partial<Employee>) => {
+    onSubmit(employee);
+  };
 
-  const handleSubmit = (data: EmployeeFormValues) => {
-    const employeeData = formValuesToEmployee(data);
-    onSubmit(employeeData);
-    methods.reset();
+  const handleCancel = () => {
+    onOpenChange(false);
   };
 
   return (
@@ -65,27 +34,11 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Nouvel Employé</DialogTitle>
         </DialogHeader>
-        <FormProvider {...methods}>
-          <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
-            <PersonalInfoFields />
-            <CompanyDepartmentFields />
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                type="button" 
-                onClick={() => onOpenChange(false)}
-                variant="outline"
-              >
-                Annuler
-              </Button>
-              <Button 
-                type="submit" 
-              >
-                Enregistrer
-              </Button>
-            </div>
-          </form>
-        </FormProvider>
+        
+        <EmployeeForm 
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
       </DialogContent>
     </Dialog>
   );

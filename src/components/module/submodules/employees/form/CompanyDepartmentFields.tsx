@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const CompanyDepartmentFields = () => {
   const { register, formState: { errors }, setValue, watch } = useFormContext<EmployeeFormValues>();
-  const { departments = [] } = useEmployeeData();
+  const { departments, employees = [] } = useEmployeeData();
   const contractTypes = ['cdi', 'cdd', 'stage', 'alternance', 'freelance', 'autre'];
   
   // Liste fictive d'entreprises (à remplacer par des données réelles)
@@ -21,6 +21,15 @@ const CompanyDepartmentFields = () => {
   
   const watchDepartment = watch('department');
   const watchCompany = watch('company');
+  const watchManagerId = watch('managerId');
+
+  // Liste des employés pouvant être responsables
+  const potentialManagers = employees
+    .filter(emp => emp.isManager || (emp.position && emp.position.toLowerCase().includes('manager')))
+    .map(emp => ({
+      id: emp.id,
+      name: `${emp.firstName} ${emp.lastName}`
+    }));
 
   return (
     <div className="space-y-4">
@@ -116,6 +125,27 @@ const CompanyDepartmentFields = () => {
               {companies.map((company) => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Responsable */}
+        <div className="md:col-span-2">
+          <Label htmlFor="managerId">Responsable</Label>
+          <Select 
+            value={watchManagerId}
+            onValueChange={(value) => setValue('managerId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un responsable" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Aucun responsable</SelectItem>
+              {potentialManagers.map((manager) => (
+                <SelectItem key={manager.id} value={manager.id}>
+                  {manager.name}
                 </SelectItem>
               ))}
             </SelectContent>

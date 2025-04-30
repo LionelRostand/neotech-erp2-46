@@ -1,3 +1,4 @@
+
 import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
 
@@ -12,8 +13,8 @@ export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormV
     phone: employee.phone || '',
     position: employee.position || '',
     professionalEmail: employee.professionalEmail || '',
-    department: employee.department || '',
-    company: typeof employee.company === 'string' ? employee.company : '',
+    department: employee.department || employee.departmentId || '',
+    company: typeof employee.company === 'string' ? employee.company : (employee.company?.id || ''),
     status: (employee.status || 'active') as any,
     contract: employee.contract || 'cdi',
     hireDate: employee.hireDate || new Date().toISOString().split('T')[0],
@@ -27,7 +28,7 @@ export const employeeToFormValues = (employee: Partial<Employee>): EmployeeFormV
     streetNumber: employee.streetNumber || '',
     streetName: employee.streetName || '',
     city: employee.city || '',
-    zipCode: employee.zipCode || '',
+    zipCode: employee.zipCode || employee.postalCode || '',
     region: employee.region || '',
     country: employee.country || '',
     // Adresse professionnelle
@@ -47,6 +48,7 @@ export const formValuesToEmployee = (formData: EmployeeFormValues, existingEmplo
     position: formData.position || '',
     professionalEmail: formData.professionalEmail || '',
     department: formData.department || '',
+    departmentId: formData.department || '',
     company: formData.company || '',
     status: formData.status,
     contract: formData.contract,
@@ -61,6 +63,7 @@ export const formValuesToEmployee = (formData: EmployeeFormValues, existingEmplo
     streetName: formData.streetName,
     city: formData.city,
     zipCode: formData.zipCode,
+    postalCode: formData.zipCode,
     region: formData.region,
     country: formData.country,
     

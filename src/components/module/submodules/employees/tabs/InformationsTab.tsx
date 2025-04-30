@@ -1,155 +1,119 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Building, 
-  Briefcase, 
-  Calendar,
-  User
-} from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Mail, Phone, MapPin, Building2, Calendar, User, Briefcase } from 'lucide-react';
 
 interface InformationsTabProps {
-  employee: Employee;
+  employee: Employee & { 
+    departmentName?: string;
+    managerName?: string;
+    companyName?: string;
+  };
 }
 
-const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
-  // Format date for display
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('fr-FR');
-  };
-  
-  // Format address for display
-  const formatAddress = (employee: Employee) => {
-    if (typeof employee.address === 'object' && employee.address) {
-      const addr = employee.address;
-      return [
-        addr.street,
-        addr.city,
-        addr.postalCode,
-        addr.country
-      ].filter(Boolean).join(', ');
-    } else if (employee.streetName) {
-      return [
-        `${employee.streetNumber || ''} ${employee.streetName}`,
-        employee.city,
-        employee.zipCode || employee.postalCode,
-        employee.region,
-        employee.country
-      ].filter(Boolean).join(', ');
-    }
-    
-    return employee.address || '-';
-  };
+const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | React.ReactNode }) => (
+  <div className="flex items-start space-x-3 px-4 py-3 border-b last:border-0">
+    <div className="text-gray-500">
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <div className="text-base">{value || '—'}</div>
+    </div>
+  </div>
+);
 
+const formatDate = (dateString?: string): string => {
+  if (!dateString) return '—';
+  
+  try {
+    const date = new Date(dateString);
+    return format(date, 'P', { locale: fr });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
+};
+
+const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   return (
-    <div className="divide-y divide-gray-200">
-      <div className="py-4">
-        <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Poste</p>
-            <div className="flex items-center">
-              <Briefcase className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.position || '-'}</p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Informations professionnelles</h3>
+        <div className="border rounded-md">
+          <InfoItem 
+            icon={<Briefcase className="h-5 w-5" />} 
+            label="Poste" 
+            value={employee.position || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Entreprise</p>
-            <div className="flex items-center">
-              <Building className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.companyName || employee.company || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<Building2 className="h-5 w-5" />} 
+            label="Département" 
+            value={employee.departmentName || employee.department || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Département</p>
-            <div className="flex items-center">
-              <Building className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.departmentName || employee.department || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<Mail className="h-5 w-5" />} 
+            label="Email professionnel" 
+            value={employee.professionalEmail || employee.email || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Manager</p>
-            <div className="flex items-center">
-              <User className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.managerName || employee.manager || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<User className="h-5 w-5" />} 
+            label="Responsable" 
+            value={employee.managerName || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Email professionnel</p>
-            <div className="flex items-center">
-              <Mail className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.professionalEmail || employee.email || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<Building2 className="h-5 w-5" />} 
+            label="Entreprise" 
+            value={employee.companyName || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Date d'embauche</p>
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{formatDate(employee.hireDate || employee.startDate)}</p>
-            </div>
-          </div>
-          
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Type de contrat</p>
-            <div className="flex items-center">
-              <Briefcase className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.contract || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<Calendar className="h-5 w-5" />} 
+            label="Date d'embauche" 
+            value={formatDate(employee.hireDate)} 
+          />
         </div>
       </div>
       
-      <div className="py-4">
-        <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Nom complet</p>
-            <div className="flex items-center">
-              <User className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.firstName} {employee.lastName}</p>
-            </div>
-          </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Informations personnelles</h3>
+        <div className="border rounded-md">
+          <InfoItem 
+            icon={<Mail className="h-5 w-5" />} 
+            label="Email personnel" 
+            value={employee.email || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Email personnel</p>
-            <div className="flex items-center">
-              <Mail className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.email || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<Phone className="h-5 w-5" />} 
+            label="Téléphone" 
+            value={employee.phone || '—'} 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Téléphone</p>
-            <div className="flex items-center">
-              <Phone className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{employee.phone || '-'}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<MapPin className="h-5 w-5" />} 
+            label="Adresse" 
+            value={
+              <>
+                <div>{employee.streetNumber || ''} {employee.streetName || ''}</div>
+                <div>{employee.zipCode || ''} {employee.city || ''}</div>
+                <div>{employee.region || ''}</div>
+                <div>{employee.country || ''}</div>
+              </>
+            } 
+          />
           
-          <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Date de naissance</p>
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-              <p>{formatDate(employee.birthDate)}</p>
-            </div>
-          </div>
-          
-          <div className="md:col-span-2">
-            <p className="text-sm font-medium text-gray-500 mb-1">Adresse</p>
-            <div className="flex items-start">
-              <MapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
-              <p>{formatAddress(employee)}</p>
-            </div>
-          </div>
+          <InfoItem 
+            icon={<Calendar className="h-5 w-5" />} 
+            label="Date de naissance" 
+            value={formatDate(employee.birthDate)} 
+          />
         </div>
       </div>
     </div>

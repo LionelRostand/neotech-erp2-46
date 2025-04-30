@@ -46,7 +46,7 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
       if (managerInfo) {
         return {
           ...employee,
-          department: employee.department, // Keep the department ID
+          department: employee.department || employee.departmentId, // Keep the department ID
           departmentName, // Add the properly formatted department name
           manager: `${managerInfo.firstName} ${managerInfo.lastName}`
         };
@@ -55,14 +55,14 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
     
     return {
       ...employee,
-      department: employee.department, // Keep the department ID
+      department: employee.department || employee.departmentId, // Keep the department ID
       departmentName // Add the properly formatted department name
     };
   };
   
   const preparedEmployee = prepareEmployeeData();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Partial<Employee>) => {
     if (!employee || !employee.id) {
       toast.error("ID d'employé manquant");
       return;
@@ -72,9 +72,7 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
     try {
       await updateEmployee({
         ...data,
-        id: employee.id,
-        // Preserve the managerId if it exists in the original employee data
-        managerId: employee.managerId
+        id: employee.id
       });
 
       toast.success("Employé mis à jour avec succès");
@@ -88,6 +86,10 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
   };
 
   // Ne rien rendre si l'employé est null
@@ -105,7 +107,7 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
         <EmployeeForm 
           defaultValues={preparedEmployee}
           onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
+          onCancel={handleCancel}
           isSubmitting={isSubmitting}
         />
       </DialogContent>

@@ -1,233 +1,126 @@
 
 import React, { useState } from 'react';
 import { Employee, Skill } from '@/types/employee';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmployeeActions } from '@/hooks/useEmployeeActions';
-import { toast } from 'sonner';
+import { PlusCircle, X, Award } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface CompetencesTabProps {
   employee: Employee;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
-  const { updateEmployee } = useEmployeeActions();
-  const [isAdding, setIsAdding] = useState(false);
-  const [newSkill, setNewSkill] = useState('');
-  const [skillLevel, setSkillLevel] = useState('intermediate');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Initialize skills from employee or as empty array
-  const skills = Array.isArray(employee.skills) 
-    ? employee.skills 
-    : [];
-  
-  // Get skill level display
-  const getSkillLevelDisplay = (level: string): string => {
-    switch(level) {
-      case 'beginner': return 'Débutant';
-      case 'intermediate': return 'Intermédiaire';
-      case 'advanced': return 'Avancé';
-      case 'expert': return 'Expert';
-      default: return level || 'Non spécifié';
-    }
-  };
-  
-  // Get skill level color
-  const getSkillLevelColor = (level: string): string => {
-    switch(level) {
-      case 'beginner': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'intermediate': return 'bg-green-100 text-green-800 border-green-200';
-      case 'advanced': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'expert': return 'bg-amber-100 text-amber-800 border-amber-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-  
-  // Format skill for display
-  const formatSkill = (skill: string | Skill): { name: string; level: string; } => {
-    if (typeof skill === 'string') {
-      return { name: skill, level: 'intermediate' };
-    }
-    return { name: skill.name || '', level: skill.level || 'intermediate' };
-  };
-  
-  // Handle adding a new skill
-  const handleAddSkill = async () => {
-    if (!newSkill.trim()) {
-      toast.error('Veuillez entrer un nom de compétence');
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const newSkillObject: Skill = {
-        id: `skill-${Date.now()}`,
-        name: newSkill.trim(),
-        level: skillLevel
-      };
-      
-      // Create a new array with existing skills plus the new one
-      const updatedSkills = [...skills, newSkillObject];
-      
-      // Update employee with new skills
-      await updateEmployee({
-        id: employee.id,
-        skills: updatedSkills
-      });
-      
-      toast.success('Compétence ajoutée avec succès');
-      setNewSkill('');
-      setSkillLevel('intermediate');
-      setIsAdding(false);
-    } catch (error) {
-      console.error('Error adding skill:', error);
-      toast.error('Erreur lors de l\'ajout de la compétence');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Handle removing a skill
-  const handleRemoveSkill = async (skillToRemove: string | Skill) => {
-    setIsLoading(true);
-    
-    try {
-      const nameToRemove = typeof skillToRemove === 'string' 
-        ? skillToRemove 
-        : skillToRemove.name;
-      
-      // Filter out the skill to remove
-      const updatedSkills = skills.filter(skill => {
-        const skillName = typeof skill === 'string' ? skill : skill.name;
-        return skillName !== nameToRemove;
-      });
-      
-      // Update employee with filtered skills
-      await updateEmployee({
-        id: employee.id,
-        skills: updatedSkills
-      });
-      
-      toast.success('Compétence supprimée avec succès');
-    } catch (error) {
-      console.error('Error removing skill:', error);
-      toast.error('Erreur lors de la suppression de la compétence');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const skillLevels = [
+  { value: 'débutant', label: 'Débutant' },
+  { value: 'intermédiaire', label: 'Intermédiaire' },
+  { value: 'avancé', label: 'Avancé' },
+  { value: 'expert', label: 'Expert' }
+];
 
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
+  const [skills, setSkills] = useState<Skill[]>(
+    (Array.isArray(employee.skills) 
+      ? employee.skills.map(skill => 
+          typeof skill === 'string' 
+            ? { id: uuidv4(), name: skill, level: 'intermédiaire' } 
+            : skill
+        )
+      : []
+    ) || []
+  );
+  
+  const [newSkill, setNewSkill] = useState('');
+  const [newLevel, setNewLevel] = useState('intermédiaire');
+  
+  const handleAddSkill = () => {
+    if (!newSkill.trim()) return;
+    
+    const skillToAdd: Skill = {
+      id: uuidv4(),
+      name: newSkill.trim(),
+      level: newLevel
+    };
+    
+    setSkills([...skills, skillToAdd]);
+    setNewSkill('');
+    setNewLevel('intermédiaire');
+  };
+  
+  const handleRemoveSkill = (id: string) => {
+    setSkills(skills.filter(skill => skill.id !== id));
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Compétences</h3>
-        {!isAdding && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setIsAdding(true)}
-          >
-            <PlusCircle className="h-4 w-4 mr-1" /> Ajouter une compétence
-          </Button>
-        )}
       </div>
       
-      {isAdding && (
-        <div className="border rounded-md p-4 space-y-4 bg-gray-50">
-          <h4 className="font-medium">Nouvelle compétence</h4>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="skill-name" className="block text-sm font-medium text-gray-700">
-                Nom de la compétence
-              </label>
-              <Input
-                id="skill-name"
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                placeholder="Ex: JavaScript, Leadership, Communication..."
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="skill-level" className="block text-sm font-medium text-gray-700">
-                Niveau
-              </label>
-              <Select value={skillLevel} onValueChange={setSkillLevel}>
-                <SelectTrigger id="skill-level" className="w-full mt-1">
-                  <SelectValue placeholder="Sélectionner un niveau" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Débutant</SelectItem>
-                  <SelectItem value="intermediate">Intermédiaire</SelectItem>
-                  <SelectItem value="advanced">Avancé</SelectItem>
-                  <SelectItem value="expert">Expert</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsAdding(false)}
-                disabled={isLoading}
-              >
-                Annuler
-              </Button>
-              <Button 
-                size="sm"
-                onClick={handleAddSkill}
-                disabled={isLoading || !newSkill.trim()}
-              >
-                {isLoading ? 'Enregistrement...' : 'Enregistrer'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {skills.length === 0 ? (
-        <div className="text-center py-8 border rounded-md">
-          <p className="text-gray-500">Aucune compétence enregistrée</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {skills.map((skill, index) => {
-            const formattedSkill = formatSkill(skill);
-            return (
+      <div className="grid gap-4">
+        {skills.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {skills.map((skill) => (
               <div 
-                key={index} 
-                className="flex justify-between items-center p-3 border rounded-md"
+                key={skill.id} 
+                className="flex justify-between items-center p-3 border rounded-lg bg-gray-50"
               >
-                <div>
-                  <div className="font-medium">{formattedSkill.name}</div>
-                  <Badge 
-                    variant="outline" 
-                    className={getSkillLevelColor(formattedSkill.level)}
-                  >
-                    {getSkillLevelDisplay(formattedSkill.level)}
-                  </Badge>
+                <div className="flex items-center space-x-2">
+                  <Award className="h-4 w-4 text-blue-600" />
+                  <div>
+                    <p className="font-medium">{skill.name}</p>
+                    <p className="text-xs text-gray-500">Niveau: {skill.level}</p>
+                  </div>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                  onClick={() => handleRemoveSkill(skill)}
-                  disabled={isLoading}
+                  onClick={() => handleRemoveSkill(skill.id)}
+                  className="h-8 w-8 p-0"
                 >
-                  Retirer
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-8 border rounded-md">
+            <Award className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+            <p className="text-gray-500">Aucune compétence enregistrée</p>
+          </div>
+        )}
+      </div>
+      
+      <div className="bg-gray-50 p-4 rounded-md">
+        <h4 className="text-sm font-medium mb-3">Ajouter une compétence</h4>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <Input 
+              placeholder="Nom de la compétence" 
+              value={newSkill}
+              onChange={(e) => setNewSkill(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-48">
+            <Select value={newLevel} onValueChange={setNewLevel}>
+              <SelectTrigger>
+                <SelectValue placeholder="Niveau" />
+              </SelectTrigger>
+              <SelectContent>
+                {skillLevels.map((level) => (
+                  <SelectItem key={level.value} value={level.value}>
+                    {level.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleAddSkill} className="shrink-0">
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Ajouter
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

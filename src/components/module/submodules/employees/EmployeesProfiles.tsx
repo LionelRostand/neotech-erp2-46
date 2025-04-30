@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import EmployeesTable from './EmployeesTable';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
-import ViewEmployeeDialog from './ViewEmployeeDialog';
+import ViewEmployeeDialog from './dialogs/EmployeeViewDialog';
 import DeleteConfirmDialog from './dialogs/DeleteConfirmDialog';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { toast } from 'sonner';
@@ -138,9 +138,13 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees = [], i
             open={viewDialogOpen}
             onOpenChange={setViewDialogOpen}
             employee={selectedEmployee}
+            onEdit={() => {
+              setViewDialogOpen(false);
+              setEditDialogOpen(true);
+            }}
           />
           
-          <EditEmployeeDialog
+          <EmployeeEditDialog
             employee={selectedEmployee}
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}

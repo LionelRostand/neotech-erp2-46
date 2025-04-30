@@ -2,149 +2,56 @@
 import { Employee } from '@/types/employee';
 
 /**
- * Vérifie si un intitulé de poste correspond à un manager
- * @param position Intitulé du poste à vérifier
- * @returns true si le poste est un poste de manager
+ * Vérifie si l'employé est un manager en fonction de son poste
  */
-export const isEmployeeManager = (position: string): boolean => {
+export const isEmployeeManager = (position?: string): boolean => {
   if (!position) return false;
   
-  const lowerPosition = position.toLowerCase();
-  
-  // Liste des mots-clés indiquant un poste de management
   const managerKeywords = [
-    'manager', 'directeur', 'directrice', 'chef', 'responsable',
-    'supervisor', 'lead', 'head', 'président', 'ceo', 'cto', 'coo', 'cfo',
-    'vp', 'vice-président', 'dirigeant'
+    'manager', 'directeur', 'directrice', 'chef', 'responsable', 'superviseur', 
+    'leader', 'gérant', 'coordinateur'
   ];
   
-  return managerKeywords.some(keyword => lowerPosition.includes(keyword));
+  const positionLower = position.toLowerCase();
+  return managerKeywords.some(keyword => positionLower.includes(keyword));
 };
 
 /**
- * Génère une chaîne formatée avec le nom et prénom
+ * Obtient le nom complet d'un employé
  */
-export const getEmployeeFullName = (employee: Partial<Employee>): string => {
+export const getEmployeeFullName = (employee: Employee | null | undefined): string => {
   if (!employee) return '';
-  return `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
+  return `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employé sans nom';
 };
 
 /**
- * Génère les initiales d'un employé
+ * Filtre les employés par terme de recherche
  */
-export const getEmployeeInitials = (employee: Partial<Employee>): string => {
-  if (!employee) return '';
-  const firstName = employee.firstName || '';
-  const lastName = employee.lastName || '';
-  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-};
-
-/**
- * Génère une couleur d'avatar basée sur le nom
- */
-export const getAvatarColorFromName = (name: string): string => {
-  const colors = [
-    'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500',
-    'bg-red-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'
-  ];
+export const filterEmployeesBySearchTerm = (employees: Employee[], searchTerm: string): Employee[] => {
+  if (!searchTerm) return employees;
   
-  if (!name) return colors[0];
-  
-  // Simple hash function to get a consistent color for a given name
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
-};
-
-/**
- * Génère des classes CSS pour styliser un poste spécifique
- */
-export const getPositionStyleClasses = (position: string): string => {
-  if (!position) return 'text-gray-600';
-  
-  const lowerPosition = position.toLowerCase();
-  
-  if (lowerPosition.includes('manager') || 
-      lowerPosition.includes('directeur') || 
-      lowerPosition.includes('responsable')) {
-    return 'text-blue-600 font-medium';
-  }
-  
-  if (lowerPosition.includes('senior') || lowerPosition.includes('lead')) {
-    return 'text-purple-600 font-medium';
-  }
-  
-  return 'text-gray-600';
-};
-
-/**
- * Convertit une date au format français
- */
-export const formatDateFR = (dateStr?: string): string => {
-  if (!dateStr) return '';
-  
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  } catch (e) {
-    console.error('Erreur de formatage de date:', e);
-    return dateStr;
-  }
-};
-
-/**
- * Filter employees based on search term and other filters
- * @param employees List of employees to filter
- * @param searchTerm Search term to match against employee data
- * @param filters Additional filters to apply
- * @returns Filtered list of employees
- */
-export const filterEmployees = (
-  employees: Employee[],
-  searchTerm: string = '',
-  filters: { status?: string; department?: string } = {}
-): Employee[] => {
-  if (!employees || !Array.isArray(employees)) {
-    return [];
-  }
-  
-  // Convert search term to lowercase for case-insensitive comparison
-  const search = searchTerm.toLowerCase().trim();
+  const searchLower = searchTerm.toLowerCase();
   
   return employees.filter(employee => {
-    // Skip null/undefined employees
-    if (!employee) return false;
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    return (
+      fullName.includes(searchLower) ||
+      (employee.email && employee.email.toLowerCase().includes(searchLower)) ||
+      (employee.position && employee.position.toLowerCase().includes(searchLower)) ||
+      (employee.department && employee.department.toLowerCase().includes(searchLower))
+    );
+  });
+};
+
+/**
+ * Trie les employés par un champ spécifique
+ */
+export const sortEmployees = (employees: Employee[], sortField: keyof Employee, sortDirection: 'asc' | 'desc'): Employee[] => {
+  return [...employees].sort((a, b) => {
+    const valueA = a[sortField] || '';
+    const valueB = b[sortField] || '';
     
-    // Apply search term filter if provided
-    if (search) {
-      const fullName = getEmployeeFullName(employee).toLowerCase();
-      const email = (employee.email || '').toLowerCase();
-      const position = (employee.position || '').toLowerCase();
-      const department = (employee.department || '').toLowerCase();
-      
-      // Return false if none of the fields match the search term
-      if (!fullName.includes(search) && 
-          !email.includes(search) && 
-          !position.includes(search) && 
-          !department.includes(search)) {
-        return false;
-      }
-    }
-    
-    // Apply status filter if provided
-    if (filters.status && employee.status !== filters.status) {
-      return false;
-    }
-    
-    // Apply department filter if provided
-    if (filters.department && employee.department !== filters.department) {
-      return false;
-    }
-    
-    // If all filters pass, include this employee
-    return true;
+    const comparison = String(valueA).localeCompare(String(valueB));
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 };
