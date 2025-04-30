@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Department } from './types';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
@@ -11,9 +11,10 @@ export const useDepartments = () => {
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const { departments: fetchedDepartments, isLoading: isLoadingDepartments, refetch } = useFirebaseDepartments();
 
-  const [departments, setDepartments] = useState<Department[]>(fetchedDepartments || []);
+  // Use useMemo to prevent unnecessary state updates and re-renders
+  const departments = useMemo(() => fetchedDepartments || [], [fetchedDepartments]);
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const loading = useMemo(() => isLoadingDepartments || isLoadingEmployees, [isLoadingDepartments, isLoadingEmployees]);
 
   // State for dialogs
   const {
@@ -41,21 +42,13 @@ export const useDepartments = () => {
     setSelectedEmployees
   } = useDepartmentForm(departments);
 
-  // Department operations - Import the service functions
+  // Department operations - rename imported functions to avoid name conflicts
   const {
-    handleSaveDepartment: saveDepartmentService,
-    handleUpdateDepartment: updateDepartmentService,
+    handleSaveDepartment: saveDepartmentOperation,
+    handleUpdateDepartment: updateDepartmentOperation,
     handleDeleteDepartment,
-    handleSaveEmployeeAssignments: saveEmployeeAssignmentsService
+    handleSaveEmployeeAssignments: saveEmployeeAssignmentsOperation
   } = useDepartmentOperations();
-
-  // Effect to update departments when fetched data changes
-  useEffect(() => {
-    if (fetchedDepartments) {
-      setDepartments(fetchedDepartments);
-    }
-    setLoading(isLoadingDepartments || isLoadingEmployees);
-  }, [fetchedDepartments, isLoadingDepartments, isLoadingEmployees]);
 
   // Handle add department dialog
   const handleAddDepartment = useCallback(() => {
@@ -77,40 +70,40 @@ export const useDepartments = () => {
     setIsManageEmployeesDialogOpen(true);
   }, [setIsManageEmployeesDialogOpen, setSelectedEmployees]);
 
-  // Save new department - wrapper function for service
+  // Save new department - renamed to avoid conflict
   const handleSaveDepartment = useCallback(async () => {
-    const success = await saveDepartmentService(formData, selectedEmployees);
+    const success = await saveDepartmentOperation(formData, selectedEmployees);
     if (success) {
       setIsAddDialogOpen(false);
       resetForm();
       refetch();
     }
-  }, [formData, selectedEmployees, saveDepartmentService, setIsAddDialogOpen, resetForm, refetch]);
+  }, [formData, selectedEmployees, saveDepartmentOperation, setIsAddDialogOpen, resetForm, refetch]);
 
-  // Update department - wrapper function for service
+  // Update department - renamed to avoid conflict
   const handleUpdateDepartment = useCallback(async () => {
     if (!currentDepartment) return;
-    const success = await updateDepartmentService(formData, selectedEmployees, currentDepartment);
+    const success = await updateDepartmentOperation(formData, selectedEmployees, currentDepartment);
     if (success) {
       setIsEditDialogOpen(false);
       refetch();
     }
-  }, [currentDepartment, formData, selectedEmployees, updateDepartmentService, setIsEditDialogOpen, refetch]);
+  }, [currentDepartment, formData, selectedEmployees, updateDepartmentOperation, setIsEditDialogOpen, refetch]);
 
-  // Save employee assignments - wrapper function for service
+  // Save employee assignments - renamed to avoid conflict
   const handleSaveEmployeeAssignments = useCallback(async () => {
     if (!currentDepartment) return;
-    const success = await saveEmployeeAssignmentsService(currentDepartment, selectedEmployees);
+    const success = await saveEmployeeAssignmentsOperation(currentDepartment, selectedEmployees);
     if (success) {
       setIsManageEmployeesDialogOpen(false);
       refetch();
     }
-  }, [currentDepartment, selectedEmployees, saveEmployeeAssignmentsService, setIsManageEmployeesDialogOpen, refetch]);
+  }, [currentDepartment, selectedEmployees, saveEmployeeAssignmentsOperation, setIsManageEmployeesDialogOpen, refetch]);
 
-  // Get department employees
+  // Get department employees - memoized to prevent unnecessary recalculations
   const getDepartmentEmployees = useCallback((departmentId: string) => {
     const department = departments.find(dept => dept.id === departmentId);
-    if (!department || !department.employeeIds) return [];
+    if (!department || !department.employeeIds || !Array.isArray(department.employeeIds)) return [];
     
     return employees.filter(employee => 
       department.employeeIds && Array.isArray(department.employeeIds) && 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Users } from 'lucide-react';
@@ -20,8 +20,8 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onManageEmployees 
 }) => {
-  // Add defensive check for departments array
-  const validDepartments = React.useMemo(() => {
+  // Add defensive check for departments array and memoize the result
+  const validDepartments = useMemo(() => {
     if (!departments || !Array.isArray(departments)) {
       console.warn("Invalid departments data:", departments);
       return [];
@@ -48,8 +48,6 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
     
     return Array.from(deptMap.values());
   }, [departments]);
-
-  console.log("Rendering department table with", validDepartments.length, "departments");
 
   return (
     <div className="relative w-full overflow-auto">

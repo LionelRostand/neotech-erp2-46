@@ -21,7 +21,7 @@ export const prepareDepartmentFromForm = (
   companies: any[]
 ): Department => {
   // Find the selected manager from all employees
-  const selectedManager = formData.managerId && formData.managerId !== "none" && allEmployees
+  const selectedManager = formData.managerId && formData.managerId !== "none" && Array.isArray(allEmployees)
     ? allEmployees.find(emp => emp && emp.id === formData.managerId) 
     : null;
 
@@ -30,13 +30,16 @@ export const prepareDepartmentFromForm = (
     : null;
   
   // Find the selected company from all companies
-  const selectedCompany = formData.companyId && formData.companyId !== "none" && companies
+  const selectedCompany = formData.companyId && formData.companyId !== "none" && Array.isArray(companies)
     ? companies.find(comp => comp && comp.id === formData.companyId)
     : null;
     
   const companyName = selectedCompany 
     ? selectedCompany.name
     : null;
+  
+  // Safe check for selected employees
+  const safeSelectedEmployees = Array.isArray(selectedEmployees) ? selectedEmployees : [];
   
   // Create department object with safe checks for arrays
   return {
@@ -48,7 +51,9 @@ export const prepareDepartmentFromForm = (
     companyId: formData.companyId === "none" ? null : formData.companyId,
     companyName: companyName,
     color: formData.color || '#3b82f6',
-    employeeIds: Array.isArray(selectedEmployees) ? selectedEmployees : [],
-    employeesCount: Array.isArray(selectedEmployees) ? selectedEmployees.length : 0
+    employeeIds: safeSelectedEmployees,
+    employeesCount: safeSelectedEmployees.length,
+    createdAt: formData.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 };

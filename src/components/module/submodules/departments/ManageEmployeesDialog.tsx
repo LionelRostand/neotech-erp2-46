@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Department } from './types';
@@ -23,7 +23,12 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  const { employees } = useEmployeeData();
+  const { employees, isLoading } = useEmployeeData();
+  
+  // Memoize employees data to prevent unnecessary re-renders
+  const employeesData = useMemo(() => {
+    return employees || [];
+  }, [employees]);
 
   // Set selected employees based on department
   useEffect(() => {
@@ -41,7 +46,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       
       <div className="py-4">
         <EmployeesList 
-          employees={employees || []}
+          employees={employeesData}
           selectedEmployees={selectedEmployees || []}
           onEmployeeSelection={onEmployeeSelection}
           id="manage"
