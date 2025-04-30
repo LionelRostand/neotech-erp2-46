@@ -29,6 +29,7 @@ export const LeaveActionMenu = ({ leave, onStatusChange }: LeaveActionMenuProps)
     if (!leave.id) return;
     
     try {
+      console.log("Approving leave:", leave.id);
       const success = await onStatusChange(leave.id, 'Approuvé');
       if (success) {
         toast.success(`Congés de ${leave.employeeName || 'l\'employé'} approuvés`);
@@ -43,6 +44,7 @@ export const LeaveActionMenu = ({ leave, onStatusChange }: LeaveActionMenuProps)
     if (!leave.id) return;
     
     try {
+      console.log("Rejecting leave:", leave.id);
       const success = await onStatusChange(leave.id, 'Refusé');
       if (success) {
         toast.success(`Congés de ${leave.employeeName || 'l\'employé'} refusés`);

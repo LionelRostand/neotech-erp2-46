@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CreateLeaveDialog from './CreateLeaveDialog';
 import SubmoduleHeader from '../SubmoduleHeader';
 import { LeaveActionMenu } from './components/LeaveActionMenu';
+import { toast } from 'sonner';
 
 const EmployeesLeaves: React.FC = () => {
   const { leaves = [], stats = { total: 0, pending: 0, approved: 0, rejected: 0 }, isLoading, updateLeaveStatus } = useLeaveData();
@@ -17,6 +18,11 @@ const EmployeesLeaves: React.FC = () => {
   
   // Make sure leaves is always an array, even if undefined
   const safeLeaves = Array.isArray(leaves) ? leaves : [];
+
+  // Debug info
+  useEffect(() => {
+    console.log("Leaves data:", safeLeaves);
+  }, [safeLeaves]);
 
   // Define columns with safe rendering
   const columns = [
@@ -80,7 +86,22 @@ const EmployeesLeaves: React.FC = () => {
         return (
           <LeaveActionMenu 
             leave={row.original} 
-            onStatusChange={updateLeaveStatus}
+            onStatusChange={async (leaveId, newStatus) => {
+              console.log(`Attempting to change status: ${leaveId} to ${newStatus}`);
+              try {
+                if (!updateLeaveStatus) {
+                  console.error("updateLeaveStatus function is undefined");
+                  toast.error("Erreur de mise à jour du statut");
+                  return false;
+                }
+                const result = await updateLeaveStatus(leaveId, newStatus);
+                return result;
+              } catch (error) {
+                console.error("Failed to update leave status:", error);
+                toast.error("Erreur lors de la mise à jour du statut");
+                return false;
+              }
+            }}
           />
         );
       }

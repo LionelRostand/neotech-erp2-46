@@ -1,118 +1,126 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Briefcase, Pencil } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, PencilIcon, FileText } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Employee } from '@/types/employee';
-import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import InformationsTab from './tabs/InformationsTab';
+import CompetencesTab from './tabs/CompetencesTab';
+import AbsencesTab from './tabs/AbsencesTab';
+import HorairesTab from './tabs/HorairesTab';
+import CongesTab from './tabs/CongesTab';
+import EvaluationsTab from './tabs/EvaluationsTab';
 import ExportEmployeePdfButton from './components/ExportEmployeePdfButton';
+import { StatusBadge } from '@/components/module/submodules/StatusBadge';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
-  onEmployeeUpdate?: (updatedEmployee: Employee) => void;
+  onEdit?: () => void;
 }
 
-const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ 
-  employee, 
-  onEmployeeUpdate 
-}) => {
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employee);
-
-  const getInitials = () => {
-    return `${currentEmployee.firstName?.charAt(0) || ''}${currentEmployee.lastName?.charAt(0) || ''}`;
-  };
-
-  const getStatusBadge = () => {
-    switch (currentEmployee.status) {
-      case 'active':
-      case 'Actif':
-        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
-      case 'inactive':
-      case 'Inactif':
-        return <Badge variant="outline" className="text-gray-500 border-gray-300">Inactif</Badge>;
-      case 'onLeave':
-      case 'En congé':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>;
-      case 'Suspendu':
-        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
-      default:
-        return <Badge variant="outline">{currentEmployee.status}</Badge>;
-    }
-  };
-
-  const getCompanyName = () => {
-    if (!currentEmployee.company) return 'Non spécifiée';
-    
-    if (typeof currentEmployee.company === 'string') {
-      return currentEmployee.company === 'no_company' ? 'Non spécifiée' : currentEmployee.company;
-    }
-    
-    return currentEmployee.company.name || 'Non spécifiée';
-  };
-
-  const handleEmployeeUpdated = (updatedEmployee: Employee) => {
-    setCurrentEmployee(updatedEmployee);
-    
-    if (onEmployeeUpdate) {
-      onEmployeeUpdate(updatedEmployee);
-    }
+const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee, onEdit }) => {
+  const [activeTab, setActiveTab] = useState("informations");
+  
+  const getStatusVariant = () => {
+    const status = employee.status?.toLowerCase() || '';
+    if (status.includes('active') || status.includes('actif')) return "success";
+    if (status.includes('leave') || status.includes('congé')) return "warning";
+    return "default";
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="flex flex-col items-center">
-            <Avatar className="w-24 h-24 border-2 border-primary/10 mb-2">
-              <AvatarImage 
-                src={currentEmployee.photoURL || currentEmployee.photo} 
-                alt={`${currentEmployee.firstName} ${currentEmployee.lastName}`} 
-              />
-              <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
-            </Avatar>
-          </div>
+    <div className="space-y-6">
+      {/* Employee header with back button */}
+      <div className="flex justify-between items-center">
+        <Link to="/modules/employees/profiles">
+          <Button variant="outline" size="sm">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Retour à la liste
+          </Button>
+        </Link>
+        
+        <div className="flex items-center space-x-2">
+          <ExportEmployeePdfButton employee={employee} />
           
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <h2 className="text-2xl font-bold">{currentEmployee.firstName} {currentEmployee.lastName}</h2>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center text-muted-foreground">
-                    <Briefcase className="h-4 w-4 mr-2" />
-                    <span className="text-sm">
-                      {currentEmployee.position || 'Poste non spécifié'} @ {getCompanyName()}
-                    </span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowEditDialog(true)}
-                    className="ml-2"
-                  >
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Modifier
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {getStatusBadge()}
-                <ExportEmployeePdfButton employee={currentEmployee} size="sm" />
-              </div>
+          {onEdit && (
+            <Button size="sm" onClick={onEdit}>
+              <PencilIcon className="h-4 w-4 mr-1" />
+              Modifier
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* Employee profile banner */}
+      <div className="bg-white rounded-lg border p-6 flex flex-col md:flex-row gap-6">
+        <Avatar className="h-20 w-20">
+          <AvatarImage src={employee.photoURL || employee.photo || ''} alt={`${employee.firstName} ${employee.lastName}`} />
+          <AvatarFallback className="text-lg">{employee.firstName?.[0]}{employee.lastName?.[0]}</AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-grow space-y-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+            <h1 className="text-2xl font-bold">
+              {employee.firstName} {employee.lastName}
+            </h1>
+            <StatusBadge 
+              status={employee.status || 'Actif'}
+              variant={getStatusVariant()}
+            >
+              {employee.status || 'Actif'}
+            </StatusBadge>
+          </div>
+          <p className="text-gray-500">{employee.position || employee.role || 'Non spécifié'}</p>
+          <p className="text-gray-500">{employee.department || 'Département non spécifié'}</p>
+          <div className="pt-2 flex flex-wrap gap-2">
+            <div className="flex items-center text-sm text-gray-600">
+              <FileText className="h-4 w-4 mr-1" />
+              <span>ID: {employee.id?.substring(0, 8) || 'Non disponible'}</span>
             </div>
           </div>
         </div>
-      </CardContent>
-
-      <EditCompanyPositionDialog 
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        employee={currentEmployee}
-        onEmployeeUpdated={handleEmployeeUpdated}
-      />
-    </Card>
+      </div>
+      
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full grid grid-cols-2 md:grid-cols-6">
+          <TabsTrigger value="informations">Informations</TabsTrigger>
+          <TabsTrigger value="competences">Compétences</TabsTrigger>
+          <TabsTrigger value="horaires">Horaires</TabsTrigger>
+          <TabsTrigger value="absences">Absences</TabsTrigger>
+          <TabsTrigger value="conges">Congés</TabsTrigger>
+          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
+        </TabsList>
+        
+        <div className="mt-6">
+          <TabsContent value="informations">
+            <InformationsTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="competences">
+            <CompetencesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="horaires">
+            <HorairesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="absences">
+            <AbsencesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="conges">
+            <CongesTab employee={employee} />
+          </TabsContent>
+          
+          <TabsContent value="evaluations">
+            <EvaluationsTab employee={employee} />
+          </TabsContent>
+        </div>
+      </Tabs>
+    </div>
   );
 };
 

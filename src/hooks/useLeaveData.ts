@@ -127,6 +127,16 @@ export const useLeaveData = () => {
   // Update leave status
   const updateLeaveStatus = useCallback(async (leaveId: string, newStatus: string) => {
     try {
+      console.log(`Updating leave status: ${leaveId} to ${newStatus}`);
+      
+      // Get the leave request to update
+      const leaveToUpdate = leaves.find(leave => leave.id === leaveId);
+      if (!leaveToUpdate) {
+        console.error(`Leave with ID ${leaveId} not found`);
+        toast.error("Erreur: demande de congé introuvable");
+        return false;
+      }
+
       // Update in Firestore
       await updateDocument(COLLECTIONS.HR.LEAVE_REQUESTS, leaveId, {
         status: newStatus,
@@ -134,6 +144,11 @@ export const useLeaveData = () => {
         // If approved, add the approval date
         ...(newStatus === 'approved' || newStatus === 'Approuvé' ? { approvedAt: new Date().toISOString() } : {})
       });
+      
+      // If approved, update the employee's leave balance
+      if ((newStatus === 'approved' || newStatus === 'Approuvé') && leaveToUpdate.employeeId) {
+        await updateEmployeeLeaveBalance(leaveToUpdate);
+      }
       
       // Show success message
       toast.success(`Demande de congé ${newStatus === 'approved' || newStatus === 'Approuvé' ? 'approuvée' : 
@@ -148,7 +163,66 @@ export const useLeaveData = () => {
       toast.error("Erreur lors de la mise à jour du statut de la demande");
       return false;
     }
-  }, []);
+  }, [leaves]);
+
+  // Update employee's leave balance when a leave is approved
+  const updateEmployeeLeaveBalance = async (leave: Leave) => {
+    try {
+      const employeeId = leave.employeeId;
+      if (!employeeId) {
+        console.error("Cannot update leave balance: no employee ID");
+        return false;
+      }
+
+      // Find the employee
+      const employee = employees?.find(emp => emp.id === employeeId);
+      if (!employee) {
+        console.error(`Employee with ID ${employeeId} not found`);
+        return false;
+      }
+
+      // Determine leave type and update the appropriate balance
+      const days = leave.days || 0;
+      const isRtt = leave.type.toLowerCase().includes('rtt');
+      
+      // Get current values or set defaults
+      const currentConges = employee.conges || { acquired: 25, taken: 0, balance: 25 };
+      const currentRtt = employee.rtt || { acquired: 12, taken: 0, balance: 12 };
+      
+      if (isRtt) {
+        // Update RTT
+        const newTaken = (currentRtt.taken || 0) + days;
+        const newBalance = Math.max(0, (currentRtt.acquired || 12) - newTaken);
+        
+        await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
+          rtt: {
+            acquired: currentRtt.acquired || 12,
+            taken: newTaken,
+            balance: newBalance
+          },
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        // Update regular paid leave (congés payés)
+        const newTaken = (currentConges.taken || 0) + days;
+        const newBalance = Math.max(0, (currentConges.acquired || 25) - newTaken);
+        
+        await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
+          conges: {
+            acquired: currentConges.acquired || 25,
+            taken: newTaken,
+            balance: newBalance
+          },
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error updating employee leave balance:", error);
+      return false;
+    }
+  };
   
   // Refresh data
   const refetch = useCallback(() => {
