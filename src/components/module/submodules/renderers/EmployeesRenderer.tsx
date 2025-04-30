@@ -42,6 +42,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
+      // Still render the Profiles component if accessed directly
       return <EmployeesProfiles employees={safeEmployees} isLoading={isLoading} />;
     case 'employees-badges':
       return <EmployeesBadges />;

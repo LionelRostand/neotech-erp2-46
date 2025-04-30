@@ -6,7 +6,6 @@ import {
   Calendar, 
   Clock, 
   ClipboardCheck, 
-  User, 
   BarChart, 
   DollarSign, 
   PieChart, 
@@ -15,7 +14,6 @@ import {
   Briefcase,
   GraduationCap,
   Bell,
-  IdCard,
   SunMedium,
   FileSignature,
   ListTree
@@ -32,9 +30,8 @@ export const employeesModule: AppModule = {
   submodules: [
     { id: "employees-dashboard", name: "Tableau de bord", href: "/modules/employees/dashboard", icon: createIcon(LayoutDashboard) },
     
-    // Fiches employé (renommé en "Employés")
-    { id: "employees-profiles", name: "Employés", href: "/modules/employees/profiles", icon: createIcon(IdCard) },
-    { id: "employees-badges", name: "Badges et accès", href: "/modules/employees/badges", icon: createIcon(User) },
+    // Removed "Employés" submodule
+    { id: "employees-badges", name: "Badges et accès", href: "/modules/employees/badges", icon: createIcon(Users) },
     
     // Hiérarchie (removed Départements from this section)
     { id: "employees-hierarchy", name: "Hiérarchie", href: "/modules/employees/hierarchy", icon: createIcon(ListTree) },
