@@ -24,7 +24,7 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 // Separate wrapper component so it only re-renders when needed
 const EmployeesProfilesWrapper = () => {
-  const { employees = [], isLoading = true } = useEmployeeData();
+  const { employees = [], departments = [], isLoading = true } = useEmployeeData();
   
   // Make sure we have a valid array of employees and memoize it
   const safeEmployees = useMemo(() => {

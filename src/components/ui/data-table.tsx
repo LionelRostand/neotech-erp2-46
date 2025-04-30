@@ -12,8 +12,12 @@ export function DataTable<T>({
   onRowClick,
 }: DataTableProps<T>) {
   
-  // Ensure data is always an array
+  // Ensure columns and data are always arrays
+  const safeColumns = Array.isArray(columns) ? columns : [];
   const safeData = Array.isArray(data) ? data : [];
+  
+  // Log info for debugging
+  console.log(`DataTable rendering with ${safeColumns.length} columns and ${safeData.length} rows`);
   
   if (isLoading) {
     return (
@@ -21,14 +25,14 @@ export function DataTable<T>({
         <div className="overflow-x-auto">
           <div className="w-full min-w-full divide-y divide-gray-200">
             <div className="bg-gray-50 px-6 py-3">
-              {columns.map((column, idx) => (
+              {safeColumns.map((column, idx) => (
                 <Skeleton key={idx} className="h-4 w-24 my-2" />
               ))}
             </div>
             <div className="divide-y divide-gray-200 bg-white">
-              {Array.from({ length: 5 }).map((_, rowIndex) => (
+              {[1, 2, 3, 4, 5].map((_, rowIndex) => (
                 <div key={rowIndex} className="px-6 py-4">
-                  {columns.map((_, colIndex) => (
+                  {safeColumns.map((_, colIndex) => (
                     <Skeleton key={colIndex} className="h-4 w-full my-2" />
                   ))}
                 </div>
@@ -55,7 +59,8 @@ export function DataTable<T>({
         return column.cell({ row: { original: row } });
       } else if (column.accessorKey && typeof column.accessorKey === 'string' && row) {
         // If there's an accessorKey but no cell function, just display the raw value
-        return (row as any)[column.accessorKey];
+        const value = (row as any)[column.accessorKey];
+        return value !== undefined && value !== null ? value : '';
       }
     } catch (error) {
       console.error('Error rendering cell content:', error);
@@ -70,7 +75,7 @@ export function DataTable<T>({
         <table className="w-full min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {columns.map((column, index) => (
+              {safeColumns.map((column, index) => (
                 <th
                   key={index}
                   scope="col"
@@ -91,7 +96,7 @@ export function DataTable<T>({
                 )}
                 onClick={() => onRowClick?.(row)}
               >
-                {columns.map((column, colIndex) => (
+                {safeColumns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {renderCellContent(column, row)}
                   </td>

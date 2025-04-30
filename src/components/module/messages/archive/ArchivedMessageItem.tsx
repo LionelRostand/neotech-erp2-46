@@ -20,11 +20,29 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
   // Ensure message has all required properties with defaults
   const safeMessage = {
     id: message?.id || 'unknown',
-    senderName: message?.senderName || 'Contact inconnu',
+    sender: message?.sender || { name: 'Contact inconnu', email: '' },
+    senderName: message?.senderName || message?.sender?.name || 'Contact inconnu',
     createdAt: message?.createdAt || new Date(),
     subject: message?.subject || 'Sans objet',
     content: message?.content || 'Aucun contenu',
     ...message
+  };
+
+  const getDate = () => {
+    try {
+      if (safeMessage.createdAt instanceof Date) {
+        return formatDate(safeMessage.createdAt);
+      }
+      
+      if (safeMessage.createdAt && typeof safeMessage.createdAt.toDate === 'function') {
+        return formatDate(safeMessage.createdAt.toDate());
+      }
+      
+      return formatDate(new Date());
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date inconnue';
+    }
   };
 
   return (
@@ -35,7 +53,7 @@ const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-semibold">{safeMessage.senderName}</span>
               <span className="text-xs text-muted-foreground">
-                {formatDate(safeMessage.createdAt?.toDate?.() || new Date())}
+                {getDate()}
               </span>
             </div>
             <div className="text-sm font-medium">{safeMessage.subject}</div>

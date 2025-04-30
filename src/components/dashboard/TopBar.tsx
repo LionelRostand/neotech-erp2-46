@@ -10,9 +10,9 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const TopBar = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const auth = useAuth();
 
-  // Ensure COLLECTIONS.MESSAGES is defined before accessing its properties
+  // Safe access to COLLECTIONS.MESSAGES with fallback
   const messagesCollection = COLLECTIONS.MESSAGES || {};
   const inboxPath = messagesCollection.INBOX ? `/modules/messages/inbox` : '#';
 
@@ -61,9 +61,9 @@ const TopBar = () => {
           onClick={handleProfileClick}
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.photoURL || ''} />
+            <AvatarImage src={auth?.currentUser?.photoURL || ''} />
             <AvatarFallback className="bg-primary/80 text-white">
-              {user?.displayName?.charAt(0) || user?.email?.charAt(0) || <User size={16} />}
+              {auth?.currentUser?.displayName?.charAt(0) || auth?.currentUser?.email?.charAt(0) || <User size={16} />}
             </AvatarFallback>
           </Avatar>
         </div>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 interface ArchivedMessagesListProps {
-  messages: Message[];
+  messages: Message[] | undefined;
   isLoading: boolean;
   onRestoreMessage: (message: Message) => void;
 }
@@ -17,12 +17,17 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   onRestoreMessage 
 }) => {
   // Ensure messages is always an array
-  const safeMessages = Array.isArray(messages) ? messages : [];
+  const safeMessages = Array.isArray(messages) ? messages.filter(Boolean) : [];
   
   // State for message being restored
   const [restoringMessageId, setRestoringMessageId] = React.useState<string | null>(null);
 
   const handleRestore = (message: Message) => {
+    if (!message || !message.id) {
+      console.error('Cannot restore message: Invalid message object');
+      return;
+    }
+    
     setRestoringMessageId(message.id);
     
     // Simulate restoration process
@@ -52,16 +57,18 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   return (
     <div className="space-y-4">
       {safeMessages.map(message => {
+        if (!message) return null;
+        
         // Get display name for the contact
-        const contactName = message.senderName || 'Contact inconnu';
-        const isRestoring = restoringMessageId === message.id;
+        const contactName = message.senderName || message.sender?.name || 'Contact inconnu';
+        const isRestoring = message.id && restoringMessageId === message.id;
         
         return (
           <ArchivedMessageItem 
-            key={message.id} 
+            key={message.id || `msg-${Math.random()}`} 
             message={message} 
             onRestoreMessage={() => handleRestore(message)}
-            isRestoring={isRestoring}
+            isRestoring={!!isRestoring}
           />
         );
       })}
