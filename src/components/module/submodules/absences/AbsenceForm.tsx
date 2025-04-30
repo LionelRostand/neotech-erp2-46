@@ -56,8 +56,8 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
 
   // Mettre à jour le nom de l'employé lorsque l'ID change
   useEffect(() => {
-    if (employeeId && employees) {
-      const selectedEmployee = employees.find(emp => emp.id === employeeId);
+    if (employeeId && employees && Array.isArray(employees)) {
+      const selectedEmployee = employees.find(emp => emp && emp.id === employeeId);
       if (selectedEmployee) {
         setEmployeeName(`${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
       }
@@ -77,11 +77,11 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({
             {employeesLoading ? (
               <SelectItem value="loading" disabled>Chargement...</SelectItem>
             ) : (
-              employees && employees.map(emp => (
+              employees && Array.isArray(employees) ? employees.map(emp => emp && (
                 <SelectItem key={emp.id} value={emp.id}>
                   {`${emp.firstName} ${emp.lastName}`}
                 </SelectItem>
-              ))
+              )) : <SelectItem value="no-data" disabled>Aucun employé trouvé</SelectItem>
             )}
           </SelectContent>
         </Select>

@@ -45,7 +45,7 @@ export const useEmployeeData = () => {
       .filter(department => department != null) // Filter out null/undefined departments
       .map(department => {
         // Make sure department has an id
-        if (!department.id) {
+        if (!department || !department.id) {
           console.log('useEmployeeData: department without id');
           return {
             id: `dept-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

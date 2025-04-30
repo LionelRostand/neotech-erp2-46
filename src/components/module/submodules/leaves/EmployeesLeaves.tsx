@@ -22,7 +22,7 @@ const getLeaveTypeName = (type: string): string => {
 };
 
 const EmployeesLeaves: React.FC = () => {
-  const { leaves, stats, isLoading, refetch } = useLeaveData();
+  const { leaves = [], stats = {}, isLoading, refetch } = useLeaveData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   if (isLoading) {
@@ -34,9 +34,9 @@ const EmployeesLeaves: React.FC = () => {
   }
 
   // Calculer les stats pour le dashboard
-  const pendingLeaves = leaves.filter(leave => leave.status === 'En attente' || leave.status === 'pending');
-  const approvedLeaves = leaves.filter(leave => leave.status === 'Approuvé' || leave.status === 'approved');
-  const rejectedLeaves = leaves.filter(leave => leave.status === 'Refusé' || leave.status === 'rejected');
+  const pendingLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave.status === 'En attente' || leave.status === 'pending') : [];
+  const approvedLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave.status === 'Approuvé' || leave.status === 'approved') : [];
+  const rejectedLeaves = Array.isArray(leaves) ? leaves.filter(leave => leave.status === 'Refusé' || leave.status === 'rejected') : [];
 
   return (
     <div className="container mx-auto p-6">
@@ -110,7 +110,7 @@ interface LeavesTableProps {
 }
 
 const LeavesTable: React.FC<LeavesTableProps> = ({ leaves }) => {
-  if (leaves.length === 0) {
+  if (!leaves || !Array.isArray(leaves) || leaves.length === 0) {
     return (
       <div className="text-center py-8 bg-gray-50 rounded-md">
         <p className="text-gray-500">Aucune demande de congé pour cette catégorie.</p>
@@ -133,9 +133,9 @@ const LeavesTable: React.FC<LeavesTableProps> = ({ leaves }) => {
           </tr>
         </thead>
         <tbody>
-          {leaves.map((leave) => (
+          {leaves.map((leave) => leave && (
             <tr key={leave.id} className="border-t hover:bg-gray-50">
-              <td className="px-4 py-2">{leave.employeeName}</td>
+              <td className="px-4 py-2">{leave.employeeName || 'N/A'}</td>
               <td className="px-4 py-2">{getLeaveTypeName(leave.type)}</td>
               <td className="px-4 py-2">{leave.startDate}</td>
               <td className="px-4 py-2">{leave.endDate}</td>
