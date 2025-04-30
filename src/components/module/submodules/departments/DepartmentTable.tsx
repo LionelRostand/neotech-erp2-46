@@ -55,7 +55,6 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">ID</TableHead>
             <TableHead>Nom</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Manager</TableHead>
@@ -67,20 +66,19 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={6} className="text-center py-4">
                 Chargement...
               </TableCell>
             </TableRow>
           ) : validDepartments.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={6} className="text-center py-4">
                 Aucun département trouvé.
               </TableCell>
             </TableRow>
           ) : (
             validDepartments.map((department) => (
               <TableRow key={department.id}>
-                <TableCell className="font-medium">{department.id}</TableCell>
                 <TableCell>{department.name}</TableCell>
                 <TableCell>{department.description}</TableCell>
                 <TableCell>{department.managerName || 'N/A'}</TableCell>
