@@ -9,6 +9,7 @@ import { XCircle, FileText, FileUser, FileArchive } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useContractsData } from '@/hooks/useContractsData';
+import { toast } from 'sonner';
 
 interface DocumentsTabsProps {
   documents: HrDocument[];
@@ -28,26 +29,41 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
   onClearDateFilter
 }) => {
   // Get contracts data
-  const { contracts, isLoading: contractsLoading } = useContractsData();
+  const { contracts, isLoading: contractsLoading, error } = useContractsData();
+
+  // Log for debugging
+  console.log("DocumentsTabs - documents:", documents);
+  console.log("DocumentsTabs - contracts:", contracts);
+
+  // Show error toast if contracts loading fails
+  React.useEffect(() => {
+    if (error) {
+      toast.error("Erreur lors du chargement des contrats: " + error.message);
+    }
+  }, [error]);
 
   // Convert contracts to document format for display
-  const contractDocuments = contracts.map(contract => ({
-    id: `contract-${contract.id}`,
-    title: `Contrat - ${contract.type}`,
-    type: 'Contrat',
-    uploadDate: contract.startDate,
-    employeeId: contract.employeeId,
-    employeeName: contract.employeeName || '',
-    employeePhoto: contract.employeePhoto,
-    department: contract.department,
-    description: `${contract.type} - ${contract.position}`,
-    // Additional contract fields
-    status: contract.status,
-    startDate: contract.startDate,
-    endDate: contract.endDate,
-    position: contract.position,
-    salary: contract.salary
-  }));
+  const contractDocuments = React.useMemo(() => {
+    if (!contracts || contracts.length === 0) return [];
+    
+    return contracts.map(contract => ({
+      id: `contract-${contract.id}`,
+      title: `Contrat - ${contract.type} - ${contract.employeeName || ''}`,
+      type: 'Contrat',
+      uploadDate: contract.startDate,
+      employeeId: contract.employeeId,
+      employeeName: contract.employeeName || '',
+      employeePhoto: contract.employeePhoto,
+      department: contract.department,
+      description: `${contract.type} - ${contract.position}`,
+      // Additional contract fields
+      status: contract.status,
+      startDate: contract.startDate,
+      endDate: contract.endDate,
+      position: contract.position,
+      salary: contract.salary
+    }));
+  }, [contracts]);
 
   // Safe format function
   const safeFormatDate = (date: Date | null) => {
@@ -73,7 +89,7 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
   );
   
   // Use both contract documents from HR documents and from contracts data
-  const allContractDocuments = [
+  const allContractDocuments = React.useMemo(() => [
     ...documents.filter(doc => 
       doc.type?.toLowerCase() === 'contrat' || 
       doc.type?.toLowerCase() === 'contract' || 
@@ -81,7 +97,9 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
       doc.description?.toLowerCase().includes('contrat')
     ),
     ...contractDocuments
-  ];
+  ], [documents, contractDocuments]);
+
+  console.log("DocumentsTabs - allContractDocuments:", allContractDocuments);
 
   return (
     <Tabs defaultValue="all">

@@ -1,194 +1,179 @@
 
-import { useEffect, useState, useRef } from 'react';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { useHrData } from './modules/useHrData';
 import { Company } from '@/components/module/submodules/companies/types';
 import { Employee } from '@/types/employee';
 
 /**
- * Hook to fetch HR module data with optimized Firebase requests and safe data handling
+ * Hook to fetch and process HR module data
  */
 export const useHrModuleData = () => {
+  const { 
+    employees: rawEmployees, 
+    payslips, 
+    contracts: rawContracts, 
+    departments, 
+    leaveRequests, 
+    attendance,
+    absenceRequests,
+    hrDocuments,
+    timeSheets,
+    evaluations,
+    trainings,
+    hrReports,
+    hrAlerts,
+    isLoading, 
+    error 
+  } = useHrData();
+  
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Use a ref for cache management to prevent state updates triggering rerenders
-  const cacheRef = useRef({
-    lastFetched: null as number | null,
-    fetchInProgress: false,
-    // Cache timeout in milliseconds (10 minutes)
-    CACHE_TIMEOUT: 10 * 60 * 1000
-  });
+  const [contracts, setContracts] = useState<any[]>([]);
 
+  // Log for debugging
+  console.log("useHrModuleData - rawContracts:", rawContracts?.length || 0);
+
+  // Process employees data
   useEffect(() => {
-    // Function to fetch data with caching
-    const fetchDataIfNeeded = async () => {
-      // Skip if already fetching or cache is still valid
-      if (cacheRef.current.fetchInProgress) {
-        return;
-      }
+    if (rawEmployees) {
+      const processedEmployees = rawEmployees.map(emp => ({
+        id: emp.id,
+        firstName: emp.firstName || '',
+        lastName: emp.lastName || '',
+        email: emp.email || '',
+        phone: emp.phone || '',
+        position: emp.position || emp.role || 'Employé',
+        department: emp.department || 'Non spécifié',
+        departmentId: emp.departmentId || emp.department || '',
+        photo: emp.photoURL || emp.photo || '',
+        photoURL: emp.photoURL || emp.photo || '',
+        hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
+        startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
+        status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
+        address: emp.address || {},
+        contract: emp.contract || '',
+        socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
+        birthDate: emp.birthDate || '',
+        documents: emp.documents || [],
+        company: emp.company || '',
+        role: emp.role || emp.position || '',
+        title: emp.title || emp.position || '',
+        manager: emp.manager || '',
+        managerId: emp.managerId || '',
+        professionalEmail: emp.professionalEmail || emp.email || '',
+        skills: emp.skills || [],
+        education: emp.education || [],
+        workSchedule: emp.workSchedule || {
+          monday: '09:00 - 18:00',
+          tuesday: '09:00 - 18:00',
+          wednesday: '09:00 - 18:00',
+          thursday: '09:00 - 18:00',
+          friday: '09:00 - 17:00',
+        },
+        payslips: emp.payslips || [],
+      })) as Employee[];
       
-      const now = Date.now();
-      const cacheValid = cacheRef.current.lastFetched && 
-                        (now - cacheRef.current.lastFetched < cacheRef.current.CACHE_TIMEOUT);
-      
-      // Return if cache is valid and data is already loaded
-      if (cacheValid && employees.length > 0 && departments.length > 0) {
-        return;
-      }
-      
-      // Set loading state and mark fetch in progress
-      setIsLoading(true);
-      cacheRef.current.fetchInProgress = true;
-      
-      try {
-        console.log('Fetching HR data from Firebase...');
-        
-        // Use getDocs for one-time fetch instead of real-time listeners
-        const employeesQuery = query(collection(db, COLLECTIONS.HR.EMPLOYEES || 'hr_employees'));
-        const departmentsQuery = query(collection(db, COLLECTIONS.HR.DEPARTMENTS || 'hr_departments'));
-        const leaveRequestsQuery = query(collection(db, COLLECTIONS.HR.LEAVES || 'hr_leaves'));
-        
-        // Fetch data in parallel with try/catch for each request
-        try {
-          const [employeesSnapshot, departmentsSnapshot, leaveRequestsSnapshot] = await Promise.all([
-            getDocs(employeesQuery).catch(e => {
-              console.error("Error fetching employees:", e);
-              return { docs: [] };
-            }),
-            getDocs(departmentsQuery).catch(e => {
-              console.error("Error fetching departments:", e);
-              return { docs: [] };
-            }),
-            getDocs(leaveRequestsQuery).catch(e => {
-              console.error("Error fetching leave requests:", e);
-              return { docs: [] };
-            })
-          ]);
-          
-          // Process employee data safely
-          const employeesData = employeesSnapshot.docs ? employeesSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) : [];
-          
-          // Process department data safely
-          const departmentsData = departmentsSnapshot.docs ? departmentsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) : [];
-          
-          // Process leave requests data safely
-          const leaveRequestsData = leaveRequestsSnapshot.docs ? leaveRequestsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) : [];
-          
-          // Update state with data
-          setEmployees(employeesData);
-          setDepartments(departmentsData);
-          setLeaveRequests(leaveRequestsData);
-          
-          // Update cache timestamp
-          cacheRef.current.lastFetched = Date.now();
-          setError(null);
-        } catch (err) {
-          console.error("Error in Promise.all:", err);
-          throw err;
-        }
-      } catch (err) {
-        console.error("Error fetching HR module data:", err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-        // Make sure we set empty arrays even on error to avoid undefined
-        setEmployees([]);
-        setDepartments([]);
-        setLeaveRequests([]);
-      } finally {
-        setIsLoading(false);
-        cacheRef.current.fetchInProgress = false;
-      }
-    };
-    
-    // Call fetch function
-    fetchDataIfNeeded();
-  }, []); // Only run on mount, cache management is handled inside
+      setEmployees(processedEmployees);
+    }
+  }, [rawEmployees]);
   
-  // Processing companies from employees (moved out of useEffect to simplify)
+  // Process contracts data
   useEffect(() => {
-    if (Array.isArray(employees) && employees.length > 0) {
+    if (rawContracts && Array.isArray(rawContracts)) {
+      console.log("Processing contracts:", rawContracts.length);
+      setContracts(rawContracts);
+    }
+  }, [rawContracts]);
+
+  // Extract companies from employees if available
+  useEffect(() => {
+    if (employees && employees.length > 0) {
       // Create a map to ensure unique companies
       const companiesMap = new Map<string, Company>();
       
       employees.forEach(emp => {
-        if (emp?.company) {
-          const companyId = typeof emp.company === 'string' ? emp.company : (emp.company.id || 'default');
+        if (emp.company) {
+          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
           
           if (!companiesMap.has(companyId)) {
-            // Create a company object safely
-            companiesMap.set(companyId, {
-              id: companyId,
-              name: typeof emp.company === 'string' ? 'Entreprise' : (emp.company.name || 'Entreprise'),
-              address: {
-                street: '',
-                city: '',
-                postalCode: '',
-                country: ''
-              },
-              siret: '',
-              logo: '',
-              logoUrl: '',
-              phone: '',
-              email: '',
-              website: '',
-              industry: '',
-              size: '',
-              status: 'active',
-              employeesCount: 0,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            });
+            if (typeof emp.company === 'string') {
+              // Only has the id, create a basic company object
+              companiesMap.set(companyId, {
+                id: companyId,
+                name: 'Entreprise',
+                address: {
+                  street: '',
+                  city: '',
+                  postalCode: '',
+                  country: ''
+                },
+                siret: '',
+                logo: '',
+                logoUrl: '',
+                phone: '',
+                email: '',
+                website: '',
+                industry: '',
+                size: '',
+                status: 'active',
+                employeesCount: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+            } else {
+              // Has the full company object
+              const company = emp.company as Company;
+              
+              // Add missing properties if needed
+              if (!company.address) {
+                company.address = {
+                  street: '',
+                  city: '',
+                  postalCode: '',
+                  country: ''
+                };
+              }
+              
+              companiesMap.set(companyId, {
+                ...company,
+                logo: company.logo || '',
+                logoUrl: company.logoUrl || '',
+                phone: company.phone || '',
+                email: company.email || '',
+                website: company.website || '',
+                industry: company.industry || '',
+                size: company.size || '',
+                status: company.status || 'active',
+                employeesCount: company.employeesCount || 0,
+                createdAt: company.createdAt || new Date().toISOString(),
+                updatedAt: company.updatedAt || new Date().toISOString()
+              });
+            }
           }
         }
       });
       
       // Convert map to array
       setCompanies(Array.from(companiesMap.values()));
-    } else {
-      setCompanies([]);
     }
   }, [employees]);
-  
-  // Add a manual refresh function
-  const refreshData = () => {
-    // Reset cache timestamp to trigger a new fetch
-    cacheRef.current.lastFetched = null;
-    // Force a new fetch
-    setEmployees([]);
-    setDepartments([]);
-    setLeaveRequests([]);
-    setIsLoading(true);
-  };
-  
+
   return {
-    employees: employees || [],
-    departments: departments || [],
-    companies: companies || [],
+    employees,
+    payslips,
+    contracts,
+    departments,
+    companies,
     leaveRequests: leaveRequests || [],
-    attendance: [],
-    absenceRequests: [],
-    hrDocuments: [],
-    timeSheets: [],
-    evaluations: [],
-    trainings: [],
-    hrReports: [],
-    hrAlerts: [],
+    attendance: attendance || [],
+    absenceRequests: absenceRequests || [],
+    hrDocuments: hrDocuments || [],
+    timeSheets: timeSheets || [],
+    evaluations: evaluations || [],
+    trainings: trainings || [],
+    hrReports: hrReports || [],
+    hrAlerts: hrAlerts || [],
     isLoading,
-    error,
-    refreshData
+    error
   };
 };

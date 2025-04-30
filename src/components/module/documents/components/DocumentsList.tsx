@@ -5,12 +5,13 @@ import { DocumentsLoading } from './DocumentsLoading';
 import { DocumentsEmptyState } from './DocumentsEmptyState';
 import { DocumentGridItem } from './DocumentGridItem';
 import { DocumentListItem } from './DocumentListItem';
+import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsListProps {
-  documents: DocumentFile[];
+  documents: (DocumentFile | HrDocument)[];
   isLoading?: boolean;
   view?: 'grid' | 'list';
-  onSelect?: (document: DocumentFile) => void;
+  onSelect?: (document: DocumentFile | HrDocument) => void;
   onDelete?: (documentId: string) => void;
   selected?: string;
 }
@@ -23,13 +24,16 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
   onDelete = () => {},
   selected
 }) => {
+  // Log for debugging
+  console.log("DocumentsList - documents:", documents?.length || 0);
+  
   // Loading state
   if (isLoading) {
     return <DocumentsLoading view={view} />;
   }
   
   // Empty state
-  if (documents.length === 0) {
+  if (!documents || documents.length === 0) {
     return <DocumentsEmptyState />;
   }
   
@@ -42,8 +46,8 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
             key={document.id}
             document={document}
             selected={selected === document.id}
-            onSelect={onSelect}
-            onDelete={onDelete}
+            onSelect={() => onSelect(document)}
+            onDelete={() => onDelete(document.id)}
           />
         ))}
       </div>
@@ -58,8 +62,8 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           key={document.id}
           document={document}
           selected={selected === document.id}
-          onSelect={onSelect}
-          onDelete={onDelete}
+          onSelect={() => onSelect(document)}
+          onDelete={() => onDelete(document.id)}
         />
       ))}
     </div>

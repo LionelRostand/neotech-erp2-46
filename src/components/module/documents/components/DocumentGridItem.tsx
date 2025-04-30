@@ -1,140 +1,71 @@
 
 import React from 'react';
+import { MoreVertical, Trash2 } from 'lucide-react';
+import { DocumentIcon } from './DocumentIcon'; 
 import { DocumentFile } from '../types/document-types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  MoreHorizontal, 
-  Trash2, 
-  Download, 
-  Archive, 
-  Lock, 
-  Calendar,
-} from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { formatFileSize } from '../utils/formatUtils';
-import { format, isValid } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { DocumentIcon } from './DocumentIcon';
+import { Button } from '@/components/ui/button';
+import { formatFileSize, formatDate } from '../utils/formatUtils';
+import { HrDocument } from '@/hooks/useDocumentsData';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface DocumentGridItemProps {
-  document: DocumentFile;
-  selected: boolean;
-  onSelect: (document: DocumentFile) => void;
-  onDelete: (documentId: string) => void;
+  document: DocumentFile | HrDocument;
+  selected?: boolean;
+  onSelect?: (document: DocumentFile | HrDocument) => void;
+  onDelete?: (documentId: string) => void;
 }
 
 export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
   document,
-  selected,
-  onSelect,
-  onDelete
+  selected = false,
+  onSelect = () => {},
+  onDelete = () => {},
 }) => {
-  // Function to safely format date with validation
-  const formatSafeDate = (date: Date | string | number | null | undefined) => {
-    if (!date) return 'Date inconnue';
-    
-    // If it's a string, try to convert it to a date object
-    const dateObj = typeof date === 'string' || typeof date === 'number' 
-      ? new Date(date) 
-      : date;
-    
-    // Validate the date is actually valid before formatting
-    if (!dateObj || !isValid(dateObj)) {
-      return 'Date invalide';
-    }
-    
-    try {
-      return format(dateObj, 'PPP', { locale: fr });
-    } catch (error) {
-      console.error('Error formatting date:', error, dateObj);
-      return 'Date invalide';
-    }
-  };
-
+  // Handle empty or undefined fields
+  const title = document.title || document.name || 'Document sans titre';
+  const type = document.type || 'Autre';
+  const date = document.uploadDate || document.createdAt || 'Date inconnue';
+  
+  // Handle employee information if available
+  const hasEmployeeInfo = 'employeeName' in document && document.employeeName;
+  
   return (
     <div 
-      className={`border rounded-md p-4 space-y-2 hover:bg-gray-50 cursor-pointer transition-colors ${
-        selected ? 'ring-2 ring-primary' : ''
-      }`}
+      className={`relative group rounded-md border p-3 hover:shadow-md transition-all cursor-pointer ${selected ? 'ring-2 ring-primary' : ''}`}
       onClick={() => onSelect(document)}
     >
-      <div className="flex justify-center">
-        <DocumentIcon format={document.format || ''} />
-      </div>
-      <h3 className="font-medium text-center truncate" title={document.name}>
-        {document.name}
-      </h3>
-      <div className="flex justify-center items-center gap-1 text-xs text-muted-foreground">
-        <span>{formatFileSize(document.size)}</span>
-        {document.isEncrypted && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Lock className="h-3 w-3 ml-1" />
-              </TooltipTrigger>
-              <TooltipContent>Fichier chiffré</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-      <div className="flex justify-center pt-1">
-        <Badge variant="outline" className="text-xs">
-          {document.format ? document.format.toUpperCase() : 'N/A'}
-        </Badge>
-      </div>
-      <div className="flex justify-between items-center mt-2 pt-1 border-t">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </TooltipTrigger>
-            <TooltipContent>
-              {formatSafeDate(document.createdAt)}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
+      <div className="absolute right-2 top-2">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">Options</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={e => {
+            <DropdownMenuItem onClick={(e) => {
               e.stopPropagation();
-              // Handle download
+              window.open(document.url || '#', '_blank');
             }}>
-              <Download className="h-4 w-4 mr-2" />
+              Aperçu
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation();
+              if (document.url) window.location.href = document.url;
+            }}>
               Télécharger
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={e => {
-              e.stopPropagation();
-              // Handle archive
-            }}>
-              <Archive className="h-4 w-4 mr-2" />
-              Archiver
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="text-red-600" 
-              onClick={e => {
+            <DropdownMenuItem
+              className="text-red-600"
+              onClick={(e) => {
                 e.stopPropagation();
                 onDelete(document.id);
               }}
@@ -144,6 +75,56 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      <div className="flex flex-col items-center gap-2 mb-2">
+        <DocumentIcon type={type} size={48} />
+        <div className="text-sm font-medium text-center line-clamp-2" title={title}>
+          {title}
+        </div>
+      </div>
+
+      <div className="text-xs text-muted-foreground flex flex-col gap-1 mt-2">
+        <div className="flex justify-between items-center">
+          <span>Type:</span>
+          <span className="font-medium">{type}</span>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <span>Date:</span>
+          <span>{date}</span>
+        </div>
+        
+        {'fileSize' in document && document.fileSize && (
+          <div className="flex justify-between items-center">
+            <span>Taille:</span>
+            <span>{typeof document.fileSize === 'number' ? formatFileSize(document.fileSize) : document.fileSize}</span>
+          </div>
+        )}
+        
+        {'position' in document && document.position && (
+          <div className="flex justify-between items-center">
+            <span>Poste:</span>
+            <span>{document.position}</span>
+          </div>
+        )}
+        
+        {'status' in document && document.status && (
+          <div className="flex justify-between items-center">
+            <span>Statut:</span>
+            <span>{document.status}</span>
+          </div>
+        )}
+        
+        {hasEmployeeInfo && (
+          <div className="flex items-center gap-2 mt-2 border-t pt-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={document.employeePhoto} />
+              <AvatarFallback>{document.employeeName?.charAt(0) || '?'}</AvatarFallback>
+            </Avatar>
+            <span className="text-xs truncate">{document.employeeName}</span>
+          </div>
+        )}
       </div>
     </div>
   );
