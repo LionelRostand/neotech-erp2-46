@@ -34,7 +34,7 @@ const ContainerStatusSelect: React.FC<ContainerStatusSelectProps> = ({ value, on
         value={safeValue}
         onValueChange={onChange}
       >
-        <SelectTrigger>
+        <SelectTrigger id="status">
           <SelectValue placeholder="Sélectionner un statut" />
         </SelectTrigger>
         <SelectContent>
