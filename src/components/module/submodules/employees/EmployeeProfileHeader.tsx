@@ -7,6 +7,7 @@ import { Briefcase, Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 import { EditCompanyPositionDialog } from './EditCompanyPositionDialog';
+import ExportEmployeePdfButton from './components/ExportEmployeePdfButton';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -46,7 +47,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     if (!currentEmployee.company) return 'Non spécifiée';
     
     if (typeof currentEmployee.company === 'string') {
-      return currentEmployee.company;
+      return currentEmployee.company === 'no_company' ? 'Non spécifiée' : currentEmployee.company;
     }
     
     return currentEmployee.company.name || 'Non spécifiée';
@@ -98,6 +99,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {getStatusBadge()}
+                <ExportEmployeePdfButton employee={currentEmployee} size="sm" />
               </div>
             </div>
           </div>
