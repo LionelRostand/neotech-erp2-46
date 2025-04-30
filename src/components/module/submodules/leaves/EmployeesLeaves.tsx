@@ -9,9 +9,10 @@ import { useLeaveData } from '@/hooks/useLeaveData';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CreateLeaveDialog from './CreateLeaveDialog';
 import SubmoduleHeader from '../SubmoduleHeader';
+import { LeaveActionMenu } from './components/LeaveActionMenu';
 
 const EmployeesLeaves: React.FC = () => {
-  const { leaves = [], stats = { total: 0, pending: 0, approved: 0, rejected: 0 }, isLoading } = useLeaveData();
+  const { leaves = [], stats = { total: 0, pending: 0, approved: 0, rejected: 0 }, isLoading, updateLeaveStatus } = useLeaveData();
   const [dialogOpen, setDialogOpen] = useState(false);
   
   // Make sure leaves is always an array, even if undefined
@@ -70,6 +71,18 @@ const EmployeesLeaves: React.FC = () => {
         if (status === "Refusé" || status === "rejected") variant = "destructive";
         
         return <StatusBadge status={status} variant={variant}>{status}</StatusBadge>;
+      }
+    },
+    {
+      header: "Actions",
+      id: "actions",
+      cell: ({ row }) => {
+        return (
+          <LeaveActionMenu 
+            leave={row.original} 
+            onStatusChange={updateLeaveStatus}
+          />
+        );
       }
     }
   ];

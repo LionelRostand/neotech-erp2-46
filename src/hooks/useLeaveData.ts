@@ -1,6 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { toast } from 'sonner';
+import { updateDocument } from './firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 // Define the Leave type to be exported
 export interface Leave {
@@ -121,10 +124,36 @@ export const useLeaveData = () => {
     }
   }, [leaveRequests, employees, refreshKey]);
   
+  // Update leave status
+  const updateLeaveStatus = useCallback(async (leaveId: string, newStatus: string) => {
+    try {
+      // Update in Firestore
+      await updateDocument(COLLECTIONS.HR.LEAVE_REQUESTS, leaveId, {
+        status: newStatus,
+        updatedAt: new Date().toISOString(),
+        // If approved, add the approval date
+        ...(newStatus === 'approved' || newStatus === 'Approuvé' ? { approvedAt: new Date().toISOString() } : {})
+      });
+      
+      // Show success message
+      toast.success(`Demande de congé ${newStatus === 'approved' || newStatus === 'Approuvé' ? 'approuvée' : 
+        newStatus === 'rejected' || newStatus === 'Refusé' ? 'refusée' : 'mise à jour'}`);
+      
+      // Trigger refresh
+      setRefreshKey(Date.now());
+      
+      return true;
+    } catch (err) {
+      console.error('Error updating leave status', err);
+      toast.error("Erreur lors de la mise à jour du statut de la demande");
+      return false;
+    }
+  }, []);
+  
   // Refresh data
   const refetch = useCallback(() => {
     setRefreshKey(Date.now());
   }, []);
   
-  return { leaves, stats, isLoading, error, refetch };
+  return { leaves, stats, isLoading, error, refetch, updateLeaveStatus };
 };

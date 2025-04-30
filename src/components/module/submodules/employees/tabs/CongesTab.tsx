@@ -3,6 +3,7 @@ import React from 'react';
 import { Employee, LeaveRequest } from '@/types/employee';
 import { StatusBadge } from '@/components/module/submodules/StatusBadge';
 import { useLeaveData } from '@/hooks/useLeaveData';
+import { LeaveActionMenu } from '../../leaves/components/LeaveActionMenu';
 
 interface CongesTabProps {
   employee: Employee;
@@ -10,7 +11,7 @@ interface CongesTabProps {
 
 const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
   // Fetch all leaves and filter by employee
-  const { leaves = [] } = useLeaveData();
+  const { leaves = [], updateLeaveStatus } = useLeaveData();
   const employeeLeaves = Array.isArray(leaves) 
     ? leaves.filter(leave => leave && leave.employeeId === employee.id)
     : [];
@@ -92,6 +93,9 @@ const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Statut
                   </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -111,6 +115,12 @@ const CongesTab: React.FC<CongesTabProps> = ({ employee }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {renderStatus(leave.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <LeaveActionMenu 
+                        leave={leave}
+                        onStatusChange={updateLeaveStatus}
+                      />
                     </td>
                   </tr>
                 ))}
