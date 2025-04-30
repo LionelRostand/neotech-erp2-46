@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Employee } from '@/types/employee';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { getDepartmentName } from '../utils/departmentUtils';
 
 interface EmployeeViewDialogProps {
   employee: Employee | null;
@@ -25,8 +26,8 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
   onOpenChange,
   onEdit
 }) => {
-  // Get employees data to find manager details
-  const { employees } = useEmployeeData();
+  // Get employees and departments data to find manager details and department name
+  const { employees, departments } = useEmployeeData();
   
   if (!employee) return null;
   
@@ -39,6 +40,12 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
   const managerDisplay = managerInfo 
     ? `${managerInfo.firstName} ${managerInfo.lastName}`
     : employee.manager || "Aucun manager";
+    
+  // Get formatted department name
+  const departmentDisplay = getDepartmentName(
+    employee.department || employee.departmentId, 
+    departments
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -50,7 +57,7 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
             </span>
           </DialogTitle>
           <DialogDescription>
-            {employee.position || "Poste non spécifié"} - {employee.department || "Département non spécifié"}
+            {employee.position || "Poste non spécifié"} - {departmentDisplay}
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +120,7 @@ const EmployeeViewDialog: React.FC<EmployeeViewDialogProps> = ({
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Département</h3>
-                <p>{employee.department || "Non spécifié"}</p>
+                <p>{departmentDisplay}</p>
               </div>
             </div>
             <div>

@@ -11,6 +11,7 @@ import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { toast } from 'sonner';
 import EmployeeForm from '../EmployeeForm';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { getDepartmentName } from '../utils/departmentUtils';
 
 interface EmployeeEditDialogProps {
   employee: Employee | null;
@@ -27,11 +28,17 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { updateEmployee } = useEmployeeActions();
-  const { employees } = useEmployeeData();
+  const { employees, departments } = useEmployeeData();
 
   // Prepare employee data with manager information
   const prepareEmployeeData = () => {
     if (!employee) return null;
+    
+    // Get department name
+    const departmentName = getDepartmentName(
+      employee.department || employee.departmentId,
+      departments
+    );
     
     // If employee has managerId, find the manager to include full name
     if (employee.managerId) {
@@ -39,12 +46,18 @@ const EmployeeEditDialog: React.FC<EmployeeEditDialogProps> = ({
       if (managerInfo) {
         return {
           ...employee,
+          department: employee.department, // Keep the department ID
+          departmentName, // Add the properly formatted department name
           manager: `${managerInfo.firstName} ${managerInfo.lastName}`
         };
       }
     }
     
-    return employee;
+    return {
+      ...employee,
+      department: employee.department, // Keep the department ID
+      departmentName // Add the properly formatted department name
+    };
   };
   
   const preparedEmployee = prepareEmployeeData();
