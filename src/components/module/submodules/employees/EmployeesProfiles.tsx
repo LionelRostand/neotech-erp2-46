@@ -1,282 +1,227 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { 
-  Card, 
-  CardContent
-} from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { 
-  Plus, 
-  Search, 
-  Edit2, 
-  Trash2, 
-  Eye,
-  UserPlus
-} from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
+import { Column } from '@/types/table-types';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Employee } from '@/types/employee';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
 import EmployeeViewDialog from './EmployeeViewDialog';
 import EmployeeDeleteDialog from './EmployeeDeleteDialog';
-import EmployeeForm from './EmployeeForm';
-import EmployeeStats from './EmployeesStats';
-import { toast } from 'sonner';
-import { useEmployeeActions } from '@/hooks/useEmployeeActions';
+import EmployeeFilter from './EmployeeFilter';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import EmployeesStats from './EmployeesStats';
 
 interface EmployeesProfilesProps {
   employees?: Employee[];
-  isLoading?: boolean;
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ 
-  employees = [], 
-  isLoading = false 
-}) => {
-  // State
-  const [searchQuery, setSearchQuery] = useState('');
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = () => {
+  // State for employees data
+  const [employeesData, setEmployeesData] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // State for selected employee
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   
-  // Hooks
-  const { addEmployee, updateEmployee, isLoading: isActionLoading } = useEmployeeActions();
+  // Dialog states
+  const { isOpen: isViewOpen, onOpen: onViewOpen, onClose: onViewClose } = useDisclosure();
+  const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
 
-  // Filter employees when search query or employees list changes
-  useEffect(() => {
-    if (!employees || employees.length === 0) {
-      setFilteredEmployees([]);
-      return;
-    }
-
-    if (!searchQuery.trim()) {
-      setFilteredEmployees(employees);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = employees.filter(employee => {
-      const fullName = `${employee.firstName || ''} ${employee.lastName || ''}`.toLowerCase();
-      const position = (employee.position || '').toLowerCase();
-      const department = (employee.department || '').toLowerCase();
+  // Fetch data using Firebase directly
+  const fetchEmployeesData = async () => {
+    setIsLoading(true);
+    try {
+      const employeesCollectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+      const querySnapshot = await getDocs(employeesCollectionRef);
       
-      return (
-        fullName.includes(query) ||
-        position.includes(query) ||
-        department.includes(query)
-      );
-    });
-    
-    setFilteredEmployees(filtered);
-  }, [searchQuery, employees]);
-
-  // Handle adding a new employee
-  const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
-    try {
-      await addEmployee(newEmployee);
-      setIsAddDialogOpen(false);
-      toast.success('Employé ajouté avec succès');
+      const employees = querySnapshot.docs.map(doc => {
+        const data = doc.data() as Employee;
+        return {
+          ...data,
+          id: doc.id,
+          // Ensure required fields have default values if missing
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          position: data.position || '',
+          department: data.department || '',
+          phone: data.phone || '',
+        };
+      });
+      
+      console.log('Fetched employees:', employees);
+      setEmployeesData(employees);
+      setFilteredEmployees(employees);
     } catch (error) {
-      console.error('Error adding employee:', error);
-      toast.error(`Erreur lors de l'ajout de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      console.error('Error fetching employees data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle updating an employee
-  const handleUpdateEmployee = async (updatedEmployee: Partial<Employee>) => {
-    if (!selectedEmployee?.id) return;
-    
-    try {
-      await updateEmployee({ ...updatedEmployee, id: selectedEmployee.id });
-      setIsEditDialogOpen(false);
-      toast.success('Employé mis à jour avec succès');
-    } catch (error) {
-      console.error('Error updating employee:', error);
-      toast.error(`Erreur lors de la mise à jour: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    }
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchEmployeesData();
+  }, []);
+
+  // Handle employee creation
+  const handleCreateEmployee = (newEmployee: Partial<Employee>) => {
+    console.log('Creating employee:', newEmployee);
+    onCreateClose();
+    fetchEmployeesData(); // Refresh data after creation
   };
 
-  // Handle opening edit dialog
-  const handleEditClick = (employee: Employee) => {
+  // Handle employee update
+  const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
+    console.log('Updating employee:', updatedEmployee);
+    onViewClose();
+    fetchEmployeesData(); // Refresh data after update
+  };
+
+  // Handle employee deletion
+  const handleDeleteSuccess = () => {
+    console.log('Employee deleted');
+    onDeleteClose();
+    fetchEmployeesData(); // Refresh data after deletion
+  };
+
+  // Handle view employee
+  const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
-    setIsEditDialogOpen(true);
+    onViewOpen();
   };
 
-  // Handle opening delete dialog
+  // Handle delete employee
   const handleDeleteClick = (employee: Employee) => {
     setSelectedEmployee(employee);
-    setIsDeleteDialogOpen(true);
+    onDeleteOpen();
   };
 
-  // Handle opening view dialog
-  const handleViewClick = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsViewDialogOpen(true);
+  // Handle filter change
+  const handleFilterChange = (filtered: Employee[]) => {
+    setFilteredEmployees(filtered);
   };
 
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Define table columns
+  const columns: Column<Employee>[] = [
+    {
+      header: "ID",
+      accessorKey: "id",
+      cell: ({ row }) => {
+        const id = row.original.id || '';
+        return <span className="font-mono text-xs">{id.substring(0, 8)}</span>;
+      }
+    },
+    {
+      header: "Nom",
+      cell: ({ row }) => {
+        const employee = row.original;
+        const fullName = `${employee.firstName || ''} ${employee.lastName || ''}`;
+        return <span className="font-medium">{fullName.trim() || 'N/A'}</span>;
+      }
+    },
+    {
+      header: "Poste",
+      accessorKey: "position",
+      cell: ({ row }) => {
+        return <span>{row.original.position || 'N/A'}</span>;
+      }
+    },
+    {
+      header: "Département",
+      accessorKey: "department",
+      cell: ({ row }) => {
+        return <span>{row.original.department || 'N/A'}</span>;
+      }
+    },
+    {
+      header: "Téléphone",
+      accessorKey: "phone",
+      cell: ({ row }) => {
+        return <span>{row.original.phone || 'N/A'}</span>;
+      }
+    },
+    {
+      header: "Actions",
+      cell: ({ row }) => {
+        const employee = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Button 
+              size="icon" 
+              variant="ghost"
+              onClick={() => handleViewEmployee(employee)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="text-destructive"
+              onClick={() => handleDeleteClick(employee)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
+    }
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Dashboard Stats */}
-      <EmployeeStats employees={employees} />
+    <div className="space-y-4 p-4">
+      {/* Dashboard component at the top */}
+      <EmployeesStats employees={employeesData} />
       
-      {/* Search and Add Section */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div className="relative w-full sm:w-auto flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Rechercher un employé..."
-            className="w-full sm:w-[300px] pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Ajouter un employé
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Employés</h1>
+        <Button onClick={onCreateOpen} className="flex items-center gap-1">
+          <Plus className="h-4 w-4" /> Ajouter un employé
         </Button>
       </div>
       
-      {/* Employees Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[60px]">ID</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Poste</TableHead>
-                <TableHead>Département</TableHead>
-                <TableHead>Téléphone</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEmployees.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    Aucun employé trouvé
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell className="font-medium">
-                      {employee.employeeId || employee.id?.substring(0, 5) || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {employee.photoURL && (
-                          <div className="w-8 h-8 rounded-full overflow-hidden">
-                            <img 
-                              src={employee.photoURL} 
-                              alt={`${employee.firstName} ${employee.lastName}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <div>{employee.firstName} {employee.lastName}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{employee.position || 'Non spécifié'}</TableCell>
-                    <TableCell>{employee.department || 'Non spécifié'}</TableCell>
-                    <TableCell>{employee.phone || 'Non spécifié'}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleViewClick(employee)}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(employee)}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(employee)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Add Employee Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Ajouter un nouvel employé</DialogTitle>
-          </DialogHeader>
-          <EmployeeForm
-            onSubmit={handleAddEmployee}
-            onCancel={() => setIsAddDialogOpen(false)}
-            isSubmitting={isActionLoading}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Employee Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Modifier l'employé</DialogTitle>
-          </DialogHeader>
-          <EmployeeForm
-            employee={selectedEmployee || undefined}
-            onSubmit={handleUpdateEmployee}
-            onCancel={() => setIsEditDialogOpen(false)}
-            isSubmitting={isActionLoading}
-            isEditing
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* View Employee Dialog */}
+      <EmployeeFilter 
+        employees={employeesData} 
+        onFilterChange={handleFilterChange}
+      />
+      
+      <DataTable
+        columns={columns}
+        data={filteredEmployees}
+        isLoading={isLoading}
+        emptyMessage="Aucun employé trouvé"
+        onRowClick={handleViewEmployee}
+      />
+      
       {selectedEmployee && (
-        <EmployeeViewDialog
-          employee={selectedEmployee}
-          open={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
-          onUpdate={handleUpdateEmployee}
-        />
+        <>
+          <EmployeeViewDialog
+            open={isViewOpen}
+            onOpenChange={onViewOpen}
+            employee={selectedEmployee}
+            onSubmit={handleUpdateEmployee}
+          />
+          
+          <EmployeeDeleteDialog
+            open={isDeleteOpen}
+            onOpenChange={onDeleteClose}
+            employee={selectedEmployee}
+            onSuccess={handleDeleteSuccess}
+          />
+        </>
       )}
-
-      {/* Delete Employee Dialog */}
-      <EmployeeDeleteDialog
-        employee={selectedEmployee}
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onSuccess={() => {
-          toast.success('Employé supprimé avec succès');
-        }}
+      
+      <CreateEmployeeDialog
+        open={isCreateOpen}
+        onOpenChange={onCreateClose}
+        onSubmit={handleCreateEmployee}
       />
     </div>
   );
