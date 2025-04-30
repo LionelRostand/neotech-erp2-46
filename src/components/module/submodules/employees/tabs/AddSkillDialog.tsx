@@ -17,6 +17,7 @@ interface AddSkillDialogProps {
 const AddSkillDialog: React.FC<AddSkillDialogProps> = ({ open, onOpenChange, onAddSkill }) => {
   const [skillName, setSkillName] = useState('');
   const [skillLevel, setSkillLevel] = useState('débutant');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,23 +27,39 @@ const AddSkillDialog: React.FC<AddSkillDialogProps> = ({ open, onOpenChange, onA
       return;
     }
     
-    const newSkill: Skill = {
-      id: Date.now().toString(),
-      name: skillName.trim(),
-      level: skillLevel
-    };
-    
-    onAddSkill(newSkill);
-    toast.success("Compétence ajoutée avec succès");
-    
-    // Reset form
-    setSkillName('');
-    setSkillLevel('débutant');
-    onOpenChange(false);
+    setIsSubmitting(true);
+    try {
+      const newSkill: Skill = {
+        id: Date.now().toString(),
+        name: skillName.trim(),
+        level: skillLevel
+      };
+      
+      onAddSkill(newSkill);
+      
+      // Reset form
+      setSkillName('');
+      setSkillLevel('débutant');
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la compétence:', error);
+      toast.error("Une erreur est survenue lors de l'ajout de la compétence");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Cleanup form when dialog closes
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setSkillName('');
+      setSkillLevel('débutant');
+    }
+    onOpenChange(open);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Ajouter une compétence</DialogTitle>
@@ -79,10 +96,17 @@ const AddSkillDialog: React.FC<AddSkillDialogProps> = ({ open, onOpenChange, onA
           </div>
           
           <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
-            <Button type="submit">Ajouter</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Ajout en cours...' : 'Ajouter'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

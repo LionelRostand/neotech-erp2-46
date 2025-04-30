@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Employee } from '@/types/employee';
+import { Employee, Skill } from '@/types/employee';
 import { 
   updateEmployee as apiUpdateEmployee,
   deleteEmployee as apiDeleteEmployee,
@@ -21,25 +21,37 @@ export const useEmployeeActions = () => {
       
       // Ensure skills are properly formatted before sending to API
       if (data.skills) {
+        // Ensure skills is an array
+        const skillsArray = Array.isArray(data.skills) ? data.skills : [];
+        
         // Filter out null/undefined values and transform any invalid objects
-        data.skills = data.skills
+        data.skills = skillsArray
           .filter(skill => skill !== null && skill !== undefined)
           .map(skill => {
             if (typeof skill === 'string') {
-              return skill;
+              return {
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+                name: skill,
+                level: 'débutant'
+              };
             }
             // Ensure skill objects have the required properties
             const skillObj = skill as any;
             if (!skillObj.name) {
-              return JSON.stringify(skillObj);
+              return {
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+                name: JSON.stringify(skillObj),
+                level: 'débutant'
+              };
             }
+            
             return {
               ...skillObj,
-              id: skillObj.id || Date.now().toString(),
-              level: skillObj.level || 'other',
+              id: skillObj.id || Date.now().toString() + Math.random().toString(36).substring(2, 9),
+              level: skillObj.level || 'débutant',
               // Ensure name is a string to avoid rendering issues
               name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
-            };
+            } as Skill;
           });
       }
       

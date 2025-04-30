@@ -21,9 +21,12 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
     return typeof value === 'object' ? JSON.stringify(value) : String(value);
   };
 
+  // Ensure employee object and skills array both exist
+  const safeEmployee = employee || {};
+  
   // Ensure skills is an array and filter out any null/undefined values
-  const skills = Array.isArray(employee.skills) 
-    ? employee.skills.filter(skill => skill !== null && skill !== undefined) 
+  const skills = Array.isArray(safeEmployee.skills) 
+    ? safeEmployee.skills.filter(skill => skill !== null && skill !== undefined) 
     : [];
 
   // Define badge colors for different skill levels
@@ -36,11 +39,17 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
 
   const handleAddSkill = async (newSkill: Skill) => {
     try {
+      if (!employee || !employee.id) {
+        toast.error("Impossible de mettre à jour l'employé: ID manquant");
+        return;
+      }
+      
       const updatedSkills = [...skills, newSkill];
       await updateEmployee({
         id: employee.id,
         skills: updatedSkills
       });
+      toast.success("Compétence ajoutée avec succès");
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la compétence:', error);
       toast.error("Erreur lors de l'ajout de la compétence");
@@ -54,16 +63,18 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
         <Button 
           size="sm" 
           onClick={() => setIsAddSkillDialogOpen(true)}
-          disabled={isLoading}
+          disabled={isLoading || !employee?.id}
         >
           <Plus className="h-4 w-4 mr-1" /> Ajouter une compétence
         </Button>
       </div>
       
-      {skills.length > 0 ? (
+      {skills && skills.length > 0 ? (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {skills.map((skill, index) => {
+              if (!skill) return null;
+              
               // Handle both string and object types of skills
               const skillName = typeof skill === 'string' 
                 ? skill 
@@ -79,7 +90,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
               
               return (
                 <div 
-                  key={index} 
+                  key={`skill-${index}-${skillName}`} 
                   className="p-3 border rounded-md flex justify-between items-center"
                 >
                   <div>{skillName}</div>
