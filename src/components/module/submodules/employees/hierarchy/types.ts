@@ -25,3 +25,14 @@ export interface HierarchyVisualizationProps {
   data: HierarchyNode | ChartNode | null;
   onRefresh?: () => void;
 }
+
+export interface DepartmentStat {
+  department: string;
+  count: number;
+}
+
+export interface EmployeeStatusStats {
+  active: number;
+  inactive: number;
+  onLeave: number;
+}
