@@ -1,3 +1,4 @@
+
 /**
  * Constantes pour les chemins des collections Firestore
  */
@@ -40,11 +41,18 @@ export const COLLECTIONS = {
     CARRIERS: 'freight_carriers',
     CLIENTS: 'freight_clients',
     ROUTES: 'freight_routes',
-    INVOICES: 'freight_invoices',
+    BILLING: 'freight_billing',
     CONTAINERS: 'freight_containers',
     PACKAGES: 'freight_packages',
     TRANSPORTS: 'freight_transports',
-    SETTINGS: 'freight_settings'
+    SETTINGS: 'freight_settings',
+    DOCUMENTS: 'freight_documents',
+    PACKAGE_TYPES: 'freight_package_types',
+    PRICING: 'freight_pricing',
+    QUOTES: 'freight_quotes',
+    TRACKING: 'freight_tracking',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    USERS: 'freight_users'
   },
   GARAGE: {
     VEHICLES: 'garage_vehicles',
