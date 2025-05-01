@@ -1,59 +1,98 @@
 
 import React from 'react';
-import { useDroppable } from "@dnd-kit/core";
 import { RecruitmentPost } from '@/types/recruitment';
-import KanbanCard from './KanbanCard';
-import AddCandidateDialog from './AddCandidateDialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Building, Calendar, MapPin, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface KanbanColumnProps {
   id: string;
   title: string;
   items: RecruitmentPost[];
-  onSort?: () => void;
-  isOrganizing?: boolean;
-  currentlyDraggingId?: string | null;
 }
 
-export default function KanbanColumn({ id, title, items, onSort, isOrganizing, currentlyDraggingId }: KanbanColumnProps) {
-  const { setNodeRef } = useDroppable({ id });
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, items = [] }) => {
+  // Ensure items is always an array
+  const safeItems = Array.isArray(items) ? items : [];
+  
+  const getPriorityColor = (priority: string = '') => {
+    const p = priority?.toLowerCase();
+    if (p === 'haute' || p === 'high') return 'bg-red-100 text-red-800 border-red-200';
+    if (p === 'moyenne' || p === 'medium') return 'bg-amber-100 text-amber-800 border-amber-200';
+    return 'bg-green-100 text-green-800 border-green-200';
+  };
 
   return (
-    <div className="flex flex-col min-w-[300px] max-w-[350px] bg-gray-50 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold">{title}</h3>
-          <span className="bg-gray-200 px-2 py-1 rounded text-sm">
-            {items.length}
-          </span>
+    <div className="flex-shrink-0 w-72">
+      <div className="bg-muted/30 rounded-lg p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-medium">{title}</h3>
+          <Badge variant="outline" className="bg-white">
+            {safeItems.length}
+          </Badge>
         </div>
-        {id === 'En cours' && items.length > 0 && (
-          <AddCandidateDialog 
-            recruitmentId={items[0].id} 
-            onCandidateAdded={(candidate) => {
-              if (!items[0].candidates) {
-                items[0].candidates = [];
-              }
-              items[0].candidates.push(candidate);
-            }}
-          />
-        )}
-      </div>
-      
-      <div
-        ref={setNodeRef}
-        className={`flex flex-col gap-2 min-h-[200px] ${
-          currentlyDraggingId ? 'bg-blue-50 border-2 border-dashed border-blue-300 rounded-md p-2' : ''
-        }`}
-      >
-        {items.map((item) => (
-          <KanbanCard 
-            key={item.id} 
-            item={item} 
-            type="recruitment" 
-            isDragging={item.id === currentlyDraggingId}
-          />
-        ))}
+        
+        <div className="space-y-3">
+          {safeItems.length === 0 ? (
+            <Card className="bg-white/50 border-dashed">
+              <CardContent className="p-3 text-center text-sm text-muted-foreground">
+                Aucun poste dans cette catégorie
+              </CardContent>
+            </Card>
+          ) : (
+            safeItems.map((item) => {
+              if (!item) return null; // Safety check
+              
+              return (
+                <Card key={item.id} className="bg-white">
+                  <CardContent className="p-3">
+                    <h4 className="font-medium text-sm">{item.position}</h4>
+                    
+                    <div className="mt-2 space-y-1 text-xs">
+                      {item.department && (
+                        <div className="flex items-center text-muted-foreground">
+                          <Building className="h-3 w-3 mr-1" />
+                          <span>{item.department}</span>
+                        </div>
+                      )}
+                      
+                      {item.location && (
+                        <div className="flex items-center text-muted-foreground">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span>{item.location}</span>
+                        </div>
+                      )}
+                      
+                      {item.openDate && (
+                        <div className="flex items-center text-muted-foreground">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span>Ouvert le {item.openDate}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-2 flex items-center justify-between">
+                      {item.priority && (
+                        <Badge className={`${getPriorityColor(item.priority)} text-xs`}>
+                          {item.priority}
+                        </Badge>
+                      )}
+                      
+                      {item.candidates && (
+                        <Badge variant="outline" className="text-xs">
+                          {item.candidates.length || 0} candidat(s)
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default KanbanColumn;

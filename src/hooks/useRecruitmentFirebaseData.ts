@@ -25,7 +25,19 @@ export const useRecruitmentFirebaseData = () => {
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
+          if (!snapshot) {
+            console.log('No snapshot returned from Firebase');
+            setRecruitmentPosts([]);
+            setIsLoading(false);
+            return;
+          }
+
           const posts = snapshot.docs.map(doc => {
+            if (!doc || !doc.data) {
+              console.log('Invalid document in snapshot');
+              return null;
+            }
+
             const data = doc.data();
             // Format dates if they exist in timestamp format
             const formattedData: any = { ...data };
@@ -59,7 +71,7 @@ export const useRecruitmentFirebaseData = () => {
               id: doc.id,
               ...formattedData
             };
-          }) as RecruitmentPost[];
+          }).filter(Boolean) as RecruitmentPost[]; // Filter out any null values
           
           console.log(`Retrieved ${posts.length} recruitment posts from Firebase`);
           setRecruitmentPosts(posts);
@@ -68,6 +80,7 @@ export const useRecruitmentFirebaseData = () => {
         (err: Error) => {
           console.error('Error fetching recruitment data:', err);
           setError(err);
+          setRecruitmentPosts([]); // Ensure we always set an empty array, not undefined
           setIsLoading(false);
         }
       );
@@ -80,6 +93,7 @@ export const useRecruitmentFirebaseData = () => {
       const error = err instanceof Error ? err : new Error('Unknown error occurred');
       console.error('Error setting up recruitment listener:', error);
       setError(error);
+      setRecruitmentPosts([]); // Ensure we always set an empty array, not undefined
       setIsLoading(false);
       return () => {}; // Empty cleanup function if setup fails
     }
@@ -97,7 +111,7 @@ export const useRecruitmentFirebaseData = () => {
   }, [fetchData]);
 
   return {
-    recruitmentPosts,
+    recruitmentPosts: recruitmentPosts || [], // Ensure we always return an array, not undefined
     isLoading,
     error,
     refreshData

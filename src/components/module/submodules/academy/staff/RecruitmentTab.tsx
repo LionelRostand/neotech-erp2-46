@@ -10,10 +10,13 @@ import KanbanColumn from '@/components/module/submodules/recruitment/KanbanColum
 const RecruitmentTab = () => {
   const { recruitmentPosts, isLoading } = useRecruitmentFirebaseData();
 
-  const openPosts = recruitmentPosts.filter(post => post.status === 'Ouverte');
-  const inProgressPosts = recruitmentPosts.filter(post => post.status === 'En cours');
-  const interviewPosts = recruitmentPosts.filter(post => post.status === 'Entretiens');
-  const closedPosts = recruitmentPosts.filter(post => post.status === 'Fermée');
+  // Ensure recruitmentPosts is always an array
+  const safePosts = Array.isArray(recruitmentPosts) ? recruitmentPosts : [];
+  
+  const openPosts = safePosts.filter(post => post && post.status === 'Ouverte');
+  const inProgressPosts = safePosts.filter(post => post && post.status === 'En cours');
+  const interviewPosts = safePosts.filter(post => post && post.status === 'Entretiens');
+  const closedPosts = safePosts.filter(post => post && post.status === 'Fermée');
 
   return (
     <Card>

@@ -21,6 +21,9 @@ const EmployeesRecruitment = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  // Ensure recruitmentPosts is always an array
+  const safePosts = Array.isArray(recruitmentPosts) ? recruitmentPosts : [];
+  
   const handleRecruitmentCreated = () => {
     toast({
       title: "Offre créée",
@@ -118,7 +121,7 @@ const EmployeesRecruitment = () => {
         <TabsContent value="list" className="mt-6">
           <DataTable
             columns={columns}
-            data={recruitmentPosts}
+            data={safePosts}
             isLoading={isLoading}
           />
         </TabsContent>
