@@ -9,6 +9,9 @@ import CreateBadgeDialog from './badges/CreateBadgeDialog';
 import BadgePreviewDialog from './badges/BadgePreviewDialog';
 import BadgeStats from './badges/BadgeStats';
 import BadgesTable from '../badges/BadgesTable';
+import ViewBadgeDialog from '../badges/ViewBadgeDialog';
+import EditBadgeDialog from '../badges/EditBadgeDialog';
+import DeleteBadgeDialog from '../badges/DeleteBadgeDialog';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
@@ -22,9 +25,18 @@ const EmployeesBadges: React.FC = () => {
     COLLECTIONS.HR.BADGES
   );
   
+  // États pour la prévisualisation, l'édition et la suppression des badges
   const [isBadgePreviewOpen, setIsBadgePreviewOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeData | null>(null);
   const [selectedBadgeEmployee, setSelectedBadgeEmployee] = useState<Employee | null>(null);
+  
+  // Nouveaux états pour les dialogues
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [badgeToView, setBadgeToView] = useState<BadgeData | null>(null);
+  const [badgeToEdit, setBadgeToEdit] = useState<BadgeData | null>(null);
+  const [badgeToDelete, setBadgeToDelete] = useState<BadgeData | null>(null);
 
   const handleCreateBadge = async (newBadge: BadgeData) => {
     try {
@@ -38,7 +50,32 @@ const EmployeesBadges: React.FC = () => {
     }
   };
   
-  const handleViewBadge = (badgeId: string) => {
+  const handleViewBadge = (badge: BadgeData) => {
+    setBadgeToView(badge);
+    setIsViewDialogOpen(true);
+  };
+  
+  const handleEditBadge = (badge: BadgeData) => {
+    setBadgeToEdit(badge);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDeleteBadge = (badge: BadgeData) => {
+    setBadgeToDelete(badge);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleBadgeUpdated = (updatedBadge: BadgeData) => {
+    // Rafraîchir la liste des badges après mise à jour
+    refetch();
+  };
+  
+  const handleBadgeDeleted = (badgeId: string) => {
+    // Rafraîchir la liste des badges après suppression
+    refetch();
+  };
+  
+  const handleBadgeClick = (badgeId: string) => {
     const badge = badgesList.find(b => b.id === badgeId);
     if (badge) {
       setSelectedBadge(badge);
@@ -77,8 +114,11 @@ const EmployeesBadges: React.FC = () => {
 
       <BadgesTable 
         badgesList={badgesList} 
-        onBadgeClick={handleViewBadge} 
-        loading={isLoading} 
+        onBadgeClick={handleBadgeClick} 
+        loading={isLoading}
+        onViewBadge={handleViewBadge}
+        onEditBadge={handleEditBadge}
+        onDeleteBadge={handleDeleteBadge}
       />
       
       <CreateBadgeDialog 
@@ -93,6 +133,27 @@ const EmployeesBadges: React.FC = () => {
         onOpenChange={setIsBadgePreviewOpen} 
         selectedBadge={selectedBadge} 
         selectedEmployee={selectedBadgeEmployee} 
+      />
+      
+      {/* Nouveaux dialogues pour voir, modifier et supprimer */}
+      <ViewBadgeDialog
+        isOpen={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        badge={badgeToView}
+      />
+      
+      <EditBadgeDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        badge={badgeToEdit}
+        onBadgeUpdated={handleBadgeUpdated}
+      />
+      
+      <DeleteBadgeDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        badge={badgeToDelete}
+        onBadgeDeleted={handleBadgeDeleted}
       />
     </>
   );
