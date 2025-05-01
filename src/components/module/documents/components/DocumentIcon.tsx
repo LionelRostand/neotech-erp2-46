@@ -2,7 +2,7 @@
 import React from 'react';
 import { 
   FileText, 
-  FilePdf, 
+  File, 
   FileImage, 
   FileSpreadsheet, 
   FileCode, 
@@ -26,7 +26,7 @@ export const DocumentIcon: React.FC<DocumentIconProps> = ({
   
   // Determine the icon based on the file type
   if (type.includes('pdf')) {
-    return <FilePdf size={size} className={`text-red-500 ${className}`} />;
+    return <File size={size} className={`text-red-500 ${className}`} />;
   } else if (
     type.includes('image') || 
     type.includes('jpg') || 
