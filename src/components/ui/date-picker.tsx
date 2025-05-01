@@ -33,7 +33,9 @@ export function DatePicker({
   // Safely format the date, handling potential undefined or invalid dates
   const getFormattedDate = () => {
     try {
-      return date ? format(date, "dd/MM/yyyy", { locale: fr }) : null;
+      return date && date instanceof Date && !isNaN(date.getTime()) 
+        ? format(date, "dd/MM/yyyy", { locale: fr }) 
+        : null;
     } catch (error) {
       console.error("Error formatting date:", error);
       return null;

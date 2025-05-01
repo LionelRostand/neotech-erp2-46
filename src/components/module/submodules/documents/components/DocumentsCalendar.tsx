@@ -63,100 +63,50 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       .filter((date): date is Date => date !== null);
   }, [documents]);
 
-  // Create a map of dates to document counts
-  const dateToDocCount = useMemo(() => {
-    try {
-      return documentDates.reduce<Record<string, number>>((acc, date) => {
-        if (!date || !isValid(date)) return acc;
-        
-        try {
-          const dateStr = format(date, 'yyyy-MM-dd');
-          acc[dateStr] = (acc[dateStr] || 0) + 1;
-        } catch (error) {
-          console.error('Error formatting date in reduce:', error);
-        }
-        
-        return acc;
-      }, {});
-    } catch (error) {
-      console.error('Error creating date map:', error);
-      return {};
-    }
-  }, [documentDates]);
-
-  // Handle month change
-  const handleMonthChange = (month: Date) => {
-    if (month && isValid(month)) {
-      setCurrentMonth(month);
-    }
+  // Create a function to check if a date has documents
+  const hasDocumentsForDate = (date: Date) => {
+    return documentDates.some((docDate) => 
+      docDate && isValid(docDate) && isSameDay(docDate, date)
+    );
   };
 
   // Handle date selection
   const handleSelect = (date: Date | undefined) => {
-    if (date && isValid(date)) {
+    if (date) {
       setSelectedDate(date);
       onSelectDate(date);
     }
   };
 
-  // Safer day rendering with better error handling
-  const renderDay = (day: Date) => {
-    try {
-      if (!day || !isValid(day)) {
-        return <div>{day?.getDate?.() ?? '?'}</div>;
-      }
-      
-      let dateStr: string;
-      try {
-        dateStr = format(day, 'yyyy-MM-dd');
-      } catch (e) {
-        console.error('Error formatting day in renderDay:', e, day);
-        return <div>{day?.getDate?.() ?? '?'}</div>;
-      }
-      
-      const count = dateToDocCount[dateStr] || 0;
-      
-      return (
-        <div className="relative">
-          <div>{day.getDate()}</div>
-          {count > 0 && (
-            <Badge 
-              variant="secondary" 
-              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full text-[10px] p-0"
-            >
-              {count}
-            </Badge>
-          )}
-        </div>
-      );
-    } catch (e) {
-      console.error('Error rendering day:', e);
-      return <div>?</div>;
-    }
+  // Handle month change
+  const handleMonthChange = (month: Date) => {
+    setCurrentMonth(month);
+  };
+
+  // Render calendar day with potential badges
+  const renderCalendarDay = (day: Date) => {
+    const hasDocuments = hasDocumentsForDate(day);
+    
+    return (
+      <div className="relative">
+        <div>{format(day, 'd')}</div>
+        {hasDocuments && (
+          <Badge className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 p-0">
+            <span className="sr-only">Documents disponibles</span>
+          </Badge>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div className="border rounded-md p-4 bg-white">
-      <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={handleSelect}
-        onMonthChange={handleMonthChange}
-        locale={fr}
-        month={currentMonth}
-        components={{
-          Day: ({ date, displayMonth }) => {
-            if (!date) return null;
-            try {
-              return renderDay(date);
-            } catch (e) {
-              console.error('Error in Day component:', e);
-              return <div>{date?.getDate?.() ?? '?'}</div>;
-            }
-          }
-        }}
-        className="p-3 pointer-events-auto"
-      />
-    </div>
+    <Calendar
+      mode="single"
+      selected={selectedDate}
+      onSelect={handleSelect}
+      locale={fr}
+      className="rounded-md border"
+      onMonthChange={handleMonthChange}
+    />
   );
 };

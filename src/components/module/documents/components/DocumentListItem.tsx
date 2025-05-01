@@ -1,85 +1,133 @@
 
 import React from 'react';
 import { DocumentFile } from '../types/document-types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Download, 
-  Archive, 
-  Trash2,
-  Lock
-} from 'lucide-react';
-import { formatFileSize } from '../utils/formatUtils';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { HrDocument } from '@/hooks/useDocumentsData';
 import { DocumentIcon } from './DocumentIcon';
+import { cn } from '@/lib/utils';
+import { formatFileSize, formatDate } from '../utils/formatUtils';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Download, Trash2, Eye } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DocumentListItemProps {
-  document: DocumentFile;
-  selected: boolean;
-  onSelect: (document: DocumentFile) => void;
-  onDelete: (documentId: string) => void;
+  document: DocumentFile | HrDocument;
+  selected?: boolean;
+  onSelect?: (document: DocumentFile | HrDocument) => void;
+  onDelete?: (documentId: string) => void;
 }
 
 export const DocumentListItem: React.FC<DocumentListItemProps> = ({
   document,
-  selected,
-  onSelect,
-  onDelete
+  selected = false,
+  onSelect = () => {},
+  onDelete = () => {},
 }) => {
+  // Handle empty or undefined fields
+  const name = document.name || 'Document sans titre';
+  const documentTitle = 'title' in document ? document.title : name;
+  const type = document.type || 'Autre';
+  const dateValue = 'uploadDate' in document ? document.uploadDate : (document.createdAt || 'Date inconnue');
+  const dateDisplay = formatDate(dateValue);
+  
   return (
-    <div 
-      className={`border rounded-md p-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition-colors ${
-        selected ? 'ring-2 ring-primary' : ''
-      }`}
+    <div
+      className={cn(
+        "flex items-center space-x-4 p-3 rounded-md border hover:bg-muted/30 cursor-pointer",
+        selected && "ring-2 ring-primary bg-muted/20"
+      )}
       onClick={() => onSelect(document)}
     >
-      <div className="flex items-center space-x-3">
-        <DocumentIcon format={document.format} />
-        <div>
-          <h3 className="font-medium" title={document.name}>
-            {document.name.length > 30 ? document.name.substring(0, 30) + '...' : document.name}
-          </h3>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <span>{formatFileSize(document.size)}</span>
-            <span className="mx-1">•</span>
-            <Badge variant="outline" className="text-xs h-5">
-              {document.format.toUpperCase()}
-            </Badge>
-            {document.isEncrypted && (
-              <Lock className="h-3 w-3 ml-1" aria-label="Fichier chiffré" />
-            )}
-          </div>
+      <div className="flex-shrink-0">
+        <DocumentIcon fileType={type} size={36} />
+      </div>
+      
+      <div className="flex-grow min-w-0">
+        <div className="font-medium truncate">{documentTitle}</div>
+        <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 mt-1">
+          <span>Type: {type}</span>
+          <span>Date: {dateDisplay}</span>
+          {document && 'fileSize' in document && document.fileSize && (
+            <span>Taille: {typeof document.fileSize === 'number' ? formatFileSize(document.fileSize) : document.fileSize}</span>
+          )}
+          {'position' in document && document.position && (
+            <span>Poste: {document.position}</span>
+          )}
+          {'status' in document && document.status && (
+            <span>Status: {document.status}</span>
+          )}
         </div>
       </div>
       
-      <div className="flex items-center">
-        <div className="text-xs text-muted-foreground mr-3 hidden md:block">
-          {format(new Date(document.createdAt), 'Pp', { locale: fr })}
-        </div>
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={(e) => {
+            e.stopPropagation();
+            const url = 'url' in document ? document.url : undefined;
+            if (url) window.open(url, '_blank');
+          }}
+        >
+          <Eye className="h-4 w-4" />
+          <span className="sr-only">Aperçu</span>
+        </Button>
         
-        <div className="flex space-x-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={(e) => {
             e.stopPropagation();
-            // Handle download
-          }}>
-            <Download className="h-4 w-4" />
-          </Button>
-          
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
-            e.stopPropagation();
-            // Handle archive
-          }}>
-            <Archive className="h-4 w-4" />
-          </Button>
-          
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={e => {
-            e.stopPropagation();
-            onDelete(document.id);
-          }}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+            const url = 'url' in document ? document.url : undefined;
+            if (url) window.location.href = url;
+          }}
+        >
+          <Download className="h-4 w-4" />
+          <span className="sr-only">Télécharger</span>
+        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">Plus d'options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation();
+              const url = 'url' in document ? document.url : undefined;
+              if (url) window.open(url, '_blank');
+            }}>
+              Aperçu
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation();
+              const url = 'url' in document ? document.url : undefined;
+              if (url) window.location.href = url;
+            }}>
+              Télécharger
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="text-red-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(document.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Supprimer
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

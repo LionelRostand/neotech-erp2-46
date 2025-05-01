@@ -1,39 +1,50 @@
 
-/**
- * Format file size to a human-readable string
- */
-export const formatFileSize = (bytes: number) => {
-  if (!bytes || bytes === 0) return '0 B';
-  
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  
-  return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
+// Add this file if it doesn't exist
+import { format, isValid } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+export const formatFileSize = (sizeInBytes: number): string => {
+  if (sizeInBytes < 1024) {
+    return `${sizeInBytes} B`;
+  } else if (sizeInBytes < 1024 * 1024) {
+    return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+  } else {
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
 };
 
-/**
- * Get short format description
- */
-export const getFormatDescription = (format: string) => {
-  format = format.toLowerCase();
+export const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'Date inconnue';
   
-  const formatMap: Record<string, string> = {
-    pdf: 'Document PDF',
-    docx: 'Document Word',
+  try {
+    // If it's already a Date object
+    if (date instanceof Date) {
+      return isValid(date) ? format(date, 'dd/MM/yyyy', { locale: fr }) : 'Date invalide';
+    }
+    
+    // If it's a string, try to parse it
+    const parsedDate = new Date(date);
+    return isValid(parsedDate) ? format(parsedDate, 'dd/MM/yyyy', { locale: fr }) : 'Date invalide';
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date invalide';
+  }
+};
+
+export const getFileTypeFromName = (fileName: string): string => {
+  const extension = fileName.split('.').pop()?.toLowerCase() || '';
+  
+  const extensionMap: Record<string, string> = {
+    pdf: 'PDF',
     doc: 'Document Word',
-    xlsx: 'Feuille Excel',
+    docx: 'Document Word',
     xls: 'Feuille Excel',
-    pptx: 'Présentation PowerPoint',
-    ppt: 'Présentation PowerPoint',
-    jpg: 'Image JPEG',
-    jpeg: 'Image JPEG',
-    png: 'Image PNG',
-    gif: 'Image GIF',
-    txt: 'Document texte',
-    csv: 'Fichier CSV',
-    zip: 'Archive ZIP',
-    rar: 'Archive RAR'
+    xlsx: 'Feuille Excel',
+    jpg: 'Image',
+    jpeg: 'Image',
+    png: 'Image',
+    txt: 'Texte',
   };
   
-  return formatMap[format] || `Fichier ${format.toUpperCase()}`;
+  return extensionMap[extension] || 'Fichier';
 };

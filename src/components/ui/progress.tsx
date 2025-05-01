@@ -9,6 +9,7 @@ const Progress = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, ...props }, ref) => {
   // Ensure value is a valid number between 0 and 100
+  // Using Math.max and Math.min to clamp the value between 0 and 100
   const safeValue = typeof value === 'number' && !isNaN(value) 
     ? Math.max(0, Math.min(100, value)) 
     : 0;

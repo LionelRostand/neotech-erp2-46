@@ -8,7 +8,7 @@ import { DocumentListItem } from './DocumentListItem';
 import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsListProps {
-  documents: (DocumentFile | HrDocument)[];
+  documents: Array<DocumentFile | HrDocument>;
   isLoading?: boolean;
   view?: 'grid' | 'list';
   onSelect?: (document: DocumentFile | HrDocument) => void;

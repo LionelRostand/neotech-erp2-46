@@ -29,9 +29,11 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
   onDelete = () => {},
 }) => {
   // Handle empty or undefined fields
-  const title = document.title || document.name || 'Document sans titre';
+  const name = document.name || 'Document sans titre';
+  const documentTitle = 'title' in document ? document.title : name;
   const type = document.type || 'Autre';
-  const date = document.uploadDate || document.createdAt || 'Date inconnue';
+  const dateValue = 'uploadDate' in document ? document.uploadDate : (document.createdAt || 'Date inconnue');
+  const dateDisplay = formatDate(dateValue);
   
   // Handle employee information if available
   const hasEmployeeInfo = 'employeeName' in document && document.employeeName;
@@ -52,13 +54,15 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={(e) => {
               e.stopPropagation();
-              window.open(document.url || '#', '_blank');
+              const url = 'url' in document ? document.url : undefined;
+              if (url) window.open(url, '_blank');
             }}>
               Aperçu
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(e) => {
               e.stopPropagation();
-              if (document.url) window.location.href = document.url;
+              const url = 'url' in document ? document.url : undefined;
+              if (url) window.location.href = url;
             }}>
               Télécharger
             </DropdownMenuItem>
@@ -78,9 +82,9 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
       </div>
 
       <div className="flex flex-col items-center gap-2 mb-2">
-        <DocumentIcon type={type} size={48} />
-        <div className="text-sm font-medium text-center line-clamp-2" title={title}>
-          {title}
+        <DocumentIcon fileType={type} size={48} />
+        <div className="text-sm font-medium text-center line-clamp-2" title={documentTitle}>
+          {documentTitle}
         </div>
       </div>
 
@@ -92,7 +96,7 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
         
         <div className="flex justify-between items-center">
           <span>Date:</span>
-          <span>{date}</span>
+          <span>{dateDisplay}</span>
         </div>
         
         {'fileSize' in document && document.fileSize && (
@@ -119,10 +123,10 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
         {hasEmployeeInfo && (
           <div className="flex items-center gap-2 mt-2 border-t pt-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={document.employeePhoto} />
-              <AvatarFallback>{document.employeeName?.charAt(0) || '?'}</AvatarFallback>
+              <AvatarImage src={'employeePhoto' in document ? document.employeePhoto : undefined} />
+              <AvatarFallback>{('employeeName' in document && document.employeeName) ? document.employeeName.charAt(0) : '?'}</AvatarFallback>
             </Avatar>
-            <span className="text-xs truncate">{document.employeeName}</span>
+            <span className="text-xs truncate">{'employeeName' in document ? document.employeeName : ''}</span>
           </div>
         )}
       </div>
