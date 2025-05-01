@@ -1,54 +1,107 @@
 
-import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { RecruitmentPost } from '@/types/recruitment';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
-/**
- * Hook to fetch recruitment post data from Firebase
- */
 export const useRecruitmentFirebaseData = () => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    // Make sure we have a valid collection path
-    if (!COLLECTIONS.HR.RECRUITMENT) {
-      console.error('Invalid collection path: COLLECTIONS.HR.RECRUITMENT is undefined or empty');
-      setError(new Error('Configuration error: Invalid collection path'));
-      setIsLoading(false);
-      return;
-    }
-    
-    const recruitmentRef = collection(db, COLLECTIONS.HR.RECRUITMENT);
-    const q = query(recruitmentRef, orderBy('createdAt', 'desc'));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const posts: RecruitmentPost[] = [];
-        snapshot.forEach((doc) => {
-          posts.push({
-            id: doc.id,
-            ...doc.data()
-          } as RecruitmentPost);
-        });
-        setRecruitmentPosts(posts);
-        setIsLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching recruitment posts:', err);
-        setError(err);
-        setIsLoading(false);
+  const fetchData = useCallback(() => {
+    console.log('Fetching recruitment data from Firebase...');
+    setIsLoading(true);
+    try {
+      // Vérification que le chemin de collection existe
+      if (!COLLECTIONS.HR.RECRUITMENT) {
+        throw new Error('Collection path for recruitment is not defined');
       }
-    );
-
-    return () => unsubscribe();
+      
+      const collectionRef = collection(db, COLLECTIONS.HR.RECRUITMENT);
+      const q = query(collectionRef);
+      
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const posts = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Format dates if they exist in timestamp format
+            const formattedData: any = { ...data };
+            if (data.openDate instanceof Date) {
+              formattedData.openDate = data.openDate.toLocaleDateString('fr-FR');
+            } else if (data.openDate && typeof data.openDate === 'string') {
+              try {
+                const date = new Date(data.openDate);
+                formattedData.openDate = isNaN(date.getTime()) 
+                  ? data.openDate 
+                  : date.toLocaleDateString('fr-FR');
+              } catch (e) {
+                formattedData.openDate = data.openDate;
+              }
+            }
+            
+            if (data.applicationDeadline instanceof Date) {
+              formattedData.applicationDeadline = data.applicationDeadline.toLocaleDateString('fr-FR');
+            } else if (data.applicationDeadline && typeof data.applicationDeadline === 'string') {
+              try {
+                const date = new Date(data.applicationDeadline);
+                formattedData.applicationDeadline = isNaN(date.getTime()) 
+                  ? data.applicationDeadline 
+                  : date.toLocaleDateString('fr-FR');
+              } catch (e) {
+                formattedData.applicationDeadline = data.applicationDeadline;
+              }
+            }
+            
+            return {
+              id: doc.id,
+              ...formattedData
+            };
+          }) as RecruitmentPost[];
+          
+          console.log(`Retrieved ${posts.length} recruitment posts from Firebase`);
+          setRecruitmentPosts(posts);
+          setIsLoading(false);
+        },
+        (err: Error) => {
+          console.error('Error fetching recruitment data:', err);
+          setError(err);
+          setIsLoading(false);
+        }
+      );
+      
+      return () => {
+        console.log('Unsubscribing from recruitment collection');
+        unsubscribe();
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      console.error('Error setting up recruitment listener:', error);
+      setError(error);
+      setIsLoading(false);
+      return () => {}; // Empty cleanup function if setup fails
+    }
   }, []);
 
-  return { recruitmentPosts, isLoading, error };
+  useEffect(() => {
+    const unsubscribe = fetchData();
+    return unsubscribe;
+  }, [fetchData]);
+
+  const refreshData = useCallback(() => {
+    // Re-fetch data
+    const unsubscribe = fetchData();
+    return unsubscribe;
+  }, [fetchData]);
+
+  return {
+    recruitmentPosts,
+    isLoading,
+    error,
+    refreshData
+  };
 };
 
 export default useRecruitmentFirebaseData;

@@ -17,7 +17,8 @@ export const COLLECTIONS = {
     TRAININGS: 'hr_trainings',
     REPORTS: 'hr_reports',
     ALERTS: 'hr_alerts',
-    BADGES: 'hr_badges'
+    BADGES: 'hr_badges',
+    RECRUITMENT: 'hr_recruitment'  // Ajout de la collection RECRUITMENT
   },
   CRM: {
     CLIENTS: 'crm_clients',
