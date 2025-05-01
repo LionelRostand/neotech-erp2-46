@@ -7,6 +7,8 @@ interface QRCodeGeneratorProps {
   size?: number;
   className?: string;
   errorCorrection?: 'L' | 'M' | 'Q' | 'H';
+  darkColor?: string;
+  lightColor?: string;
 }
 
 /**
@@ -16,7 +18,9 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
   value, 
   size = 128,
   className = "",
-  errorCorrection = 'M'
+  errorCorrection = 'M',
+  darkColor = '#000000',
+  lightColor = '#ffffff'
 }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +39,8 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
           margin: 1,
           errorCorrectionLevel: errorCorrection,
           color: {
-            dark: '#000000',
-            light: '#ffffff'
+            dark: darkColor,
+            light: lightColor
           }
         });
         
@@ -50,7 +54,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
     };
     
     generateQRCode();
-  }, [value, size, errorCorrection]);
+  }, [value, size, errorCorrection, darkColor, lightColor]);
   
   if (error) {
     return (

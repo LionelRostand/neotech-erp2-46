@@ -37,22 +37,22 @@ const RecruitmentKanban = () => {
       <KanbanColumn 
         id="Ouverte"
         title="Postes ouverts"
-        items={openPosts}
+        items={openPosts || []}
       />
       <KanbanColumn 
         id="En cours"
         title="En cours"
-        items={inProgressPosts}
+        items={inProgressPosts || []}
       />
       <KanbanColumn 
         id="Entretiens"
         title="Entretiens"
-        items={interviewPosts}
+        items={interviewPosts || []}
       />
       <KanbanColumn 
         id="Fermée"
         title="Fermés"
-        items={closedPosts}
+        items={closedPosts || []}
       />
     </div>
   );
