@@ -34,6 +34,12 @@ const BadgesTable: React.FC<BadgesTableProps> = ({
     }
     return <Badge variant="outline">{status}</Badge>;
   };
+
+  // Fonction pour tronquer et formater le numéro de badge
+  const formatBadgeId = (badgeId: string) => {
+    if (!badgeId) return "";
+    return badgeId.length > 6 ? badgeId.substring(0, 6) : badgeId;
+  };
   
   if (loading) {
     return (
@@ -74,7 +80,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({
               key={badge.id} 
               className="hover:bg-muted/50"
             >
-              <TableCell className="font-medium">{badge.id}</TableCell>
+              <TableCell className="font-medium">{formatBadgeId(badge.id)}</TableCell>
               <TableCell>{badge.employeeName}</TableCell>
               <TableCell>{badge.department}</TableCell>
               <TableCell>

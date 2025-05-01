@@ -1,19 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BadgeData } from './BadgeTypes';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BadgeData } from './BadgeTypes';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import { updateBadge } from '../employees/services/badgeService';
 
 interface EditBadgeDialogProps {
@@ -29,41 +29,76 @@ const EditBadgeDialog: React.FC<EditBadgeDialogProps> = ({
   badge,
   onBadgeUpdated,
 }) => {
-  const [editedBadge, setEditedBadge] = useState<BadgeData | null>(badge);
-  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<BadgeData>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [idError, setIdError] = useState<string>('');
 
-  React.useEffect(() => {
-    setEditedBadge(badge);
+  useEffect(() => {
+    if (badge) {
+      setFormData({
+        id: badge.id,
+        employeeName: badge.employeeName,
+        employeeId: badge.employeeId,
+        department: badge.department,
+        company: badge.company,
+        accessLevel: badge.accessLevel,
+        status: badge.status,
+        date: badge.date,
+      });
+      setIdError('');
+    }
   }, [badge]);
 
-  if (!editedBadge) return null;
+  if (!badge) return null;
 
-  const handleChange = (field: keyof BadgeData, value: string) => {
-    setEditedBadge(prev => {
-      if (!prev) return prev;
-      return { ...prev, [field]: value };
+  const handleInputChange = (field: keyof BadgeData, value: string) => {
+    // Vérification spécifique pour l'ID du badge
+    if (field === 'id') {
+      if (value.length > 6) {
+        setIdError('Le numéro de badge ne doit pas dépasser 6 caractères');
+      } else {
+        setIdError('');
+      }
+      // On limite le texte saisi à 6 caractères
+      value = value.substring(0, 6);
+    }
+
+    setFormData({
+      ...formData,
+      [field]: value,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editedBadge) return;
+    
+    // Validation de la longueur de l'ID
+    if (formData.id && formData.id.length > 6) {
+      setIdError('Le numéro de badge ne doit pas dépasser 6 caractères');
+      return;
+    }
+
+    if (!formData.id || !formData.employeeName) {
+      toast.error("Le numéro de badge et le nom de l'employé sont requis");
+      return;
+    }
 
     try {
-      setIsSaving(true);
-      const statusText = editedBadge.status === 'success' ? 'Actif' : 
-                        editedBadge.status === 'error' ? 'Désactivé' : 'Expiré';
+      setIsSubmitting(true);
       
-      const updatedBadge = {...editedBadge, statusText};
-      await updateBadge(editedBadge.id, updatedBadge);
-      onBadgeUpdated(updatedBadge);
-      toast.success('Badge mis à jour avec succès');
+      // Mise à jour du badge dans la base de données
+      await updateBadge(badge.id, formData as BadgeData);
+
+      // Notifier le composant parent de la mise à jour
+      onBadgeUpdated(formData as BadgeData);
+      
+      toast.success("Badge mis à jour avec succès");
       onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du badge:', error);
-      toast.error('Échec de la mise à jour du badge');
+      console.error("Erreur lors de la mise à jour du badge:", error);
+      toast.error("Échec de la mise à jour du badge");
     } finally {
-      setIsSaving(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -71,93 +106,111 @@ const EditBadgeDialog: React.FC<EditBadgeDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Modifier le Badge</DialogTitle>
-          <DialogDescription>
-            Modifier les informations du badge {editedBadge.id}
-          </DialogDescription>
+          <DialogTitle>Modifier le badge</DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 py-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid gap-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="employeeName" className="text-right">
+              <Label htmlFor="badge-id" className="text-right">
+                N° Badge
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="badge-id"
+                  value={formData.id || ''}
+                  onChange={(e) => handleInputChange('id', e.target.value)}
+                  maxLength={6}
+                  className={idError ? 'border-red-500' : ''}
+                />
+                {idError && <p className="text-xs text-red-500 mt-1">{idError}</p>}
+                <p className="text-xs text-muted-foreground mt-1">Maximum 6 caractères</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="employee-name" className="text-right">
                 Employé
               </Label>
               <Input
-                id="employeeName"
-                value={editedBadge.employeeName}
-                onChange={(e) => handleChange('employeeName', e.target.value)}
+                id="employee-name"
+                value={formData.employeeName || ''}
+                onChange={(e) => handleInputChange('employeeName', e.target.value)}
                 className="col-span-3"
               />
             </div>
-
+            
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="department" className="text-right">
                 Département
               </Label>
               <Input
                 id="department"
-                value={editedBadge.department || ''}
-                onChange={(e) => handleChange('department', e.target.value)}
+                value={formData.department || ''}
+                onChange={(e) => handleInputChange('department', e.target.value)}
                 className="col-span-3"
               />
             </div>
-
+            
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="company" className="text-right">
                 Entreprise
               </Label>
               <Input
                 id="company"
-                value={editedBadge.company || ''}
-                onChange={(e) => handleChange('company', e.target.value)}
+                value={formData.company || ''}
+                onChange={(e) => handleInputChange('company', e.target.value)}
                 className="col-span-3"
               />
             </div>
-
+            
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="accessLevel" className="text-right">
+              <Label htmlFor="access-level" className="text-right">
                 Niveau d'accès
               </Label>
               <Input
-                id="accessLevel"
-                value={editedBadge.accessLevel}
-                onChange={(e) => handleChange('accessLevel', e.target.value)}
+                id="access-level"
+                value={formData.accessLevel || ''}
+                onChange={(e) => handleInputChange('accessLevel', e.target.value)}
                 className="col-span-3"
               />
             </div>
-
+            
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="status" className="text-right">
                 Statut
               </Label>
-              <Select
-                value={editedBadge.status}
-                onValueChange={(value) => handleChange('status', value)}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Sélectionner un statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="success">Actif</SelectItem>
-                  <SelectItem value="warning">Expiré</SelectItem>
-                  <SelectItem value="error">Désactivé</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="col-span-3">
+                <Select
+                  value={formData.status || ''}
+                  onValueChange={(value) => handleInputChange('status', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="success">Actif</SelectItem>
+                    <SelectItem value="error">Désactivé</SelectItem>
+                    <SelectItem value="warning">Expiré</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-
+          
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isSaving}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Mise à jour...
+                </>
+              ) : (
+                'Mettre à jour'
+              )}
             </Button>
           </DialogFooter>
         </form>

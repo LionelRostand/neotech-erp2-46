@@ -26,6 +26,12 @@ const ViewBadgeDialog: React.FC<ViewBadgeDialogProps> = ({
 }) => {
   if (!badge) return null;
 
+  // Fonction pour formater l'ID du badge à 6 caractères maximum
+  const formatBadgeId = (badgeId: string) => {
+    if (!badgeId) return "";
+    return badgeId.length > 6 ? badgeId.substring(0, 6) : badgeId;
+  };
+
   const renderStatus = (status: string) => {
     if (status === 'success') {
       return <Badge className="bg-green-100 text-green-800 border-green-300"><Check className="h-3 w-3 mr-1" /> Actif</Badge>;
@@ -43,7 +49,7 @@ const ViewBadgeDialog: React.FC<ViewBadgeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Détails du Badge</DialogTitle>
           <DialogDescription>
-            Informations complètes sur le badge {badge.id}
+            Informations complètes sur le badge {formatBadgeId(badge.id)}
           </DialogDescription>
         </DialogHeader>
 
@@ -60,7 +66,7 @@ const ViewBadgeDialog: React.FC<ViewBadgeDialogProps> = ({
           <div className="space-y-4">
             <div className="flex justify-between">
               <span className="text-sm font-medium">N° Badge:</span>
-              <span className="text-sm">{badge.id}</span>
+              <span className="text-sm">{formatBadgeId(badge.id)}</span>
             </div>
 
             <div className="flex justify-between items-center">
