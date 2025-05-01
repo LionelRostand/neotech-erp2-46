@@ -1,6 +1,28 @@
 
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import QRCode from 'qrcode';
+
+/**
+ * Generate a QR code as a data URL
+ * @param value Text to encode in the QR code
+ * @returns Promise with data URL
+ */
+export const generateQRCodeDataUrl = async (value: string): Promise<string> => {
+  try {
+    return await QRCode.toDataURL(value, {
+      margin: 1,
+      width: 150,
+      color: {
+        dark: '#000',
+        light: '#fff'
+      }
+    });
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    throw error;
+  }
+};
 
 /**
  * Export data to PDF file
@@ -80,5 +102,99 @@ export const exportToPdf = (
   } catch (error) {
     console.error('Error exporting to PDF:', error);
     return false;
+  }
+};
+
+/**
+ * Generate a freight document (invoice or delivery note) with company info, client info, and items
+ * @param documentType Type of document ('invoice' or 'delivery_note')
+ * @param companyName Company name
+ * @param clientName Client name
+ * @param containerNumber Container number (optional)
+ * @param referenceNumber Reference number
+ * @param items Items/packages in the shipment
+ * @param trackingCode Code to use for QR tracking
+ * @returns Promise resolving to the generated PDF document as a data URL
+ */
+export const generateFreightDocument = async (
+  documentType: 'invoice' | 'delivery_note',
+  companyName: string,
+  clientName: string,
+  containerNumber: string | undefined,
+  referenceNumber: string,
+  items: Array<{name: string, quantity: number, description?: string}>,
+  trackingCode: string
+): Promise<string> => {
+  try {
+    const doc = new jsPDF();
+    const title = documentType === 'invoice' ? 'FACTURE' : 'BON DE LIVRAISON';
+    const filePrefix = documentType === 'invoice' ? 'Facture' : 'BonLivraison';
+    
+    // Generate QR code for tracking
+    const qrCodeDataUrl = await generateQRCodeDataUrl(`https://track.domain.com/${trackingCode}`);
+    
+    // Add header with company info
+    doc.setFontSize(20);
+    doc.text(title, 105, 20, { align: 'center' });
+    
+    doc.setFontSize(14);
+    doc.text(companyName, 105, 30, { align: 'center' });
+    
+    // Add reference information
+    doc.setFontSize(10);
+    doc.text(`Référence: ${referenceNumber}`, 20, 45);
+    doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 50);
+    
+    // Add client information
+    doc.text('Client:', 20, 60);
+    doc.text(clientName, 40, 60);
+    
+    // Add container information if available
+    let yPos = 65;
+    if (containerNumber) {
+      doc.text(`Conteneur: ${containerNumber}`, 20, yPos);
+      yPos += 5;
+    }
+    
+    // QR code for tracking (right side)
+    doc.addImage(qrCodeDataUrl, 'PNG', 150, 40, 30, 30);
+    doc.setFontSize(8);
+    doc.text('Scanner pour suivre', 165, 75, { align: 'center' });
+    
+    // Add items/packages table
+    autoTable(doc, {
+      startY: yPos + 10,
+      head: [['Description', 'Quantité', 'Détails']],
+      body: items.map(item => [
+        item.name,
+        item.quantity.toString(),
+        item.description || ''
+      ]),
+      theme: 'grid',
+      headStyles: {
+        fillColor: [66, 139, 202],
+        textColor: 255,
+        fontStyle: 'bold'
+      }
+    });
+    
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(
+        `${filePrefix}_${referenceNumber} - Page ${i} sur ${pageCount}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: 'center' }
+      );
+    }
+    
+    // Return as data URL for preview and download
+    return doc.output('datauristring');
+  } catch (error) {
+    console.error(`Error generating ${documentType}:`, error);
+    throw error;
   }
 };

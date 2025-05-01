@@ -79,6 +79,81 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
     }
   };
 
+  // Handle document preview
+  const handlePreview = () => {
+    // If there's a URL, we can create a simple preview by opening it in a new tab
+    if (document.url) {
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <iframe src="${document.url}" style="width:100%; height:100vh; border:none;"></iframe>
+        `);
+      } else {
+        toast({
+          title: "Aperçu bloqué",
+          description: "Veuillez autoriser les popups pour voir l'aperçu du document.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  // Enhanced download handler
+  const handleDownload = () => {
+    if (document.url) {
+      // Create a link and trigger the download
+      const link = document.createElement('a');
+      link.href = document.url;
+      link.download = document.name || `document-${document.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Téléchargement lancé",
+        description: `${getDocumentTypeLabel(document.type)} téléchargé avec succès.`,
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Erreur de téléchargement",
+        description: "Aucun document disponible pour le téléchargement.",
+        variant: "destructive"
+      });
+    }
+    
+    // Call the external handler if provided
+    if (onDownload) onDownload();
+  };
+
+  // Enhanced print handler
+  const handlePrint = () => {
+    if (document.url) {
+      const printWindow = window.open(document.url);
+      if (printWindow) {
+        // Wait for the document to load before printing
+        printWindow.addEventListener('load', () => {
+          printWindow.print();
+        });
+      } else {
+        toast({
+          title: "Impression bloquée",
+          description: "Veuillez autoriser les popups pour imprimer le document.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Erreur d'impression",
+        description: "Aucun document disponible pour l'impression.",
+        variant: "destructive"
+      });
+    }
+    
+    // Call the external handler if provided
+    if (onPrint) onPrint();
+  };
+
   console.log('Viewing document:', document);
 
   return (
@@ -107,11 +182,11 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
               </p>
               
               <div className="flex justify-center gap-3 mt-6">
-                <Button variant="outline" size="sm" onClick={onDownload}>
+                <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="mr-2 h-4 w-4" />
                   Télécharger
                 </Button>
-                <Button variant="outline" size="sm" onClick={onPrint}>
+                <Button variant="outline" size="sm" onClick={handlePrint}>
                   <Printer className="mr-2 h-4 w-4" />
                   Imprimer
                 </Button>

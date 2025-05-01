@@ -10,9 +10,10 @@ import KanbanColumn from '@/components/module/submodules/recruitment/KanbanColum
 const RecruitmentTab = () => {
   const { recruitmentPosts, isLoading } = useRecruitmentFirebaseData();
 
-  // Ensure recruitmentPosts is always an array
-  const safePosts = Array.isArray(recruitmentPosts) ? recruitmentPosts : [];
+  // Ensure recruitmentPosts is always an array and filter out nulls/undefined
+  const safePosts = Array.isArray(recruitmentPosts) ? recruitmentPosts.filter(Boolean) : [];
   
+  // Filter by status with additional null checks to prevent errors
   const openPosts = safePosts.filter(post => post && post.status === 'Ouverte');
   const inProgressPosts = safePosts.filter(post => post && post.status === 'En cours');
   const interviewPosts = safePosts.filter(post => post && post.status === 'Entretiens');
