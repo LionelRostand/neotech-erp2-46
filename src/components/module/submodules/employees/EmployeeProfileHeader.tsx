@@ -14,6 +14,7 @@ import CongesTab from './tabs/CongesTab';
 import EvaluationsTab from './tabs/EvaluationsTab';
 import ExportEmployeePdfButton from './components/ExportEmployeePdfButton';
 import { StatusBadge } from '@/components/module/submodules/StatusBadge';
+import EditEmployeeInfoDialog from './dialogs/EditEmployeeInfoDialog';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -22,12 +23,23 @@ interface EmployeeProfileHeaderProps {
 
 const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee, onEdit }) => {
   const [activeTab, setActiveTab] = useState("informations");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employee);
   
   const getStatusVariant = () => {
     const status = employee.status?.toLowerCase() || '';
     if (status.includes('active') || status.includes('actif')) return "success";
     if (status.includes('leave') || status.includes('congé')) return "warning";
     return "default";
+  };
+
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEmployeeUpdate = (updatedEmployee: Employee) => {
+    setCurrentEmployee(updatedEmployee);
+    setIsEditDialogOpen(false);
   };
 
   return (
@@ -42,42 +54,40 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
         </Link>
         
         <div className="flex items-center space-x-2">
-          <ExportEmployeePdfButton employee={employee} />
+          <ExportEmployeePdfButton employee={currentEmployee} />
           
-          {onEdit && (
-            <Button size="sm" onClick={onEdit}>
-              <PencilIcon className="h-4 w-4 mr-1" />
-              Modifier
-            </Button>
-          )}
+          <Button size="sm" onClick={handleEditClick}>
+            <PencilIcon className="h-4 w-4 mr-1" />
+            Modifier
+          </Button>
         </div>
       </div>
       
       {/* Employee profile banner */}
       <div className="bg-white rounded-lg border p-6 flex flex-col md:flex-row gap-6">
         <Avatar className="h-20 w-20">
-          <AvatarImage src={employee.photoURL || employee.photo || ''} alt={`${employee.firstName} ${employee.lastName}`} />
-          <AvatarFallback className="text-lg">{employee.firstName?.[0]}{employee.lastName?.[0]}</AvatarFallback>
+          <AvatarImage src={currentEmployee.photoURL || currentEmployee.photo || ''} alt={`${currentEmployee.firstName} ${currentEmployee.lastName}`} />
+          <AvatarFallback className="text-lg">{currentEmployee.firstName?.[0]}{currentEmployee.lastName?.[0]}</AvatarFallback>
         </Avatar>
         
         <div className="flex-grow space-y-1">
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             <h1 className="text-2xl font-bold">
-              {employee.firstName} {employee.lastName}
+              {currentEmployee.firstName} {currentEmployee.lastName}
             </h1>
             <StatusBadge 
-              status={employee.status || 'Actif'}
+              status={currentEmployee.status || 'Actif'}
               variant={getStatusVariant()}
             >
-              {employee.status || 'Actif'}
+              {currentEmployee.status || 'Actif'}
             </StatusBadge>
           </div>
-          <p className="text-gray-500">{employee.position || employee.role || 'Non spécifié'}</p>
-          <p className="text-gray-500">{employee.department || 'Département non spécifié'}</p>
+          <p className="text-gray-500">{currentEmployee.position || currentEmployee.role || 'Non spécifié'}</p>
+          <p className="text-gray-500">{currentEmployee.department || 'Département non spécifié'}</p>
           <div className="pt-2 flex flex-wrap gap-2">
             <div className="flex items-center text-sm text-gray-600">
               <FileText className="h-4 w-4 mr-1" />
-              <span>ID: {employee.id?.substring(0, 8) || 'Non disponible'}</span>
+              <span>ID: {currentEmployee.id?.substring(0, 8) || 'Non disponible'}</span>
             </div>
           </div>
         </div>
@@ -96,30 +106,38 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
         
         <div className="mt-6">
           <TabsContent value="informations">
-            <InformationsTab employee={employee} />
+            <InformationsTab employee={currentEmployee} />
           </TabsContent>
           
           <TabsContent value="competences">
-            <CompetencesTab employee={employee} />
+            <CompetencesTab employee={currentEmployee} />
           </TabsContent>
           
           <TabsContent value="horaires">
-            <HorairesTab employee={employee} />
+            <HorairesTab employee={currentEmployee} />
           </TabsContent>
           
           <TabsContent value="absences">
-            <AbsencesTab employee={employee} />
+            <AbsencesTab employee={currentEmployee} />
           </TabsContent>
           
           <TabsContent value="conges">
-            <CongesTab employee={employee} />
+            <CongesTab employee={currentEmployee} />
           </TabsContent>
           
           <TabsContent value="evaluations">
-            <EvaluationsTab employee={employee} />
+            <EvaluationsTab employee={currentEmployee} />
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* Dialog d'édition */}
+      <EditEmployeeInfoDialog 
+        employee={currentEmployee}
+        open={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={handleEmployeeUpdate}
+      />
     </div>
   );
 };

@@ -38,8 +38,19 @@ export const getEmployee = async (id: string): Promise<Employee | null> => {
 // Function to update an employee
 export const updateEmployee = async (id: string, data: Partial<EmployeeFormValues>): Promise<void> => {
   try {
+    if (!id) {
+      throw new Error("Employee ID is required for update");
+    }
+    
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await updateDoc(docRef, data);
+    
+    // Add timestamp for tracking updates
+    const updateData = {
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+    
+    await updateDoc(docRef, updateData);
     console.log("Employee updated successfully!");
   } catch (error) {
     console.error("Error updating employee:", error);
@@ -72,7 +83,11 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
 export const createEmployee = async (data: EmployeeFormValues): Promise<Employee | null> => {
   try {
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const docRef = await addDoc(collectionRef, data);
+    const docRef = await addDoc(collectionRef, {
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {

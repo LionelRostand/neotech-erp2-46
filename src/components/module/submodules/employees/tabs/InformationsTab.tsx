@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Employee } from '@/types/employee';
-import { StatusBadge } from '@/components/ui/status-badge';
+import { StatusBadge } from '@/components/module/submodules/StatusBadge';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -11,7 +11,9 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     try {
-      return new Date(dateString).toLocaleDateString('fr-FR');
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return date.toLocaleDateString('fr-FR');
     } catch (error) {
       return dateString;
     }
@@ -54,6 +56,27 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   const workCity = hasWorkAddress ? ensureString(employee.workAddress.city) : '-';
   const workPostalCode = hasWorkAddress ? ensureString(employee.workAddress.postalCode) : '-';
   const workCountry = hasWorkAddress ? ensureString(employee.workAddress.country) : '-';
+
+  // Format contract name
+  const getContractName = (contractCode: string) => {
+    const contractTypes: Record<string, string> = {
+      cdi: 'CDI',
+      cdd: 'CDD',
+      interim: 'Intérim',
+      apprentissage: 'Apprentissage',
+      stage: 'Stage',
+      autre: 'Autre'
+    };
+    return contractTypes[contractCode?.toLowerCase()] || contract;
+  };
+
+  // Format status badge
+  const getStatusDisplay = (status: string) => {
+    return status === 'active' ? 'Actif' : 
+           status === 'inactive' ? 'Inactif' : 
+           status === 'onLeave' ? 'En congé' : 
+           status;
+  };
 
   return (
     <div className="space-y-6">
@@ -98,12 +121,12 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
             <div className="text-gray-500">Statut</div>
             <div>
               <StatusBadge status={status}>
-                {status}
+                {getStatusDisplay(status)}
               </StatusBadge>
             </div>
             
             <div className="text-gray-500">Type de contrat</div>
-            <div>{contract}</div>
+            <div>{getContractName(contract)}</div>
           </div>
         </div>
       </div>
