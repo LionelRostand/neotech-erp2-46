@@ -29,6 +29,11 @@ const DeleteCompanyDialog: React.FC<DeleteCompanyDialogProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Return early if company is undefined or null
+  if (!company || !company.id) {
+    return null;
+  }
+
   const handleDelete = async () => {
     setIsDeleting(true);
     

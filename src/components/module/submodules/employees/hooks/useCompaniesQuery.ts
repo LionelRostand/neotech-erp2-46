@@ -1,36 +1,28 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchCollectionData } from '@/lib/fetchCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Company } from '@/components/module/submodules/companies/types';
+import { companyService } from '../../companies/services/companyService';
+import { Company } from '../../companies/types';
 
 export const useCompaniesQuery = () => {
-  return useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        console.log('Fetching companies data...');
-        
-        // S'assurer que le chemin de collection est valide
-        if (!COLLECTIONS.COMPANIES) {
-          console.error('Invalid companies collection path');
-          return [];
-        }
-        
-        const companies = await fetchCollectionData<Company>(COLLECTIONS.COMPANIES);
-        // Ensure all companies have required fields to avoid undefined errors
-        return companies.map(company => ({
-          id: company.id || '',
-          name: company.name || 'Sans nom',
-          industry: company.industry || '',
-          status: company.status || 'active',
-          // Ensure other fields have default values if needed
-          ...company
-        }));
+        const response = await companyService.getCompanies();
+        // Ensure we always return a valid array of companies
+        return Array.isArray(response.companies) ? response.companies : [];
       } catch (error) {
-        console.error('Error fetching companies:', error);
-        throw error;
+        console.error("Error fetching companies:", error);
+        // Return empty array if there's an error
+        return [] as Company[];
       }
     }
   });
+
+  return {
+    data: Array.isArray(data) ? data : [],
+    isLoading,
+    error,
+    refetch
+  };
 };

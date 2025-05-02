@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Company } from './types';
 import { 
@@ -20,7 +21,7 @@ import {
 
 export interface CompaniesTableProps {
   companies: Company[];
-  isLoading?: boolean; // Changed from loading to isLoading for consistency
+  isLoading?: boolean;
   onView: (company: Company) => void;
   onEdit?: (company: Company) => void;
   onDelete?: (company: Company) => void;
@@ -33,6 +34,9 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({
   onEdit,
   onDelete
 }) => {
+  // Ensure companies is an array
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -52,51 +56,55 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({
                 Chargement...
               </TableCell>
             </TableRow>
-          ) : companies.length === 0 ? (
+          ) : safeCompanies.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-4">
                 Aucune entreprise trouvée.
               </TableCell>
             </TableRow>
           ) : (
-            companies.map((company) => (
-              <TableRow key={company.id}>
-                <TableCell className="font-medium">{company.name}</TableCell>
-                <TableCell>{company.industry || 'N/A'}</TableCell>
-                <TableCell>{company.size || 'N/A'}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{company.status}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Ouvrir le menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onView(company)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Voir
-                      </DropdownMenuItem>
-                      {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(company)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Modifier
+            safeCompanies.map((company) => {
+              if (!company) return null;
+              
+              return (
+                <TableRow key={company.id}>
+                  <TableCell className="font-medium">{company.name || 'N/A'}</TableCell>
+                  <TableCell>{company.industry || 'N/A'}</TableCell>
+                  <TableCell>{company.size || 'N/A'}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{company.status || 'N/A'}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Ouvrir le menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onView(company)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Voir
                         </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <DropdownMenuItem onClick={() => onDelete(company)} className="text-destructive">
-                          <Trash className="mr-2 h-4 w-4" />
-                          Supprimer
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
+                        {onEdit && (
+                          <DropdownMenuItem onClick={() => onEdit(company)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Modifier
+                          </DropdownMenuItem>
+                        )}
+                        {onDelete && (
+                          <DropdownMenuItem onClick={() => onDelete(company)} className="text-destructive">
+                            <Trash className="mr-2 h-4 w-4" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>

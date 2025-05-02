@@ -24,30 +24,34 @@ const EmployeesCompanies = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const filteredCompanies = companies.filter(company => {
+  const filteredCompanies = Array.isArray(companies) ? companies.filter(company => {
+    if (!company) return false;
     // Add null checks to prevent the "toLowerCase of undefined" error
     const companyName = company.name || '';
     const companyIndustry = company.industry || '';
     
     return companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       companyIndustry.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  }) : [];
 
   const handleCreateCompany = () => {
     navigate('/modules/companies/create');
   };
 
   const handleViewCompany = (company: Company) => {
+    if (!company) return;
     setSelectedCompany(company);
     setViewDialogOpen(true);
   };
 
   const handleEditCompany = (company: Company) => {
+    if (!company) return;
     setSelectedCompany(company);
     setEditDialogOpen(true);
   };
 
   const handleDeleteCompany = (company: Company) => {
+    if (!company) return;
     setSelectedCompany(company);
     setDeleteDialogOpen(true);
   };

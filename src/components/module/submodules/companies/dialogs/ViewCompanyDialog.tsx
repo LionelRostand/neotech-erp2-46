@@ -20,10 +20,11 @@ interface ViewCompanyDialogProps {
 }
 
 const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, onClose }) => {
+  // Return early if company is undefined or null
   if (!company) return null;
 
   // Format creation date safely
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
     try {
       if (!dateString) return 'Date non spécifiée';
       const date = parseISO(dateString);
@@ -77,7 +78,7 @@ const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, on
                 </p>
                 {company.address?.city && (
                   <p className="text-sm pl-6">
-                    {company.address.city}, {company.address.postalCode}
+                    {company.address.city}, {company.address.postalCode || ''}
                   </p>
                 )}
                 {company.address?.country && (
