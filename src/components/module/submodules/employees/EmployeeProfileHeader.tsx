@@ -22,12 +22,15 @@ interface EmployeeProfileHeaderProps {
 }
 
 const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee, onEdit }) => {
+  // Make sure employee is defined with fallback
+  const safeEmployee = employee || {} as Employee;
+  
   const [activeTab, setActiveTab] = useState("informations");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employee);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee>(safeEmployee);
   
   const getStatusVariant = () => {
-    const status = employee.status?.toLowerCase() || '';
+    const status = currentEmployee?.status?.toLowerCase() || '';
     if (status.includes('active') || status.includes('actif')) return "success";
     if (status.includes('leave') || status.includes('congé')) return "warning";
     return "default";
@@ -66,28 +69,28 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
       {/* Employee profile banner */}
       <div className="bg-white rounded-lg border p-6 flex flex-col md:flex-row gap-6">
         <Avatar className="h-20 w-20">
-          <AvatarImage src={currentEmployee.photoURL || currentEmployee.photo || ''} alt={`${currentEmployee.firstName} ${currentEmployee.lastName}`} />
-          <AvatarFallback className="text-lg">{currentEmployee.firstName?.[0]}{currentEmployee.lastName?.[0]}</AvatarFallback>
+          <AvatarImage src={currentEmployee?.photoURL || currentEmployee?.photo || ''} alt={`${currentEmployee?.firstName || ''} ${currentEmployee?.lastName || ''}`} />
+          <AvatarFallback className="text-lg">{(currentEmployee?.firstName || '')[0]}{(currentEmployee?.lastName || '')[0]}</AvatarFallback>
         </Avatar>
         
         <div className="flex-grow space-y-1">
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             <h1 className="text-2xl font-bold">
-              {currentEmployee.firstName} {currentEmployee.lastName}
+              {currentEmployee?.firstName || ''} {currentEmployee?.lastName || ''}
             </h1>
             <StatusBadge 
-              status={currentEmployee.status || 'Actif'}
+              status={currentEmployee?.status || 'Actif'}
               variant={getStatusVariant()}
             >
-              {currentEmployee.status || 'Actif'}
+              {currentEmployee?.status || 'Actif'}
             </StatusBadge>
           </div>
-          <p className="text-gray-500">{currentEmployee.position || currentEmployee.role || 'Non spécifié'}</p>
-          <p className="text-gray-500">{currentEmployee.department || 'Département non spécifié'}</p>
+          <p className="text-gray-500">{currentEmployee?.position || currentEmployee?.role || 'Non spécifié'}</p>
+          <p className="text-gray-500">{currentEmployee?.department || 'Département non spécifié'}</p>
           <div className="pt-2 flex flex-wrap gap-2">
             <div className="flex items-center text-sm text-gray-600">
               <FileText className="h-4 w-4 mr-1" />
-              <span>ID: {currentEmployee.id?.substring(0, 8) || 'Non disponible'}</span>
+              <span>ID: {currentEmployee?.id?.substring(0, 8) || 'Non disponible'}</span>
             </div>
           </div>
         </div>

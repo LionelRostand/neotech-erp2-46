@@ -9,12 +9,20 @@ export const useCompaniesQuery = () => {
     queryFn: async () => {
       try {
         const response = await companyService.getCompanies();
+        
         // Ensure we always return a valid array of companies
-        return Array.isArray(response.companies) ? response.companies : [];
+        if (response && Array.isArray(response.companies)) {
+          return response.companies;
+        } else if (response && Array.isArray(response)) {
+          // Handle case where response might be the array directly
+          return response;
+        } else {
+          console.warn("Companies data is not in expected format:", response);
+          return [];
+        }
       } catch (error) {
         console.error("Error fetching companies:", error);
-        // Return empty array if there's an error
-        return [] as Company[];
+        return [] as Company[]; // Return empty array on error
       }
     }
   });

@@ -19,6 +19,11 @@ export interface EmployeeFormValues {
 // Function to fetch an employee by ID
 export const getEmployee = async (id: string): Promise<Employee | null> => {
   try {
+    if (!id) {
+      console.warn("No employee ID provided");
+      return null;
+    }
+    
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
     const docSnap = await getDoc(docRef);
 
@@ -66,10 +71,12 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
     const employees: Employee[] = [];
 
     querySnapshot.forEach(doc => {
-      employees.push({
-        id: doc.id,
-        ...doc.data()
-      } as Employee);
+      if (doc.exists()) {
+        employees.push({
+          id: doc.id,
+          ...doc.data()
+        } as Employee);
+      }
     });
 
     return employees;
@@ -106,6 +113,10 @@ export const createEmployee = async (data: EmployeeFormValues): Promise<Employee
 // Function to delete an employee
 export const deleteEmployee = async (id: string): Promise<void> => {
   try {
+    if (!id) {
+      throw new Error("Employee ID is required for deletion");
+    }
+    
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
     await deleteDoc(docRef);
     console.log("Employee deleted successfully!");
@@ -118,7 +129,14 @@ export const deleteEmployee = async (id: string): Promise<void> => {
 // Add a function to update employee skills
 export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<boolean> => {
   try {
-    await updateEmployee(employeeId, { skills });
+    if (!employeeId) {
+      throw new Error("Employee ID is required");
+    }
+    
+    // Ensure skills is an array
+    const safeSkills = Array.isArray(skills) ? skills : [];
+    
+    await updateEmployee(employeeId, { skills: safeSkills });
     console.log("Employee skills updated successfully!");
     return true;
   } catch (error) {
