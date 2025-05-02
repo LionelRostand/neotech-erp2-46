@@ -18,31 +18,34 @@ const RecruitmentStats: React.FC = () => {
       };
     }
     
-    const openPositions = recruitmentPosts.filter(post => post.status === 'Ouverte').length;
-    const ongoingRecruitments = recruitmentPosts.filter(post => 
+    // Ensure we have a valid array before filtering
+    const safePosts = Array.isArray(recruitmentPosts) ? recruitmentPosts.filter(Boolean) : [];
+    
+    const openPositions = safePosts.filter(post => post.status === 'Ouverte').length;
+    const ongoingRecruitments = safePosts.filter(post => 
       post.status === 'En cours' || post.status === 'Entretiens' || post.status === 'Offre'
     ).length;
-    const closedPositions = recruitmentPosts.filter(post => post.status === 'Fermée').length;
+    const closedPositions = safePosts.filter(post => post.status === 'Fermée').length;
     
     // Calculate total applications
-    const totalApplications = recruitmentPosts.reduce((total, post) => {
-      if (post.candidates && post.candidates.length) {
+    const totalApplications = safePosts.reduce((total, post) => {
+      if (post.candidates && Array.isArray(post.candidates)) {
         return total + post.candidates.length;
       }
       // Try using applicationCount if available
-      if (post.applicationCount !== undefined) {
+      if (typeof post.applicationCount === 'number') {
         return total + post.applicationCount;
       }
       // Try using applications_count if available
-      if (post.applications_count !== undefined) {
+      if (typeof post.applications_count === 'number') {
         return total + post.applications_count;
       }
       return total;
     }, 0);
     
     // Calculate scheduled interviews
-    const scheduledInterviews = recruitmentPosts.reduce((total, post) => {
-      if (post.interviews_scheduled !== undefined) {
+    const scheduledInterviews = safePosts.reduce((total, post) => {
+      if (typeof post.interviews_scheduled === 'number') {
         return total + post.interviews_scheduled;
       }
       return total;

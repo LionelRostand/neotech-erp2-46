@@ -18,18 +18,27 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
     const foundModule = modules.find(m => m.id === moduleId);
     setModule(foundModule);
     
+    // Check if module exists before trying to access its properties
+    if (!foundModule) {
+      console.error(`Module with ID ${moduleId} not found`);
+      return;
+    }
+    
     // Si nous sommes à la racine d'un module, rediriger vers son dashboard s'il existe,
     // sinon vers son premier sous-module
     if (location.pathname === `/modules/${foundModule?.href.split('/')[2]}`) {
       console.log('At module root, redirecting to dashboard or first submodule');
       
-      const dashboardSubmodule = foundModule?.submodules.find(sm => sm.id.endsWith('-dashboard'));
-      if (dashboardSubmodule) {
-        navigate(`/modules/${foundModule?.href.split('/')[2]}/dashboard`);
-      } else if (foundModule?.submodules.length > 0) {
-        const firstSubmodule = foundModule.submodules[0];
-        const submoduleId = firstSubmodule.id.split('-')[1];
-        navigate(`/modules/${foundModule?.href.split('/')[2]}/${submoduleId}`);
+      // Ensure submodules exists and is an array
+      if (Array.isArray(foundModule?.submodules) && foundModule?.submodules.length > 0) {
+        const dashboardSubmodule = foundModule.submodules.find(sm => sm.id.endsWith('-dashboard'));
+        if (dashboardSubmodule) {
+          navigate(`/modules/${foundModule.href.split('/')[2]}/dashboard`);
+        } else {
+          const firstSubmodule = foundModule.submodules[0];
+          const submoduleId = firstSubmodule.id.split('-')[1];
+          navigate(`/modules/${foundModule.href.split('/')[2]}/${submoduleId}`);
+        }
       }
     }
   }, [moduleId, location.pathname, navigate]);

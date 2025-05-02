@@ -2,7 +2,7 @@
 import React from 'react';
 import { RecruitmentPost } from '@/types/recruitment';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building, Calendar, MapPin, AlertCircle } from 'lucide-react';
+import { Building, Calendar, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface KanbanColumnProps {
@@ -80,7 +80,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, items = [] }) =>
                       
                       {item.candidates && (
                         <Badge variant="outline" className="text-xs">
-                          {item.candidates.length || 0} candidat(s)
+                          {Array.isArray(item.candidates) ? item.candidates.length : 0} candidat(s)
                         </Badge>
                       )}
                     </div>

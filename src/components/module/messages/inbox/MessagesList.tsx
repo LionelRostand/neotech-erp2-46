@@ -37,8 +37,8 @@ const MessagesList: React.FC<MessagesListProps> = ({
     if (searchTerm && searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       result = result.filter(
-        msg => msg.subject.toLowerCase().includes(term) || 
-               msg.content.toLowerCase().includes(term)
+        msg => (msg.subject || '').toLowerCase().includes(term) || 
+               (msg.content || '').toLowerCase().includes(term)
       );
     }
     
