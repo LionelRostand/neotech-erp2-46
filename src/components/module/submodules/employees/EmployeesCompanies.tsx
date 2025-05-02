@@ -8,11 +8,21 @@ import { useCompaniesQuery } from './hooks/useCompaniesQuery';
 import CompaniesTable from '../companies/CompaniesTable';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Company } from '../companies/types';
+import ViewCompanyDialog from '../companies/dialogs/ViewCompanyDialog';
+import EditCompanyDialog from '../companies/dialogs/EditCompanyDialog';
+import DeleteCompanyDialog from '../companies/dialogs/DeleteCompanyDialog';
 
 const EmployeesCompanies = () => {
   const { data: companies = [], isLoading, refetch } = useCompaniesQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  
+  // État pour la gestion des dialogues et de l'entreprise sélectionnée
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const filteredCompanies = companies.filter(company => {
     // Add null checks to prevent the "toLowerCase of undefined" error
@@ -27,9 +37,31 @@ const EmployeesCompanies = () => {
     navigate('/modules/companies/create');
   };
 
-  const handleViewCompany = (company: typeof companies[0]) => {
-    // Implementation for viewing company details
-    console.log('View company:', company);
+  const handleViewCompany = (company: Company) => {
+    setSelectedCompany(company);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditCompany = (company: Company) => {
+    setSelectedCompany(company);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteCompany = (company: Company) => {
+    setSelectedCompany(company);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleUpdateSuccess = async () => {
+    setEditDialogOpen(false);
+    await refetch();
+    toast.success('Entreprise mise à jour avec succès');
+  };
+
+  const handleDeleteSuccess = async () => {
+    setDeleteDialogOpen(false);
+    await refetch();
+    toast.success('Entreprise supprimée avec succès');
   };
 
   const handleRefresh = async () => {
@@ -74,9 +106,34 @@ const EmployeesCompanies = () => {
             companies={filteredCompanies}
             isLoading={isLoading}
             onView={handleViewCompany}
+            onEdit={handleEditCompany}
+            onDelete={handleDeleteCompany}
           />
         </CardContent>
       </Card>
+
+      {/* Dialogues pour afficher, modifier et supprimer des entreprises */}
+      {selectedCompany && (
+        <>
+          <ViewCompanyDialog 
+            company={selectedCompany} 
+            open={viewDialogOpen} 
+            onClose={() => setViewDialogOpen(false)} 
+          />
+          <EditCompanyDialog 
+            company={selectedCompany} 
+            open={editDialogOpen} 
+            onClose={() => setEditDialogOpen(false)}
+            onSuccess={handleUpdateSuccess}
+          />
+          <DeleteCompanyDialog 
+            company={selectedCompany} 
+            open={deleteDialogOpen} 
+            onClose={() => setDeleteDialogOpen(false)}
+            onSuccess={handleDeleteSuccess}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -5,9 +5,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Company } from '../types';
-import { Building2, Mail, Phone, Globe, MapPin } from 'lucide-react';
+import { Building2, Mail, Phone, Globe, MapPin, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -21,8 +23,9 @@ const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, on
   if (!company) return null;
 
   // Format creation date safely
-  const formatCreationDate = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     try {
+      if (!dateString) return 'Date non spécifiée';
       const date = parseISO(dateString);
       return format(date, 'dd MMMM yyyy', { locale: fr });
     } catch (error) {
@@ -92,11 +95,22 @@ const ViewCompanyDialog: React.FC<ViewCompanyDialogProps> = ({ company, open, on
           )}
 
           <div className="border-t pt-4">
-            <p className="text-sm text-muted-foreground">
-              Créé le {formatCreationDate(company.createdAt)}
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Créé le {formatDate(company.createdAt)}
             </p>
+            {company.updatedAt && company.updatedAt !== company.createdAt && (
+              <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                <Calendar className="h-4 w-4" />
+                Mis à jour le {formatDate(company.updatedAt)}
+              </p>
+            )}
           </div>
         </div>
+        
+        <DialogFooter>
+          <Button onClick={onClose}>Fermer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
