@@ -6,14 +6,17 @@ import { Plus } from 'lucide-react';
 import AddSkillDialog from './AddSkillDialog';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 import { toast } from 'sonner';
+import { useEmployee } from '../hooks/useEmployee';
 
 interface CompetencesTabProps {
   employee: Employee;
+  onEmployeeUpdate?: () => void;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpdate }) => {
   const [isAddSkillDialogOpen, setIsAddSkillDialogOpen] = useState(false);
   const { updateEmployee, isLoading } = useEmployeeActions();
+  const { refetch } = useEmployee(employee.id);
 
   // Helper to ensure values are strings
   const ensureString = (value: any) => {
@@ -49,7 +52,17 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
         id: employee.id,
         skills: updatedSkills
       });
+      
       toast.success("Compétence ajoutée avec succès");
+      
+      // Refresh employee data after adding skill
+      if (onEmployeeUpdate) {
+        onEmployeeUpdate();
+      }
+      
+      // Force refetch of employee data to update UI
+      refetch();
+      
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la compétence:', error);
       toast.error("Erreur lors de l'ajout de la compétence");
@@ -57,7 +70,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <h3 className="font-medium text-lg">Compétences</h3>
         <Button 

@@ -21,6 +21,7 @@ export const useEmployeeActions = () => {
       
       // Ensure skills are properly formatted before sending to API
       if (data.skills) {
+        console.log('Formatting skills before update:', data.skills);
         // Ensure skills is an array
         const skillsArray = Array.isArray(data.skills) ? data.skills : [];
         
@@ -53,12 +54,16 @@ export const useEmployeeActions = () => {
               name: typeof skillObj.name === 'object' ? JSON.stringify(skillObj.name) : String(skillObj.name)
             } as Skill;
           });
+          
+        console.log('Skills after formatting:', data.skills);
       }
       
       await apiUpdateEmployee(data.id, data);
+      console.log('Employee updated successfully:', data.id);
       
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employee', data.id] });
       
       return Promise.resolve();
     } catch (error) {
