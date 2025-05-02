@@ -80,8 +80,12 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
                 <dd className="col-span-2 font-medium">{employee.firstName} {employee.lastName}</dd>
               </div>
               <div className="grid grid-cols-3 gap-1">
-                <dt className="text-gray-500">Email</dt>
+                <dt className="text-gray-500">Email personnel</dt>
                 <dd className="col-span-2">{employee.email}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Email professionnel</dt>
+                <dd className="col-span-2">{employee.professionalEmail || 'Non spécifié'}</dd>
               </div>
               <div className="grid grid-cols-3 gap-1">
                 <dt className="text-gray-500">Téléphone</dt>

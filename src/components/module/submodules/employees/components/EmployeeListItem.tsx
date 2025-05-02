@@ -33,6 +33,9 @@ const EmployeeListItem: React.FC<EmployeeListItemProps> = ({
   // Get employee initials for avatar fallback
   const initials = getInitials(employee.firstName, employee.lastName);
   
+  // Use professional email if available, otherwise use personal email
+  const displayEmail = employee.professionalEmail || employee.email;
+  
   const handleClick = () => {
     if (onEmployeeClick) {
       onEmployeeClick(employee);
@@ -57,7 +60,7 @@ const EmployeeListItem: React.FC<EmployeeListItemProps> = ({
         </div>
       </TableCell>
       <TableCell>{departmentName}</TableCell>
-      <TableCell>{employee.email}</TableCell>
+      <TableCell>{displayEmail}</TableCell>
       <TableCell>{formattedHireDate}</TableCell>
       <TableCell>
         <Badge variant={employee.status === 'active' ? 'default' : 'outline'} className="bg-green-500 hover:bg-green-600">

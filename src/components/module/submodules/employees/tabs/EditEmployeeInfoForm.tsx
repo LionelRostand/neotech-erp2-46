@@ -1,36 +1,13 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/patched-select';
-import { Employee } from '@/types/employee';
-import { updateEmployee } from '../services/employeeService';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
-
-// Define the form schema
-const formSchema = z.object({
-  firstName: z.string().min(1, "Le prénom est requis"),
-  lastName: z.string().min(1, "Le nom est requis"),
-  email: z.string().email("Email invalide"),
-  phone: z.string().optional(),
-  position: z.string().min(1, "Le poste est requis"),
-  department: z.string().optional(),
-  hireDate: z.string().optional(),
-  birthDate: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { Employee } from '@/types/employee';
+import { useEmployeeService } from '@/hooks/useEmployeeService';
+import { toast } from 'sonner';
 
 interface EditEmployeeInfoFormProps {
   employee: Employee;
@@ -38,189 +15,185 @@ interface EditEmployeeInfoFormProps {
   onCancel: () => void;
 }
 
-const EditEmployeeInfoForm: React.FC<EditEmployeeInfoFormProps> = ({
+const EditEmployeeInfoForm: React.FC<EditEmployeeInfoFormProps> = ({ 
   employee,
   onSuccess,
   onCancel
 }) => {
-  const { departments, isLoading: departmentsLoading } = useAvailableDepartments();
-  
-  // Initialize the form with employee data
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: employee.firstName || '',
-      lastName: employee.lastName || '',
-      email: employee.email || '',
-      phone: employee.phone || '',
-      position: employee.position || employee.role || '',
-      department: employee.departmentId || '',
-      hireDate: employee.hireDate || '',
-      birthDate: employee.birthDate || '',
-    }
+  const [formData, setFormData] = useState({
+    firstName: employee.firstName || '',
+    lastName: employee.lastName || '',
+    email: employee.email || '',
+    professionalEmail: employee.professionalEmail || '',
+    phone: employee.phone || '',
+    position: employee.position || '',
+    departmentId: employee.departmentId || '',
+    hireDate: employee.hireDate ? new Date(employee.hireDate).toISOString().split('T')[0] : '',
+    birthDate: employee.birthDate ? new Date(employee.birthDate).toISOString().split('T')[0] : '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { departments } = useAvailableDepartments();
+  const { updateEmployee } = useEmployeeService();
 
-  const onSubmit = async (data: FormValues) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
     try {
-      const success = await updateEmployee(employee.id, data);
+      await updateEmployee(employee.id, {
+        ...formData,
+        // Ensure departmentId is passed correctly
+        departmentId: formData.departmentId,
+        department: formData.departmentId, // For backward compatibility
+      });
       
-      if (success) {
-        onSuccess();
-      }
+      toast.success('Informations de l\'employé mises à jour avec succès');
+      onSuccess();
     } catch (error) {
-      console.error('Error updating employee:', error);
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error('Échec de la mise à jour des informations');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
+    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Prénom</Label>
+          <Input
+            id="firstName"
             name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prénom</FormLabel>
-                <FormControl>
-                  <Input placeholder="Prénom" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            value={formData.firstName}
+            onChange={handleChange}
+            required
           />
-          
-          <FormField
-            control={form.control}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Nom</Label>
+          <Input
+            id="lastName"
             name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nom</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nom" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            value={formData.lastName}
+            onChange={handleChange}
+            required
           />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="Email" type="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Téléphone</FormLabel>
-                <FormControl>
-                  <Input placeholder="Téléphone" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
           />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
+        
+        <div className="space-y-2">
+          <Label htmlFor="professionalEmail">Email professionnel</Label>
+          <Input
+            id="professionalEmail"
+            name="professionalEmail"
+            type="email"
+            value={formData.professionalEmail}
+            onChange={handleChange}
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="phone">Téléphone</Label>
+        <Input
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="position">Poste</Label>
+          <Input
+            id="position"
             name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Poste</FormLabel>
-                <FormControl>
-                  <Input placeholder="Poste" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="department"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Département</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value} 
-                  disabled={departmentsLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un département" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="no_department">Aucun département</SelectItem>
-                    {departments.map(dept => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            value={formData.position}
+            onChange={handleChange}
           />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
+        
+        <div className="space-y-2">
+          <Label htmlFor="departmentId">Département</Label>
+          <Select 
+            name="departmentId" 
+            value={formData.departmentId} 
+            onValueChange={(value) => handleSelectChange('departmentId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un département" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Non spécifié</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="hireDate">Date d'embauche</Label>
+          <Input
+            id="hireDate"
             name="hireDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date d'embauche</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="date"
+            value={formData.hireDate}
+            onChange={handleChange}
           />
-          
-          <FormField
-            control={form.control}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="birthDate">Date de naissance</Label>
+          <Input
+            id="birthDate"
             name="birthDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date de naissance</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="date"
+            value={formData.birthDate}
+            onChange={handleChange}
           />
         </div>
+      </div>
 
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={onCancel}>
-            Annuler
-          </Button>
-          <Button type="submit">
-            Enregistrer
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+        </Button>
+      </div>
+    </form>
   );
 };
 
