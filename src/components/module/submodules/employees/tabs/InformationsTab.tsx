@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Employee } from '@/types/employee';
 import { Pencil } from 'lucide-react';
 import EditEmployeeInfoDialog from './EditEmployeeInfoDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface InformationsTabProps {
   employee: Employee | null;
@@ -20,6 +21,30 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
 }) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { departments } = useAvailableDepartments();
+  
+  // Find the department name based on department ID
+  const departmentName = useMemo(() => {
+    if (!employee || !departments || departments.length === 0) return "Non renseigné";
+    
+    // Try to match by ID first (if it's an ID)
+    const departmentById = departments.find(dept => 
+      dept.id === employee.department || 
+      dept.id === employee.departmentId
+    );
+    
+    if (departmentById) return departmentById.name;
+    
+    // If not found by ID, check if the department field is already a name
+    const departmentByName = departments.find(dept => 
+      dept.name === employee.department
+    );
+    
+    if (departmentByName) return departmentByName.name;
+    
+    // Return the department field value or a fallback
+    return employee.department || "Non renseigné";
+  }, [employee, departments]);
 
   if (isLoading) {
     return <div className="p-4">Chargement des informations...</div>;
@@ -116,7 +141,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
               </div>
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Département</h4>
-                <p>{employee.department || "Non renseigné"}</p>
+                <p>{departmentName}</p>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Email professionnel</h4>

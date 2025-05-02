@@ -58,9 +58,10 @@ export const updateEmployee = async (id: string, data: Partial<EmployeeFormValue
       return false;
     }
     
-    // Add timestamp for tracking updates
+    // Make sure department is saved as departmentId if it represents an ID
     const updateData = {
       ...data,
+      departmentId: data.department, // Store both for compatibility
       updatedAt: new Date().toISOString()
     };
     
@@ -107,11 +108,16 @@ export const createEmployee = async (data: EmployeeFormValues): Promise<Employee
     }
     
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const docRef = await addDoc(collectionRef, {
+    
+    // Store department as departmentId for consistency
+    const employeeData = {
       ...data,
+      departmentId: data.department,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    });
+    };
+    
+    const docRef = await addDoc(collectionRef, employeeData);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
