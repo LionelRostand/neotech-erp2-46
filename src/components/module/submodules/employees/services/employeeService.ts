@@ -1,8 +1,9 @@
 
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentReference } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
+import { toast } from 'sonner';
 
 // Define the EmployeeFormValues type if it doesn't exist
 export interface EmployeeFormValues {
@@ -41,13 +42,21 @@ export const getEmployee = async (id: string): Promise<Employee | null> => {
 };
 
 // Function to update an employee
-export const updateEmployee = async (id: string, data: Partial<EmployeeFormValues>): Promise<void> => {
+export const updateEmployee = async (id: string, data: Partial<EmployeeFormValues>): Promise<boolean> => {
   try {
     if (!id) {
       throw new Error("Employee ID is required for update");
     }
     
+    console.log("Updating employee:", id, data);
+    
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      console.error("Employee document does not exist");
+      return false;
+    }
     
     // Add timestamp for tracking updates
     const updateData = {
@@ -57,9 +66,12 @@ export const updateEmployee = async (id: string, data: Partial<EmployeeFormValue
     
     await updateDoc(docRef, updateData);
     console.log("Employee updated successfully!");
+    toast.success("Employé mis à jour avec succès");
+    return true;
   } catch (error) {
     console.error("Error updating employee:", error);
-    throw error;
+    toast.error(`Erreur lors de la mise à jour: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    return false;
   }
 };
 
@@ -89,6 +101,11 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
 // Function to create a new employee
 export const createEmployee = async (data: EmployeeFormValues): Promise<Employee | null> => {
   try {
+    // Validate required fields
+    if (!data.firstName || !data.lastName || !data.email) {
+      throw new Error("First name, last name, and email are required");
+    }
+    
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
     const docRef = await addDoc(collectionRef, {
       ...data,
@@ -136,9 +153,9 @@ export const updateEmployeeSkills = async (employeeId: string, skills: any[]): P
     // Ensure skills is an array
     const safeSkills = Array.isArray(skills) ? skills : [];
     
-    await updateEmployee(employeeId, { skills: safeSkills });
+    const success = await updateEmployee(employeeId, { skills: safeSkills });
     console.log("Employee skills updated successfully!");
-    return true;
+    return success;
   } catch (error) {
     console.error("Error updating employee skills:", error);
     throw error;
