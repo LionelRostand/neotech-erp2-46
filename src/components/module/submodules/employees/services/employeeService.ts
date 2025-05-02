@@ -1,7 +1,6 @@
-
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
 
@@ -17,6 +16,28 @@ export interface EmployeeFormValues {
   [key: string]: any;
 }
 
+// Function to fetch department name by ID
+export const getDepartmentName = async (departmentId: string): Promise<string> => {
+  try {
+    if (!departmentId || departmentId === 'no_department') {
+      return 'Non spécifié';
+    }
+    
+    const docRef = doc(db, COLLECTIONS.HR.DEPARTMENTS, departmentId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data().name || 'Non spécifié';
+    } else {
+      console.log("No department with this ID:", departmentId);
+      return 'Non spécifié';
+    }
+  } catch (error) {
+    console.error("Error fetching department:", error);
+    return 'Non spécifié';
+  }
+};
+
 // Function to fetch an employee by ID
 export const getEmployee = async (id: string): Promise<Employee | null> => {
   try {
@@ -30,7 +51,23 @@ export const getEmployee = async (id: string): Promise<Employee | null> => {
 
     if (docSnap.exists()) {
       const docData = docSnap.data();
-      return { id: docSnap.id, ...docData } as Employee;
+      
+      // Get department name if department ID exists
+      let departmentName = 'Non spécifié';
+      if (docData.department || docData.departmentId) {
+        const deptId = docData.departmentId || docData.department;
+        if (typeof deptId === 'string' && deptId !== 'no_department') {
+          departmentName = await getDepartmentName(deptId);
+        }
+      }
+      
+      return { 
+        id: docSnap.id, 
+        ...docData,
+        // Keep the department ID in departmentId and use the name for display
+        departmentId: docData.departmentId || docData.department,
+        department: departmentName
+      } as Employee;
     } else {
       console.log("No such document!");
       return null;
@@ -82,15 +119,33 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
     const querySnapshot = await getDocs(collectionRef);
     const employees: Employee[] = [];
+    const deptCache = new Map<string, string>(); // Cache for department names
 
-    querySnapshot.forEach(doc => {
+    for (const doc of querySnapshot.docs) {
       if (doc.exists()) {
+        const data = doc.data();
+        
+        // Use the department cache or fetch the department name
+        let departmentName = 'Non spécifié';
+        const deptId = data.departmentId || data.department;
+        
+        if (typeof deptId === 'string' && deptId !== 'no_department') {
+          if (deptCache.has(deptId)) {
+            departmentName = deptCache.get(deptId) || 'Non spécifié';
+          } else {
+            departmentName = await getDepartmentName(deptId);
+            deptCache.set(deptId, departmentName);
+          }
+        }
+        
         employees.push({
           id: doc.id,
-          ...doc.data()
+          ...data,
+          departmentId: deptId,
+          department: departmentName
         } as Employee);
       }
-    });
+    }
 
     return employees;
   } catch (error) {
@@ -122,7 +177,20 @@ export const createEmployee = async (data: EmployeeFormValues): Promise<Employee
 
     if (docSnap.exists()) {
       const docData = docSnap.data();
-      return { id: docRef.id, ...docData } as unknown as Employee;
+      
+      // Get department name
+      let departmentName = 'Non spécifié';
+      const deptId = docData.departmentId || docData.department;
+      if (typeof deptId === 'string' && deptId !== 'no_department') {
+        departmentName = await getDepartmentName(deptId);
+      }
+      
+      return { 
+        id: docRef.id, 
+        ...docData,
+        departmentId: deptId,
+        department: departmentName
+      } as unknown as Employee;
     } else {
       console.log("No such document!");
       return null;
@@ -149,7 +217,7 @@ export const deleteEmployee = async (id: string): Promise<void> => {
   }
 };
 
-// Add a function to update employee skills
+// Function to update employee skills
 export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<boolean> => {
   try {
     if (!employeeId) {
@@ -165,6 +233,39 @@ export const updateEmployeeSkills = async (employeeId: string, skills: any[]): P
   } catch (error) {
     console.error("Error updating employee skills:", error);
     throw error;
+  }
+};
+
+// Function to fetch employees by department ID
+export const getEmployeesByDepartment = async (departmentId: string): Promise<Employee[]> => {
+  try {
+    if (!departmentId) {
+      return [];
+    }
+    
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const q = query(employeesRef, 
+      where('departmentId', '==', departmentId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const employees: Employee[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      if (doc.exists()) {
+        employees.push({
+          id: doc.id,
+          ...doc.data(),
+          departmentId: departmentId,
+          department: 'Chargement...' // Will be updated by the component
+        } as Employee);
+      }
+    });
+    
+    return employees;
+  } catch (error) {
+    console.error("Error fetching employees by department:", error);
+    return [];
   }
 };
 

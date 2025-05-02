@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';
@@ -10,6 +10,14 @@ import { Department } from '@/components/module/submodules/departments/types';
  */
 export const useEmployeeData = () => {
   const { employees: rawEmployees = [], departments: hrDepartments = [], isLoading = true, error } = useHrModuleData();
+  
+  // Fonction pour obtenir le nom d'un département à partir de son ID
+  const getDepartmentNameById = useCallback((departmentId: string): string => {
+    if (!departmentId || !Array.isArray(hrDepartments)) return 'Non spécifié';
+    
+    const department = hrDepartments.find(dept => dept && dept.id === departmentId);
+    return department?.name || 'Non spécifié';
+  }, [hrDepartments]);
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
@@ -24,14 +32,23 @@ export const useEmployeeData = () => {
       .map(employee => {
         if (!employee) return null; // Extra safety check
         
+        // Get department name from id
+        const departmentId = employee.departmentId || employee.department;
+        const departmentName = typeof departmentId === 'string' ? 
+          getDepartmentNameById(departmentId) : 
+          (typeof employee.department === 'string' ? employee.department : 'Non spécifié');
+        
         return {
           ...employee,
           // Garantir que chaque employé a une photo (même placeholder)
           photoURL: employee.photoURL || employee.photo || '',
+          // Make sure department name is properly set
+          departmentId: departmentId,
+          department: departmentName
         };
       })
       .filter(Boolean); // Filter out any nulls that might have resulted from the mapping
-  }, [rawEmployees]);
+  }, [rawEmployees, getDepartmentNameById]);
   
   // Formater les départements pour les enrichir avec les données des managers
   const formattedDepartments = useMemo(() => {
@@ -65,7 +82,7 @@ export const useEmployeeData = () => {
         // Calculate employees count safely
         const deptEmployeesCount = safeEmployees.filter(
           emp => emp && (
-            (emp.department === department.id) || 
+            (emp.department === department.name) || 
             (emp.departmentId === department.id)
           )
         ).length;
@@ -87,6 +104,7 @@ export const useEmployeeData = () => {
     employees: formattedEmployees as Employee[],
     departments: formattedDepartments as Department[],
     isLoading,
-    error
+    error,
+    getDepartmentNameById
   };
 };

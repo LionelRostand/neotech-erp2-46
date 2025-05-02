@@ -1,13 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/patched-select';
 import { Employee } from '@/types/employee';
 import { updateEmployee } from '../services/employeeService';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
-import { toast } from 'sonner';
+
+// Define the form schema
+const formSchema = z.object({
+  firstName: z.string().min(1, "Le prénom est requis"),
+  lastName: z.string().min(1, "Le nom est requis"),
+  email: z.string().email("Email invalide"),
+  phone: z.string().optional(),
+  position: z.string().min(1, "Le poste est requis"),
+  department: z.string().optional(),
+  hireDate: z.string().optional(),
+  birthDate: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface EditEmployeeInfoFormProps {
   employee: Employee;
@@ -20,276 +43,184 @@ const EditEmployeeInfoForm: React.FC<EditEmployeeInfoFormProps> = ({
   onSuccess,
   onCancel
 }) => {
-  const [formData, setFormData] = useState({
-    firstName: employee.firstName || '',
-    lastName: employee.lastName || '',
-    email: employee.email || '',
-    phone: employee.phone || '',
-    birthDate: employee.birthDate || '',
-    socialSecurityNumber: employee.socialSecurityNumber || '',
-    address: {
-      street: employee.address?.street || '',
-      city: employee.address?.city || '',
-      postalCode: employee.address?.postalCode || '',
-      country: employee.address?.country || '',
-    },
-    position: employee.position || employee.role || '',
-    department: employee.department || employee.departmentId || '',
-    professionalEmail: employee.professionalEmail || employee.email || '',
-    hireDate: employee.hireDate || employee.startDate || '',
-  });
+  const { departments, isLoading: departmentsLoading } = useAvailableDepartments();
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { departments, isLoading: loadingDepartments } = useAvailableDepartments();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev],
-          [child]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+  // Initialize the form with employee data
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: employee.firstName || '',
+      lastName: employee.lastName || '',
+      email: employee.email || '',
+      phone: employee.phone || '',
+      position: employee.position || employee.role || '',
+      department: employee.departmentId || '',
+      hireDate: employee.hireDate || '',
+      birthDate: employee.birthDate || '',
     }
-  };
-  
-  const handleSelectChange = (value: string, field: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
+  const onSubmit = async (data: FormValues) => {
     try {
-      const success = await updateEmployee(employee.id, formData);
+      const success = await updateEmployee(employee.id, data);
       
       if (success) {
-        toast.success("Informations mises à jour avec succès");
         onSuccess();
-      } else {
-        toast.error("Échec de la mise à jour des informations");
       }
     } catch (error) {
-      console.error("Error updating employee:", error);
-      toast.error("Erreur lors de la mise à jour");
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error updating employee:', error);
     }
   };
 
-  if (!employee?.id) {
-    return <div>Erreur: Employé non trouvé</div>;
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 py-4">
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Informations personnelles</h3>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">Prénom</Label>
-            <Input
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prénom</FormLabel>
+                <FormControl>
+                  <Input placeholder="Prénom" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Nom</Label>
-            <Input
-              id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone</Label>
-            <Input
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Date de naissance</Label>
-            <Input
-              id="birthDate"
-              name="birthDate"
-              type="date"
-              value={formData.birthDate}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="socialSecurityNumber">Numéro de sécurité sociale</Label>
-            <Input
-              id="socialSecurityNumber"
-              name="socialSecurityNumber"
-              value={formData.socialSecurityNumber}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Adresse</h3>
-        <div className="space-y-2">
-          <Label htmlFor="street">Rue</Label>
-          <Input
-            id="street"
-            name="address.street"
-            value={formData.address.street}
-            onChange={handleChange}
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nom" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city">Ville</Label>
-            <Input
-              id="city"
-              name="address.city"
-              value={formData.address.city}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="postalCode">Code postal</Label>
-            <Input
-              id="postalCode"
-              name="address.postalCode"
-              value={formData.address.postalCode}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="country">Pays</Label>
-            <Input
-              id="country"
-              name="address.country"
-              value={formData.address.country}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Informations professionnelles</h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="position">Poste</Label>
-            <Input
-              id="position"
-              name="position"
-              value={formData.position}
-              onChange={handleChange}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="Email" type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="department">Département</Label>
-            <Select
-              value={formData.department}
-              onValueChange={(value) => handleSelectChange(value, 'department')}
-            >
-              <SelectTrigger id="department">
-                <SelectValue placeholder="Sélectionner un département" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingDepartments ? (
-                  <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                ) : departments && departments.length > 0 ? (
-                  departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="none" disabled>Aucun département disponible</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="professionalEmail">Email professionnel</Label>
-            <Input
-              id="professionalEmail"
-              name="professionalEmail"
-              type="email"
-              value={formData.professionalEmail}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="hireDate">Date d'embauche</Label>
-            <Input
-              id="hireDate"
-              name="hireDate"
-              type="date"
-              value={formData.hireDate}
-              onChange={handleChange}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Téléphone</FormLabel>
+                <FormControl>
+                  <Input placeholder="Téléphone" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Annuler
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
-        </Button>
-      </div>
-    </form>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Poste</FormLabel>
+                <FormControl>
+                  <Input placeholder="Poste" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="department"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Département</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value} 
+                  disabled={departmentsLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un département" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="no_department">Aucun département</SelectItem>
+                    {departments.map(dept => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="hireDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date d'embauche</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="birthDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date de naissance</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" type="button" onClick={onCancel}>
+            Annuler
+          </Button>
+          <Button type="submit">
+            Enregistrer
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 

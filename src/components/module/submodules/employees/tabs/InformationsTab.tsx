@@ -1,168 +1,129 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Employee } from '@/types/employee';
+import { Card } from '@/components/ui/card';
 import { Pencil } from 'lucide-react';
-import EditEmployeeInfoDialog from './EditEmployeeInfoDialog';
-import { useQueryClient } from '@tanstack/react-query';
+import { Employee } from '@/types/employee';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import EditEmployeeInfoDialog from './EditEmployeeInfoDialog';
 
 interface InformationsTabProps {
   employee: Employee | null;
-  isLoading?: boolean;
   onEmployeeUpdate?: () => void;
 }
 
-const InformationsTab: React.FC<InformationsTabProps> = ({ 
-  employee, 
-  isLoading = false,
-  onEmployeeUpdate 
+const InformationsTab: React.FC<InformationsTabProps> = ({
+  employee,
+  onEmployeeUpdate
 }) => {
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { departments } = useAvailableDepartments();
-  
-  // Find the department name based on department ID
-  const departmentName = useMemo(() => {
-    if (!employee || !departments || departments.length === 0) return "Non renseigné";
-    
-    // Try to match by ID first (if it's an ID)
-    const departmentById = departments.find(dept => 
-      dept.id === employee.department || 
-      dept.id === employee.departmentId
-    );
-    
-    if (departmentById) return departmentById.name;
-    
-    // If not found by ID, check if the department field is already a name
-    const departmentByName = departments.find(dept => 
-      dept.name === employee.department
-    );
-    
-    if (departmentByName) return departmentByName.name;
-    
-    // Return the department field value or a fallback
-    return employee.department || "Non renseigné";
-  }, [employee, departments]);
-
-  if (isLoading) {
-    return <div className="p-4">Chargement des informations...</div>;
-  }
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { getDepartmentName } = useAvailableDepartments();
 
   if (!employee) {
-    return <div className="p-4">Aucune information disponible</div>;
+    return <div className="p-6">Chargement des informations...</div>;
   }
 
-  const handleEditSuccess = () => {
-    // Invalidate employee data to trigger a refetch
-    queryClient.invalidateQueries({ queryKey: ['employees'] });
-    if (onEmployeeUpdate) {
-      onEmployeeUpdate();
+  // Format date if exists
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Non spécifié';
+    try {
+      return format(new Date(dateString), 'dd MMMM yyyy', { locale: fr });
+    } catch (e) {
+      return 'Date invalide';
     }
   };
 
+  // Get department name
+  const departmentName = employee.departmentId ? 
+    getDepartmentName(employee.departmentId) : 
+    (typeof employee.department === 'string' ? employee.department : 'Non spécifié');
+
+  const handleOpenEditDialog = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+  };
+
+  const handleUpdateSuccess = () => {
+    if (onEmployeeUpdate) {
+      onEmployeeUpdate();
+    }
+    setIsEditDialogOpen(false);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Informations personnelles</h3>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Informations de l'employé</h3>
         <Button 
-          onClick={() => setEditDialogOpen(true)} 
           variant="outline" 
-          size="sm"
-          className="flex items-center gap-1"
+          size="sm" 
+          className="flex items-center gap-2"
+          onClick={handleOpenEditDialog}
         >
-          <Pencil size={16} />
-          <span>Modifier</span>
+          <Pencil className="h-4 w-4" />
+          Modifier
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Nom complet</h4>
-              <p>{employee.firstName} {employee.lastName}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Email</h4>
-              <p>{employee.email || "Non renseigné"}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Téléphone</h4>
-              <p>{employee.phone || "Non renseigné"}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Date de naissance</h4>
-              <p>{employee.birthDate || "Non renseigné"}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Numéro de sécurité sociale</h4>
-              <p>{employee.socialSecurityNumber || "Non renseigné"}</p>
-            </div>
+      <Card className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="font-medium mb-4">Informations personnelles</h4>
+            <dl className="space-y-2">
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Nom</dt>
+                <dd className="col-span-2 font-medium">{employee.firstName} {employee.lastName}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Email</dt>
+                <dd className="col-span-2">{employee.email}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Téléphone</dt>
+                <dd className="col-span-2">{employee.phone || 'Non spécifié'}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Date de naissance</dt>
+                <dd className="col-span-2">{formatDate(employee.birthDate)}</dd>
+              </div>
+            </dl>
           </div>
-        </CardContent>
+
+          <div>
+            <h4 className="font-medium mb-4">Informations professionnelles</h4>
+            <dl className="space-y-2">
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Poste</dt>
+                <dd className="col-span-2">{employee.position || employee.role || 'Non spécifié'}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Département</dt>
+                <dd className="col-span-2">{departmentName}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Date d'embauche</dt>
+                <dd className="col-span-2">{formatDate(employee.hireDate)}</dd>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                <dt className="text-gray-500">Statut</dt>
+                <dd className="col-span-2 capitalize">{employee.status || 'Non spécifié'}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
       </Card>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Adresse</h3>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Adresse</h4>
-                <p>{employee.address?.street || "Non renseigné"}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Ville</h4>
-                <p>{employee.address?.city || "Non renseigné"}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Code postal</h4>
-                <p>{employee.address?.postalCode || "Non renseigné"}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Pays</h4>
-                <p>{employee.address?.country || "Non renseigné"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Informations professionnelles</h3>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Poste</h4>
-                <p>{employee.position || employee.role || "Non renseigné"}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Département</h4>
-                <p>{departmentName}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Email professionnel</h4>
-                <p>{employee.professionalEmail || employee.email || "Non renseigné"}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Date d'embauche</h4>
-                <p>{employee.hireDate || employee.startDate || "Non renseigné"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Edit Dialog */}
-      {employee && (
-        <EditEmployeeInfoDialog
-          isOpen={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
+      {isEditDialogOpen && (
+        <EditEmployeeInfoDialog 
+          isOpen={isEditDialogOpen} 
+          onClose={handleCloseEditDialog} 
           employee={employee}
-          onSuccess={handleEditSuccess}
+          onSuccess={handleUpdateSuccess}
         />
       )}
     </div>
