@@ -10,7 +10,7 @@ import ContractForm from './ContractForm';
 interface CreateContractDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onContractCreated: () => void;
+  onContractCreated?: () => void; // Make this optional with ?
 }
 
 const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
@@ -76,7 +76,11 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
         department: '',
       });
       
-      onContractCreated();
+      // Check if onContractCreated is provided before calling it
+      if (onContractCreated) {
+        onContractCreated();
+      }
+      
       onOpenChange(false);
     } catch (error) {
       console.error("Erreur lors de la création du contrat:", error);

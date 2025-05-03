@@ -1,121 +1,69 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { RecruitmentPost } from '@/types/recruitment';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { RecruitmentPost } from '@/types/recruitment';
+import { toast } from 'sonner';
 
 export const useRecruitmentFirebaseData = () => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = useCallback(() => {
-    console.log('Fetching recruitment data from Firebase...');
-    setIsLoading(true);
+  const fetchData = async () => {
     try {
-      // Vérification que le chemin de collection existe
-      if (!COLLECTIONS.HR.RECRUITMENT) {
-        throw new Error('Collection path for recruitment is not defined');
-      }
-      
-      const collectionRef = collection(db, COLLECTIONS.HR.RECRUITMENT);
-      const q = query(collectionRef);
-      
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          if (!snapshot) {
-            console.log('No snapshot returned from Firebase');
-            setRecruitmentPosts([]);
-            setIsLoading(false);
-            return;
-          }
+      setIsLoading(true);
+      setError(null);
 
-          const posts = snapshot.docs.map(doc => {
-            if (!doc || !doc.data) {
-              console.log('Invalid document in snapshot');
-              return null;
-            }
-
-            const data = doc.data();
-            // Format dates if they exist in timestamp format
-            const formattedData: any = { ...data };
-            if (data.openDate instanceof Date) {
-              formattedData.openDate = data.openDate.toLocaleDateString('fr-FR');
-            } else if (data.openDate && typeof data.openDate === 'string') {
-              try {
-                const date = new Date(data.openDate);
-                formattedData.openDate = isNaN(date.getTime()) 
-                  ? data.openDate 
-                  : date.toLocaleDateString('fr-FR');
-              } catch (e) {
-                formattedData.openDate = data.openDate;
-              }
-            }
-            
-            if (data.applicationDeadline instanceof Date) {
-              formattedData.applicationDeadline = data.applicationDeadline.toLocaleDateString('fr-FR');
-            } else if (data.applicationDeadline && typeof data.applicationDeadline === 'string') {
-              try {
-                const date = new Date(data.applicationDeadline);
-                formattedData.applicationDeadline = isNaN(date.getTime()) 
-                  ? data.applicationDeadline 
-                  : date.toLocaleDateString('fr-FR');
-              } catch (e) {
-                formattedData.applicationDeadline = data.applicationDeadline;
-              }
-            }
-            
-            return {
-              id: doc.id,
-              ...formattedData
-            };
-          }).filter(Boolean) as RecruitmentPost[]; // Filter out any null values
-          
-          console.log(`Retrieved ${posts.length} recruitment posts from Firebase`);
-          setRecruitmentPosts(posts);
-          setIsLoading(false);
-        },
-        (err: Error) => {
-          console.error('Error fetching recruitment data:', err);
-          setError(err);
-          setRecruitmentPosts([]); // Ensure we always set an empty array, not undefined
-          setIsLoading(false);
-        }
-      );
+      // Create a reference to the recruitment posts collection
+      const recruitmentCollectionRef = collection(db, COLLECTIONS.HR.RECRUITMENT);
       
-      return () => {
-        console.log('Unsubscribing from recruitment collection');
-        unsubscribe();
-      };
+      // Create a query to order by creation date (newest first)
+      const q = query(recruitmentCollectionRef, orderBy('createdAt', 'desc'));
+      
+      // Get the documents
+      const querySnapshot = await getDocs(q);
+      
+      // Transform the data
+      const posts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as RecruitmentPost));
+
+      console.log('Retrieved recruitment posts:', posts.length);
+      
+      // Update state with the retrieved data
+      setRecruitmentPosts(posts);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error occurred');
-      console.error('Error setting up recruitment listener:', error);
-      setError(error);
-      setRecruitmentPosts([]); // Ensure we always set an empty array, not undefined
+      console.error('Error fetching recruitment data:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch recruitment data'));
+      toast.error('Erreur lors du chargement des données de recrutement');
+    } finally {
       setIsLoading(false);
-      return () => {}; // Empty cleanup function if setup fails
     }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = fetchData();
-    return unsubscribe;
-  }, [fetchData]);
-
-  const refreshData = useCallback(() => {
-    // Re-fetch data
-    const unsubscribe = fetchData();
-    return unsubscribe;
-  }, [fetchData]);
+  // Calculate stats for the recruitment dashboard
+  const stats = {
+    openPositions: recruitmentPosts.filter(post => post.status === 'Ouverte').length,
+    inProgressPositions: recruitmentPosts.filter(post => post.status === 'En cours').length,
+    interviewsPositions: recruitmentPosts.filter(post => post.status === 'Entretiens').length,
+    closedPositions: recruitmentPosts.filter(post => post.status === 'Fermée').length,
+    applicationsThisMonth: 0, // This would require additional data processing
+    interviewsScheduled: 0, // This would require additional data processing
+  };
 
   return {
-    recruitmentPosts: recruitmentPosts || [], // Ensure we always return an array, not undefined
+    recruitmentPosts,
     isLoading,
     error,
-    refreshData
+    stats,
+    refetch: fetchData
   };
 };
-
-export default useRecruitmentFirebaseData;

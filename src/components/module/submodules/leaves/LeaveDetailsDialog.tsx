@@ -1,129 +1,129 @@
 
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, FileText, User, MessageSquare, Briefcase } from 'lucide-react';
-import { Leave } from '@/hooks/useLeaveData';
+import { Employee } from '@/types/employee';
+import { LeaveRequest } from './services/leaveService';
 
 interface LeaveDetailsDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  leave: Leave | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  leave: LeaveRequest;
+  employees: Employee[];
 }
 
-const LeaveDetailsDialog: React.FC<LeaveDetailsDialogProps> = ({
-  isOpen,
-  onClose,
-  leave
-}) => {
-  if (!leave) return null;
-
-  const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes('approved') || statusLower.includes('approuvé')) {
-      return <Badge className="bg-green-100 text-green-800">Approuvé</Badge>;
-    }
-    if (statusLower.includes('rejected') || statusLower.includes('refusé')) {
-      return <Badge className="bg-red-100 text-red-800">Refusé</Badge>;
-    }
-    return <Badge className="bg-amber-100 text-amber-800">En attente</Badge>;
+const LeaveDetailsDialog: React.FC<LeaveDetailsDialogProps> = ({ open, onOpenChange, leave, employees }) => {
+  // Get employee name by ID
+  const getEmployeeName = (id: string) => {
+    const employee = employees.find(emp => emp.id === id);
+    return employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu';
   };
   
-  const getInitials = (name: string) => {
-    try {
-      return name
-        .split(' ')
-        .map(part => part[0])
-        .join('')
-        .toUpperCase();
-    } catch (e) {
-      return 'U';
+  // Format leave type for display
+  const formatLeaveType = (type: string) => {
+    const types = {
+      paid: 'Congés payés',
+      unpaid: 'Congés sans solde',
+      sick: 'Maladie',
+      maternity: 'Maternité',
+      paternity: 'Paternité',
+      other: 'Autre'
+    };
+    return types[type as keyof typeof types] || type;
+  };
+  
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">En attente</Badge>;
+      case 'approved':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Approuvée</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Refusée</Badge>;
+      case 'canceled':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">Annulée</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
+  };
+  
+  // Get approver name by ID
+  const getApproverName = (id?: string) => {
+    if (!id) return '-';
+    const employee = employees.find(emp => emp.id === id);
+    return employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu';
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Détails de la demande de congé</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-12 w-12">
-              {leave.employeePhoto ? (
-                <AvatarImage src={leave.employeePhoto} alt={leave.employeeName} />
-              ) : null}
-              <AvatarFallback>{getInitials(leave.employeeName)}</AvatarFallback>
-            </Avatar>
+          <div className="flex justify-between">
+            <div className="font-medium">Employé</div>
+            <div>{getEmployeeName(leave.employeeId)}</div>
+          </div>
+          
+          <div className="flex justify-between">
+            <div className="font-medium">Type de congé</div>
+            <div>{formatLeaveType(leave.type)}</div>
+          </div>
+          
+          <div className="flex justify-between">
+            <div className="font-medium">Période</div>
             <div>
-              <h3 className="font-medium text-lg">{leave.employeeName}</h3>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Briefcase className="mr-1 h-4 w-4" />
-                {leave.department || 'Département non spécifié'}
-              </div>
+              Du {format(parseISO(leave.startDate), 'dd MMMM yyyy', { locale: fr })}
+              <br />
+              Au {format(parseISO(leave.endDate), 'dd MMMM yyyy', { locale: fr })}
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Type de congé</p>
-              <p>{leave.type}</p>
+          <div className="flex justify-between">
+            <div className="font-medium">Durée</div>
+            <div>{leave.durationDays || '-'} jour(s)</div>
+          </div>
+          
+          <div className="flex justify-between">
+            <div className="font-medium">Statut</div>
+            <div>{getStatusBadge(leave.status)}</div>
+          </div>
+          
+          {leave.reason && (
+            <div className="space-y-2">
+              <div className="font-medium">Motif</div>
+              <div className="p-3 bg-gray-50 rounded-md">{leave.reason}</div>
             </div>
-            
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Statut</p>
-              <div>{getStatusBadge(leave.status)}</div>
+          )}
+          
+          {leave.approvedBy && (
+            <div className="flex justify-between">
+              <div className="font-medium">Approuvé par</div>
+              <div>{getApproverName(leave.approvedBy)}</div>
             </div>
-            
-            <div className="space-y-1 col-span-2">
-              <p className="text-sm font-medium">Période</p>
-              <div className="flex items-center text-sm">
-                <Calendar className="mr-2 h-4 w-4 text-gray-500" />
-                <span>Du {leave.startDate} au {leave.endDate} ({leave.days} jour{leave.days > 1 ? 's' : ''})</span>
-              </div>
+          )}
+          
+          {leave.approvedAt && (
+            <div className="flex justify-between">
+              <div className="font-medium">Date d'approbation</div>
+              <div>{format(parseISO(leave.approvedAt), 'dd MMMM yyyy', { locale: fr })}</div>
             </div>
-            
-            <div className="space-y-1 col-span-2">
-              <p className="text-sm font-medium">Date de la demande</p>
-              <div className="flex items-center text-sm">
-                <Clock className="mr-2 h-4 w-4 text-gray-500" />
-                <span>{leave.requestDate}</span>
-              </div>
-            </div>
-            
-            {leave.reason && (
-              <div className="space-y-1 col-span-2">
-                <p className="text-sm font-medium">Motif</p>
-                <div className="flex items-start">
-                  <MessageSquare className="mr-2 h-4 w-4 text-gray-500 mt-1" />
-                  <p className="text-sm">{leave.reason}</p>
-                </div>
-              </div>
-            )}
-            
-            {leave.approvedBy && (
-              <div className="space-y-1 col-span-2">
-                <p className="text-sm font-medium">Traité par</p>
-                <div className="flex items-center">
-                  <User className="mr-2 h-4 w-4 text-gray-500" />
-                  <p className="text-sm">{leave.approvedBy}</p>
-                </div>
-              </div>
-            )}
+          )}
+          
+          <div className="flex justify-between">
+            <div className="font-medium">Créée le</div>
+            <div>{format(parseISO(leave.createdAt), 'dd MMMM yyyy', { locale: fr })}</div>
           </div>
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Fermer</Button>
+          <Button onClick={() => onOpenChange(false)}>Fermer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

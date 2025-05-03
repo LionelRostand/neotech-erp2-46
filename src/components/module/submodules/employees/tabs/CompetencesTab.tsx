@@ -21,7 +21,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
     return typeof value === 'object' ? JSON.stringify(value) : String(value);
   };
 
-  // Ensure employee object and skills array both exist
+  // Ensure employee object exists
   const safeEmployee = employee || {};
   
   // Ensure skills is an array and filter out any null/undefined values
@@ -44,11 +44,33 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee }) => {
         return;
       }
       
-      const updatedSkills = [...skills, newSkill];
+      // Clone the skills array and add the new skill
+      const updatedSkills = Array.isArray(skills) ? [...skills, newSkill] : [newSkill];
+      
+      // Make sure all skills have the required properties
+      const normalizedSkills = updatedSkills.map(skill => {
+        if (typeof skill === 'string') {
+          return {
+            id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+            name: skill,
+            level: 'débutant'
+          };
+        }
+        
+        // Ensure skill is an object with proper properties
+        const skillObj = skill as Skill;
+        return {
+          id: skillObj.id || Date.now().toString() + Math.random().toString(36).substring(2, 9),
+          name: typeof skillObj.name === 'string' ? skillObj.name : String(skillObj.name || ''),
+          level: skillObj.level || 'débutant'
+        };
+      });
+      
       await updateEmployee({
         id: employee.id,
-        skills: updatedSkills
+        skills: normalizedSkills
       });
+      
       toast.success("Compétence ajoutée avec succès");
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la compétence:', error);

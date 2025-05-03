@@ -5,20 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { createLeaveRequest } from './services/leaveService';
+import { Employee } from '@/types/employee';
+import { LeaveRequest, updateLeaveRequest } from './services/leaveService';
 
-interface CreateLeaveDialogProps {
+interface UpdateLeaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLeaveCreated: () => void;
+  leave: LeaveRequest;
+  onUpdateSuccess: () => void;
+  employees: Employee[];
 }
 
 const leaveTypes = [
@@ -30,17 +32,24 @@ const leaveTypes = [
   { id: 'other', name: 'Autre' },
 ];
 
-const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChange, onLeaveCreated }) => {
+const statusOptions = [
+  { id: 'pending', name: 'En attente' },
+  { id: 'approved', name: 'Approuvée' },
+  { id: 'rejected', name: 'Refusée' },
+  { id: 'canceled', name: 'Annulée' },
+];
+
+const UpdateLeaveDialog: React.FC<UpdateLeaveDialogProps> = ({ open, onOpenChange, leave, onUpdateSuccess, employees }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { employees } = useHrModuleData();
   
-  const { control, handleSubmit, watch, reset, formState: { errors } } = useForm({
+  const { control, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
-      employeeId: '',
-      type: 'paid',
-      startDate: new Date(),
-      endDate: new Date(),
-      reason: '',
+      employeeId: leave.employeeId,
+      type: leave.type,
+      startDate: parseISO(leave.startDate),
+      endDate: parseISO(leave.endDate),
+      reason: leave.reason || '',
+      status: leave.status,
     }
   });
   
@@ -55,18 +64,22 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChang
         ...data,
         startDate: format(data.startDate, 'yyyy-MM-dd'),
         endDate: format(data.endDate, 'yyyy-MM-dd'),
-        status: 'pending' as 'pending' // Type assertion
+        
+        // Add approval info if status is changed to approved
+        ...(data.status === 'approved' && leave.status !== 'approved' ? {
+          approvedBy: 'currentUserId', // Replace with actual current user ID in a real app
+          approvedAt: new Date().toISOString()
+        } : {})
       };
       
-      await createLeaveRequest(formattedData);
+      await updateLeaveRequest(leave.id, formattedData);
       
-      toast.success("Demande de congé créée avec succès");
-      reset();
-      onLeaveCreated();
+      toast.success("Demande de congé mise à jour avec succès");
+      onUpdateSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error("Erreur lors de la création de la demande de congé:", error);
-      toast.error("Une erreur est survenue lors de la création de la demande");
+      console.error("Erreur lors de la mise à jour de la demande de congé:", error);
+      toast.error("Une erreur est survenue lors de la mise à jour de la demande");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +89,7 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChang
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nouvelle demande de congé</DialogTitle>
+          <DialogTitle>Modifier la demande de congé</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
@@ -140,6 +153,37 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChang
               )}
             />
             {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
+          </div>
+          
+          {/* Status */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Statut</label>
+            <Controller
+              name="status"
+              control={control}
+              rules={{ required: "Le statut est requis" }}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className={errors.status ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map(status => (
+                      <SelectItem 
+                        key={status.id} 
+                        value={status.id}
+                      >
+                        {status.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.status && <p className="text-red-500 text-sm">{errors.status.message}</p>}
           </div>
           
           {/* Start and end dates */}
@@ -249,7 +293,7 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChang
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Envoi en cours..." : "Envoyer la demande"}
+              {isSubmitting ? "Mise à jour..." : "Mettre à jour"}
             </Button>
           </DialogFooter>
         </form>
@@ -258,4 +302,4 @@ const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChang
   );
 };
 
-export default CreateLeaveDialog;
+export default UpdateLeaveDialog;

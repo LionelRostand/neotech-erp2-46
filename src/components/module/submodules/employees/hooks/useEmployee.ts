@@ -23,7 +23,17 @@ export const useEmployee = (employeeId: string | null) => {
       
       if (employeeData) {
         console.log("Employee data retrieved:", employeeData);
-        setEmployee(employeeData);
+        
+        // Ensure the employee has all required fields
+        const processedEmployee = {
+          ...employeeData,
+          // Ensure skills array exists and is valid
+          skills: Array.isArray(employeeData.skills) 
+            ? employeeData.skills.filter(skill => skill !== null && skill !== undefined)
+            : [],
+        };
+        
+        setEmployee(processedEmployee);
       } else {
         console.warn("No employee data found for ID:", employeeId);
         setError(new Error("Employee not found"));
