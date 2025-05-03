@@ -12,42 +12,16 @@ export const useEmployee = (employeeId: string | null) => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['employee', employeeId],
     queryFn: async () => {
-      if (!employeeId) {
-        console.log("No employee ID provided");
-        return null;
-      }
+      if (!employeeId) return null;
       
       console.log("Fetching employee data for ID:", employeeId);
-      try {
-        const employeeData = await getEmployee(employeeId);
-        return employeeData;
-      } catch (err) {
-        console.error("Error in query function:", err);
-        throw err;
-      }
+      return getEmployee(employeeId);
     },
     enabled: !!employeeId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     onSuccess: (data) => {
-      if (data) {
-        console.log("Employee data retrieved:", data);
-        // Ensure we provide a valid Employee object with all required fields
-        const safeEmployee = {
-          ...data,
-          id: data.id || '',
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          department: data.department || '',
-          position: data.position || '',
-          status: data.status || 'active',
-          // Ensure skills array is always defined
-          skills: Array.isArray(data.skills) ? data.skills : []
-        };
-        setEmployee(safeEmployee);
-      } else {
-        console.log("No employee data returned");
-      }
+      console.log("Employee data retrieved:", data);
+      setEmployee(data);
     },
     onError: (err) => {
       console.error("Error fetching employee:", err);
@@ -58,24 +32,12 @@ export const useEmployee = (employeeId: string | null) => {
   // Update employee when data changes
   useEffect(() => {
     if (data) {
-      const safeEmployee = {
-        ...data,
-        id: data.id || '',
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
-        email: data.email || '',
-        department: data.department || '',
-        position: data.position || '',
-        status: data.status || 'active',
-        // Ensure skills array is always defined
-        skills: Array.isArray(data.skills) ? data.skills : []
-      };
-      setEmployee(safeEmployee);
+      setEmployee(data);
     }
   }, [data]);
   
   return {
-    employee,
+    employee: employee,
     isLoading,
     error,
     refetch
