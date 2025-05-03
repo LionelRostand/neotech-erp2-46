@@ -1,4 +1,3 @@
-
 import { Employee } from '@/types/employee';
 
 /**
@@ -37,6 +36,18 @@ export const getEmployeeInitials = (employee: Partial<Employee>): string => {
   const firstName = employee.firstName || '';
   const lastName = employee.lastName || '';
   return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+};
+
+/**
+ * Génère les initiales à partir du prénom et nom
+ * @param firstName Prénom
+ * @param lastName Nom
+ * @returns Initiales (2 caractères maximum)
+ */
+export const getInitials = (firstName?: string, lastName?: string): string => {
+  const first = firstName ? firstName.charAt(0) : '';
+  const last = lastName ? lastName.charAt(0) : '';
+  return (first + last).toUpperCase();
 };
 
 /**

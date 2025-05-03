@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TableCell, TableRow } from '@/components/ui/patched-table';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
