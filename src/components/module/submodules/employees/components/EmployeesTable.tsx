@@ -21,16 +21,22 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
   isLoading = false,
   onEmployeeClick
 }) => {
-  // Filter out any null/undefined employee objects
+  // Filter out any null/undefined employee objects and ensure we have a valid array
   const validEmployees = useMemo(() => {
-    return Array.isArray(employees) ? employees.filter(Boolean) : [];
+    // First check if employees is an array
+    if (!Array.isArray(employees)) {
+      console.warn('EmployeesTable: employees prop is not an array');
+      return [];
+    }
+    // Then filter out any null/undefined values
+    return employees.filter(Boolean);
   }, [employees]);
 
   if (isLoading) {
     return <div className="flex justify-center p-8">Chargement des employés...</div>;
   }
 
-  if (validEmployees.length === 0) {
+  if (!validEmployees || validEmployees.length === 0) {
     return <div className="flex justify-center p-8">Aucun employé trouvé.</div>;
   }
 
@@ -49,7 +55,7 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({
         <TableBody>
           {validEmployees.map((employee) => (
             <EmployeeListItem 
-              key={employee.id} 
+              key={employee.id || `emp-${Math.random()}`} 
               employee={employee} 
               onEmployeeClick={onEmployeeClick}
             />

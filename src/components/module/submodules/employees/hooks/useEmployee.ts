@@ -12,16 +12,29 @@ export const useEmployee = (employeeId: string | null) => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['employee', employeeId],
     queryFn: async () => {
-      if (!employeeId) return null;
+      if (!employeeId) {
+        console.log("No employee ID provided");
+        return null;
+      }
       
       console.log("Fetching employee data for ID:", employeeId);
-      return getEmployee(employeeId);
+      try {
+        const employeeData = await getEmployee(employeeId);
+        return employeeData;
+      } catch (err) {
+        console.error("Error in query function:", err);
+        throw err;
+      }
     },
     enabled: !!employeeId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     onSuccess: (data) => {
-      console.log("Employee data retrieved:", data);
-      setEmployee(data);
+      if (data) {
+        console.log("Employee data retrieved:", data);
+        setEmployee(data);
+      } else {
+        console.log("No employee data returned");
+      }
     },
     onError: (err) => {
       console.error("Error fetching employee:", err);
@@ -37,7 +50,7 @@ export const useEmployee = (employeeId: string | null) => {
   }, [data]);
   
   return {
-    employee: employee,
+    employee,
     isLoading,
     error,
     refetch
