@@ -1,90 +1,78 @@
 
-import React, { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Clock, CheckCheck, AlertCircle } from 'lucide-react';
-import { LeaveRequest } from './services/leaveService';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Employee } from '@/types/employee';
 
 interface LeaveStatsProps {
-  leaveRequests: LeaveRequest[];
+  leaveRequests: any[];
+  employees: Employee[];
 }
 
-const LeaveStats: React.FC<LeaveStatsProps> = ({ leaveRequests }) => {
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const pending = leaveRequests.filter(leave => leave.status === 'pending').length;
-    const approved = leaveRequests.filter(leave => leave.status === 'approved').length;
-    const rejected = leaveRequests.filter(leave => leave.status === 'rejected').length;
-    
-    const totalDays = leaveRequests.reduce((sum, leave) => {
-      if (leave.status === 'approved' && leave.durationDays) {
-        return sum + leave.durationDays;
-      }
-      return sum;
-    }, 0);
-    
-    return {
-      pending,
-      approved,
-      rejected,
-      total: leaveRequests.length,
-      totalDays
-    };
-  }, [leaveRequests]);
+const LeaveStats: React.FC<LeaveStatsProps> = ({ leaveRequests, employees }) => {
+  // Calculer les statistiques par type de congé
+  const leaveTypeStats = leaveRequests.reduce((acc, request) => {
+    const type = request.type || 'other';
+    if (!acc[type]) acc[type] = 0;
+    acc[type] += 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Types de congés pour l'affichage
+  const leaveTypes = {
+    paid: { label: 'Congés payés', color: 'bg-blue-500' },
+    unpaid: { label: 'Congés sans solde', color: 'bg-purple-500' },
+    sick: { label: 'Congés maladie', color: 'bg-orange-500' },
+    maternity: { label: 'Congés maternité', color: 'bg-pink-500' },
+    paternity: { label: 'Congés paternité', color: 'bg-indigo-500' },
+    other: { label: 'Autres congés', color: 'bg-teal-500' },
+  };
+
+  // Calculer le total des congés
+  const totalLeaves = Object.values(leaveTypeStats).reduce((sum, count) => sum + count, 0);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card>
-        <CardContent className="p-4 flex items-start">
-          <div className="bg-blue-100 p-3 rounded-full mr-4">
-            <Calendar className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Total demandes</h3>
-            <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-sm text-gray-500">{stats.totalDays} jours accordés</p>
-          </div>
-        </CardContent>
-      </Card>
+    <Card>
+      <CardHeader>
+        <CardTitle>Statistiques des congés</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(leaveTypes).map(([key, { label, color }]) => (
+            <div key={key} className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${color}`} />
+              <div>
+                <span className="font-medium">{label}:</span>{' '}
+                <span>{leaveTypeStats[key] || 0}</span>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      <Card>
-        <CardContent className="p-4 flex items-start">
-          <div className="bg-yellow-100 p-3 rounded-full mr-4">
-            <Clock className="h-6 w-6 text-yellow-600" />
+        <div className="mt-6">
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            {Object.entries(leaveTypes).map(([key, { color }], index) => {
+              const percentage = totalLeaves ? (leaveTypeStats[key] || 0) / totalLeaves * 100 : 0;
+              const prevPercentages = Object.entries(leaveTypes)
+                .slice(0, index)
+                .reduce((sum, [prevKey]) => sum + (totalLeaves ? (leaveTypeStats[prevKey] || 0) / totalLeaves * 100 : 0), 0);
+              
+              return (
+                <div 
+                  key={key}
+                  className={`h-2.5 rounded-full ${color}`} 
+                  style={{ 
+                    width: `${percentage}%`,
+                    marginLeft: index === 0 ? 0 : `${prevPercentages}%`,
+                    position: index === 0 ? 'relative' : 'absolute',
+                    top: 0,
+                  }}
+                />
+              );
+            })}
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">En attente</h3>
-            <p className="text-2xl font-bold">{stats.pending}</p>
-            <p className="text-sm text-gray-500">{Math.round(stats.pending / stats.total * 100) || 0}% des demandes</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4 flex items-start">
-          <div className="bg-green-100 p-3 rounded-full mr-4">
-            <CheckCheck className="h-6 w-6 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Approuvées</h3>
-            <p className="text-2xl font-bold">{stats.approved}</p>
-            <p className="text-sm text-gray-500">{Math.round(stats.approved / stats.total * 100) || 0}% des demandes</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4 flex items-start">
-          <div className="bg-red-100 p-3 rounded-full mr-4">
-            <AlertCircle className="h-6 w-6 text-red-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Refusées</h3>
-            <p className="text-2xl font-bold">{stats.rejected}</p>
-            <p className="text-sm text-gray-500">{Math.round(stats.rejected / stats.total * 100) || 0}% des demandes</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,22 +1,15 @@
 
 import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface ViewLeaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  leaveRequest: any; // Use a more specific type if available
+  leaveRequest: any;
 }
 
 const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
@@ -25,7 +18,7 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
   leaveRequest
 }) => {
   const { employees } = useHrModuleData();
-  
+
   // Format date safely
   const formatDateSafely = (dateStr: string) => {
     if (!dateStr) return "Date invalide";
@@ -36,53 +29,17 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
       return "Date invalide";
     }
   };
-  
-  // Find employee details
-  const findEmployee = (employeeId: string) => {
-    return employees.find(emp => emp.id === employeeId);
-  };
-  
-  // Get employee name
-  const getEmployeeName = (employeeId: string) => {
-    const employee = findEmployee(employeeId);
+
+  // Find employee name
+  const findEmployeeName = (employeeId: string) => {
+    const employee = employees.find((emp) => emp.id === employeeId);
     return employee ? `${employee.firstName} ${employee.lastName}` : "Employé inconnu";
   };
-  
-  // Status label mapping
-  const statusLabels: Record<string, string> = {
-    pending: "En attente",
-    approved: "Approuvé",
-    rejected: "Rejeté",
-    canceled: "Annulé"
-  };
-  
-  // Type label mapping
-  const typeLabels: Record<string, string> = {
-    paid: "Congé payé",
-    unpaid: "Sans solde",
-    sick: "Maladie",
-    maternity: "Maternité",
-    paternity: "Paternité",
-    other: "Autre"
-  };
-  
-  // Calculate duration in days
-  const calculateDuration = (startDate: string, endDate: string) => {
-    if (!startDate || !endDate) return "N/A";
-    try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const diffTime = end.getTime() - start.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 because inclusive
-      return `${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-    } catch (error) {
-      console.error("Error calculating duration:", error);
-      return "N/A";
-    }
-  };
-  
+
+  if (!leaveRequest) return null;
+
   // Status badge colors
-  const statusColors: Record<string, string> = {
+  const statusColors = {
     pending: "bg-yellow-100 text-yellow-800",
     approved: "bg-green-100 text-green-800",
     rejected: "bg-red-100 text-red-800",
@@ -90,7 +47,7 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
   };
 
   // Type badge colors
-  const typeColors: Record<string, string> = {
+  const typeColors = {
     paid: "bg-blue-100 text-blue-800",
     unpaid: "bg-purple-100 text-purple-800",
     sick: "bg-orange-100 text-orange-800",
@@ -99,86 +56,91 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
     other: "bg-teal-100 text-teal-800"
   };
 
-  if (!leaveRequest) return null;
+  // Type labels
+  const typeLabel = {
+    paid: "Congé payé",
+    unpaid: "Sans solde",
+    sick: "Maladie",
+    maternity: "Maternité",
+    paternity: "Paternité",
+    other: "Autre"
+  };
+
+  // Status labels
+  const statusLabel = {
+    pending: "En attente",
+    approved: "Approuvé",
+    rejected: "Rejeté",
+    canceled: "Annulé"
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Détails de la demande de congé</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-3 items-center gap-4">
-            <span className="font-medium">Employé:</span>
-            <span className="col-span-2">{getEmployeeName(leaveRequest.employeeId)}</span>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="font-medium">Employé:</div>
+            <div className="col-span-3">{findEmployeeName(leaveRequest.employeeId)}</div>
           </div>
-          
-          <div className="grid grid-cols-3 items-center gap-4">
-            <span className="font-medium">Type:</span>
-            <span className="col-span-2">
-              <Badge className={typeColors[leaveRequest.type] || "bg-gray-100"}>
-                {typeLabels[leaveRequest.type] || leaveRequest.type}
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="font-medium">Type:</div>
+            <div className="col-span-3">
+              <Badge className={typeColors[leaveRequest.type as keyof typeof typeColors] || ""}>
+                {typeLabel[leaveRequest.type as keyof typeof typeLabel] || leaveRequest.type}
               </Badge>
-            </span>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-3 items-center gap-4">
-            <span className="font-medium">Du:</span>
-            <span className="col-span-2">{formatDateSafely(leaveRequest.startDate)}</span>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="font-medium">Date de début:</div>
+            <div className="col-span-3">{formatDateSafely(leaveRequest.startDate)}</div>
           </div>
-          
-          <div className="grid grid-cols-3 items-center gap-4">
-            <span className="font-medium">Au:</span>
-            <span className="col-span-2">{formatDateSafely(leaveRequest.endDate)}</span>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="font-medium">Date de fin:</div>
+            <div className="col-span-3">{formatDateSafely(leaveRequest.endDate)}</div>
           </div>
-          
-          <div className="grid grid-cols-3 items-center gap-4">
-            <span className="font-medium">Durée:</span>
-            <span className="col-span-2">{calculateDuration(leaveRequest.startDate, leaveRequest.endDate)}</span>
-          </div>
-          
-          <div className="grid grid-cols-3 items-center gap-4">
-            <span className="font-medium">Statut:</span>
-            <span className="col-span-2">
-              <Badge className={statusColors[leaveRequest.status] || "bg-gray-100"}>
-                {statusLabels[leaveRequest.status] || leaveRequest.status}
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="font-medium">Statut:</div>
+            <div className="col-span-3">
+              <Badge className={statusColors[leaveRequest.status as keyof typeof statusColors] || ""}>
+                {statusLabel[leaveRequest.status as keyof typeof statusLabel] || leaveRequest.status}
               </Badge>
-            </span>
+            </div>
           </div>
-          
+
           {leaveRequest.reason && (
-            <div className="grid grid-cols-3 items-start gap-4">
-              <span className="font-medium">Raison:</span>
-              <p className="col-span-2">{leaveRequest.reason}</p>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <div className="font-medium">Motif:</div>
+              <div className="col-span-3">{leaveRequest.reason}</div>
             </div>
           )}
-          
+
           {leaveRequest.approvedBy && (
-            <div className="grid grid-cols-3 items-center gap-4">
-              <span className="font-medium">Approuvé par:</span>
-              <span className="col-span-2">{getEmployeeName(leaveRequest.approvedBy)}</span>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <div className="font-medium">Approuvé par:</div>
+              <div className="col-span-3">{findEmployeeName(leaveRequest.approvedBy)}</div>
             </div>
           )}
-          
+
           {leaveRequest.approvedAt && (
-            <div className="grid grid-cols-3 items-center gap-4">
-              <span className="font-medium">Date d'approbation:</span>
-              <span className="col-span-2">{formatDateSafely(leaveRequest.approvedAt)}</span>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <div className="font-medium">Approuvé le:</div>
+              <div className="col-span-3">{formatDateSafely(leaveRequest.approvedAt)}</div>
             </div>
           )}
-          
-          {leaveRequest.createdAt && (
-            <div className="grid grid-cols-3 items-center gap-4">
-              <span className="font-medium">Créé le:</span>
-              <span className="col-span-2">{formatDateSafely(leaveRequest.createdAt)}</span>
-            </div>
-          )}
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="font-medium">Créé le:</div>
+            <div className="col-span-3">{formatDateSafely(leaveRequest.createdAt)}</div>
+          </div>
         </div>
-        
-        <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>Fermer</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

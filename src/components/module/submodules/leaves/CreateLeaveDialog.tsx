@@ -1,258 +1,179 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
-import { toast } from 'sonner';
-import { useForm, Controller } from 'react-hook-form';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { createLeaveRequest } from './services/leaveService';
+import { toast } from 'sonner';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Employee } from '@/types/employee';
 
 interface CreateLeaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLeaveCreated: () => void;
+  onSuccess: () => void;
+  employees: Employee[];
 }
 
-const leaveTypes = [
-  { id: 'paid', name: 'Congés payés' },
-  { id: 'unpaid', name: 'Congés sans solde' },
-  { id: 'sick', name: 'Maladie' },
-  { id: 'maternity', name: 'Maternité' },
-  { id: 'paternity', name: 'Paternité' },
-  { id: 'other', name: 'Autre' },
-];
+const formSchema = z.object({
+  employeeId: z.string().min(1, { message: "L'employé est requis" }),
+  type: z.enum(['paid', 'unpaid', 'sick', 'maternity', 'paternity', 'other']),
+  startDate: z.string().min(1, { message: 'La date de début est requise' }),
+  endDate: z.string().min(1, { message: 'La date de fin est requise' }),
+  reason: z.string().optional(),
+});
 
-const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({ open, onOpenChange, onLeaveCreated }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { employees } = useHrModuleData();
-  
-  const { control, handleSubmit, watch, reset, formState: { errors } } = useForm({
+const CreateLeaveDialog: React.FC<CreateLeaveDialogProps> = ({
+  open,
+  onOpenChange,
+  onSuccess,
+  employees
+}) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       employeeId: '',
       type: 'paid',
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: '',
+      endDate: '',
       reason: '',
-    }
+    },
   });
-  
-  const startDate = watch('startDate');
-  
-  const onSubmit = async (data: any) => {
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      setIsSubmitting(true);
-      
-      // Format dates as strings for Firestore
-      const formattedData = {
-        ...data,
-        startDate: format(data.startDate, 'yyyy-MM-dd'),
-        endDate: format(data.endDate, 'yyyy-MM-dd'),
-        status: 'pending' as 'pending' // Type assertion
-      };
-      
-      await createLeaveRequest(formattedData);
-      
+      const now = new Date().toISOString();
+      await createLeaveRequest({
+        ...values,
+        status: 'pending',
+        createdAt: now,
+        updatedAt: now
+      });
       toast.success("Demande de congé créée avec succès");
-      reset();
-      onLeaveCreated();
       onOpenChange(false);
+      form.reset();
+      onSuccess();
     } catch (error) {
       console.error("Erreur lors de la création de la demande de congé:", error);
-      toast.error("Une erreur est survenue lors de la création de la demande");
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Échec de la création de la demande");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Nouvelle demande de congé</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
-          {/* Employee selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Employé</label>
-            <Controller
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
               name="employeeId"
-              control={control}
-              rules={{ required: "L'employé est requis" }}
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger className={errors.employeeId ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Sélectionner un employé" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map(employee => (
-                      <SelectItem 
-                        key={employee.id} 
-                        value={employee.id}
-                      >
-                        {`${employee.firstName} ${employee.lastName}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Employé</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un employé" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {employees.map(employee => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.firstName} {employee.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {errors.employeeId && <p className="text-red-500 text-sm">{errors.employeeId.message}</p>}
-          </div>
-          
-          {/* Leave type */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Type de congé</label>
-            <Controller
+
+            <FormField
+              control={form.control}
               name="type"
-              control={control}
-              rules={{ required: "Le type de congé est requis" }}
               render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger className={errors.type ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Sélectionner un type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {leaveTypes.map(type => (
-                      <SelectItem 
-                        key={type.id} 
-                        value={type.id}
-                      >
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Type de congé</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un type de congé" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="paid">Congé payé</SelectItem>
+                      <SelectItem value="unpaid">Sans solde</SelectItem>
+                      <SelectItem value="sick">Maladie</SelectItem>
+                      <SelectItem value="maternity">Maternité</SelectItem>
+                      <SelectItem value="paternity">Paternité</SelectItem>
+                      <SelectItem value="other">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {errors.type && <p className="text-red-500 text-sm">{errors.type.message}</p>}
-          </div>
-          
-          {/* Start and end dates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de début</label>
-              <Controller
-                name="startDate"
-                control={control}
-                rules={{ required: "La date de début est requise" }}
-                render={({ field }) => (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={`w-full justify-start text-left font-normal ${
-                          errors.startDate ? "border-red-500" : ""
-                        }`}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, 'dd MMMM yyyy', { locale: fr })
-                        ) : (
-                          <span>Choisir une date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-              {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate.message}</p>}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de fin</label>
-              <Controller
-                name="endDate"
-                control={control}
-                rules={{ required: "La date de fin est requise" }}
-                render={({ field }) => (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={`w-full justify-start text-left font-normal ${
-                          errors.endDate ? "border-red-500" : ""
-                        }`}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, 'dd MMMM yyyy', { locale: fr })
-                        ) : (
-                          <span>Choisir une date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < startDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-              {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate.message}</p>}
-            </div>
-          </div>
-          
-          {/* Reason */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Motif (optionnel)</label>
-            <Controller
+
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date de début</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date de fin</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="reason"
-              control={control}
               render={({ field }) => (
-                <Textarea
-                  {...field}
-                  placeholder="Motif de la demande de congé..."
-                  className="min-h-[100px]"
-                />
+                <FormItem>
+                  <FormLabel>Motif (optionnel)</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
-          
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Annuler
-            </Button>
-            <Button 
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Envoi en cours..." : "Envoyer la demande"}
-            </Button>
-          </DialogFooter>
-        </form>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">Créer la demande</Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

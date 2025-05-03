@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Eye, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,48 +11,29 @@ import { Avatar } from '@/components/ui/avatar';
 import { AvatarImage } from '@/components/ui/avatar';
 import { AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { LeaveRequest, updateLeaveRequestStatus, deleteLeaveRequest } from './services/leaveService';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { updateLeaveRequestStatus, deleteLeaveRequest } from './services/leaveService';
 import ViewLeaveDialog from './ViewLeaveDialog';
 import EditLeaveDialog from './EditLeaveDialog';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { getInitials } from '@/lib/utils';
 
-interface LeaveRequestsTableProps {
-  leaveRequests: LeaveRequest[];
-  isLoading: boolean;
-  onSuccess: () => void;
-}
-
-const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({ 
-  leaveRequests, 
-  isLoading,
-  onSuccess 
-}) => {
+const LeaveRequestsTable = ({ leaveRequests, isLoading, onSuccess }) => {
   const navigate = useNavigate();
   const { employees } = useHrModuleData();
-  
+
   // State for dialogs
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequest | null>(null);
+  const [selectedLeaveRequest, setSelectedLeaveRequest] = useState(null);
 
   // Status badge colors
   const statusColors = {
     pending: "bg-yellow-100 text-yellow-800",
     approved: "bg-green-100 text-green-800",
     rejected: "bg-red-100 text-red-800",
-    canceled: "bg-gray-100 text-gray-800",
+    canceled: "bg-gray-100 text-gray-800"
   };
 
   // Type badge colors
@@ -62,23 +43,23 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
     sick: "bg-orange-100 text-orange-800",
     maternity: "bg-pink-100 text-pink-800",
     paternity: "bg-indigo-100 text-indigo-800",
-    other: "bg-teal-100 text-teal-800",
+    other: "bg-teal-100 text-teal-800"
   };
 
   // Handle view leave request
-  const handleView = (request: LeaveRequest) => {
+  const handleView = (request) => {
     setSelectedLeaveRequest(request);
     setViewDialogOpen(true);
   };
 
   // Handle edit leave request
-  const handleEdit = (request: LeaveRequest) => {
+  const handleEdit = (request) => {
     setSelectedLeaveRequest(request);
     setEditDialogOpen(true);
   };
 
   // Handle delete leave request
-  const handleDeleteClick = (request: LeaveRequest) => {
+  const handleDeleteClick = (request) => {
     setSelectedLeaveRequest(request);
     setDeleteDialogOpen(true);
   };
@@ -99,7 +80,7 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
   };
 
   // Handle approve leave request
-  const handleApprove = async (request: LeaveRequest) => {
+  const handleApprove = async (request) => {
     try {
       await updateLeaveRequestStatus(request.id, 'approved');
       toast.success("Demande de congé approuvée");
@@ -111,7 +92,7 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
   };
 
   // Handle reject leave request
-  const handleReject = async (request: LeaveRequest) => {
+  const handleReject = async (request) => {
     try {
       await updateLeaveRequestStatus(request.id, 'rejected');
       toast.success("Demande de congé rejetée");
@@ -123,26 +104,27 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
   };
 
   // Find employee name
-  const findEmployeeName = (employeeId: string) => {
-    const employee = employees.find(emp => emp.id === employeeId);
+  const findEmployeeName = (employeeId) => {
+    const employee = employees.find((emp) => emp.id === employeeId);
     return employee ? `${employee.firstName} ${employee.lastName}` : "Employé inconnu";
   };
 
   // Format date safely
-  const formatDateSafely = (dateStr: string | undefined) => {
+  const formatDateSafely = (dateStr) => {
     if (!dateStr) return "Date invalide";
-    
     try {
-      return format(new Date(dateStr), 'dd/MM/yyyy', { locale: fr });
+      return format(new Date(dateStr), 'dd/MM/yyyy', {
+        locale: fr
+      });
     } catch (err) {
       console.error("Date parsing error:", err);
       return "Date invalide";
     }
   };
-  
+
   // Find employee photo
-  const findEmployeePhoto = (employeeId: string) => {
-    const employee = employees.find(emp => emp.id === employeeId);
+  const findEmployeePhoto = (employeeId) => {
+    const employee = employees.find((emp) => emp.id === employeeId);
     return employee?.photoURL || employee?.photo || '';
   };
 
@@ -150,11 +132,10 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
     {
       header: "Employé",
       accessorKey: "employeeId",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         const employeeId = row.original.employeeId;
         const employeeName = findEmployeeName(employeeId);
         const photoURL = findEmployeePhoto(employeeId);
-        
         return (
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
@@ -172,7 +153,7 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
     {
       header: "Type",
       accessorKey: "type",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         const type = row.original.type;
         const typeLabel = {
           paid: "Congé payé",
@@ -182,38 +163,32 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
           paternity: "Paternité",
           other: "Autre"
         }[type] || type;
-        
-        const colorClass = typeColors[type as keyof typeof typeColors] || "bg-gray-100 text-gray-800";
-        
-        return (
-          <Badge className={colorClass}>{typeLabel}</Badge>
-        );
+        const colorClass = typeColors[type] || "bg-gray-100 text-gray-800";
+        return <Badge className={colorClass}>{typeLabel}</Badge>;
       }
     },
     {
       header: "Date de début",
       accessorKey: "startDate",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         return formatDateSafely(row.original.startDate);
       }
     },
     {
       header: "Date de fin",
       accessorKey: "endDate",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         return formatDateSafely(row.original.endDate);
       }
     },
     {
       header: "Durée",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         const request = row.original;
-        
         // Check if both dates exist before calculating duration
         if (!request.startDate || !request.endDate) {
           return "N/A";
         }
-        
         try {
           const start = new Date(request.startDate);
           const end = new Date(request.endDate);
@@ -229,7 +204,7 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
     {
       header: "Statut",
       accessorKey: "status",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         const status = row.original.status;
         const statusLabel = {
           pending: "En attente",
@@ -237,20 +212,15 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
           rejected: "Rejeté",
           canceled: "Annulé"
         }[status] || status;
-        
-        const colorClass = statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800";
-        
-        return (
-          <Badge className={colorClass}>{statusLabel}</Badge>
-        );
+        const colorClass = statusColors[status] || "bg-gray-100 text-gray-800";
+        return <Badge className={colorClass}>{statusLabel}</Badge>;
       }
     },
     {
       header: "Actions",
-      cell: ({ row }: { row: { original: LeaveRequest } }) => {
+      cell: ({ row }) => {
         const request = row.original;
         const isPending = request.status === 'pending';
-        
         return (
           <div className="flex space-x-2">
             <Button variant="ghost" size="icon" onClick={() => handleView(request)}>
@@ -262,7 +232,6 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
             <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(request)}>
               <Trash2 className="h-4 w-4" />
             </Button>
-            
             {isPending && (
               <>
                 <Button variant="ghost" size="icon" className="text-green-600" onClick={() => handleApprove(request)}>
@@ -280,22 +249,19 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
   ];
 
   // Process leave requests for sorting
-  const processedLeaveRequests = leaveRequests.map(request => {
+  const processedLeaveRequests = leaveRequests.map((request) => {
     // Ensure startDate and endDate are valid before processing
     let sortableStartDate, sortableEndDate;
-    
     try {
       sortableStartDate = request.startDate ? new Date(request.startDate).toISOString() : null;
     } catch (e) {
       sortableStartDate = null;
     }
-    
     try {
       sortableEndDate = request.endDate ? new Date(request.endDate).toISOString() : null;
     } catch (e) {
       sortableEndDate = null;
     }
-    
     return {
       ...request,
       sortableStartDate,
@@ -305,14 +271,13 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
 
   return (
     <div>
-      <DataTable
-        columns={columns}
-        data={processedLeaveRequests}
+      <DataTable 
+        columns={columns} 
+        data={processedLeaveRequests} 
         isLoading={isLoading}
         emptyMessage="Aucune demande de congé trouvée"
       />
       
-      {/* View Leave Dialog */}
       {selectedLeaveRequest && (
         <ViewLeaveDialog
           open={viewDialogOpen}
@@ -321,7 +286,6 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
         />
       )}
       
-      {/* Edit Leave Dialog */}
       {selectedLeaveRequest && (
         <EditLeaveDialog
           open={editDialogOpen}
@@ -334,7 +298,6 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
         />
       )}
       
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -343,6 +306,7 @@ const LeaveRequestsTable: React.FC<LeaveRequestsTableProps> = ({
               Êtes-vous sûr de vouloir supprimer cette demande de congé ? Cette action ne peut pas être annulée.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
