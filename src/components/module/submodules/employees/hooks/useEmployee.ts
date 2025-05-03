@@ -31,7 +31,20 @@ export const useEmployee = (employeeId: string | null) => {
     onSuccess: (data) => {
       if (data) {
         console.log("Employee data retrieved:", data);
-        setEmployee(data);
+        // Ensure we provide a valid Employee object with all required fields
+        const safeEmployee = {
+          ...data,
+          id: data.id || '',
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          department: data.department || '',
+          position: data.position || '',
+          status: data.status || 'active',
+          // Ensure skills array is always defined
+          skills: Array.isArray(data.skills) ? data.skills : []
+        };
+        setEmployee(safeEmployee);
       } else {
         console.log("No employee data returned");
       }
@@ -45,7 +58,19 @@ export const useEmployee = (employeeId: string | null) => {
   // Update employee when data changes
   useEffect(() => {
     if (data) {
-      setEmployee(data);
+      const safeEmployee = {
+        ...data,
+        id: data.id || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        department: data.department || '',
+        position: data.position || '',
+        status: data.status || 'active',
+        // Ensure skills array is always defined
+        skills: Array.isArray(data.skills) ? data.skills : []
+      };
+      setEmployee(safeEmployee);
     }
   }, [data]);
   

@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '@/components/ui/patched-table';
+} from '@/components/ui/table';
 import { Employee } from '@/types/employee';
 import EmployeeListItem from './EmployeeListItem';
 

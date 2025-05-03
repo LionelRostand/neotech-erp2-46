@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Employee } from '@/types/employee';
-import { getInitials } from '../utils/employeeUtils';
+import { getInitials } from '@/lib/utils';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee | null;
