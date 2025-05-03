@@ -1,137 +1,280 @@
-
-import { Employee } from '@/types/employee';
-import { collection, doc, getDoc, getDocs, updateDoc, addDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { Employee } from '@/types/employee';
+import { toast } from 'sonner';
 
-const EMPLOYEES_COLLECTION = COLLECTIONS.HR.EMPLOYEES;
+// Define the EmployeeFormValues type if it doesn't exist
+export interface EmployeeFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  position: string;
+  department: string;
+  hireDate: string;
+  [key: string]: any;
+}
 
-// Get all employees
-export const getAllEmployees = async (): Promise<Employee[]> => {
+// Function to fetch department name by ID
+export const getDepartmentName = async (departmentId: string): Promise<string> => {
   try {
-    const querySnapshot = await getDocs(collection(db, EMPLOYEES_COLLECTION));
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Employee[];
+    if (!departmentId || departmentId === 'no_department') {
+      return 'Non spécifié';
+    }
+    
+    const docRef = doc(db, COLLECTIONS.HR.DEPARTMENTS, departmentId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data().name || 'Non spécifié';
+    } else {
+      console.log("No department with this ID:", departmentId);
+      return 'Non spécifié';
+    }
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    throw error;
+    console.error("Error fetching department:", error);
+    return 'Non spécifié';
   }
 };
 
-// Get a single employee by ID
+// Function to fetch an employee by ID
 export const getEmployee = async (id: string): Promise<Employee | null> => {
   try {
-    const docRef = doc(db, EMPLOYEES_COLLECTION, id);
+    if (!id) {
+      console.warn("No employee ID provided");
+      return null;
+    }
+    
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const docData = docSnap.data();
+      
+      // Get department name if department ID exists
+      let departmentName = 'Non spécifié';
+      if (docData.department || docData.departmentId) {
+        const deptId = docData.departmentId || docData.department;
+        if (typeof deptId === 'string' && deptId !== 'no_department') {
+          departmentName = await getDepartmentName(deptId);
+        }
+      }
+      
+      return { 
+        id: docSnap.id, 
+        ...docData,
+        // Keep the department ID in departmentId and use the name for display
+        departmentId: docData.departmentId || docData.department,
+        department: departmentName
+      } as Employee;
+    } else {
+      console.log("No such document!");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching employee:", error);
+    return null;
+  }
+};
+
+// Function to update an employee
+export const updateEmployee = async (id: string, data: Partial<EmployeeFormValues>): Promise<boolean> => {
+  try {
+    if (!id) {
+      throw new Error("Employee ID is required for update");
+    }
+    
+    console.log("Updating employee:", id, data);
+    
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
     const docSnap = await getDoc(docRef);
     
+    if (!docSnap.exists()) {
+      console.error("Employee document does not exist");
+      return false;
+    }
+    
+    // Make sure department is saved as departmentId if it represents an ID
+    const updateData = {
+      ...data,
+      departmentId: data.department, // Store both for compatibility
+      updatedAt: new Date().toISOString()
+    };
+    
+    await updateDoc(docRef, updateData);
+    console.log("Employee updated successfully!");
+    toast.success("Employé mis à jour avec succès");
+    return true;
+  } catch (error) {
+    console.error("Error updating employee:", error);
+    toast.error(`Erreur lors de la mise à jour: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    return false;
+  }
+};
+
+// Function to fetch all employees
+export const getAllEmployees = async (): Promise<Employee[]> => {
+  try {
+    const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const querySnapshot = await getDocs(collectionRef);
+    const employees: Employee[] = [];
+    const deptCache = new Map<string, string>(); // Cache for department names
+
+    for (const doc of querySnapshot.docs) {
+      if (doc.exists()) {
+        const data = doc.data();
+        
+        // Use the department cache or fetch the department name
+        let departmentName = 'Non spécifié';
+        const deptId = data.departmentId || data.department;
+        
+        if (typeof deptId === 'string' && deptId !== 'no_department') {
+          if (deptCache.has(deptId)) {
+            departmentName = deptCache.get(deptId) || 'Non spécifié';
+          } else {
+            departmentName = await getDepartmentName(deptId);
+            deptCache.set(deptId, departmentName);
+          }
+        }
+        
+        employees.push({
+          id: doc.id,
+          ...data,
+          departmentId: deptId,
+          department: departmentName
+        } as Employee);
+      }
+    }
+
+    return employees;
+  } catch (error) {
+    console.error("Error fetching all employees:", error);
+    return [];
+  }
+};
+
+// Function to create a new employee
+export const createEmployee = async (data: EmployeeFormValues): Promise<Employee | null> => {
+  try {
+    // Validate required fields
+    if (!data.firstName || !data.lastName || !data.email) {
+      throw new Error("First name, last name, and email are required");
+    }
+    
+    const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    
+    // Store department as departmentId for consistency
+    const employeeData = {
+      ...data,
+      departmentId: data.department,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const docRef = await addDoc(collectionRef, employeeData);
+    const docSnap = await getDoc(docRef);
+
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Employee;
+      const docData = docSnap.data();
+      
+      // Get department name
+      let departmentName = 'Non spécifié';
+      const deptId = docData.departmentId || docData.department;
+      if (typeof deptId === 'string' && deptId !== 'no_department') {
+        departmentName = await getDepartmentName(deptId);
+      }
+      
+      return { 
+        id: docRef.id, 
+        ...docData,
+        departmentId: deptId,
+        department: departmentName
+      } as unknown as Employee;
+    } else {
+      console.log("No such document!");
+      return null;
     }
+  } catch (error) {
+    console.error("Error creating employee:", error);
     return null;
-  } catch (error) {
-    console.error('Error fetching employee:', error);
-    throw error;
   }
 };
 
-// Update an employee
-export const updateEmployee = async (id: string, data: Partial<Employee>): Promise<void> => {
-  try {
-    console.log(`Updating employee ${id} with data:`, data);
-    const employeeRef = doc(db, EMPLOYEES_COLLECTION, id);
-    
-    // Handle skills field specially - ensure it's properly formatted
-    if (data.skills) {
-      console.log('Processing skills before update:', data.skills);
-      
-      // Make sure skills is an array
-      const skillsArray = Array.isArray(data.skills) ? data.skills : [];
-      
-      // Process each skill to ensure it has the right format
-      data.skills = skillsArray.map(skill => {
-        if (typeof skill === 'string') {
-          return {
-            id: `skill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: skill,
-            level: 'débutant'
-          };
-        }
-        // If it's already an object, ensure it has all required fields
-        const skillObj = skill as any;
-        return {
-          id: skillObj.id || `skill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: skillObj.name || 'Compétence',
-          level: skillObj.level || 'débutant'
-        };
-      });
-      
-      console.log('Skills after processing:', data.skills);
-    }
-    
-    await updateDoc(employeeRef, data);
-    console.log(`Employee ${id} updated successfully`);
-  } catch (error) {
-    console.error('Error updating employee:', error);
-    throw error;
-  }
-};
-
-// Create a new employee
-export const createEmployee = async (data: Omit<Employee, 'id'>): Promise<Employee> => {
-  try {
-    // Process skills if provided
-    if (data.skills && Array.isArray(data.skills)) {
-      data.skills = data.skills.map(skill => {
-        if (typeof skill === 'string') {
-          return {
-            id: `skill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: skill,
-            level: 'débutant'
-          };
-        }
-        // If it's already an object, ensure it has all required fields
-        const skillObj = skill as any;
-        return {
-          id: skillObj.id || `skill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: skillObj.name || 'Compétence',
-          level: skillObj.level || 'débutant'
-        };
-      });
-    }
-    
-    const docRef = await addDoc(collection(db, EMPLOYEES_COLLECTION), data);
-    return { id: docRef.id, ...data } as Employee;
-  } catch (error) {
-    console.error('Error creating employee:', error);
-    throw error;
-  }
-};
-
-// Delete an employee
+// Function to delete an employee
 export const deleteEmployee = async (id: string): Promise<void> => {
   try {
-    const employeeRef = doc(db, EMPLOYEES_COLLECTION, id);
-    await deleteDoc(employeeRef);
+    if (!id) {
+      throw new Error("Employee ID is required for deletion");
+    }
+    
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    await deleteDoc(docRef);
+    console.log("Employee deleted successfully!");
   } catch (error) {
-    console.error('Error deleting employee:', error);
+    console.error("Error deleting employee:", error);
     throw error;
   }
 };
 
-// Check if an employee is manager of any department
-export const checkIfManager = async (employeeId: string): Promise<boolean> => {
+// Function to update employee skills
+export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<boolean> => {
   try {
-    const departmentsQuery = query(
-      collection(db, COLLECTIONS.HR.DEPARTMENTS), 
-      where('managerId', '==', employeeId)
+    if (!employeeId) {
+      throw new Error("Employee ID is required");
+    }
+    
+    // Ensure skills is an array
+    const safeSkills = Array.isArray(skills) ? skills : [];
+    
+    const success = await updateEmployee(employeeId, { skills: safeSkills });
+    console.log("Employee skills updated successfully!");
+    return success;
+  } catch (error) {
+    console.error("Error updating employee skills:", error);
+    throw error;
+  }
+};
+
+// Function to fetch employees by department ID
+export const getEmployeesByDepartment = async (departmentId: string): Promise<Employee[]> => {
+  try {
+    if (!departmentId) {
+      return [];
+    }
+    
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const q = query(employeesRef, 
+      where('departmentId', '==', departmentId)
     );
     
-    const querySnapshot = await getDocs(departmentsQuery);
-    return !querySnapshot.empty;
+    const querySnapshot = await getDocs(q);
+    const employees: Employee[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      if (doc.exists()) {
+        employees.push({
+          id: doc.id,
+          ...doc.data(),
+          departmentId: departmentId,
+          department: 'Chargement...' // Will be updated by the component
+        } as Employee);
+      }
+    });
+    
+    return employees;
   } catch (error) {
-    console.error('Error checking if employee is manager:', error);
-    return false;
+    console.error("Error fetching employees by department:", error);
+    return [];
+  }
+};
+
+// Add the missing refreshEmployeesData function
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
+  try {
+    return await getAllEmployees();
+  } catch (error) {
+    console.error("Error refreshing employees data:", error);
+    return [];
   }
 };
