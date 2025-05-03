@@ -1,4 +1,3 @@
-
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -56,8 +55,8 @@ export const updateBadge = async (id: string, badgeData: Partial<BadgeData>): Pr
   }
 };
 
-// Delete a badge
-export const deleteDocument = async (id: string): Promise<void> => {
+// Delete a badge - rename from deleteDocument to deleteBadge for consistency
+export const deleteBadge = async (id: string): Promise<void> => {
   try {
     const badgeRef = doc(db, COLLECTIONS.HR.BADGES, id);
     await deleteDoc(badgeRef);
@@ -66,3 +65,6 @@ export const deleteDocument = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+// Keep the original function name as an alias for backward compatibility
+export const deleteDocument = deleteBadge;

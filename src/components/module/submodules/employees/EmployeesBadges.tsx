@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Badge as BadgeIcon, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import DeleteBadgeDialog from '../badges/DeleteBadgeDialog';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { getBadges, addBadge, deleteBadge } from './services/badgeService';
 
 const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
