@@ -1,46 +1,25 @@
 
-export type TimeReportStatus = "En cours" | "Soumis" | "Validé" | "Rejeté";
-
 export interface TimeReport {
-  id: string;
+  id?: string;
   title: string;
   employeeId: string;
   employeeName: string;
   employeePhoto?: string;
+  managerId?: string;
+  managerName?: string;
+  departmentId?: string;
+  departmentName?: string;
   startDate: string;
   endDate: string;
+  status: 'En cours' | 'Soumis' | 'Validé' | 'Rejeté';
   totalHours: number;
-  status: TimeReportStatus;
+  weeklyHours?: {
+    [week: string]: number;
+  };
+  comments?: string;
+  lastUpdateBy?: string;
+  lastUpdateText?: string;
+  lastUpdateDate?: string;
   createdAt?: string;
   updatedAt?: string;
-  lastUpdated: string;
-  lastUpdateText: string;
-  submittedAt?: string;
-  approvedAt?: string;
-  approvedBy?: string;
-  comments?: string;
-  details?: TimeReportDetail[];
-}
-
-export interface TimeReportDetail {
-  date: string;
-  hours: number;
-  project?: string;
-  description?: string;
-}
-
-export interface TimeSheetEntry {
-  day: string;
-  date: string;
-  hours: number;
-  project?: string;
-  task?: string;
-}
-
-export interface WeekReport {
-  weekStartDate: string;
-  weekEndDate: string;
-  entries: TimeSheetEntry[];
-  totalHours: number;
-  status: TimeReportStatus;
 }

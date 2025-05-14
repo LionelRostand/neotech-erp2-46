@@ -7,7 +7,7 @@ import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { DataTable } from '@/components/ui/data-table';
-import { useEmployeePermissions } from '@/components/module/submodules/employees/hooks/useEmployeePermissions';
+import { useEmployeePermissions } from '@/hooks/useEmployeePermissions';
 import { getInitials } from '@/lib/utils';
 import { TimeReport } from '@/types/timesheet';
 import TimeSheetDetails from './TimeSheetDetails';
@@ -19,7 +19,10 @@ interface TimesheetTableProps {
   onRefresh?: () => void;
 }
 
-const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, isLoading, onRefresh }) => {
+const TimesheetTable: React.FC<TimesheetTableProps> = ({ data = [], isLoading, onRefresh }) => {
+  // Ensure we have a valid array of data
+  const safeData = Array.isArray(data) ? data : [];
+  
   const { isAdmin } = useEmployeePermissions('employees-timesheet');
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -58,18 +61,18 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, isLoading, onRefr
     {
       header: "Employé",
       accessorKey: "employeeId",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const timesheet = row.original;
         return (
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
               {timesheet.employeePhoto ? (
-                <AvatarImage src={timesheet.employeePhoto} alt={timesheet.employeeName} />
+                <AvatarImage src={timesheet.employeePhoto} alt={timesheet.employeeName || ''} />
               ) : (
-                <AvatarFallback>{getInitials(timesheet.employeeName)}</AvatarFallback>
+                <AvatarFallback>{getInitials(timesheet.employeeName || 'Employé')}</AvatarFallback>
               )}
             </Avatar>
-            <span>{timesheet.employeeName}</span>
+            <span>{timesheet.employeeName || 'Employé'}</span>
           </div>
         );
       }
@@ -80,11 +83,11 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, isLoading, onRefr
     },
     {
       header: "Période",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const timesheet = row.original;
         return (
           <div>
-            {formatDateSafely(timesheet.startDate)} - {formatDateSafely(timesheet.endDate)}
+            {formatDateSafely(timesheet.startDate || '')} - {formatDateSafely(timesheet.endDate || '')}
           </div>
         );
       }
@@ -92,15 +95,16 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, isLoading, onRefr
     {
       header: "Heures",
       accessorKey: "totalHours",
-      cell: ({ row }) => {
-        return <span>{row.original.totalHours}h</span>;
+      cell: ({ row }: any) => {
+        const hours = row.original.totalHours || 0;
+        return <span>{hours}h</span>;
       }
     },
     {
       header: "Statut",
       accessorKey: "status",
-      cell: ({ row }) => {
-        const status = row.original.status;
+      cell: ({ row }: any) => {
+        const status = row.original.status || 'En cours';
         return (
           <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>
             {status}
@@ -114,7 +118,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, isLoading, onRefr
     },
     {
       header: "Actions",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const timesheet = row.original;
         return (
           <div className="flex space-x-2">
@@ -136,7 +140,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({ data, isLoading, onRefr
     <>
       <DataTable 
         columns={columns} 
-        data={data} 
+        data={safeData} 
         isLoading={isLoading}
         emptyMessage="Aucune feuille de temps trouvée" 
       />

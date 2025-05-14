@@ -8,13 +8,17 @@ import TimesheetStats from './timesheet/TimesheetStats';
 import { useFirebaseCollection } from '@/hooks/useFirebaseCollection';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import CreateTimesheetDialog from './timesheet/CreateTimesheetDialog';
+import { TimeReport } from '@/types/timesheet';
 
 const EmployeesTimesheet = () => {
   // Use the Firebase collection hook with the correct path
-  const { data: timeSheets, isLoading, refetch } = useFirebaseCollection(
+  const { data: rawTimeSheets = [], isLoading, refetch } = useFirebaseCollection(
     COLLECTIONS.HR.TIMESHEET
   );
-  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
+  
+  // Ensure we have a valid array of timesheets
+  const timeSheets = Array.isArray(rawTimeSheets) ? rawTimeSheets : [];
+  
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleRefresh = async () => {
@@ -53,6 +57,7 @@ const EmployeesTimesheet = () => {
       <TimesheetTable 
         data={timeSheets}
         isLoading={isLoading}
+        onRefresh={handleRefresh}
       />
 
       <CreateTimesheetDialog 

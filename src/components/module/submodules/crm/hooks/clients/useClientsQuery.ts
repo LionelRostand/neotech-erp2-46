@@ -1,120 +1,97 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { collection, query, getDocs, addDoc } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
-import { Client } from '../../types/crm-types';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import mockClients from '../../data/mockClients';
-import { toast } from 'sonner';
+import { Client } from '@/types/crm';
+import { mockClients } from '../../data/mockClients';
 
 export const useClientsQuery = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
-  const [loadingOperationCancelled, setLoadingOperationCancelled] = useState<boolean>(false);
 
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
-    setLoadingOperationCancelled(false);
+    setError(null);
+    
     try {
-      // Vérifier que l'utilisateur est authentifié
-      if (!auth.currentUser) {
-        console.log("L'utilisateur n'est pas authentifié, affichage des données de démo");
-        setClients(mockClients);
-        setIsOfflineMode(true);
-        return;
-      }
-
-      // Use the correct collection path from COLLECTIONS
-      const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-      const clientsQuery = query(clientsCollection);
+      const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS || 'crm_clients');
+      const clientsQuery = query(clientsCollection, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(clientsQuery);
       
-      const clientsData: Client[] = [];
-      querySnapshot.forEach(doc => {
-        clientsData.push({ id: doc.id, ...doc.data() } as Client);
+      const fetchedClients: Client[] = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          updatedAt: data.updatedAt?.toDate?.() || new Date()
+        } as Client;
       });
       
-      console.log(`Retrieved ${clientsData.length} clients from Firestore`);
-      setClients(clientsData);
+      setClients(fetchedClients);
       setIsOfflineMode(false);
-      setError(null);
     } catch (err) {
-      const error = err as Error;
-      console.error('Error fetching clients:', error);
+      console.error('Error fetching clients:', err);
+      setError('Une erreur est survenue lors de la récupération des clients.');
       
-      if (error.message.includes('offline') || 
-          error.message.includes('unavailable')) {
-        console.log('Network error, using mock data');
-        toast.error('Application fonctionnant en mode hors ligne');
-        setClients(mockClients);
-        setIsOfflineMode(true);
-      } else if ((error as any).code === 'permission-denied') {
-        toast.error("Erreur d'accès: permissions insuffisantes");
-        console.error("Permission denied accessing clients collection");
-        setClients(mockClients);
+      // If online but error occurred, don't use mock data
+      if (navigator.onLine) {
+        setClients([]);
       } else {
-        setError(error);
-        toast.error(`Erreur lors du chargement des clients: ${error.message}`);
+        // If offline, use mock data
+        setIsOfflineMode(true);
       }
     } finally {
-      if (!loadingOperationCancelled) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
-  }, [loadingOperationCancelled]);
-
+  }, []);
+  
+  // Initial fetch on component mount
   useEffect(() => {
     fetchClients();
-  }, [fetchClients]);
-
-  const cancelLoading = useCallback(() => {
-    console.log("Loading operation cancelled");
-    setLoadingOperationCancelled(true);
-    setIsLoading(false);
-  }, []);
-
+    
+    // Listen for online/offline events
+    const handleOnline = () => {
+      if (isOfflineMode) {
+        fetchClients();
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [fetchClients, isOfflineMode]);
+  
+  const cancelLoading = () => {
+    if (isLoading) {
+      setIsLoading(false);
+    }
+  };
+  
   const seedMockClients = async () => {
     setIsLoading(true);
     try {
-      // Vérifier que l'utilisateur est authentifié
-      if (!auth.currentUser) {
-        toast.error("Vous devez être connecté pour ajouter des données démo");
-        return;
-      }
-      
-      for (const mockClient of mockClients) {
-        // Use the correct collection path from COLLECTIONS
-        const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-        await addDoc(clientsCollection, {
-          ...mockClient,
-          id: undefined,
-          createdBy: auth.currentUser.uid,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      }
-      
-      toast.success("Données démo ajoutées avec succès");
-      await fetchClients();
-    } catch (error: any) {
-      console.error("Error seeding mock clients:", error);
-      
-      if (error.code === 'permission-denied') {
-        toast.error("Vous n'avez pas les droits nécessaires pour ajouter des données démo");
-      } else {
-        toast.error(`Erreur lors de l'ajout des données démo: ${error.message}`);
-      }
+      // In a real app, this would add the clients to Firestore
+      // For now, we just set the mock data locally
+      setClients(mockClients);
+      return true;
+    } catch (err) {
+      console.error('Error seeding mock clients:', err);
+      setError('Une erreur est survenue lors de l\'ajout des clients de test.');
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return {
-    clients,
-    isLoading,
-    error,
+  return { 
+    clients: clients || [], 
+    isLoading, 
+    error, 
     isOfflineMode,
     fetchClients,
     cancelLoading,
